@@ -1,0 +1,28 @@
+{
+  "name": "dappnode_sdk",
+  "version": "0.1.0-rc1",
+  "description": "",
+  "main": "generate_dappnode_package.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "debug": "node --nolazy --inspect-brk=9229 ./src/index.js new minor"
+  },
+  "bin": {
+    "dappnodesdk": "./src/index.js"
+  },
+  "author": "Eduardo Antuña <eduadiez@gmail.com> (https://github.com/eduadiez)",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "@aragon/os": "^4.0.0-alpha.2",
+    "chalk": "^2.4.1",
+    "commander": "^2.17.1",
+    "ethereum-ens": "^0.7.4",
+    "figlet": "^1.2.0",
+    "inquirer": "^6.2.0",
+    "ipfs-api": "^17.5.0",
+    "js-yaml": "^3.12.0",
+    "semver": "^5.5.1",
+    "shelljs": "^0.8.1",
+    "web3": "^1.0.0-beta.35"
+  }
+}
