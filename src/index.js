@@ -58,53 +58,84 @@ function initalMessage() {
 }
 
 if (cmd.new) {
-    initalMessage().then(() => {
-        var dappnode_package = JSON.parse(FILESYSTEM.readFileSync('dappnode_package.json', 'utf8'));
-        apm.getLatestVersion(dappnode_package.name).then(async (version) => {
-            dappnode_package.version = semver.inc(version.version, cmd.new)
-            generateManifest.generateManifest(dappnode_package);
-            generateCompose.generateCompose(JSON.parse(FILESYSTEM.readFileSync(MANIFEST_NAME)));
-            console.log('Next version: ' + dappnode_package.version)
-            await INQUIRER.prompt([
-                {
-                    type: 'confirm',
-                    name: 'confirm',
-                    default: false,
-                    message: 'Do you want to build it?',
-                },
-            ]).then(async (answer) => { if (answer.confirm) await build.newBuild(); apm.closeProvider() });
-        }).catch((error) => {
-            apm.getRepoRegistry(dappnode_package.name).then(async (a) => {
+    initalMessage().then(async () => {
+
+        if (!await existsFile('./dappnode_package.json')) {
+            console.log("it hasn't been possible to find a `dappnode_package.json` file, you must be in a directory that contains it to be able to execute this command")
+            process.exit(1)
+        }
+
+        var dappnode_package = JSON.parse(FILESYSTEM.readFileSync('./dappnode_package.json', 'utf8'));
+        var reg = await apm.getRepoRegistry(dappnode_package.name);
+        console.log("Registry address (" + dappnode_package.name.split('.').slice(1).join('.') + "): " + reg._address)
+
+        if (reg._address) {
+            apm.getLatestVersion(dappnode_package.name).then(async (version) => {
+                dappnode_package.version = semver.inc(version.version, cmd.new)
+                generateManifest.generateManifest(dappnode_package);
+                generateCompose.generateCompose(JSON.parse(FILESYSTEM.readFileSync(MANIFEST_NAME)));
+                console.log('Next version: ' + dappnode_package.version)
                 await INQUIRER.prompt([
                     {
                         type: 'confirm',
                         name: 'confirm',
                         default: false,
-                        message: 'the Aragon Package Manager repo does not exist, do you want to create a new one?',
+                        message: 'Do you want to build it?',
                     },
-                ]).then(async (answer) => {
-                    if (answer.confirm) {
-                        INQUIRER.prompt([
-                            {
-                                type: 'input',
-                                name: 'dev',
-                                default: '0x0000000000000000000000000000000000000000',
-                                message: 'Developer address',
-                            }
-                        ]).then(async (ans) => { await build.newBuild(ans.dev); apm.closeProvider() })
-                    }
-                });
-            }).catch((error) => { 
-                console.log(chalk.red(dappnode_package.name + ' repo does not belong to a valid registry'))
-                apm.closeProvider()
-            })
-        });
+                ]).then(async (answer) => { if (answer.confirm) await build.newBuild(); apm.closeProvider() });
+            }).catch((error) => {
+                apm.getRepoRegistry(dappnode_package.name).then(async (a) => {
+                    await INQUIRER.prompt([
+                        {
+                            type: 'confirm',
+                            name: 'confirm',
+                            default: false,
+                            message: 'the Aragon Package Manager Repo does not exist, do you want to create a new one?',
+                        },
+                    ]).then(async (answer) => {
+                        if (answer.confirm) {
+                            INQUIRER.prompt([
+                                {
+                                    type: 'input',
+                                    name: 'dev',
+                                    default: '0x0000000000000000000000000000000000000000',
+                                    message: 'Developer address',
+                                    validate: (val) => (val == '0x0000000000000000000000000000000000000000') ? 'the dev address can\'t be 0x0000000000000000000000000000000000000000' : true
+                                }
+                            ]).then(async (ans) => { await build.newBuild(ans.dev); apm.closeProvider() })
+                        }
+                    });
+                }).catch(async (error) => {
+                    await INQUIRER.prompt([
+                        {
+                            type: 'confirm',
+                            name: 'confirm',
+                            default: false,
+                            message: 'the Aragon Package Manager registry does not exist, do you want to create a new one?',
+                        },
+                    ]).then(async (answer) => {
+                        if (answer.confirm) {
+                            INQUIRER.prompt([
+                                {
+                                    type: 'input',
+                                    name: 'dev',
+                                    default: '0x0000000000000000000000000000000000000000',
+                                    message: 'Developer address',
+                                    validate: (val) => (val == '0x0000000000000000000000000000000000000000') ? 'the dev address can\'t be 0x0000000000000000000000000000000000000000' : true
+                                }
+                            ]).then(async (ans) => { await build.newRegistry(ans.dev); apm.closeProvider() })
+                        }
+                    });
+                })
+            });
+        }
     });
 }
 
 if (cmd.init) {
-    initalMessage().then(() => {
-        init.DappNodePackageRepo();
+    initalMessage().then(async () => {
+        await init.DappNodePackageRepo();
+        apm.closeProvider();
     });
 }
 
@@ -161,6 +192,22 @@ if (cmd.gen_manifest) {
             console.log(DOCKERCOMPOSE + " does not exist, this command must be executed in a DAppnodePackage directory")
         }
     });
+}
+
+
+function existsFile(filePath) {
+    return new Promise((resolve, reject) => {
+        FILESYSTEM.stat(filePath, (err, stats) => {
+            if (err && err.code === 'ENOENT') {
+                return resolve(false);
+            } else if (err) {
+                return reject(err);
+            }
+            if (stats.isFile() || stats.isDirectory()) {
+                return resolve(true);
+            }
+        });
+    })
 }
 
 if (cmd.build) {

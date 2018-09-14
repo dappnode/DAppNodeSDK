@@ -11,7 +11,7 @@ function DappNodePackageRepo() {
             {
                 type: 'input',
                 name: 'name',
-                default: 'package_name.open.aragonpm.eth',
+                default: 'package_name',
                 message: 'DAppNodePackage name',
             },
             {
@@ -42,9 +42,9 @@ function DappNodePackageRepo() {
             },
             {
                 type: 'input',
-                message: 'Ports to expose externally (eg: "30303:30303;30303:30303/udp;8080:80" )',
+                message: 'Ports to expose externally (eg: "30303:30303;30303:30303/udp" )',
                 name: 'ports',
-                default: '30303:30303;30303:30303/udp;8080:80'
+                default: ''
             },
             {
                 type: 'input',
@@ -56,18 +56,18 @@ function DappNodePackageRepo() {
                 type: 'input',
                 message: 'Author',
                 name: 'author',
-                default: 'Eduardo Antuña'
+                default: ''
             },
             {
                 type: 'input',
-                message: 'Keywords separated by semicolons (eg: "DAppNodeCore;IPFS" )',
+                message: 'Keywords (tags) separated by semicolons (eg: "DAppNodeCore;IPFS" )',
                 name: 'keywords',
-                default: 'DAppNodeCore;IPFS'
+                default: ''
             }
         ]).then(async function(answers) {
 
             var manifestDefinition = {
-                "name": answers.name,
+                "name": answers.name + '.public.dappnode.eth',
                 "version": answers.version,
                 "description": answers.description,
                 "avatar": answers.avatar,
@@ -86,7 +86,7 @@ function DappNodePackageRepo() {
             if (answers.ports) manifestDefinition.image.ports = answers.ports.split(";");
             if (answers.keywords) manifestDefinition.image.keywords = answers.keywords.split(";");
 
-            var path = './DAppNodePackage-' + answers.name.split('.')[0] + '/';
+            var path = './DAppNodePackage-' + answers.name + '/';
             SHELL.mkdir('-p', path);
 
             await generateManifest.generateManifest(manifestDefinition, path);

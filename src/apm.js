@@ -1,27 +1,11 @@
-var ENS = require('ethereum-ens');
-var Web3 = require('web3');
-
-var web3
-var ens
-var provider
+var provider = require('./helper/getProviders').getProvider();
+var web3 = require('./helper/getProviders').getWeb3();
+var ens = require('./helper/getProviders').getENS();
 
 async function getLatestVersion(appId) {
-    provider = new Web3.providers.WebsocketProvider('ws://my.ethchain.dnp.dappnode.eth:8546');
-
-    if (!provider.sendAsync) {
-        provider.sendAsync = provider.send
-    }
-    web3 = new Web3(provider)
-    ens = new ENS(provider);
-
     return getRepository(appId)
-        .then((repository) =>
-            repository.methods.getLatest().call()
-        )
-        .then((res) => {
-
-            return returnVersion(res);
-        })
+        .then((repository) => repository.methods.getLatest().call())
+        .then((res) => returnVersion(res))
 }
 
 function getRepository(appId) {
@@ -59,7 +43,6 @@ function returnVersion(version) {
  */
 function getRepoRegistryAddress(appId) {
     const repoId = getRepoId(appId)
-
     return ens.resolver(repoId).addr()
 }
 
@@ -79,9 +62,11 @@ function getRepoRegistry(appId) {
         )
 }
 
+
 function getRepoId(appId) {
     return appId.split('.').slice(1).join('.')
 }
+
 
 module.exports = {
     getLatestVersion,

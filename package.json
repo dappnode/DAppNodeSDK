@@ -1,11 +1,10 @@
 {
-  "name": "dappnode_sdk",
+  "name": "@dappnode/dappnodesdk",
   "version": "0.1.0-rc1",
-  "description": "",
-  "main": "generate_dappnode_package.js",
+  "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "debug": "node --nolazy --inspect-brk=9229 ./src/index.js new minor"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
     "dappnodesdk": "./src/index.js"
@@ -23,6 +22,7 @@
     "js-yaml": "^3.12.0",
     "semver": "^5.5.1",
     "shelljs": "^0.8.1",
-    "web3": "^1.0.0-beta.35"
+    "web3": "^1.0.0-beta.36",
+    "web3-utils": "^1.0.0-beta.36"
   }
 }
