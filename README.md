@@ -31,6 +31,8 @@ __To be able to update a repository you must be the authorized dev.__
 
 the script increases the current version of the repository based on the specified type (patch, minor, major), unless a version hasn't yet been published
 
+for more information about versioning check [semver](https://semver.org/)
+
 ```
-$ dappnodesdk publish 
+$ dappnodesdk publish < patch | minor | mayor >
 ```
