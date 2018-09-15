@@ -27,13 +27,13 @@ cmd.option('init', 'Initialize a new DAppNodePackage Repository')
 
 if (process.argv.length === 2) {
     initalMessage().then(function() {
-            setTimeout(function() {
-                console.log('Usage: ' + chalk.red('dappnodesdk [option]'))
-                console.log('       ' + chalk.red('dappnodesdk --help') +
-                    '\t to view available options\n')
-                process.exit(0)
-            }, 200)
-        })
+        setTimeout(function() {
+            console.log('Usage: ' + chalk.red('dappnodesdk [option]'))
+            console.log('       ' + chalk.red('dappnodesdk --help') +
+                '\t to view available options\n')
+            process.exit(0)
+        }, 200)
+    })
 }
 
 function initalMessage() {
