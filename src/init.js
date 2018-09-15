@@ -19,7 +19,7 @@ function DappNodePackageRepo() {
                 name: 'version',
                 default: '0.0.1',
                 message: 'Version',
-                validate: (val) => !SEMVER.valid(val) ? 'the version needs to be a semver valid' : true
+                validate: (val) => !SEMVER.valid(val) || !(SEMVER.eq(val, '1.0.0') || SEMVER.eq(val, '0.1.0') || SEMVER.eq(val, '0.0.1')) ? 'the version needs to be a semver valid. The valid initial valid versions are 1.0.0, 0.1.0 or 0.0.1 ' : true
             },
             {
                 type: 'input',
@@ -31,7 +31,7 @@ function DappNodePackageRepo() {
                 type: 'input',
                 message: 'Avatar',
                 name: 'avatar',
-                validate: (val) => (!FILESYSTEM.existsSync(val) && val != '') ? 'the avatar must be an png or jpg in the local path or leave it empty' : true
+                validate: (val) => (!FILESYSTEM.existsSync(val) && val != '') ? 'the avatar must be an png or jpg in the local path. You can leave this field empty' : true
             },
             {
                 type: 'list',

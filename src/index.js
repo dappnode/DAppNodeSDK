@@ -16,7 +16,7 @@ const generateCompose = require('./generateCompose')
 
 const MANIFEST_NAME = 'dappnode_package.json'
 const DOCKERCOMPOSE = 'docker-compose.yml'
-const DAPPNODE_SDK_VERSION = '0.1.2-rc2'
+const DAPPNODE_SDK_VERSION = '0.1.2-rc3'
 
 cmd.option('init', 'Initialize a new DAppNodePackage Repository')
     .option('build', 'build a new version (only generates the ipfs hash)')

@@ -147,6 +147,7 @@ function uploadManifest() {
                                 var rawTX = repository.methods.newVersion(dappnode_package.version.split('.'), '0x0000000000000000000000000000000000000000', contentURI).encodeABI();
                                 console.log(chalk.green('\n##################################################################################'))
                                 console.log(chalk.green('You must execute this transaction in mainnet to publish a new version of the package\nOnce it is minted you can install teh new version of your package through this ENS address:\n') + dappnode_package.name)
+                                console.log(chalk.red('To be able to update this repository you must be the authorized dev.'))
                                 console.log(chalk.green('########################### TX Info #####################################'))
                                 console.log(chalk.green('To: ') + repository.options.address)
                                 console.log(chalk.green('Value: ') + '0')
