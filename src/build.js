@@ -12,9 +12,11 @@ var Web3 = require('web3');
 
 var dappnode_package;
 var developer;
+var generateTX;
 
-async function newBuild(dev = '0x0000000000000000000000000000000000000000') {
-    developer = dev;
+async function newBuild(_generateTX = false, _developer = '0x0000000000000000000000000000000000000000') {
+    developer = _developer;
+    generateTX = _generateTX
     dappnode_package = JSON.parse(FILESYSTEM.readFileSync('dappnode_package.json', 'utf8'));
     name = dappnode_package.name;
     tag = dappnode_package.name;
@@ -127,147 +129,60 @@ function uploadManifest() {
             ipfs.pin.add(files[0].hash);
             console.log(chalk.green('Manifest uploaded: ') + '/ipfs/' + files[0].hash);
 
-            var contentURI = '0x' + (Buffer.from('/ipfs/' + files[0].hash, 'utf8').toString('hex'))
-            console.log(chalk.green('contentURI: ') + contentURI);
+            if (generateTX) {
 
-            if (files[0].hash == 'QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH') {
-                await uploadManifest();
-                resolve()
-            } else {
-                console.log(dappnode_package.name)
-                apm.getRepository(dappnode_package.name)
-                    .then((repository) => {
-                        if (repository.options.address == '0x0000000000000000000000000000000000000000') {
-                            console.log(chalk.red(dappnode_package.name + ' repo is not a valid repo'))
-                            reject()
-                        } else {
-                            var rawTX = repository.methods.newVersion(dappnode_package.version.split('.'), '0x0000000000000000000000000000000000000000', contentURI).encodeABI();
-                            console.log(chalk.green('\n########################### TX Info #####################################'))
-                            console.log(chalk.green('To: ') + repository.options.address)
-                            console.log(chalk.green('Value: ') + '0')
-                            console.log(chalk.green('Data: ') + rawTX)
-                            console.log(chalk.green('Gas Limit: ') + '300000')
-                            resolve();
-                        }
-                    })
-                    .catch((error) => {
-                        apm.getRepoRegistry(dappnode_package.name).then(async (registry) => {
-                            if (registry.options.address == '0x0000000000000000000000000000000000000000') {
-                                console.log(chalk.red(dappnode_package.name + ' repo does not belong to a valid registry'))
+                var contentURI = '0x' + (Buffer.from('/ipfs/' + files[0].hash, 'utf8').toString('hex'))
+                console.log(chalk.green('contentURI: ') + contentURI);
+
+                if (files[0].hash == 'QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH') {
+                    await uploadManifest();
+                    resolve()
+                } else {
+                    apm.getRepository(dappnode_package.name)
+                        .then((repository) => {
+                            if (repository.options.address == '0x0000000000000000000000000000000000000000') {
+                                console.log(chalk.red(dappnode_package.name + ' repo is not a valid repo'))
+                                reject()
                             } else {
-                                var rawTX = registry.methods.newRepoWithVersion(dappnode_package.name.split('.')[0], developer, dappnode_package.version.split('.'), '0x0000000000000000000000000000000000000000', contentURI).encodeABI();
-                                console.log(chalk.green('\n########################### TX Registry Info #####################################'))
-                                console.log(chalk.green('To: ') + registry.options.address)
+                                var rawTX = repository.methods.newVersion(dappnode_package.version.split('.'), '0x0000000000000000000000000000000000000000', contentURI).encodeABI();
+                                console.log(chalk.green('\n##################################################################################'))
+                                console.log(chalk.green('You must execute this transaction in mainnet to publish a new version of the package\nOnce it is minted you can install teh new version of your package through this ENS address:\n') + dappnode_package.name)
+                                console.log(chalk.green('########################### TX Info #####################################'))
+                                console.log(chalk.green('To: ') + repository.options.address)
                                 console.log(chalk.green('Value: ') + '0')
                                 console.log(chalk.green('Data: ') + rawTX)
-                                console.log(chalk.green('Gas Limit: ') + '1100000')
-                                resolve()
+                                console.log(chalk.green('Gas Limit: ') + '300000')
+                                console.log(chalk.green('##################################################################################'))
+                                resolve();
                             }
                         })
-                    })
+                        .catch((error) => {
+                            apm.getRepoRegistry(dappnode_package.name).then(async (registry) => {
+                                if (registry.options.address == '0x0000000000000000000000000000000000000000') {
+                                    console.log(chalk.red(dappnode_package.name + ' repo does not belong to a valid registry'))
+                                } else {
+                                    var rawTX = registry.methods.newRepoWithVersion(dappnode_package.name.split('.')[0], developer, dappnode_package.version.split('.'), '0x0000000000000000000000000000000000000000', contentURI).encodeABI();
+                                    console.log(chalk.green('\n##################################################################################'))
+                                    console.log(chalk.green('You must execute this transaction in mainnet to publish the package\nOnce it is minted you can install your package through this ENS address:\n') + dappnode_package.name)
+                                    console.log(chalk.green('########################### TX Registry Info #####################################'))
+                                    console.log(chalk.green('To: ') + registry.options.address)
+                                    console.log(chalk.green('Value: ') + '0')
+                                    console.log(chalk.green('Data: ') + rawTX)
+                                    console.log(chalk.green('Gas Limit: ') + '1100000')
+                                    console.log(chalk.green('##################################################################################'))
+
+                                    resolve()
+                                }
+                            })
+                        })
+                }
+            } else {
+                resolve();
             }
         })
     });
 }
 
-async function newRegistry(dev = '0x0000000000000000000000000000000000000000') {
-    developer = dev;
-    dappnode_package = JSON.parse(FILESYSTEM.readFileSync('dappnode_package.json', 'utf8'));
-
-    web3 = new Web3('ws://my.ethchain.dnp.dappnode.eth:8546')
-
-    var ens = new web3.eth.Contract(ENS_ABI, ENS_ADDRESS);
-
-    var root = dappnode_package.name.split('.').slice(2).join('.');
-    console.log("Root domain: " + root)
-    var registry = dappnode_package.name.split('.')[1];
-    console.log("Registry_name: " + registry)
-
-    var onwer = await ens.methods.owner(namehash(registry + '.' + root)).call()
-    console.log(onwer)
-
-    if (onwer != '0x8f64c5e21c4c5b5aedb102e7cacd07ef101bdc7d') {
-        await txSetSubnodeOwner(ens, dappnode_package);
-    } else {
-        await newAPM();
-    }
-}
-
-function txSetSubnodeOwner(ens, dappnode_package) {
-    return new Promise(async function(resolve, reject) {
-        var root = dappnode_package.name.split('.').slice(2).join('.');
-        var registry = dappnode_package.name.split('.')[1];
-        var tx_ens_setsubnodeowner = ens.methods.setSubnodeOwner(namehash(root), web3.utils.sha3(registry), '0x8f64c5e21c4c5b5aedb102e7cacd07ef101bdc7d').encodeABI();
-        console.log(chalk.green('\n##########################################################################################################################################'))
-        console.log(chalk.yellow('The owner of the domain is not the APMRegistryFactory. This is necessary to deploy the registry associated with your domain.'))
-        console.log(chalk.yellow('Therefore it is highly recommended to create a sub-domain (do not use the root domain) for this purpose.'))
-        console.log(chalk.yellow('i.e: dnp.dappnode.eth, registry.dappnode.eth, apm.dappnode.eth or similar'));
-        console.log(chalk.yellow('In order to create ' + chalk.red(registry + '.' + root) + ' sub-domain and give the onwer to the APMRegistryFactory you should execute the following transaction:'));
-        console.log(chalk.green('############################################### TX to create a sub-domain for the registry ###############################################'))
-        console.log(chalk.green('To: ') + ENS_ADDRESS)
-        console.log(chalk.green('Value: ') + '0')
-        console.log(chalk.green('Data: ') + tx_ens_setsubnodeowner)
-        console.log(chalk.green('Gas Limit: ') + '80000')
-        console.log(chalk.green('############################################### TX to create a sub-domain for the registry ###############################################'))
-        console.log(chalk.yellow('After this transaction is mined it will be necessary to execute another one to create a new registry'));
-        console.log('Waiting for the TX to create a sub-domain for the registry to be mined...');
-
-        ens.events.NewOwner({
-            filter: {
-                node: namehash(root),
-                label: web3.utils.sha3(registry)
-            },
-            fromBlock: 6000000
-        }, async function(error, event) {
-            console.log('transactionHash: ' + event.transactionHash);
-            await newAPM(ens, dappnode_package);
-            resolve(event)
-        })
-    })
-}
-
-function newAPM(ens, dappnode_package) {
-    return new Promise(async function(resolve, reject) {
-
-        var root = dappnode_package.name.split('.').slice(2).join('.');
-        var registry = dappnode_package.name.split('.')[1];
-
-        var apmregistryfactory = new web3.eth.Contract(apmregistryfactoryAbi, '0x8f64c5e21c4c5b5aedb102e7cacd07ef101bdc7d');
-        var apmregistryfactory_tx = apmregistryfactory.methods.newAPM(namehash(root), web3.utils.sha3(registry), developer).encodeABI();
-
-        console.log(chalk.green('\n########################### TX new APM Registry #####################################'))
-        console.log(chalk.green('To: ') + '0x8f64c5e21c4c5b5aedb102e7cacd07ef101bdc7d')
-        console.log(chalk.green('Value: ') + '0')
-        console.log(chalk.green('Data: ') + apmregistryfactory_tx)
-        console.log(chalk.green('Gas Limit: ') + '6450000')
-        console.log(chalk.green('########################### TX new APM Registry #####################################'))
-        console.log('Waiting for the TX to create a new APM Registry to be mined...');
-
-        apmregistryfactory.events.DeployAPM({
-            filter: {
-                node: namehash(registry + '.' + root)
-            },
-            fromBlock: 6000000
-        }, async function(error, event) {
-            console.log('transactionHash: ' + event.transactionHash);
-            await newBuild();
-            resolve(event)
-        })
-    })
-}
-
-function namehash(name) {
-    var node = '0x0000000000000000000000000000000000000000000000000000000000000000';
-    if (name != '') {
-        var labels = name.split(".");
-        for (var i = labels.length - 1; i >= 0; i--) {
-            node = web3.utils.sha3(node + web3.utils.sha3(labels[i]).slice(2), { encoding: 'hex' });
-        }
-    }
-    return node.toString();
-}
-
 module.exports = {
-    newBuild,
-    newRegistry
+    newBuild
 }

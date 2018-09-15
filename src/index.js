@@ -16,27 +16,24 @@ const generateCompose = require('./generateCompose')
 
 const MANIFEST_NAME = 'dappnode_package.json'
 const DOCKERCOMPOSE = 'docker-compose.yml'
-const DAPPNODE_SDK_VERSION = '0.1.0-rc1'
+const DAPPNODE_SDK_VERSION = '0.1.2-rc2'
 
-cmd.option('init', 'Initialize a new DAppNodePackage Repo')
+cmd.option('init', 'Initialize a new DAppNodePackage Repository')
+    .option('build', 'build a new version (only generates the ipfs hash)')
+    .option('publish <type>', 'Publish a new version of the package in an Aragon Package Manager Repository. Type: [ major | minor | patch ]', /^(major|minor|patch)$/i)
     .option('gen_manifest', 'Generate a new manifest based on a existing docker-compose.yml')
     .option('gen_compose', 'Generate a new docker-compose.yml based on a existing dappnode_package.json')
-    .option('build', 'build a new version')
-    .option('new <type>', 'apm repo', /^(major|minor|patch)$/i)
     .parse(process.argv)
 
 if (process.argv.length === 2) {
     initalMessage().then(function() {
-        var promise = new Promise(function(resolve, reject) {
             setTimeout(function() {
                 console.log('Usage: ' + chalk.red('dappnodesdk [option]'))
                 console.log('       ' + chalk.red('dappnodesdk --help') +
                     '\t to view available options\n')
-                resolve({ data: '200' })
+                process.exit(0)
             }, 200)
         })
-        return promise
-    })
 }
 
 function initalMessage() {
@@ -57,7 +54,7 @@ function initalMessage() {
     })
 }
 
-if (cmd.new) {
+if (cmd.publish) {
     initalMessage().then(async () => {
 
         if (!await existsFile('./dappnode_package.json')) {
@@ -82,7 +79,7 @@ if (cmd.new) {
                         default: false,
                         message: 'Do you want to build it?',
                     },
-                ]).then(async (answer) => { if (answer.confirm) await build.newBuild(); apm.closeProvider() });
+                ]).then(async (answer) => { if (answer.confirm) await build.newBuild(true); apm.closeProvider() });
             }).catch((error) => {
                 apm.getRepoRegistry(dappnode_package.name).then(async (a) => {
                     await INQUIRER.prompt([
@@ -102,34 +99,22 @@ if (cmd.new) {
                                     message: 'Developer address',
                                     validate: (val) => (val == '0x0000000000000000000000000000000000000000') ? 'the dev address can\'t be 0x0000000000000000000000000000000000000000' : true
                                 }
-                            ]).then(async (ans) => { await build.newBuild(ans.dev); apm.closeProvider() })
-                        }
-                    });
-                }).catch(async (error) => {
-                    await INQUIRER.prompt([
-                        {
-                            type: 'confirm',
-                            name: 'confirm',
-                            default: false,
-                            message: 'the Aragon Package Manager registry does not exist, do you want to create a new one?',
-                        },
-                    ]).then(async (answer) => {
-                        if (answer.confirm) {
-                            INQUIRER.prompt([
-                                {
-                                    type: 'input',
-                                    name: 'dev',
-                                    default: '0x0000000000000000000000000000000000000000',
-                                    message: 'Developer address',
-                                    validate: (val) => (val == '0x0000000000000000000000000000000000000000') ? 'the dev address can\'t be 0x0000000000000000000000000000000000000000' : true
-                                }
-                            ]).then(async (ans) => { await build.newRegistry(ans.dev); apm.closeProvider() })
+                            ]).then(async (ans) => { await build.newBuild(true, ans.dev); apm.closeProvider() })
+                        } else {
+                            apm.closeProvider();
                         }
                     });
                 })
             });
         }
     });
+}
+
+if (cmd.build) {
+    initalMessage().then(async () => {
+        await build.newBuild();
+        await apm.closeProvider();
+    })
 }
 
 if (cmd.init) {
@@ -194,7 +179,6 @@ if (cmd.gen_manifest) {
     });
 }
 
-
 function existsFile(filePath) {
     return new Promise((resolve, reject) => {
         FILESYSTEM.stat(filePath, (err, stats) => {
@@ -207,11 +191,5 @@ function existsFile(filePath) {
                 return resolve(true);
             }
         });
-    })
-}
-
-if (cmd.build) {
-    initalMessage().then(async () => {
-        build.newBuild();
     })
 }

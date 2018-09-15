@@ -9,8 +9,8 @@ let ens;
 function getProvider() {
   if (provider) return provider;
   provider = new Web3.providers.WebsocketProvider('ws://my.ethchain.dnp.dappnode.eth:8546');
-  provider.on("error", () => handleDisconnects());
-  provider.on("close", () => handleDisconnects());
+  provider.on("error", (e) => handleDisconnects(e));
+  provider.on("close", (e) => handleDisconnects(e));
 
   if (!provider.sendAsync) {
     provider.sendAsync = provider.send
@@ -19,7 +19,7 @@ function getProvider() {
   return provider;
 }
 
-function handleDisconnects() {
+function handleDisconnects(e) {
   console.log(chalk.red('You must be connected to your DAppNode, please check your connection'))
   process.exit(1)
 }

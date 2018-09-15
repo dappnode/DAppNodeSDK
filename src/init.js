@@ -42,13 +42,12 @@ function DappNodePackageRepo() {
             },
             {
                 type: 'input',
-                message: 'Ports to expose externally (eg: "30303:30303;30303:30303/udp" )',
+                message: 'Ports to expose externally (eg: 31313:30303;31313:30303/udp )',
                 name: 'ports',
-                default: ''
             },
             {
                 type: 'input',
-                message: 'Volumes to be persistent (eg: "ipfsdnpdappnodeeth_export:/export;/home/ipfs_data:/data/ipfs")',
+                message: 'Volumes to be persistent (eg: ipfsdnpdappnodeeth_export:/export;/home/ipfs_data:/data/ipfs)',
                 name: 'volumes',
                 default: 'ipfsdnpdappnodeeth_export:/export;/home/ipfs_data:/data/ipfs'
             },
@@ -56,13 +55,11 @@ function DappNodePackageRepo() {
                 type: 'input',
                 message: 'Author',
                 name: 'author',
-                default: ''
             },
             {
                 type: 'input',
                 message: 'Keywords (tags) separated by semicolons (eg: "DAppNodeCore;IPFS" )',
                 name: 'keywords',
-                default: ''
             }
         ]).then(async function(answers) {
 
