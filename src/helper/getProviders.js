@@ -2,13 +2,16 @@ const Web3 = require('web3');
 const chalk = require('chalk');
 const ENS = require('ethereum-ens');
 
+const PROVIDER = process.env.PROVIDER || 'ws://my.ethchain.dnp.dappnode.eth:8546';
+
+
 let provider;
 let web3;
 let ens;
 
 function getProvider() {
   if (provider) return provider;
-  provider = new Web3.providers.WebsocketProvider('ws://my.ethchain.dnp.dappnode.eth:8546');
+  provider = new Web3.providers.WebsocketProvider(PROVIDER);
   provider.on("error", (e) => handleDisconnects(e));
   provider.on("close", (e) => handleDisconnects(e));
 

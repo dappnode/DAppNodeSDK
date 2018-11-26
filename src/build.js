@@ -1,14 +1,14 @@
 const FILESYSTEM = require('fs')
 const SHELL = require('shelljs')
 const ipfsAPI = require('ipfs-api')
-const ipfs = ipfsAPI('my.ipfs.dnp.dappnode.eth')
+
+const IPFS_PROVIDER = process.env.IPFS_PROVIDER || 'my.ipfs.dnp.dappnode.eth';
+const IPFS_PROTO = process.env.IPFS_PROTO || 'http';
+
+const ipfs = new ipfsAPI({ host: IPFS_PROVIDER, port: 5001, protocol: IPFS_PROTO });
+
 const apm = require('./apm')
 const chalk = require('chalk')
-var Web3 = require('web3')
-var ENS_ABI = [{ "constant": true, "inputs": [{ "name": "node", "type": "bytes32" }], "name": "resolver", "outputs": [{ "name": "", "type": "address" }], "payable": false, "type": "function" }, { "constant": true, "inputs": [{ "name": "node", "type": "bytes32" }], "name": "owner", "outputs": [{ "name": "", "type": "address" }], "payable": false, "type": "function" }, { "constant": false, "inputs": [{ "name": "node", "type": "bytes32" }, { "name": "label", "type": "bytes32" }, { "name": "owner", "type": "address" }], "name": "setSubnodeOwner", "outputs": [], "payable": false, "type": "function" }, { "constant": false, "inputs": [{ "name": "node", "type": "bytes32" }, { "name": "ttl", "type": "uint64" }], "name": "setTTL", "outputs": [], "payable": false, "type": "function" }, { "constant": true, "inputs": [{ "name": "node", "type": "bytes32" }], "name": "ttl", "outputs": [{ "name": "", "type": "uint64" }], "payable": false, "type": "function" }, { "constant": false, "inputs": [{ "name": "node", "type": "bytes32" }, { "name": "resolver", "type": "address" }], "name": "setResolver", "outputs": [], "payable": false, "type": "function" }, { "constant": false, "inputs": [{ "name": "node", "type": "bytes32" }, { "name": "owner", "type": "address" }], "name": "setOwner", "outputs": [], "payable": false, "type": "function" }, { "anonymous": false, "inputs": [{ "indexed": true, "name": "node", "type": "bytes32" }, { "indexed": false, "name": "owner", "type": "address" }], "name": "Transfer", "type": "event" }, { "anonymous": false, "inputs": [{ "indexed": true, "name": "node", "type": "bytes32" }, { "indexed": true, "name": "label", "type": "bytes32" }, { "indexed": false, "name": "owner", "type": "address" }], "name": "NewOwner", "type": "event" }, { "anonymous": false, "inputs": [{ "indexed": true, "name": "node", "type": "bytes32" }, { "indexed": false, "name": "resolver", "type": "address" }], "name": "NewResolver", "type": "event" }, { "anonymous": false, "inputs": [{ "indexed": true, "name": "node", "type": "bytes32" }, { "indexed": false, "name": "ttl", "type": "uint64" }], "name": "NewTTL", "type": "event" }];
-var ENS_ADDRESS = '0x314159265dD8dbb310642f98f50C066173C1259b'
-var apmregistryfactoryAbi = [{ "constant": true, "inputs": [], "name": "REPO_APP_NAME", "outputs": [{ "name": "", "type": "string" }], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [], "name": "APM_APP_NAME", "outputs": [{ "name": "", "type": "string" }], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [], "name": "ENS_SUB_APP_NAME", "outputs": [{ "name": "", "type": "string" }], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [], "name": "registryBase", "outputs": [{ "name": "", "type": "address" }], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [], "name": "ensSubdomainRegistrarBase", "outputs": [{ "name": "", "type": "address" }], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [], "name": "ens", "outputs": [{ "name": "", "type": "address" }], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [], "name": "daoFactory", "outputs": [{ "name": "", "type": "address" }], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [{ "name": "_tld", "type": "bytes32" }, { "name": "_label", "type": "bytes32" }, { "name": "_root", "type": "address" }], "name": "newAPM", "outputs": [{ "name": "", "type": "address" }], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [], "name": "repoBase", "outputs": [{ "name": "", "type": "address" }], "payable": false, "stateMutability": "view", "type": "function" }, { "inputs": [{ "name": "_daoFactory", "type": "address" }, { "name": "_registryBase", "type": "address" }, { "name": "_repoBase", "type": "address" }, { "name": "_ensSubBase", "type": "address" }, { "name": "_ens", "type": "address" }, { "name": "_ensFactory", "type": "address" }], "payable": false, "stateMutability": "nonpayable", "type": "constructor" }, { "anonymous": false, "inputs": [{ "indexed": true, "name": "node", "type": "bytes32" }, { "indexed": false, "name": "apm", "type": "address" }], "name": "DeployAPM", "type": "event" }];
-var Web3 = require('web3');
 
 var dappnode_package;
 var developer;
@@ -27,6 +27,8 @@ async function newBuild(_generateTX = false, _developer = '0x0000000000000000000
     image_name = tag.replace("/", "_") + "_" + version;
     build_dir = './build_' + version + "/";
     SHELL.mkdir('-p', build_dir);
+
+    copyCompose(build_dir);
 
     await uploadAvatarIPFS();
     await buildDockerfile();
@@ -154,6 +156,15 @@ function uploadManifest() {
                                 console.log(chalk.green('Data: ') + rawTX)
                                 console.log(chalk.green('Gas Limit: ') + '300000')
                                 console.log(chalk.green('##################################################################################'))
+
+                                var stream = FILESYSTEM.createWriteStream(build_dir + "deploy.txt");
+                                stream.once('open', function(fd) {
+                                    stream.write('To: ' + repository.options.address + "\n");
+                                    stream.write('Value: 0 \n');
+                                    stream.write('Data: ' + rawTX + '\n');
+                                    stream.write('Gas Limit: 300000\n');
+                                    stream.end();
+                                });
                                 resolve();
                             }
                         })
@@ -171,7 +182,14 @@ function uploadManifest() {
                                     console.log(chalk.green('Data: ') + rawTX)
                                     console.log(chalk.green('Gas Limit: ') + '1100000')
                                     console.log(chalk.green('##################################################################################'))
-
+                                    var stream = FILESYSTEM.createWriteStream(build_dir + "deploy.txt");
+                                    stream.once('open', function(fd) {
+                                        stream.write('To: ' + registry.options.address + "\n");
+                                        stream.write('Value: 0 \n');
+                                        stream.write('Data: ' + rawTX + '\n');
+                                        stream.write('Gas Limit: 1100000\n');
+                                        stream.end();
+                                    });
                                     resolve()
                                 }
                             })
@@ -182,6 +200,24 @@ function uploadManifest() {
             }
         })
     });
+}
+
+function copyCompose(path) {
+    FILESYSTEM.readdir('./', (err, files) => {
+        for (var index in files) {
+            if (files[index].endsWith(".yml")) {
+                if (files[index].startsWith("docker-compose")) {
+                    try {
+                        FILESYSTEM.copyFile(files[index], path + files[index], (err) => {
+                            if (err) throw err;
+                        });
+                    } catch (e) {
+                        console.log(e);
+                    }
+                }
+            }
+        }
+    })
 }
 
 module.exports = {

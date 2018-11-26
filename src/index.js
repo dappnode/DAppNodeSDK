@@ -16,13 +16,17 @@ const generateCompose = require('./generateCompose')
 
 const MANIFEST_NAME = 'dappnode_package.json'
 const DOCKERCOMPOSE = 'docker-compose.yml'
-const DAPPNODE_SDK_VERSION = '0.1.2-rc3'
+const DAPPNODE_SDK_VERSION = '0.1.4'
+
+const SILENT = process.env.SILENT;
+
 
 cmd.option('init', 'Initialize a new DAppNodePackage Repository')
     .option('build', 'build a new version (only generates the ipfs hash)')
     .option('publish <type>', 'Publish a new version of the package in an Aragon Package Manager Repository. Type: [ major | minor | patch ]', /^(major|minor|patch)$/i)
     .option('gen_manifest', 'Generate a new manifest based on a existing docker-compose.yml')
     .option('gen_compose', 'Generate a new docker-compose.yml based on a existing dappnode_package.json')
+    .option('next <type>', 'Get the next release version. Type: [ major | minor | patch ]', /^(major|minor|patch)$/i)
     .parse(process.argv)
 
 if (process.argv.length === 2) {
@@ -54,6 +58,29 @@ function initalMessage() {
     })
 }
 
+if (cmd.next) {
+    return new Promise(async function(resolve, reject) {
+        if (!await existsFile('./dappnode_package.json')) {
+            console.log("it hasn't been possible to find a `dappnode_package.json` file, you must be in a directory that contains it to be able to execute this command")
+            process.exit(1)
+        }
+
+        var dappnode_package = JSON.parse(FILESYSTEM.readFileSync('./dappnode_package.json', 'utf8'));
+        var reg = await apm.getRepoRegistry(dappnode_package.name.toLowerCase());
+
+        if (reg._address) {
+            apm.getLatestVersion(dappnode_package.name.toLowerCase()).then(async (version) => {
+                console.log(semver.inc(version.version, cmd.next))
+                apm.closeProvider()
+
+            }).catch((error) => {
+                console.log("No able to find a version")
+                apm.closeProvider()
+            })
+        }
+    })
+}
+
 if (cmd.publish) {
     initalMessage().then(async () => {
 
@@ -63,25 +90,34 @@ if (cmd.publish) {
         }
 
         var dappnode_package = JSON.parse(FILESYSTEM.readFileSync('./dappnode_package.json', 'utf8'));
-        var reg = await apm.getRepoRegistry(dappnode_package.name);
-        console.log("Registry address (" + dappnode_package.name.split('.').slice(1).join('.') + "): " + reg._address)
+        var reg = await apm.getRepoRegistry(dappnode_package.name.toLowerCase());
+        console.log("Registry address (" + dappnode_package.name.toLowerCase().split('.').slice(1).join('.') + "): " + reg._address)
 
         if (reg._address) {
-            apm.getLatestVersion(dappnode_package.name).then(async (version) => {
-                dappnode_package.version = semver.inc(version.version, cmd.new)
+            apm.getLatestVersion(dappnode_package.name.toLowerCase()).then(async (version) => {
+                dappnode_package.version = semver.inc(version.version, cmd.publish)
                 generateManifest.generateManifest(dappnode_package);
-                generateCompose.generateCompose(JSON.parse(FILESYSTEM.readFileSync(MANIFEST_NAME)));
+                if (!await existsFileYML('.')) {
+                    generateCompose.generateCompose(JSON.parse(FILESYSTEM.readFileSync(MANIFEST_NAME)));
+                } else {
+                    generateCompose.updateCompose(JSON.parse(FILESYSTEM.readFileSync(MANIFEST_NAME)))
+                }
                 console.log('Next version: ' + dappnode_package.version)
-                await INQUIRER.prompt([
-                    {
-                        type: 'confirm',
-                        name: 'confirm',
-                        default: false,
-                        message: 'Do you want to build it?',
-                    },
-                ]).then(async (answer) => { if (answer.confirm) await build.newBuild(true); apm.closeProvider() });
+                if (!SILENT) {
+                    await INQUIRER.prompt([
+                        {
+                            type: 'confirm',
+                            name: 'confirm',
+                            default: false,
+                            message: 'Do you want to build it?',
+                        },
+                    ]).then(async (answer) => { if (answer.confirm) await build.newBuild(true); apm.closeProvider() });
+                } else {
+                    await build.newBuild(true); apm.closeProvider();
+                }
+
             }).catch((error) => {
-                apm.getRepoRegistry(dappnode_package.name).then(async (a) => {
+                apm.getRepoRegistry(dappnode_package.name.toLowerCase()).then(async (a) => {
                     await INQUIRER.prompt([
                         {
                             type: 'confirm',
@@ -190,6 +226,26 @@ function existsFile(filePath) {
             if (stats.isFile() || stats.isDirectory()) {
                 return resolve(true);
             }
+        });
+    })
+}
+
+function existsFileYML(filePath) {
+    return new Promise((resolve, reject) => {
+        FILESYSTEM.readdir(filePath, (err, files) => {
+            if (err && err.code === 'ENOENT') {
+                return resolve(false);
+            } else if (err) {
+                return reject(err);
+            }
+            for (var index in files) {
+                if (files[index].endsWith(".yml")) {
+                    if (files[index].startsWith("docker-compose")) {
+                        return resolve(true)
+                    }
+                }
+            }
+            return resolve(false);
         });
     })
 }
