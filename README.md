@@ -36,3 +36,5 @@ for more information about versioning check [semver](https://semver.org/)
 ```
 $ dappnodesdk publish < patch | minor | mayor >
 ```
+Please take in account that the package version is not the internal version of the package you want to upload. 
+We use Aragon package manager, and it only lets starting with version 1 and increment one by one. Valid initial versions are 1.0.0, 0.1.0 or 0.0.1
