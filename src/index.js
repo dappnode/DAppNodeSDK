@@ -16,16 +16,17 @@ const generateCompose = require('./generateCompose')
 
 const MANIFEST_NAME = 'dappnode_package.json'
 const DOCKERCOMPOSE = 'docker-compose.yml'
-const DAPPNODE_SDK_VERSION = '0.1.4'
+const DAPPNODE_SDK_VERSION = '0.1.10'
 
 const SILENT = process.env.SILENT;
-
+const DEV = process.env.DEV;
 
 cmd.option('init', 'Initialize a new DAppNodePackage Repository')
     .option('build', 'build a new version (only generates the ipfs hash)')
     .option('publish <type>', 'Publish a new version of the package in an Aragon Package Manager Repository. Type: [ major | minor | patch ]', /^(major|minor|patch)$/i)
     .option('gen_manifest', 'Generate a new manifest based on a existing docker-compose.yml')
     .option('gen_compose', 'Generate a new docker-compose.yml based on a existing dappnode_package.json')
+    .option('increase <type>', 'increases the version defined in the manifest. Type: [ major | minor | patch ]', /^(major|minor|patch)$/i)
     .option('next <type>', 'Get the next release version. Type: [ major | minor | patch ]', /^(major|minor|patch)$/i)
     .parse(process.argv)
 
@@ -74,10 +75,35 @@ if (cmd.next) {
                 apm.closeProvider()
 
             }).catch((error) => {
-                console.log("No able to find a version")
+                console.log(dappnode_package.version)
                 apm.closeProvider()
             })
         }
+    })
+}
+
+if (cmd.increase) {
+    return new Promise(async function(resolve, reject) {
+        if (!await existsFile('./dappnode_package.json')) {
+            console.log("it hasn't been possible to find a `dappnode_package.json` file, you must be in a directory that contains it to be able to execute this command")
+            process.exit(1)
+        }
+
+        var dappnode_package = JSON.parse(FILESYSTEM.readFileSync('./dappnode_package.json', 'utf8'));
+        console.log(dappnode_package.version)
+        var previous_verson = dappnode_package.version
+        dappnode_package.version = semver.inc(previous_verson, cmd.increase)
+        generateManifest.generateManifest(dappnode_package);
+
+        if (!await existsFileYML('.')) {
+            generateCompose.generateCompose(JSON.parse(FILESYSTEM.readFileSync(MANIFEST_NAME)));
+        } else {
+            await generateCompose.updateCompose(JSON.parse(FILESYSTEM.readFileSync(MANIFEST_NAME)))
+        }
+
+        console.log('Next version: ' + dappnode_package.version)
+
+        process.exit(0)
     })
 }
 
@@ -118,28 +144,37 @@ if (cmd.publish) {
 
             }).catch((error) => {
                 apm.getRepoRegistry(dappnode_package.name.toLowerCase()).then(async (a) => {
-                    await INQUIRER.prompt([
-                        {
-                            type: 'confirm',
-                            name: 'confirm',
-                            default: false,
-                            message: 'the Aragon Package Manager Repo does not exist, do you want to create a new one?',
-                        },
-                    ]).then(async (answer) => {
-                        if (answer.confirm) {
-                            INQUIRER.prompt([
-                                {
-                                    type: 'input',
-                                    name: 'dev',
-                                    default: '0x0000000000000000000000000000000000000000',
-                                    message: 'Developer address',
-                                    validate: (val) => (val == '0x0000000000000000000000000000000000000000') ? 'the dev address can\'t be 0x0000000000000000000000000000000000000000' : true
-                                }
-                            ]).then(async (ans) => { await build.newBuild(true, ans.dev); apm.closeProvider() })
+                    if (!SILENT) {
+                        await INQUIRER.prompt([
+                            {
+                                type: 'confirm',
+                                name: 'confirm',
+                                default: false,
+                                message: 'the Aragon Package Manager Repo does not exist, do you want to create a new one?',
+                            },
+                        ]).then(async (answer) => {
+                            if (answer.confirm) {
+                                INQUIRER.prompt([
+                                    {
+                                        type: 'input',
+                                        name: 'dev',
+                                        default: '0x0000000000000000000000000000000000000000',
+                                        message: 'Developer address',
+                                        validate: (val) => (val == '0x0000000000000000000000000000000000000000') ? 'the dev address can\'t be 0x0000000000000000000000000000000000000000' : true
+                                    }
+                                ]).then(async (ans) => { await build.newBuild(true, ans.dev); apm.closeProvider() })
+                            } else {
+                                apm.closeProvider();
+                            }
+                        });
+                    } else {
+                        if (DEV) {
+                            await build.newBuild(true, DEV); apm.closeProvider()
                         } else {
+                            console.log("you must define the DEV env variable specifying the developer's address since this repo has not been created previously.")
                             apm.closeProvider();
                         }
-                    });
+                    }
                 })
             });
         }

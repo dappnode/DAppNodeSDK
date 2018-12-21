@@ -1,6 +1,6 @@
 {
   "name": "@dappnode/dappnodesdk",
-  "version": "0.1.4",
+  "version": "0.1.10",
   "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
   "main": "index.js",
   "scripts": {
@@ -18,11 +18,11 @@
     "ethereum-ens": "^0.7.4",
     "figlet": "^1.2.0",
     "inquirer": "^6.2.0",
-    "ipfs-api": "^24.0.1",
     "js-yaml": "^3.12.0",
     "semver": "^5.5.1",
     "shelljs": "^0.8.1",
     "web3": "^1.0.0-beta.36",
-    "web3-utils": "^1.0.0-beta.36"
+    "web3-utils": "^1.0.0-beta.36",
+    "ipfs-api": "^26.1.2"
   }
 }

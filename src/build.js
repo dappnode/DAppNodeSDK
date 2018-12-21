@@ -28,7 +28,8 @@ async function newBuild(_generateTX = false, _developer = '0x0000000000000000000
     build_dir = './build_' + version + "/";
     SHELL.mkdir('-p', build_dir);
 
-    copyCompose(build_dir);
+    copyCompose(build_dir, dappnode_package.name);
+    copyEnv(build_dir);
 
     await uploadAvatarIPFS();
     await buildDockerfile();
@@ -50,6 +51,7 @@ function uploadAvatarIPFS() {
                 .then((response) => {
                     dappnode_package.avatar = '/ipfs/' + response[0].hash;
                     console.log(dappnode_package.avatar);
+                    ipfs.pin.add(response[0].hash);
                     resolve("Avatar uploaded!");
                 }).catch((err) => {
                     console.error(err)
@@ -96,22 +98,36 @@ function uploadDockerImageIPFS() {
             content: FILESYSTEM.createReadStream(build_dir + image_name + ".tar.xz")
         }];
 
-        ipfs.files.add(file, { progress: (prog) => console.log('Uploading... ' + ((prog / FILESYSTEM.statSync(build_dir + image_name + ".tar.xz").size) * 100).toFixed(2) + "%") })
-            .then((response) => {
-                dappnode_package.image.path = response[0].path;
-                dappnode_package.image.hash = '/ipfs/' + response[0].hash;
-                dappnode_package.image.size = response[0].size;
-                FILESYSTEM.writeFile(build_dir + 'dappnode_package.json', JSON.stringify(dappnode_package, null, 2), 'utf-8', function(err) {
-                    if (err) {
-                        throw err;
-                    }
-                });
-                ipfs.pin.add(response[0].hash);
-                resolve("Image uploaded!");
-            }).catch((err) => {
-                console.error(err)
-            })
+        if (IPFS_PROVIDER != "ipfs.infura.io") {
+            ipfs.files.add(file, { progress: (prog) => console.log('Uploading... ' + ((prog / FILESYSTEM.statSync(build_dir + image_name + ".tar.xz").size) * 100).toFixed(2) + "%") })
+                .then((response) => { ipfsUploaded(response); resolve("Image uploaded!"); })
+                .catch((err) => {
+                    console.log("ipfs.files.add err");
+                    console.error(err)
+                    reject("Error uploading file")
+                })
+        } else {
+            ipfs.files.add(file)
+                .then((response) => { ipfsUploaded(response); resolve("Image uploaded!"); })
+                .catch((err) => {
+                    console.error(err)
+                    reject("Error uploading file")
+                })
+        }
+    })
+}
+
+function ipfsUploaded(response) {
+    dappnode_package.image.path = response[0].path;
+    dappnode_package.image.hash = '/ipfs/' + response[0].hash;
+    dappnode_package.image.size = response[0].size;
+    FILESYSTEM.writeFile(build_dir + 'dappnode_package.json', JSON.stringify(dappnode_package, null, 2), 'utf-8', function(err) {
+        if (err) {
+            throw err;
+        }
     });
+    ipfs.pin.add(response[0].hash);
+    return Promise.resolve("Image uploaded!");
 }
 
 function uploadManifest() {
@@ -202,18 +218,34 @@ function uploadManifest() {
     });
 }
 
-function copyCompose(path) {
+function copyCompose(path, name) {
     FILESYSTEM.readdir('./', (err, files) => {
         for (var index in files) {
             if (files[index].endsWith(".yml")) {
                 if (files[index].startsWith("docker-compose")) {
                     try {
-                        FILESYSTEM.copyFile(files[index], path + files[index], (err) => {
+                        FILESYSTEM.copyFile(files[index], path + "docker-compose-" + name.split('.')[0] + ".yml", (err) => {
                             if (err) throw err;
                         });
                     } catch (e) {
                         console.log(e);
                     }
+                }
+            }
+        }
+    })
+}
+
+function copyEnv(path) {
+    FILESYSTEM.readdir('./', (err, files) => {
+        for (var index in files) {
+            if (files[index].endsWith(".env")) {
+                try {
+                    FILESYSTEM.copyFile(files[index], path + files[index], (err) => {
+                        if (err) throw err;
+                    });
+                } catch (e) {
+                    console.log(e);
                 }
             }
         }

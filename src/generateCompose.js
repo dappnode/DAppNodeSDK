@@ -72,28 +72,26 @@ function generateCompose(dpnManifest, path = './') {
 
 }
 
-function updateCompose(dpnManifest) {
-  FILESYSTEM.readdir('./', (err, files) => {
-    for (var index in files) {
-      if (files[index].endsWith(".yml")) {
-        if (files[index].startsWith("docker-compose")) {
-          try {
-            const dockercompose = yaml.safeLoad(FILESYSTEM.readFileSync(files[index], 'utf8'));
-            dockercompose.services[dpnManifest.name].image = dpnManifest.name + ':' + dpnManifest.version;
-            var ymlFile = yaml.dump(dockercompose, { indent: 4, });
-            FILESYSTEM.writeFileSync(files[index], ymlFile, function(err) {
-              if (err) {
-                return console.log(err);
-              }
-            });
-          } catch (e) {
-            console.log(e);
-          }
+async function updateCompose(dpnManifest) {
+  var files = FILESYSTEM.readdirSync('./');
+  for (var index in files) {
+    if (files[index].endsWith(".yml")) {
+      if (files[index].startsWith("docker-compose")) {
+        try {
+          const dockercompose = yaml.safeLoad(FILESYSTEM.readFileSync(files[index], 'utf8'));
+          dockercompose.services[dpnManifest.name].image = dpnManifest.name + ':' + dpnManifest.version;
+          var ymlFile = yaml.dump(dockercompose, { indent: 4, });
+          FILESYSTEM.writeFileSync(files[index], ymlFile, function(err) {
+            if (err) {
+              return console.log(err);
+            }
+          });
+        } catch (e) {
+          console.log(e);
         }
       }
     }
-  });
-
+  }
 }
 
 module.exports = {
