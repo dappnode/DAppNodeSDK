@@ -1,5 +1,4 @@
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
+const exec = require('child_process').exec;
 
 /**
  * If this method is invoked as its util.promisify()ed version,
@@ -14,17 +13,26 @@ const exec = util.promisify(require('child_process').exec);
  * identified by the killSignal property (the default is 'SIGTERM')
  * if the child runs longer than timeout milliseconds.
  */
-const timeout = 3*60*1000; // ms
 
-function shell(cmd) {
-  return exec(cmd, {timeout})
-      .then((res) => res.stdout)
-      .catch((err) => {
-        if (err.signal === 'SIGTERM') {
-          throw Error(`cmd "${err.cmd}" timed out (${timeout} ms)`);
+
+const deafultTimeout = 3*60*1000; // ms
+
+function shell(cmd, {silent = false, timeout = deafultTimeout} = {}) {
+  return new Promise((resolve, reject) => {
+    const cmdProcess = exec(cmd, {timeout}, (error, stdout, stderr) => {
+      if (error) {
+        if (error.signal === 'SIGTERM') {
+          reject(Error(`cmd "${error.cmd}" timed out (${timeout} ms)`));
         }
-        throw err;
-      });
+        reject(error);
+      }
+      resolve(stdout);
+    });
+    if (!silent) {
+      cmdProcess.stdout.pipe(process.stdout);
+      cmdProcess.stderr.pipe(process.stderr);
+    }
+  });
 }
 
 

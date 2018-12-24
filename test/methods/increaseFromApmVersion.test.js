@@ -2,6 +2,7 @@ const expect = require('chai').expect;
 const fs = require('fs');
 const yaml = require('js-yaml');
 const semver = require('semver');
+const rmSafe = require('../rmSafe');
 const increaseFromApmVersion = require('../../src/methods/increaseFromApmVersion');
 
 // This test will create the following fake files
@@ -30,6 +31,8 @@ describe('increaseFromApmVersion', () => {
   const composePath = './docker-compose.yml';
 
   before(async () => {
+    await rmSafe(manifestPath);
+    await rmSafe(composePath);
     fs.writeFileSync(manifestPath, JSON.stringify(manifest));
   });
 
@@ -53,7 +56,7 @@ describe('increaseFromApmVersion', () => {
   }).timeout(20000);
 
   after(async () => {
-    fs.unlinkSync(manifestPath);
-    fs.unlinkSync(composePath);
+    await rmSafe(manifestPath);
+    await rmSafe(composePath);
   });
 });

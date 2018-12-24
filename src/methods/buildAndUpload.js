@@ -15,6 +15,10 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
 
   // Load manifest
   const manifest = readManifest({dir});
+  check(manifest, 'manifest', 'object');
+  check(manifest.version, 'manifest version');
+  check(manifest.name, 'manifest name');
+  check(manifest.image, 'manifest image object', 'object');
   const manifestPath = getManifestPath({dir});
 
   // Define variables from manifest
@@ -27,15 +31,15 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   const imageTag = `${ensName}:${version}`;
 
   // Create the build directory. What if it's already created?
-  await shell(`mkdir -p ${buildDir}`);
+  await shell(`mkdir -p ${buildDir}`, {silent: true});
 
   // 0. Copy docker-compose.yml and *.env file to the buildDir
   // Copy the docker-compose. Expects only one docker-compose,
   // will fail if there are multiple docker-compose
-  await shell(`cp docker-compose*.yml ${buildDir}docker-compose-${shortName}.yml`);
+  await shell(`cp docker-compose*.yml ${buildDir}docker-compose-${shortName}.yml`, {silent});
   // Copy all .env files, if any
-  if (await shell(`ls *.env`).then(() => true).catch(() => false)) {
-    await shell(`cp *.env ${buildDir}`);
+  if (await shell(`ls *.env`, {silent: true}).then(() => true).catch(() => false)) {
+    await shell(`cp *.env ${buildDir}`, {silent: true});
   }
 
   // 1. Upload avatar to IPFS
@@ -55,11 +59,11 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
 
   // 2. Build Dockerfile
   if (!silent) console.log(`Building Dockerfile to image ${imageTag}...`);
-  await shell('docker-compose -f *.yml build');
+  await shell('docker-compose -f *.yml build', {silent});
 
   // 3. Save docker image
   if (!silent) console.log(`Saving docker image ${imageTag} to file ${imagePath}...`);
-  await shell(`docker save ${imageTag} | xz -e9vT0 > ${imagePath}`);
+  await shell(`docker save ${imageTag} | xz -e9vT0 > ${imagePath}`, {silent});
 
   // 4. Upload docker image to IPFS
   if (!silent) console.log(`Uploading docker image file ${imagePath} to IPFS...`);
@@ -83,7 +87,7 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   return manifestIpfsPath;
 }
 
-function logProgress(pathToFile, log) {
+function logProgress(pathToFile) {
   const totalSize = fs.statSync(pathToFile).size;
   return function progress(prog) {
     console.log('Uploading... ' + ((prog / totalSize) * 100).toFixed(2) + '%');

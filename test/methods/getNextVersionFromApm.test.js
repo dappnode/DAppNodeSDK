@@ -1,6 +1,7 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const semver = require('semver');
+const rmSafe = require('../rmSafe');
 const getNextVersionFromApm = require('../../src/methods/getNextVersionFromApm');
 
 // This test will create the following fake files
@@ -8,7 +9,7 @@ const getNextVersionFromApm = require('../../src/methods/getNextVersionFromApm')
 //
 // Then it will expect the function to fetch the latest version from APM and log it
 
-describe.skip('getNextVersionFromApm', () => {
+describe('getNextVersionFromApm', () => {
   const manifest = {
     name: 'admin.dnp.dappnode.eth',
     version: '0.1.0',
@@ -16,6 +17,7 @@ describe.skip('getNextVersionFromApm', () => {
   const manifestPath = './dappnode_package.json';
 
   before(async () => {
+    await rmSafe(manifestPath);
     fs.writeFileSync(manifestPath, JSON.stringify(manifest));
   });
 
@@ -29,6 +31,6 @@ describe.skip('getNextVersionFromApm', () => {
   }).timeout(20000);
 
   after(async () => {
-    fs.unlinkSync(manifestPath);
+    await rmSafe(manifestPath);
   });
 });

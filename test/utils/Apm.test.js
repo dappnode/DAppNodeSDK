@@ -1,7 +1,7 @@
 const expect = require('chai').expect;
 const Apm = require('../../src/utils/Apm');
 
-describe.skip('Apm constructor', () => {
+describe('Apm constructor', () => {
   const dnpName = 'admin.dnp.dappnode.eth';
 
   let apm;

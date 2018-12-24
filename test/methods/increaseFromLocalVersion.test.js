@@ -1,6 +1,7 @@
 const expect = require('chai').expect;
 const fs = require('fs');
 const yaml = require('js-yaml');
+const rmSafe = require('../rmSafe');
 const increaseFromLocalVersion = require('../../src/methods/increaseFromLocalVersion');
 
 // This test will create the following fake files
@@ -11,7 +12,7 @@ const increaseFromLocalVersion = require('../../src/methods/increaseFromLocalVer
 // - modify the existing manifest and increase its version
 // - generate a docker compose with the next version
 
-describe.skip('increaseFromLocalVersion', () => {
+describe('increaseFromLocalVersion', () => {
   const ensName = 'admin.dnp.dappnode.eth';
   const manifest = {
     name: ensName,
@@ -29,6 +30,8 @@ describe.skip('increaseFromLocalVersion', () => {
   const composePath = './docker-compose.yml';
 
   before(async () => {
+    await rmSafe(manifestPath);
+    await rmSafe(composePath);
     fs.writeFileSync(manifestPath, JSON.stringify(manifest));
   });
 
@@ -52,7 +55,7 @@ describe.skip('increaseFromLocalVersion', () => {
   }).timeout(20000);
 
   after(async () => {
-    fs.unlinkSync(manifestPath);
-    fs.unlinkSync(composePath);
+    await rmSafe(manifestPath);
+    await rmSafe(composePath);
   });
 });

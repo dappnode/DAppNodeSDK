@@ -7,8 +7,8 @@ const shell = require('../utils/shell');
 
 async function initializeDnp({dir = './', useDefaults}) {
   // shell outputs tend to include trailing spaces and new lines
-  const defaultName = await shell('echo "${PWD##*/}"').then((s) => s.trim());
-  const defaultAuthor = await shell('whoami').then((s) => s.trim());
+  const defaultName = await shell('echo "${PWD##*/}"', {silent: true}).then((s) => s.trim());
+  const defaultAuthor = await shell('whoami', {silent: true}).then((s) => s.trim());
 
   const defaultAnswers = {
     name: defaultName,
@@ -107,8 +107,8 @@ It only covers the most common items, and tries to guess sensible defaults.
 
   // Create folders
   const path = dir;
-  await shell(`mkdir -p ${path}`);
-  await shell(`mkdir -p ${path}/build`);
+  await shell(`mkdir -p ${path}`, {silent: true});
+  await shell(`mkdir -p ${path}/build`, {silent: true});
 
   // Write manifest and compose
   writeManifest({manifest, dir: path});
