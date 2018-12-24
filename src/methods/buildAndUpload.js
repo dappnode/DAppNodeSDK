@@ -1,4 +1,5 @@
 const fs = require('fs');
+const chalk = require('chalk');
 const shell = require('../utils/shell');
 const Ipfs = require('../utils/Ipfs');
 const check = require('../utils/check');
@@ -83,7 +84,7 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   // Write manifest IPFS upload results = {path, hash, size}
   fs.writeFileSync(`${buildDir}/manifest.json`, JSON.stringify(manifestUpload, null, 2));
   const manifestIpfsPath = `/ipfs/${manifestUpload.hash}`;
-  if (!silent) console.log(`Manifest uploaded: ${manifestIpfsPath}`);
+  if (!silent) console.log(`${chalk.green('Manifest uploaded:')} ${manifestIpfsPath}`);
   return manifestIpfsPath;
 }
 
