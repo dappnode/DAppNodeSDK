@@ -54,10 +54,13 @@ async function generatePublishTx({manifestIpfsPath, dir, developerAddress, ethPr
         contentURI // bytes _contentURI
     );
     return {
-      'To': repository.options.address,
-      'Value': 0,
-      'Data': newVersionCall.encodeABI(),
-      'Gas limit': 300000,
+      to: repository.options.address,
+      value: 0,
+      data: newVersionCall.encodeABI(),
+      gasLimit: 300000,
+      ensName,
+      currentVersion,
+      manifestIpfsPath,
     };
   }
   // If repo does not exist, create a new repo and push version
@@ -95,10 +98,14 @@ async function generatePublishTx({manifestIpfsPath, dir, developerAddress, ethPr
         contentURI // bytes _contentURI
     );
     return {
-      'To': registry.options.address,
-      'Value': 0,
-      'Data': newRepoWithVersionCall.encodeABI(),
-      'Gas limit': 1100000,
+      to: registry.options.address,
+      value: 0,
+      data: newRepoWithVersionCall.encodeABI(),
+      gasLimit: 1100000,
+      ensName,
+      currentVersion,
+      manifestIpfsPath,
+      developerAddress,
     };
   }
 }

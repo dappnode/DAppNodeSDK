@@ -1,19 +1,49 @@
 const fs = require('fs');
 const chalk = require('chalk');
 
-function outputTxData({txData, toConsole, toFile}) {
-  const txDataString = Object.keys(txData).map((key) => `${key}: ${txData[key]}`).join('\n');
+// Format txData for the dappnode ADMIN UI
+const stringifyUrlQuery = (obj) =>
+  Object.keys(obj)
+      .map((key) => `${key}=${encodeURIComponent(obj[key])}`)
+      .join('&');
 
-  // If requested output txData to file
+function outputTxData({txData, toConsole, toFile}) {
+  // txData => Admin UI link
+  const txDataShortKeys = {
+    r: txData.ensName,
+    v: txData.currentVersion,
+    h: txData.manifestIpfsPath,
+  };
+  // Only add developerAddress if necessary to not pollute the link
+  if (txData.developerAddress) txDataShortKeys.d = txData.developerAddress;
+  const adminUiLink = `http://my.admin.dnp.dappnode.eth/#/sdk/publish/${stringifyUrlQuery(txDataShortKeys)}`;
+
+  const txDataToPrint = {
+    'To': txData.to,
+    'Value': txData.value,
+    'Data': txData.data,
+    'Gas limit': txData.gasLimit,
+  };
+
+  const txDataString = Object.keys(txDataToPrint).map((key) => `${key}: ${txDataToPrint[key]}`).join('\n');
+
+  // If requested output txDataToPrint to file
   if (toFile) {
-    fs.writeFileSync(toFile, txDataString);
+    fs.writeFileSync(toFile, `
+${txDataString}
+
+You can execute this transaction with Metamask by following this pre-filled link
+
+${adminUiLink}
+
+`);
   }
 
-  const txDataStringColored = Object.keys(txData).map(
-      (key) => `${chalk.green(key)}: ${txData[key]}`
+  const txDataStringColored = Object.keys(txDataToPrint).map(
+      (key) => `  ${chalk.green(key)}: ${txDataToPrint[key]}`
   ).join('\n');
 
-  // If requested output txData to console
+  // If requested output txDataToPrint to console
   if (toConsole) {
     console.log(`
 ${chalk.green('Transaction successfully generated.')}
@@ -23,6 +53,12 @@ To be able to update this repository you must be the authorized dev.
 ${chalk.gray('###########################')} TX data ${chalk.gray('#############################################')}
 
 ${txDataStringColored}
+
+${chalk.gray('#################################################################################')}
+
+  You can execute this transaction with Metamask by following this pre-filled link
+
+  ${adminUiLink}
 
 ${chalk.gray('#################################################################################')}
 `);
