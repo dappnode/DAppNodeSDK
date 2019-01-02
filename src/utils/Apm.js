@@ -59,6 +59,7 @@ function Apm(provider) {
    * @return {String} latest semver version = '0.1.0'
    */
   async function getLatestVersion(ensName) {
+    if (!ensName) throw Error('getLatestVersion first argument ensName must be defined');
     const repository = await getRepoContract(ensName);
     if (!repository) {
       const registry = getRegistryContract(ensName);
@@ -81,6 +82,7 @@ function Apm(provider) {
    * @return {Contract} contract instance of the Repo "admin.dnp.dappnode.eth"
    */
   async function getRepoContract(ensName) {
+    if (!ensName) throw Error('getRepoContract first argument ensName must be defined');
     const repoAddress = await resolve(ensName);
     if (!repoAddress) return null;
     return new web3.eth.Contract(repoAbi, repoAddress);
@@ -96,6 +98,7 @@ function Apm(provider) {
    * @return {Contract} contract instance of the Registry "dnp.dappnode.eth"
    */
   async function getRegistryContract(ensName) {
+    if (!ensName) throw Error('getRegistryContract first argument ensName must be defined');
     const repoId = ensName.split('.').slice(1).join('.');
     const registryAddress = await resolve(repoId);
     if (!registryAddress) return null;
