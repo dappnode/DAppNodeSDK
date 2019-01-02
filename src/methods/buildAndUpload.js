@@ -82,7 +82,7 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   // 5. Upload manifest to IPFS
   const manifestUpload = await ipfs.files.add([manifestPath], {pin: true}).then((res) => res[0]);
   // Write manifest IPFS upload results = {path, hash, size}
-  fs.writeFileSync(`${buildDir}/manifest.json`, JSON.stringify(manifestUpload, null, 2));
+  fs.writeFileSync(`${buildDir}/upload.json`, JSON.stringify(manifestUpload, null, 2));
   const manifestIpfsPath = `/ipfs/${manifestUpload.hash}`;
   if (!silent) console.log(`${chalk.green('Manifest uploaded:')} ${manifestIpfsPath}`);
   return manifestIpfsPath;
