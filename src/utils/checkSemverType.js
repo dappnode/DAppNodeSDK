@@ -1,6 +1,7 @@
 
-// Valid increase types from https://www.npmjs.com/package/semver
-const validIncreaseTypes = ['major', 'minor', 'patch', 'premajor', 'preminor', 'prepatch', 'prerelease'];
+// Valid increase types for the Aragon Package Manager (APM)
+// https://hack.aragon.org/docs/apm-ref.html
+const validIncreaseTypes = ['major', 'minor', 'patch'];
 
 function checkSemverType(type) {
   if (!validIncreaseTypes.includes(type)) {
