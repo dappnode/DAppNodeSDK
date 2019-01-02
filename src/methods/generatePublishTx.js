@@ -39,7 +39,7 @@ async function generatePublishTx({manifestIpfsPath, dir, developerAddress, ethPr
   const registry = await apm.getRegistryContract(ensName);
   if (!registry) throw Error(`There must exist a registry for DNP name ${ensName}`);
   // Check if the current repo exists
-  const repository = await apm.getRepoContract();
+  const repository = await apm.getRepoContract(ensName);
 
   // If repository exists, push new version to it
   if (repository) {
