@@ -57,7 +57,8 @@ dappnodesdk
       const nextVersion = getCurrentLocalVersion({dir});
       const buildDir = `${dir}/build_${nextVersion}/`;
       // Execute command
-      await buildAndUpload({buildDir, ipfsProvider, silent});
+      const manifestIpfsPath = await buildAndUpload({buildDir, ipfsProvider, silent});
+      console.log(manifestIpfsPath);
     }));
 
 /**
