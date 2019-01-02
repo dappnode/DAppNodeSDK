@@ -35,13 +35,14 @@ describe('generatePublishTx', () => {
       ethProvider: 'infura',
     });
     expect(txData).to.be.an('object');
+    // admin.dnp.dappnode.eth ==> 0xEe66C4765696C922078e8670aA9E6d4F6fFcc455
     expect(txData).to.deep.include({
-      'To': '0x266BFdb2124A68beB6769dC887BD655f78778923',
-      'Value': 0,
-      'Gas limit': 1100000,
+      to: '0xEe66C4765696C922078e8670aA9E6d4F6fFcc455',
+      value: 0,
+      gasLimit: 300000,
     });
     // I am not sure if the Data property will be the same
-    expect(txData.Data).to.be.a('string');
+    expect(txData.data).to.be.a('string');
   }).timeout(20000);
 
   after(async () => {
