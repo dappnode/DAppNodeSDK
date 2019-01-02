@@ -28,7 +28,7 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   const shortName = manifest.name.split('.')[0];
 
   // Construct directories and names
-  const imagePath = `${buildDir}${ensName}.tar.xz`;
+  const imagePath = `${buildDir}${ensName}_${version}.tar.xz`;
   const imageTag = `${ensName}:${version}`;
 
   // Create the build directory. What if it's already created?
@@ -78,6 +78,7 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   manifest.image.size = imageUpload.size;
   // Update manifest
   writeManifest({manifest, dir});
+  writeManifest({manifest, dir: buildDir});
 
   // 5. Upload manifest to IPFS
   const manifestUpload = await ipfs.files.add([manifestPath], {pin: true}).then((res) => res[0]);
