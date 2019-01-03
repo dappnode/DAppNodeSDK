@@ -1,16 +1,27 @@
 language: node_js
-sudo: required
+
+node_js:
+  - "8"
 
 services:
   - docker
 
-node_js:
-  - node
+cache: npm
 
-before_script:
+script:
+  - npm test
   - npm run lint
 
-deploy:
-  provider: npm
-  email: "YOUR_EMAIL_ADDRESS"
-  api_key: "YOUR_AUTH_TOKEN"
+jobs:
+  include:
+    - stage: npm release
+      if: tag IS present
+      node_js: "8"
+      script: npm i
+      deploy:
+        provider: npm
+        email: "$NPM_EMAIL"
+        api_key: "$NPM_TOKEN"
+        skip_cleanup: true
+        on:
+          tags: true
