@@ -1,23 +1,25 @@
 language: node_js
 
-node_js:
-  - "8"
-
-services:
-  - docker
-
-cache: npm
-
-script:
-  - npm test
-  - npm run lint
-
 jobs:
   include:
+    - stage: npm test
+      node_js:
+        - "8"
+      cache: npm
+      services:
+        - docker
+      install:
+        - npm install
+      before_script:
+        - npm run lint
+      script:
+        - npm run test
+
     - stage: npm release
       if: tag IS present
       node_js: "8"
-      script: npm i
+      cache: npm
+      script: npm install
       deploy:
         provider: npm
         email: "$NPM_EMAIL"
