@@ -2,14 +2,14 @@
   "name": "@dappnode/dappnodesdk",
   "version": "0.1.11",
   "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
-  "main": "index.js",
+  "main": "dappnodesdk.js",
   "scripts": {
     "test": "mocha \"./{,!(node_modules)/**}/*.test.js\" ",
     "lint": "npm run lint:javascript",
     "lint:javascript": "eslint . --ext js --fix"
   },
   "bin": {
-    "dappnodesdk": "./src/index.js"
+    "dappnodesdk": "./src/dappnodesdk.js"
   },
   "author": "Eduardo Antuña <eduadiez@gmail.com> (https://github.com/eduadiez)",
   "license": "GPL-3.0",
