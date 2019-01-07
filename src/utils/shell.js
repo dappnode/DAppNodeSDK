@@ -15,9 +15,9 @@ const exec = require('child_process').exec;
  */
 
 
-const deafultTimeout = 3*60*1000; // ms
+const defaultTimeout = 3*60*1000; // ms
 
-function shell(cmd, {silent = false, timeout = deafultTimeout} = {}) {
+function shell(cmd, {silent = false, timeout = defaultTimeout} = {}) {
   return new Promise((resolve, reject) => {
     const cmdProcess = exec(cmd, {timeout}, (error, stdout, stderr) => {
       if (error) {

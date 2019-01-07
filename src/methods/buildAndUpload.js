@@ -11,6 +11,9 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   // If the provider is infura don't show progress, their API does not support it
   const showProgress = !(ipfsProvider || '').includes('infura');
 
+  // Define build timeout (20 min)
+  const buildTimeout = 20*60*1000
+
   // Init IPFS instance
   const ipfs = new Ipfs(ipfsProvider);
 
@@ -60,11 +63,11 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
 
   // 2. Build Dockerfile
   if (!silent) console.log(`Building Dockerfile to image ${imageTag}...`);
-  await shell('docker-compose -f *.yml build', {silent});
+  await shell('docker-compose -f *.yml build', {silent, timeout: buildTimeout});
 
   // 3. Save docker image
   if (!silent) console.log(`Saving docker image ${imageTag} to file ${imagePath}...`);
-  await shell(`docker save ${imageTag} | xz -e9vT0 > ${imagePath}`, {silent});
+  await shell(`docker save ${imageTag} | xz -e9vT0 > ${imagePath}`, {silent, timeout: buildTimeout});
 
   // 4. Upload docker image to IPFS
   if (!silent) console.log(`Uploading docker image file ${imagePath} to IPFS...`);
