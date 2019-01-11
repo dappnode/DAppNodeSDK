@@ -1,4 +1,4 @@
-const exec = require('child_process').exec;
+const execa = require('execa');
 
 /**
  * If this method is invoked as its util.promisify()ed version,
@@ -17,22 +17,14 @@ const exec = require('child_process').exec;
 
 const deafultTimeout = 3*60*1000; // ms
 
-function shell(cmd, {silent = false, timeout = deafultTimeout} = {}) {
-  return new Promise((resolve, reject) => {
-    const cmdProcess = exec(cmd, {timeout}, (error, stdout, stderr) => {
-      if (error) {
-        if (error.signal === 'SIGTERM') {
-          reject(Error(`cmd "${error.cmd}" timed out (${timeout} ms)`));
-        }
-        reject(error);
-      }
-      resolve(stdout);
-    });
-    if (!silent) {
-      cmdProcess.stdout.pipe(process.stdout);
-      cmdProcess.stderr.pipe(process.stderr);
-    }
+async function shell(cmd, {silent = false, timeout = deafultTimeout} = {}) {
+  const {stdout} = await execa.shell(cmd, {
+    stdout: silent ? null : process.stdout,
+    stderr: silent ? null : process.stderr,
+    stdio: silent ? null : process.stdio,
+    timeout,
   });
+  return stdout;
 }
 
 
