@@ -12,7 +12,7 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   const showProgress = !(ipfsProvider || '').includes('infura');
 
   // Define build timeout (20 min)
-  const buildTimeout = 20*60*1000
+  const buildTimeout = 20*60*1000;
 
   // Init IPFS instance
   const ipfs = new Ipfs(ipfsProvider);

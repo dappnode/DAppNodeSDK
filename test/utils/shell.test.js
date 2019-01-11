@@ -17,7 +17,7 @@ echo "hello"
   it('Execute a command without crashing', async () => {
     await shell(`chmod +x ${scriptPath}`);
     // Check that the output is correct
-    const output = await shell(`./${scriptPath}`);
+    const output = await shell(`./${scriptPath}`, {silent: true});
     expect(output.trim()).to.equal('hello');
     // Check that it errors on timeout
     const errorMessage = await shell(`./${scriptPath}`, {timeout: 1})
