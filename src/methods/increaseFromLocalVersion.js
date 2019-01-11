@@ -13,11 +13,18 @@ async function increaseFromLocalVersion({type, dir}) {
   const manifest = readManifest({dir});
   check(manifest, 'manifest', 'object');
   check(manifest.version, 'manifest version');
+  check(manifest.image, 'manifest image', 'object');
   const currentVersion = manifest.version;
 
   // Increase the version
   const nextVersion = semver.inc(currentVersion, type);
   manifest.version = nextVersion;
+
+  // Reset the image path, hash, and size fields.
+  // They no longer represent the increased version
+  manifest.image.path = '';
+  manifest.image.hash = '';
+  manifest.image.size = '';
 
   // Mofidy and write the manifest and docker-compose
   writeManifest({manifest, dir});
