@@ -3,6 +3,7 @@ const chalk = require('chalk');
 const shell = require('../utils/shell');
 const Ipfs = require('../utils/Ipfs');
 const check = require('../utils/check');
+const inquirer = require('inquirer');
 const {getManifestPath, readManifest, writeManifest} = require('../utils/manifest');
 
 async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
@@ -67,8 +68,25 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
 
   // 3. Save docker image
   if (!silent) console.log(`Saving docker image ${imageTag} to file ${imagePath}...`);
-  await shell(`docker save ${imageTag} | xz -e9vT0 > ${imagePath}`, {silent, timeout: buildTimeout});
-
+  let answer = {saveDocker: 'y'};
+  try {
+    // does file exist?
+    fs.accessSync(imagePath, fs.constants.F_OK);
+    answer = await inquirer.prompt([{
+      type: 'input',
+      name: 'saveDocker',
+      message: 'Compressed docker image exists. Overwrite? y/n',
+    }]);
+  } catch(e) {
+    // file doesn't exist
+  } finally {
+    if (answer.saveDocker !== 'y') {
+      console.log('Skipping docker image save.')
+    } else {
+     await shell(`docker save ${imageTag} | xz -e9vT0 > ${imagePath}`, {silent, timeout: buildTimeout});
+    }
+  }
+  
   // 4. Upload docker image to IPFS
   if (!silent) console.log(`Uploading docker image file ${imagePath} to IPFS...`);
   const imageUpload = await ipfs.files.add([imagePath], {
