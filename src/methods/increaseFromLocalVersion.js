@@ -1,5 +1,5 @@
 const {readManifest, writeManifest} = require('../utils/manifest');
-const {generateAndWriteCompose} = require('../utils/compose');
+const {updateCompose} = require('../utils/compose');
 const semver = require('semver');
 const check = require('../utils/check');
 const checkSemverType = require('../utils/checkSemverType');
@@ -21,7 +21,7 @@ async function increaseFromLocalVersion({type, dir}) {
 
   // Mofidy and write the manifest and docker-compose
   writeManifest({manifest, dir});
-  generateAndWriteCompose({manifest, dir});
+  updateCompose({manifest, dir});
 
   return nextVersion;
 }

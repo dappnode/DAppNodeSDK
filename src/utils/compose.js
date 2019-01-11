@@ -150,31 +150,21 @@ function generateCompose({manifest}) {
   return yaml.dump(dockerCompose, {indent: 4});
 }
 
-// async function updateCompose(manifest) {
-//   const files = FILESYSTEM.readdirSync('./');
-//   for (const index in files) {
-//     if (files[index].endsWith('.yml')) {
-//       if (files[index].startsWith('docker-compose')) {
-//         try {
-//           const dockercompose = yaml.safeLoad(FILESYSTEM.readFileSync(files[index], 'utf8'));
-//           dockercompose.services[manifest.name].image = manifest.name + ':' + manifest.version;
-//           const ymlFile = yaml.dump(dockercompose, {indent: 4});
-//           FILESYSTEM.writeFileSync(files[index], ymlFile, function(err) {
-//             if (err) {
-//               return console.log(err);
-//             }
-//           });
-//         } catch (e) {
-//           console.log(e);
-//         }
-//       }
-//     }
-//   }
-// }
+function updateCompose({manifest, dir, composeFileName}) {
+  const dockerCompose = readCompose({dir, composeFileName});
+  // Only update the imageName field
+  //   services:
+  //     wamp.dnp.dappnode.eth:
+  //       image: 'wamp.dnp.dappnode.eth:0.1.1'
+  dockerCompose.services[manifest.name].image = manifest.name + ':' + manifest.version;
+  const composeYaml = yaml.dump(dockerCompose, {indent: 4});
+  writeCompose({composeYaml, dir, composeFileName});
+}
 
 module.exports = {
   generateAndWriteCompose,
   generateCompose,
+  updateCompose,
   readCompose,
   writeCompose,
 };
