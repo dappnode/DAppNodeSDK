@@ -9,7 +9,7 @@ const execa = require('execa');
 
 const defaultTimeout = 3*60*1000; // ms
 
-async function shell(cmd, {silent = false, timeout = deafultTimeout} = {}) {
+async function shell(cmd, {silent = false, timeout = defaultTimeout} = {}) {
   const res = await execa.shell(cmd, {
     stdout: silent ? null : process.stdout,
     stderr: silent ? null : process.stderr,
