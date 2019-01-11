@@ -1,5 +1,5 @@
 const {readManifest, writeManifest} = require('../utils/manifest');
-const {generateAndWriteCompose} = require('../utils/compose');
+const {updateCompose} = require('../utils/compose');
 const check = require('../utils/check');
 const getNextVersionFromApm = require('../methods/getNextVersionFromApm');
 
@@ -16,7 +16,7 @@ async function increaseFromApmVersion({type, ethProvider, dir}) {
 
   // Mofidy and write the manifest and docker-compose
   writeManifest({manifest, dir});
-  generateAndWriteCompose({manifest, dir});
+  updateCompose({manifest, dir});
 
   return nextVersion;
 }

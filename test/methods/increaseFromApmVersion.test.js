@@ -4,6 +4,7 @@ const yaml = require('js-yaml');
 const semver = require('semver');
 const rmSafe = require('../rmSafe');
 const increaseFromApmVersion = require('../../src/methods/increaseFromApmVersion');
+const {generateAndWriteCompose} = require('../../src/utils/compose');
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -34,6 +35,7 @@ describe('increaseFromApmVersion', () => {
     await rmSafe(manifestPath);
     await rmSafe(composePath);
     fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+    generateAndWriteCompose({manifest});
   });
 
   it('Should get the last version from APM', async () => {
