@@ -3,6 +3,7 @@ const fs = require('fs');
 const yaml = require('js-yaml');
 const rmSafe = require('../rmSafe');
 const increaseFromLocalVersion = require('../../src/methods/increaseFromLocalVersion');
+const {generateAndWriteCompose} = require('../../src/utils/compose');
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -33,6 +34,7 @@ describe('increaseFromLocalVersion', () => {
     await rmSafe(manifestPath);
     await rmSafe(composePath);
     fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+    generateAndWriteCompose({manifest});
   });
 
   it('Should get the last version from APM', async () => {
