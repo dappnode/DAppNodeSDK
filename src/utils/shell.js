@@ -18,13 +18,16 @@ const execa = require('execa');
 const deafultTimeout = 3*60*1000; // ms
 
 async function shell(cmd, {silent = false, timeout = deafultTimeout} = {}) {
-  const {stdout} = await execa.shell(cmd, {
+  const res = await execa.shell(cmd, {
     stdout: silent ? null : process.stdout,
     stderr: silent ? null : process.stderr,
     stdio: silent ? null : process.stdio,
     timeout,
+  }).catch((e) => {
+    if (e.timedOut) e.message = `${e.message} - timed out ${timeout} ms`;
+    throw e;
   });
-  return stdout;
+  return res.stdout;
 }
 
 
