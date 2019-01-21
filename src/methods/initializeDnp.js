@@ -98,6 +98,7 @@ It only covers the most common items, and tries to guess sensible defaults.
     },
     'author': answers.author,
     'license': '',
+    'dependencies': {},
   };
 
   // Append objects
