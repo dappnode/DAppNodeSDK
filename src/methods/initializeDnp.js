@@ -7,8 +7,8 @@ const shell = require('../utils/shell');
 
 async function initializeDnp({dir = './', useDefaults}) {
   // shell outputs tend to include trailing spaces and new lines
-  const defaultName = await shell('echo "${PWD##*/}"', {silent: true}).then((s) => s.trim());
-  const defaultAuthor = await shell('whoami', {silent: true}).then((s) => s.trim());
+  const defaultName = await shell('echo "${PWD##*/}"', {silent: true});
+  const defaultAuthor = await shell('whoami', {silent: true});
 
   const defaultAnswers = {
     name: defaultName,
