@@ -28,7 +28,7 @@ describe('getNextVersionFromApm', () => {
     });
     // Check that the console output contains a valid semver version
     expect(semver.valid(nextVersion)).to.be.ok;
-  }).timeout(20000);
+  }).timeout(60*1000);
 
   after(async () => {
     await rmSafe(manifestPath);
