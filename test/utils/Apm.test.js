@@ -15,11 +15,11 @@ describe('Apm constructor', () => {
     const registry = await apm.getRegistryContract(dnpName);
     expect(registry).to.be.ok;
     expect(registry._address).to.equal('0x266BFdb2124A68beB6769dC887BD655f78778923');
-  }).timeout(20000);
+  }).timeout(60*1000);
 
   it('Should get the contract the repo contract of a DNP name', async () => {
     const repo = await apm.getRepoContract(dnpName);
     expect(repo).to.be.ok;
     expect(repo._address).to.equal('0xEe66C4765696C922078e8670aA9E6d4F6fFcc455');
-  }).timeout(20000);
+  }).timeout(60*1000);
 });
