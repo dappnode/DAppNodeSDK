@@ -73,7 +73,7 @@ async function generatePublishTx({manifestIpfsPath, dir, developerAddress, ethPr
           type: 'input',
           name: 'developerAddress',
           default: '0x0000000000000000000000000000000000000000',
-          message: `A new Aragon Package Manager Repo for ${ensName} will be created. \nYou must specify the developer address that will control it (Or use the -dev flag):`,
+          message: `A new Aragon Package Manager Repo for ${ensName} will be created. \nYou must specify the developer address that will control it (Or use the --developer_address, -a flag):`,
           validate: (address) => (!isAddress(address) || isZeroAddress(address))
           ? 'The developer address must be valid and non-zero. Please make sure it is correct'
           : true,
