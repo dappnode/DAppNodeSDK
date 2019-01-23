@@ -11,8 +11,8 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   // If the provider is infura don't show progress, their API does not support it
   const showProgress = !(ipfsProvider || '').includes('infura');
 
-  // Define build timeout (20 min)
-  const buildTimeout = 20*60*1000;
+  // Define build timeout (30 min)
+  const buildTimeout = 30*60*1000;
 
   // Init IPFS instance
   const ipfs = new Ipfs(ipfsProvider);
