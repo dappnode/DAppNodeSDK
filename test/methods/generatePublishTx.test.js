@@ -43,7 +43,7 @@ describe('generatePublishTx', () => {
     });
     // I am not sure if the Data property will be the same
     expect(txData.data).to.be.a('string');
-  }).timeout(20000);
+  }).timeout(60*1000);
 
   after(async () => {
     await rmSafe(manifestPath);

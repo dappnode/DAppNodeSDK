@@ -3,16 +3,21 @@ const chalk = require('chalk');
 const shell = require('../utils/shell');
 const Ipfs = require('../utils/Ipfs');
 const check = require('../utils/check');
+const getFileHash = require('../utils/getFileHash');
+const getImageId = require('../utils/getImageId');
+const cache = require('../utils/cache');
 const {getManifestPath, readManifest, writeManifest} = require('../utils/manifest');
 
+// Define build timeout (20 min)
+const buildTimeout = 20*60*1000;
+
 async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
+  // log function
+  const log = silent ? () => {} : console.log;
   // Check variables
   check(buildDir, 'buildDir', 'string');
   // If the provider is infura don't show progress, their API does not support it
   const showProgress = !(ipfsProvider || '').includes('infura');
-
-  // Define build timeout (20 min)
-  const buildTimeout = 20*60*1000;
 
   // Init IPFS instance
   const ipfs = new Ipfs(ipfsProvider);
@@ -62,18 +67,32 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   }
 
   // 2. Build Dockerfile
-  if (!silent) console.log(`Building Dockerfile to image ${imageTag}...`);
+  log(`Building Dockerfile to image ${imageTag}...`);
   await shell('docker-compose -f *.yml build', {silent, timeout: buildTimeout});
 
   // 3. Save docker image
-  if (!silent) console.log(`Saving docker image ${imageTag} to file ${imagePath}...`);
-  await shell(`docker save ${imageTag} | xz -e9vT0 > ${imagePath}`, {silent, timeout: buildTimeout});
+  // This step is extremely expensive computationally.
+  // A local cache file will prevent unnecessary compressions if the image hasn't changed
+  // Load image ID. Clean resulting string: Remove double quotes
+  const imageId = await getImageId(imageTag, shell);
+  // Load the cache object
+  const cacheTarHash = cache.load()[imageId];
+  // Load the .tar.xz hash
+  const tarHash = await getFileHash(imagePath);
+  if (imageId && tarHash && tarHash === cacheTarHash) {
+    log(`Skipping image save and compression stage, tarball ${imagePath} has been verified`);
+  } else {
+    log(`Saving docker image ${imageTag} to file ${imagePath}...`);
+    await shell(`docker save ${imageTag} | xz -e9vT0 > ${imagePath}`, {silent, timeout: buildTimeout});
+    const newTarHash = await getFileHash(imagePath);
+    if (imageId && newTarHash) cache.write({key: imageId, value: newTarHash});
+  }
 
   // 4. Upload docker image to IPFS
-  if (!silent) console.log(`Uploading docker image file ${imagePath} to IPFS...`);
+  log(`Uploading docker image file ${imagePath} to IPFS...`);
   const imageUpload = await ipfs.files.add([imagePath], {
     pin: true,
-    ...(showProgress && !silent ? {progress: logProgress(imagePath)} : {}),
+    ...(showProgress && !silent ? {progress: logProgress(imagePath, log)} : {}),
   }).then((res) => res[0]);
   // Edit manifest
   manifest.image.path = imageUpload.path;
@@ -88,14 +107,14 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   // Write manifest IPFS upload results = {path, hash, size}
   fs.writeFileSync(`${buildDir}/upload.json`, JSON.stringify(manifestUpload, null, 2));
   const manifestIpfsPath = `/ipfs/${manifestUpload.hash}`;
-  if (!silent) console.log(`${chalk.green('Manifest uploaded:')} ${manifestIpfsPath}`);
+  if (!silent) log(`${chalk.green('Manifest uploaded:')} ${manifestIpfsPath}`);
   return manifestIpfsPath;
 }
 
-function logProgress(pathToFile) {
+function logProgress(pathToFile, log) {
   const totalSize = fs.statSync(pathToFile).size;
   return function progress(prog) {
-    console.log('Uploading... ' + ((prog / totalSize) * 100).toFixed(2) + '%');
+    log('Uploading... ' + ((prog / totalSize) * 100).toFixed(2) + '%');
   };
 }
 

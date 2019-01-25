@@ -6,3 +6,4 @@ build
 build_*
 dappnode_package.json
 docker-compose.yml
+.cache

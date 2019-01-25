@@ -18,7 +18,7 @@ echo "hello"
     await shell(`chmod +x ${scriptPath}`);
     // Check that the output is correct
     const output = await shell(`./${scriptPath}`, {silent: true});
-    expect(output.trim()).to.equal('hello');
+    expect(output).to.equal('hello');
     // Check that it errors on timeout
     const errorMessage = await shell(`./${scriptPath}`, {timeout: 1})
         .catch((e) => e.message);

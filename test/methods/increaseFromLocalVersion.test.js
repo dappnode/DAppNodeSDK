@@ -54,7 +54,7 @@ describe('increaseFromLocalVersion', () => {
     const newManifestString = fs.readFileSync(manifestPath, 'utf8');
     const newManifest = JSON.parse(newManifestString);
     expect(newManifest.version).to.equal('0.1.1', 'manifest should be edited to the next version');
-  }).timeout(20000);
+  }).timeout(60*1000);
 
   after(async () => {
     await rmSafe(manifestPath);

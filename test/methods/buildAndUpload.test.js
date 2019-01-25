@@ -58,7 +58,7 @@ CMD [ "echo", "happy buidl" ]
     // Check that the deploy.txt file is correct
     // const deployText = fs.readFileSync(deployTextPath, 'utf8');
     // expect(deployText).to.include(expectedString);
-  }).timeout(60000);
+  }).timeout(60*1000);
 
   after(async () => {
     await rmSafe(manifestPath);
