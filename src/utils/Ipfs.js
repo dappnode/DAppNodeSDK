@@ -1,4 +1,4 @@
-const IpfsAPI = require('ipfs-api');
+const IpfsAPI = require('ipfs-http-client');
 
 function getIpfsProviderUrl(provider = 'dappnode') {
   if (provider === 'dappnode') {

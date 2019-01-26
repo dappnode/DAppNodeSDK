@@ -14,24 +14,25 @@
   "author": "Eduardo Antuña <eduadiez@gmail.com> (https://github.com/eduadiez)",
   "license": "GPL-3.0",
   "dependencies": {
-    "@aragon/os": "^4.0.0-alpha.2",
-    "chalk": "^2.4.1",
-    "commander": "^2.17.1",
+    "@aragon/os": "^4.0.1",
+    "@babel/runtime": "^7.3.1",
+    "chalk": "^2.4.2",
+    "commander": "^2.19.0",
     "ethereum-ens": "^0.7.4",
     "execa": "^1.0.0",
-    "figlet": "^1.2.0",
-    "inquirer": "^6.2.0",
-    "ipfs-api": "^26.1.2",
-    "js-yaml": "^3.12.0",
-    "semver": "^5.5.1",
-    "web3": "^1.0.0-beta.36",
-    "web3-utils": "^1.0.0-beta.36"
+    "figlet": "^1.2.1",
+    "inquirer": "^6.2.1",
+    "ipfs-http-client": "^29.0.1",
+    "js-yaml": "^3.12.1",
+    "semver": "^5.6.0",
+    "web3": "^1.0.0-beta.37",
+    "web3-utils": "^1.0.0-beta.37"
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "eslint": "^5.10.0",
+    "eslint": "^5.12.1",
     "eslint-config-google": "^0.11.0",
     "mocha": "^5.2.0",
-    "prettier": "^1.15.3"
+    "prettier": "^1.16.1"
   }
 }
