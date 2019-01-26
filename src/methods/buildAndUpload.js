@@ -90,7 +90,7 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
 
   // 4. Upload docker image to IPFS
   log(`Uploading docker image file ${imagePath} to IPFS...`);
-  const imageUpload = await ipfs.files.add([imagePath], {
+  const imageUpload = await ipfs.addFromFs(imagePath, {
     pin: true,
     ...(showProgress && !silent ? {progress: logProgress(imagePath, log)} : {}),
   }).then((res) => res[0]);
@@ -103,7 +103,7 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   writeManifest({manifest, dir: buildDir});
 
   // 5. Upload manifest to IPFS
-  const manifestUpload = await ipfs.files.add([manifestPath], {pin: true}).then((res) => res[0]);
+  const manifestUpload = await ipfs.addFromFs(manifestPath, {pin: true}).then((res) => res[0]);
   // Write manifest IPFS upload results = {path, hash, size}
   fs.writeFileSync(`${buildDir}/upload.json`, JSON.stringify(manifestUpload, null, 2));
   const manifestIpfsPath = `/ipfs/${manifestUpload.hash}`;
