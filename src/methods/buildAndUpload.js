@@ -1,5 +1,6 @@
 const fs = require('fs');
 const chalk = require('chalk');
+const timestring = require('timestring');
 const shell = require('../utils/shell');
 const Ipfs = require('../utils/Ipfs');
 const check = require('../utils/check');
@@ -9,15 +10,22 @@ const cache = require('../utils/cache');
 const {getManifestPath, readManifest, writeManifest} = require('../utils/manifest');
 
 // Define build timeout (20 min)
-const buildTimeout = 20*60*1000;
+let buildTimeout = 20 * 60 * 1000;
 
-async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
+async function buildAndUpload({dir, buildDir, ipfsProvider, userTimeout, silent}) {
   // log function
   const log = silent ? () => {} : console.log;
   // Check variables
   check(buildDir, 'buildDir', 'string');
   // If the provider is infura don't show progress, their API does not support it
   const showProgress = !(ipfsProvider || '').includes('infura');
+  // Parse userTimeout
+  if (userTimeout) {
+    // It's not a number assume it's a timestring formated string
+    // Otherwise assume it's in seconds
+    buildTimeout = parseInt(isNaN(userTimeout) ? timestring(userTimeout) : userTimeout) * 1000;
+    log(`User set build timeout to ${buildTimeout} ms`);
+  }
 
   // Init IPFS instance
   const ipfs = new Ipfs(ipfsProvider);
@@ -47,7 +55,11 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
   // will fail if there are multiple docker-compose
   await shell(`cp docker-compose*.yml ${buildDir}docker-compose-${shortName}.yml`, {silent});
   // Copy all .env files, if any
-  if (await shell(`ls *.env`, {silent: true}).then(() => true).catch(() => false)) {
+  if (
+    await shell(`ls *.env`, {silent: true})
+        .then(() => true)
+        .catch(() => false)
+  ) {
     await shell(`cp *.env ${buildDir}`, {silent: true});
   }
 
@@ -90,10 +102,12 @@ async function buildAndUpload({dir, buildDir, ipfsProvider, silent}) {
 
   // 4. Upload docker image to IPFS
   log(`Uploading docker image file ${imagePath} to IPFS...`);
-  const imageUpload = await ipfs.addFromFs(imagePath, {
-    pin: true,
-    ...(showProgress && !silent ? {progress: logProgress(imagePath, log)} : {}),
-  }).then((res) => res[0]);
+  const imageUpload = await ipfs
+      .addFromFs(imagePath, {
+        pin: true,
+        ...(showProgress && !silent ? {progress: logProgress(imagePath, log)} : {}),
+      })
+      .then((res) => res[0]);
   // Edit manifest
   manifest.image.path = imageUpload.path;
   manifest.image.hash = `/ipfs/${imageUpload.hash}`;
@@ -117,6 +131,5 @@ function logProgress(pathToFile, log) {
     log('Uploading... ' + ((prog / totalSize) * 100).toFixed(2) + '%');
   };
 }
-
 
 module.exports = buildAndUpload;

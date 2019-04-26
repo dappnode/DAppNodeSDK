@@ -19,9 +19,7 @@ const outputTxData = require('./utils/outputTxData');
 const warpErrors = require('./utils/warpErrors');
 
 // Generic options for all commands
-dappnodesdk
-    .option('-d, --directory [dir]', 'Change the default directory: ./')
-    .option('-s, --silent', 'Prevent the command from outputing progress logs to the console');
+dappnodesdk.option('-d, --directory [dir]', 'Change the default directory: ./').option('-s, --silent', 'Prevent the command from outputing progress logs to the console');
 
 /**
  * INIT
@@ -33,11 +31,13 @@ dappnodesdk
     .command('init')
     .description('Initialize a new DAppNodePackage (DNP) repository')
     .option('-y, --yes', `Answer yes or the default option to all initialization questions`)
-    .action(warpErrors(async (options) => {
-      const useDefaults = options.yes;
-      const dir = options.parent.dir;
-      await initializeDnp({dir, useDefaults});
-    }));
+    .action(
+        warpErrors(async (options) => {
+          const useDefaults = options.yes;
+          const dir = options.parent.dir;
+          await initializeDnp({dir, useDefaults});
+        })
+    );
 
 /**
  * BUILD
@@ -49,17 +49,21 @@ dappnodesdk
     .command('build')
     .description('Build a new version (only generates the ipfs hash)')
     .option('-p, --provider [provider]', `Specify an ipfs provider: "dappnode" (default), "infura", "localhost:5002"`)
-    .action(warpErrors(async (options) => {
-      // Parse options
-      const ipfsProvider = options.provider;
-      const dir = options.parent.dir || './'; // general option
-      const silent = options.parent.silent; // general option
-      const nextVersion = getCurrentLocalVersion({dir});
-      const buildDir = `${dir}/build_${nextVersion}/`;
-      // Execute command
-      const manifestIpfsPath = await buildAndUpload({buildDir, ipfsProvider, silent});
-      console.log(manifestIpfsPath);
-    }));
+    .option('-t, --timeout [timestring]', `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`)
+    .action(
+        warpErrors(async (options) => {
+          // Parse options
+          const ipfsProvider = options.provider;
+          const userTimeout = options.timeout;
+          const dir = options.parent.dir || './'; // general option
+          const silent = options.parent.silent; // general option
+          const nextVersion = getCurrentLocalVersion({dir});
+          const buildDir = `${dir}/build_${nextVersion}/`;
+          // Execute command
+          const manifestIpfsPath = await buildAndUpload({buildDir, ipfsProvider, userTimeout, silent});
+          console.log(manifestIpfsPath);
+        })
+    );
 
 /**
  * PUBLISH
@@ -76,30 +80,34 @@ dappnodesdk
     .option('--eth_provider [provider]', `Specify an eth provider: "dappnode" (default), "infura", "localhost:5002"`)
     .option('--ipfs_provider [provider]', `Specify an ipfs provider: "dappnode" (default), "infura", "http://localhost:8545"`)
     .option('-a, --developer_address [address]', `If there is no existing repo for this DNP the publish command needs a developer address. If it is not provided as an option a prompt will request it`)
-    // .option('-e, --extra_item [item]', 'Add custom item to the list')
-    // function to execute when command is uses
-    .action(warpErrors(async (type, options) => {
-      // Parse options
-      const ethProvider = options.provider || options.eth_provider;
-      const ipfsProvider = options.provider || options.ipfs_provider;
-      const dir = options.parent.dir; // general option
-      const developerAddress = options.developer_address;
-      const silent = options.parent.silent; // general option
-      // Execute command
-      // If the repo is not initialized yet, increaseFromApmVersion will throw
-      let nextVersion;
-      try {
-        nextVersion = await increaseFromApmVersion({type, ethProvider, dir});
-      } catch (e) {
-        if (e.message.includes('NOREPO')) nextVersion = getCurrentLocalVersion({dir});
-        else throw e;
-      }
-      const buildDir = `./build_${nextVersion}/`;
-      const manifestIpfsPath = await buildAndUpload({buildDir, ipfsProvider, silent});
-      const txData = await generatePublishTx({manifestIpfsPath, dir, developerAddress, ethProvider});
-      // Output result. Only to console if it's not silent
-      outputTxData({txData, toConsole: !silent, toFile: `${buildDir}/deploy.txt`});
-    }));
+    .option('-t, --timeout [timestring]', `Overrides default build timeout: "15h", "20min 15s", "5000". Specs: npmjs.com/package/timestring`)
+// .option('-e, --extra_item [item]', 'Add custom item to the list')
+// function to execute when command is uses
+    .action(
+        warpErrors(async (type, options) => {
+          // Parse options
+          const ethProvider = options.provider || options.eth_provider;
+          const ipfsProvider = options.provider || options.ipfs_provider;
+          const dir = options.parent.dir; // general option
+          const developerAddress = options.developer_address;
+          const userTimeout = options.timeout;
+          const silent = options.parent.silent; // general option
+          // Execute command
+          // If the repo is not initialized yet, increaseFromApmVersion will throw
+          let nextVersion;
+          try {
+            nextVersion = await increaseFromApmVersion({type, ethProvider, dir});
+          } catch (e) {
+            if (e.message.includes('NOREPO')) nextVersion = getCurrentLocalVersion({dir});
+            else throw e;
+          }
+          const buildDir = `./build_${nextVersion}/`;
+          const manifestIpfsPath = await buildAndUpload({buildDir, ipfsProvider, userTimeout, silent});
+          const txData = await generatePublishTx({manifestIpfsPath, dir, developerAddress, ethProvider});
+          // Output result. Only to console if it's not silent
+          outputTxData({txData, toConsole: !silent, toFile: `${buildDir}/deploy.txt`});
+        })
+    );
 
 /**
  * NEXT
@@ -113,15 +121,17 @@ dappnodesdk
     .command('next [type]')
     .description('Get the next release version. Type: [ major | minor | patch ]')
     .option('-p, --provider [provider]', `Specify an eth provider: "dappnode" (default), "infura", "http://localhost:8545"`)
-    .action(warpErrors(async (type, options) => {
-      // Parse options
-      const ethProvider = options.provider;
-      const dir = options.parent.dir;
-      // Execute command
-      const nextVersion = await getNextVersionFromApm({type, ethProvider, dir});
-      // Output result: "0.1.8"
-      console.log(nextVersion);
-    }));
+    .action(
+        warpErrors(async (type, options) => {
+          // Parse options
+          const ethProvider = options.provider;
+          const dir = options.parent.dir;
+          // Execute command
+          const nextVersion = await getNextVersionFromApm({type, ethProvider, dir});
+          // Output result: "0.1.8"
+          console.log(nextVersion);
+        })
+    );
 
 /**
  * INCREASE
@@ -134,14 +144,16 @@ dappnodesdk
 dappnodesdk
     .command('increase <type>')
     .description('Increases the version defined in the manifest. Type: [ major | minor | patch ]')
-    .action(warpErrors(async (type, options) => {
-      // Parse options
-      const dir = options.parent.dir;
-      // Execute command
-      const nextVersion = await increaseFromLocalVersion({type, dir});
-      // Output result: "0.1.8"
-      console.log(nextVersion);
-    }));
+    .action(
+        warpErrors(async (type, options) => {
+          // Parse options
+          const dir = options.parent.dir;
+          // Execute command
+          const nextVersion = await increaseFromLocalVersion({type, dir});
+          // Output result: "0.1.8"
+          console.log(nextVersion);
+        })
+    );
 
 /**
  * GEN_MANIFEST
@@ -153,14 +165,16 @@ dappnodesdk
 dappnodesdk
     .command('gen_manifest')
     .description('Generate a new manifest based on an existing docker-compose.yml')
-    // .option('-e, --extra_item [item]', 'Add custom item to the list')
-    // function to execute when command is uses
-    .action(warpErrors(async (options) => {
-      const dir = options.parent.dir;
-      const compose = readCompose({dir});
-      const manifest = manifestFromCompose(compose);
-      writeManifest({manifest, dir});
-    }));
+// .option('-e, --extra_item [item]', 'Add custom item to the list')
+// function to execute when command is uses
+    .action(
+        warpErrors(async (options) => {
+          const dir = options.parent.dir;
+          const compose = readCompose({dir});
+          const manifest = manifestFromCompose(compose);
+          writeManifest({manifest, dir});
+        })
+    );
 
 /**
  * GEN_COMPOSE
@@ -172,13 +186,15 @@ dappnodesdk
 dappnodesdk
     .command('gen_compose')
     .description('Generate a new docker-compose.yml based on an existing dappnode_package.json')
-    // .option('-e, --extra_item [item]', 'Add custom item to the list')
-    // function to execute when command is uses
-    .action(warpErrors(async (options) => {
-      const dir = options.parent.dir;
-      const manifest = readManifest({dir});
-      generateAndWriteCompose({manifest, dir});
-    }));
+// .option('-e, --extra_item [item]', 'Add custom item to the list')
+// function to execute when command is uses
+    .action(
+        warpErrors(async (options) => {
+          const dir = options.parent.dir;
+          const manifest = readManifest({dir});
+          generateAndWriteCompose({manifest, dir});
+        })
+    );
 
 /**
  * Additional help and customization
@@ -190,8 +206,7 @@ const sdkDescription = 'dappnodesdk is a tool to make as simple as possible the 
 const sdkVersion = require('../package.json').version;
 
 // Show version in -v command
-dappnodesdk
-    .version(sdkVersion, '-v, --version');
+dappnodesdk.version(sdkVersion, '-v, --version');
 
 // display help by default (e.g. if no command was provided)
 // REF: https://www.npmjs.com/package/commander#outputhelpcb
@@ -211,24 +226,19 @@ ${chalk.bold.hex('#2FBCB2')(figlet.textSync('    dappnode sdk'))}
 }
 
 // Display error message for unkown command. Show instructions to type the help command
-dappnodesdk
-    .command('*', {noHelp: true})
-    .action(() => {
-      console.log(`
+dappnodesdk.command('*', {noHelp: true}).action(() => {
+  console.log(`
   Unkown command. To view available commands and options run:
 
     dappnodesdk --help
 `);
-    });
+});
 
 // Extend help by providing examples
 dappnodesdk.on('--help', () => {
-  console.log(`  Tutorial:
-
-    Please go to https://github.com/dappnode/DAppNodeSDK for a comprehensive usage tutorial
+  console.log(`\nTutorial:
+  https://github.com/dappnode/DAppNodeSDK
 `);
 });
 
 dappnodesdk.parse(process.argv);
-
-
