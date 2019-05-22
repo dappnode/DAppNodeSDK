@@ -1,10 +1,10 @@
-const semverToArray = require('../utils/semverToArray');
-const {readManifest} = require('../utils/manifest');
-const inquirer = require('inquirer');
-const Apm = require('../utils/Apm');
-const check = require('../utils/check');
-const {isAddress} = require('web3-utils');
-const isZeroAddress = (address) => parseInt(address) === 0;
+const semverToArray = require("../utils/semverToArray");
+const { readManifest } = require("../utils/manifest");
+const inquirer = require("inquirer");
+const Apm = require("../utils/Apm");
+const check = require("../utils/check");
+const { isAddress } = require("web3-utils");
+const isZeroAddress = address => parseInt(address) === 0;
 
 /**
  * Generates the transaction data necessary to publish the package.
@@ -17,27 +17,34 @@ const isZeroAddress = (address) => parseInt(address) === 0;
  * - Show it on screen
  */
 
-async function generatePublishTx({manifestIpfsPath, dir, developerAddress, ethProvider}) {
+async function generatePublishTx({
+  manifestIpfsPath,
+  dir,
+  developerAddress,
+  ethProvider
+}) {
   // Init APM instance
   const apm = new Apm(ethProvider);
 
   // Load manifest
-  const manifest = readManifest({dir});
-  check(manifest, 'manifest', 'object');
-  check(manifest.version, 'manifest version');
-  check(manifest.name, 'manifest name');
-  check(manifestIpfsPath, 'manifestIpfsPath');
+  const manifest = readManifest({ dir });
+  check(manifest, "manifest", "object");
+  check(manifest.version, "manifest version");
+  check(manifest.name, "manifest name");
+  check(manifestIpfsPath, "manifestIpfsPath");
 
   // Compute tx data
-  const contentURI = '0x' + (Buffer.from(manifestIpfsPath, 'utf8').toString('hex'));
-  const contractAddress = '0x0000000000000000000000000000000000000000';
+  const contentURI =
+    "0x" + Buffer.from(manifestIpfsPath, "utf8").toString("hex");
+  const contractAddress = "0x0000000000000000000000000000000000000000";
   const currentVersion = manifest.version;
   const ensName = manifest.name;
-  const shortName = manifest.name.split('.')[0];
+  const shortName = manifest.name.split(".")[0];
 
   // Ensure that a valid registry exists
   const registry = await apm.getRegistryContract(ensName);
-  if (!registry) throw Error(`There must exist a registry for DNP name ${ensName}`);
+  if (!registry)
+    throw Error(`There must exist a registry for DNP name ${ensName}`);
   // Check if the current repo exists
   const repository = await apm.getRepoContract(ensName);
 
@@ -49,9 +56,9 @@ async function generatePublishTx({manifestIpfsPath, dir, developerAddress, ethPr
     //     bytes _contentURI
     // )
     const newVersionCall = repository.methods.newVersion(
-        semverToArray(currentVersion), // uint16[3] _newSemanticVersion
-        contractAddress, // address _contractAddress
-        contentURI // bytes _contentURI
+      semverToArray(currentVersion), // uint16[3] _newSemanticVersion
+      contractAddress, // address _contractAddress
+      contentURI // bytes _contentURI
     );
     return {
       to: repository.options.address,
@@ -60,7 +67,7 @@ async function generatePublishTx({manifestIpfsPath, dir, developerAddress, ethPr
       gasLimit: 300000,
       ensName,
       currentVersion,
-      manifestIpfsPath,
+      manifestIpfsPath
     };
   }
   // If repo does not exist, create a new repo and push version
@@ -68,19 +75,27 @@ async function generatePublishTx({manifestIpfsPath, dir, developerAddress, ethPr
     // A developer address can be provided by the option developerAddress.
     // If it is not provided a prompt will ask for it
     if (!developerAddress) {
-      developerAddress = await inquirer.prompt([
-        {
-          type: 'input',
-          name: 'developerAddress',
-          default: '0x0000000000000000000000000000000000000000',
-          message: `A new Aragon Package Manager Repo for ${ensName} will be created. \nYou must specify the developer address that will control it (Or use the --developer_address, -a flag):`,
-          validate: (address) => (!isAddress(address) || isZeroAddress(address))
-          ? 'The developer address must be valid and non-zero. Please make sure it is correct'
-          : true,
-        },
-      ]).then((answer) => answer.developerAddress);
-    } else if (!isAddress(developerAddress) || isZeroAddress(developerAddress)) {
-      throw Error('The developer address must be valid and non-zero. Please make sure it is correct');
+      developerAddress = await inquirer
+        .prompt([
+          {
+            type: "input",
+            name: "developerAddress",
+            default: "0x0000000000000000000000000000000000000000",
+            message: `A new Aragon Package Manager Repo for ${ensName} will be created. \nYou must specify the developer address that will control it (Or use the --developer_address, -a flag):`,
+            validate: address =>
+              !isAddress(address) || isZeroAddress(address)
+                ? "The developer address must be valid and non-zero. Please make sure it is correct"
+                : true
+          }
+        ])
+        .then(answer => answer.developerAddress);
+    } else if (
+      !isAddress(developerAddress) ||
+      isZeroAddress(developerAddress)
+    ) {
+      throw Error(
+        "The developer address must be valid and non-zero. Please make sure it is correct"
+      );
     }
 
     // newRepoWithVersion(
@@ -91,11 +106,11 @@ async function generatePublishTx({manifestIpfsPath, dir, developerAddress, ethPr
     //     bytes _contentURI
     // )
     const newRepoWithVersionCall = registry.methods.newRepoWithVersion(
-        shortName, // string _name
-        developerAddress, // address _dev
-        semverToArray(currentVersion), // uint16[3] _initialSemanticVersion
-        contractAddress, // address _contractAddress
-        contentURI // bytes _contentURI
+      shortName, // string _name
+      developerAddress, // address _dev
+      semverToArray(currentVersion), // uint16[3] _initialSemanticVersion
+      contractAddress, // address _contractAddress
+      contentURI // bytes _contentURI
     );
     return {
       to: registry.options.address,
@@ -105,7 +120,7 @@ async function generatePublishTx({manifestIpfsPath, dir, developerAddress, ethPr
       ensName,
       currentVersion,
       manifestIpfsPath,
-      developerAddress,
+      developerAddress
     };
   }
 }
