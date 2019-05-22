@@ -1,22 +1,22 @@
-const {readManifest, writeManifest} = require('../utils/manifest');
-const {updateCompose} = require('../utils/compose');
-const check = require('../utils/check');
-const getNextVersionFromApm = require('../methods/getNextVersionFromApm');
+const { readManifest, writeManifest } = require("../utils/manifest");
+const { updateCompose } = require("../utils/compose");
+const check = require("../utils/check");
+const getNextVersionFromApm = require("../methods/getNextVersionFromApm");
 
-async function increaseFromApmVersion({type, ethProvider, dir}) {
+async function increaseFromApmVersion({ type, ethProvider, dir }) {
   // Check variables
-  const nextVersion = await getNextVersionFromApm({type, ethProvider, dir});
+  const nextVersion = await getNextVersionFromApm({ type, ethProvider, dir });
 
   // Load manifest
-  const manifest = readManifest({dir});
-  check(manifest, 'manifest', 'object');
+  const manifest = readManifest({ dir });
+  check(manifest, "manifest", "object");
 
   // Increase the version
   manifest.version = nextVersion;
 
   // Mofidy and write the manifest and docker-compose
-  writeManifest({manifest, dir});
-  updateCompose({manifest, dir});
+  writeManifest({ manifest, dir });
+  updateCompose({ manifest, dir });
 
   return nextVersion;
 }

@@ -1,10 +1,7 @@
 {
-  "extends": ["eslint:recommended", "google"],
+  "extends": "eslint:recommended",
   "parserOptions": {
-    "ecmaVersion": 6,
-    "ecmaFeatures": {
-      "experimentalObjectRestSpread": true
-    }
+    "ecmaVersion": 2018
   },
   "env": {
     "node": true,
@@ -13,23 +10,6 @@
   },
   "rules": {
     "no-console": "off",
-    "brace-style": "off",
-    "no-tabs": "off",
-    "max-len": ["error", 1000],
-    "require-jsdoc": [
-      "error",
-      {
-        "require": {
-          "FunctionDeclaration": false,
-          "MethodDefinition": false,
-          "ClassDeclaration": false,
-          "ArrowFunctionExpression": false,
-          "FunctionExpression": false
-        }
-      }
-    ]
-  },
-  "globals": {
-    "Promise": false
+    "max-len": ["error", 1000]
   }
 }
