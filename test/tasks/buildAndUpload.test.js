@@ -2,7 +2,7 @@ const expect = require("chai").expect;
 const fs = require("fs");
 const rmSafe = require("../rmSafe");
 const yaml = require("js-yaml");
-const buildAndUpload = require("../../src/methods/buildAndUpload");
+const buildAndUpload = require("../../src/tasks/buildAndUpload");
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -30,8 +30,8 @@ CMD [ "echo", "happy buidl" ]
   const compose = {
     version: "3.4",
     services: {
-      "admin.public.dappnode.eth": {
-        image: `admin.public.dappnode.eth:${version}`,
+      "admin.dnp.dappnode.eth": {
+        image: `admin.dnp.dappnode.eth:${version}`,
         build: "./build"
       }
     }
@@ -43,16 +43,18 @@ CMD [ "echo", "happy buidl" ]
     await rmSafe("./build");
     await rmSafe(buildDir);
     fs.mkdirSync("./build");
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
-    fs.writeFileSync(composePath, yaml.dump(compose, { indent: 4 }));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    fs.writeFileSync(composePath, yaml.dump(compose, { indent: 2 }));
     fs.writeFileSync("./build/Dockerfile", Dockerfile);
   });
 
   it("Should build and upload the current version", async () => {
-    const manifestIpfsPath = await buildAndUpload({
+    const buildAndUploadTasks = buildAndUpload({
       buildDir,
-      ipfsProvider: "infura"
+      ipfsProvider: "infura",
+      verbose: true
     });
+    const { manifestIpfsPath } = await buildAndUploadTasks.run();
     // Check returned hash is correct
     expect(manifestIpfsPath).to.include("/ipfs/Qm");
     // Check that the deploy.txt file is correct

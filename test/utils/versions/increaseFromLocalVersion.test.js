@@ -1,10 +1,9 @@
 const expect = require("chai").expect;
 const fs = require("fs");
 const yaml = require("js-yaml");
-const semver = require("semver");
-const rmSafe = require("../rmSafe");
-const increaseFromApmVersion = require("../../src/methods/increaseFromApmVersion");
-const { generateAndWriteCompose } = require("../../src/utils/compose");
+const rmSafe = require("../../rmSafe");
+const increaseFromLocalVersion = require("../../../src/utils/versions/increaseFromLocalVersion");
+const { generateAndWriteCompose } = require("../../../src/utils/compose");
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -14,7 +13,7 @@ const { generateAndWriteCompose } = require("../../src/utils/compose");
 // - modify the existing manifest and increase its version
 // - generate a docker compose with the next version
 
-describe("increaseFromApmVersion", () => {
+describe("increaseFromLocalVersion", () => {
   const ensName = "admin.dnp.dappnode.eth";
   const manifest = {
     name: ensName,
@@ -39,26 +38,29 @@ describe("increaseFromApmVersion", () => {
   });
 
   it("Should get the last version from APM", async () => {
-    const nextVersion = await increaseFromApmVersion({
+    const nextVersion = await increaseFromLocalVersion({
       type: "patch",
       ethProvider: "infura"
     });
 
     // Check that the console output contains a valid semver version
-    expect(semver.valid(nextVersion)).to.be.ok;
+    expect(nextVersion).to.equal(
+      "0.1.1",
+      "Should output to console the next version"
+    );
 
     // Check that the compose was edited correctly to the next version
     const composeString = fs.readFileSync(composePath, "utf8");
     const compose = yaml.safeLoad(composeString);
     expect(compose.services[ensName].image).to.equal(
-      `admin.dnp.dappnode.eth:${nextVersion}`,
+      "admin.dnp.dappnode.eth:0.1.1",
       "compose should be edited to the next version"
     );
     // Check that the manifest was edited correctly to the next version
     const newManifestString = fs.readFileSync(manifestPath, "utf8");
     const newManifest = JSON.parse(newManifestString);
     expect(newManifest.version).to.equal(
-      nextVersion,
+      "0.1.1",
       "manifest should be edited to the next version"
     );
   }).timeout(60 * 1000);

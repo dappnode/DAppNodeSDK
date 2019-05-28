@@ -1,8 +1,8 @@
 const expect = require("chai").expect;
 const fs = require("fs");
 const semver = require("semver");
-const rmSafe = require("../rmSafe");
-const getNextVersionFromApm = require("../../src/methods/getNextVersionFromApm");
+const rmSafe = require("../../rmSafe");
+const getNextVersionFromApm = require("../../../src/utils/versions/getNextVersionFromApm");
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

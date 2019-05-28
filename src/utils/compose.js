@@ -150,7 +150,7 @@ function generateCompose({ manifest }) {
   if (Object.getOwnPropertyNames(volumes).length)
     dockerCompose.volumes = volumes;
 
-  return yaml.dump(dockerCompose, { indent: 4 });
+  return yaml.dump(dockerCompose, { indent: 2 });
 }
 
 function updateCompose({ manifest, dir, composeFileName }) {
@@ -161,7 +161,7 @@ function updateCompose({ manifest, dir, composeFileName }) {
   //       image: 'wamp.dnp.dappnode.eth:0.1.1'
   dockerCompose.services[manifest.name].image =
     manifest.name + ":" + manifest.version;
-  const composeYaml = yaml.dump(dockerCompose, { indent: 4 });
+  const composeYaml = yaml.dump(dockerCompose, { indent: 2 });
   writeCompose({ composeYaml, dir, composeFileName });
 }
 

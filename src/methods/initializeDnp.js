@@ -1,5 +1,5 @@
 const fs = require("fs");
-const SEMVER = require("semver");
+const semver = require("semver");
 const inquirer = require("inquirer");
 const { writeManifest } = require("../utils/manifest");
 const { generateAndWriteCompose } = require("../utils/compose");
@@ -40,13 +40,13 @@ It only covers the most common items, and tries to guess sensible defaults.
           default: defaultAnswers.version,
           message: "Version",
           validate: val =>
-            !SEMVER.valid(val) ||
+            !semver.valid(val) ||
             !(
-              SEMVER.eq(val, "1.0.0") ||
-              SEMVER.eq(val, "0.1.0") ||
-              SEMVER.eq(val, "0.0.1")
+              semver.eq(val, "1.0.0") ||
+              semver.eq(val, "0.1.0") ||
+              semver.eq(val, "0.0.1")
             )
-              ? "the version needs to be a semver valid. The valid initial valid versions are 1.0.0, 0.1.0 or 0.0.1 "
+              ? "the version needs to be valid semver. If this is the first release, the version must be 1.0.0, 0.1.0 or 0.0.1 "
               : true
         },
         {
@@ -81,19 +81,6 @@ It only covers the most common items, and tries to guess sensible defaults.
         {
           type: "input",
           message:
-            "Ports to expose externally (eg: 31313:30303;31313:30303/udp )",
-          name: "ports"
-        },
-        {
-          type: "input",
-          message:
-            "Volumes to be persistent (eg: ipfsdnpdappnodeeth_export:/export;/home/ipfs_data:/data/ipfs)",
-          name: "volumes"
-        },
-
-        {
-          type: "input",
-          message:
             'Keywords (tags) separated by semicolons (eg: "DAppNodeCore;IPFS" )',
           name: "keywords"
         }
@@ -120,7 +107,7 @@ It only covers the most common items, and tries to guess sensible defaults.
   // Append objects
   if (answers.volumes) manifest.image.volumes = answers.volumes.split(";");
   if (answers.ports) manifest.image.ports = answers.ports.split(";");
-  if (answers.keywords) manifest.image.keywords = answers.keywords.split(";");
+  if (answers.keywords) manifest.keywords = answers.keywords.split(";");
 
   // Create folders
   const path = dir;
