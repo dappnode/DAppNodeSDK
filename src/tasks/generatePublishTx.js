@@ -3,7 +3,8 @@ const semverToArray = require("../utils/semverToArray");
 const { readManifest } = require("../utils/manifest");
 
 const Apm = require("../utils/Apm");
-const { isAddress } = require("web3-utils");
+const abi = require("ethjs-abi");
+const { isHexString } = require("ethjs-util");
 const isZeroAddress = address => parseInt(address) === 0;
 
 /**
@@ -72,20 +73,25 @@ function generatePublishTx({
           const { registry, repository } = ctx;
           // If repository exists, push new version to it
           if (repository) {
-            // newVersion(
-            //     uint16[3] _newSemanticVersion,
-            //     address _contractAddress,
-            //     bytes _contentURI
-            // )
-            const newVersionCall = repository.methods.newVersion(
-              semverToArray(currentVersion), // uint16[3] _newSemanticVersion
-              contractAddress, // address _contractAddress
-              contentURI // bytes _contentURI
+            const newVersionCallAbi = repository.abi.find(
+              ({ name }) => name === "newVersion"
             );
+            if (!newVersionCallAbi)
+              throw Error("Repository ABI doesn't have newVersion()");
+
             ctx.txData = {
-              to: repository.options.address,
+              to: repository.address,
               value: 0,
-              data: newVersionCall.encodeABI(),
+              // newVersion(
+              //     uint16[3] _newSemanticVersion,
+              //     address _contractAddress,
+              //     bytes _contentURI
+              // )
+              data: abi.encodeMethod(newVersionCallAbi, [
+                semverToArray(currentVersion), // uint16[3] _newSemanticVersion
+                contractAddress, // address _contractAddress
+                contentURI // bytes _contentURI
+              ]),
               gasLimit: 300000,
               ensName,
               currentVersion,
@@ -97,7 +103,7 @@ function generatePublishTx({
             // A developer address must be provided by the option -a or --developer_address.
             if (
               !developerAddress ||
-              !isAddress(developerAddress) ||
+              !isHexString(developerAddress) ||
               isZeroAddress(developerAddress)
             ) {
               throw Error(
@@ -109,24 +115,29 @@ dappnodesdk publish [type] --developer_address 0xAb5801a7D398351b8bE11C439e05C5B
               );
             }
 
-            // newRepoWithVersion(
-            //     string _name,
-            //     address _dev,
-            //     uint16[3] _initialSemanticVersion,
-            //     address _contractAddress,
-            //     bytes _contentURI
-            // )
-            const newRepoWithVersionCall = registry.methods.newRepoWithVersion(
-              shortName, // string _name
-              developerAddress, // address _dev
-              semverToArray(currentVersion), // uint16[3] _initialSemanticVersion
-              contractAddress, // address _contractAddress
-              contentURI // bytes _contentURI
+            const newRepoWithVersionCallAbi = registry.abi.find(
+              ({ name }) => name === "newRepoWithVersion"
             );
+            if (!newRepoWithVersionCallAbi)
+              throw Error("Registry ABI doesn't have newRepoWithVersion()");
+
             ctx.txData = {
-              to: registry.options.address,
+              to: registry.address,
               value: 0,
-              data: newRepoWithVersionCall.encodeABI(),
+              // newRepoWithVersion(
+              //     string _name,
+              //     address _dev,
+              //     uint16[3] _initialSemanticVersion,
+              //     address _contractAddress,
+              //     bytes _contentURI
+              // )
+              data: abi.encodeMethod(newRepoWithVersionCallAbi, [
+                shortName, // string _name
+                developerAddress, // address _dev
+                semverToArray(currentVersion), // uint16[3] _initialSemanticVersion
+                contractAddress, // address _contractAddress
+                contentURI // bytes _contentURI
+              ]),
               gasLimit: 1100000,
               ensName,
               currentVersion,
