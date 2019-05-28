@@ -1,6 +1,6 @@
 const expect = require("chai").expect;
 const fs = require("fs");
-const rmSafe = require("../rmSafe");
+const { rmSafe, shellSafe } = require("../shellSafe");
 const yaml = require("js-yaml");
 const buildAndUpload = require("../../src/tasks/buildAndUpload");
 
@@ -12,9 +12,11 @@ const buildAndUpload = require("../../src/tasks/buildAndUpload");
 // and output it to the console and to ./dnp_0.0.0/deploy.txt
 
 describe("buildAndUpload", () => {
+  const ensName = "sdk-test.dnp.dappnode.eth";
   const version = "0.1.0";
+  const imageTag = `${ensName}:${version}`;
   const manifest = {
-    name: "admin.dnp.dappnode.eth",
+    name: ensName,
     version,
     image: {}
   };
@@ -22,16 +24,19 @@ describe("buildAndUpload", () => {
   const composePath = "./docker-compose.yml";
   const buildDir = `./build_${version}/`;
 
-  const Dockerfile = `FROM alpine:3.1
-WORKDIR /usr/src/app
-CMD [ "echo", "happy buidl" ]
-`;
+  /**
+   * [NOTE] using an extremely lightweight image to accelerate tests
+   */
+  const Dockerfile = `
+FROM hello-world
+ENV test=1
+`.trim();
 
   const compose = {
     version: "3.4",
     services: {
-      "admin.dnp.dappnode.eth": {
-        image: `admin.dnp.dappnode.eth:${version}`,
+      [ensName]: {
+        image: imageTag,
         build: "./build"
       }
     }
@@ -67,5 +72,6 @@ CMD [ "echo", "happy buidl" ]
     await rmSafe(composePath);
     await rmSafe("./build");
     await rmSafe(buildDir);
+    await shellSafe(`docker image rm -f ${imageTag}`);
   });
 });

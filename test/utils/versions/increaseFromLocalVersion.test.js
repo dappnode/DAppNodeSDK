@@ -1,7 +1,7 @@
 const expect = require("chai").expect;
 const fs = require("fs");
 const yaml = require("js-yaml");
-const rmSafe = require("../../rmSafe");
+const { rmSafe } = require("../../shellSafe");
 const increaseFromLocalVersion = require("../../../src/utils/versions/increaseFromLocalVersion");
 const { generateAndWriteCompose } = require("../../../src/utils/compose");
 

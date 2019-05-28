@@ -1,8 +1,7 @@
 const expect = require("chai").expect;
 const fs = require("fs");
 const generatePublishTx = require("../../src/tasks/generatePublishTx");
-const rmSafe = require("../rmSafe");
-const mkdirSafe = require("../mkdirSafe");
+const { rmSafe, mkdirSafe } = require("../shellSafe");
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

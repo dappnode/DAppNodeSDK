@@ -1,7 +1,7 @@
 const expect = require("chai").expect;
 const fs = require("fs");
 const semver = require("semver");
-const rmSafe = require("../../rmSafe");
+const { rmSafe } = require("../../shellSafe");
 const getNextVersionFromApm = require("../../../src/utils/versions/getNextVersionFromApm");
 
 // This test will create the following fake files
