@@ -1,24 +1,9 @@
 const fs = require("fs");
 const chalk = require("chalk");
-
-// Format txData for the dappnode ADMIN UI
-const stringifyUrlQuery = obj =>
-  Object.keys(obj)
-    .map(key => `${key}=${encodeURIComponent(obj[key])}`)
-    .join("&");
+const getTxDataAdminUiLink = require("./getTxDataAdminUiLink");
 
 function outputTxData({ txData, toConsole, toFile }) {
-  // txData => Admin UI link
-  const txDataShortKeys = {
-    r: txData.ensName,
-    v: txData.currentVersion,
-    h: txData.manifestIpfsPath
-  };
-  // Only add developerAddress if necessary to not pollute the link
-  if (txData.developerAddress) txDataShortKeys.d = txData.developerAddress;
-  const adminUiLink = `http://my.admin.dnp.dappnode.eth/#/sdk/publish/${stringifyUrlQuery(
-    txDataShortKeys
-  )}`;
+  const adminUiLink = getTxDataAdminUiLink({ txData });
 
   const txDataToPrint = {
     To: txData.to,

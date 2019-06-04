@@ -46,7 +46,14 @@ function buildAndUpload({
   const shortName = manifest.name.split(".")[0];
 
   // Construct directories and names
-  const imagePath = path.join(buildDir, `${ensName}_${version}.tar`);
+  const imagePathUncompressed = path.join(
+    buildDir,
+    `${ensName}_${version}.tar`
+  );
+  const imagePathCompressed = path.join(
+    buildDir,
+    `${ensName}_${version}.tar.xz`
+  );
   const composePath = path.join(buildDir, `docker-compose-${shortName}.yml`);
   const uploadPath = path.join(buildDir, `upload.json`);
   const imageTag = `${ensName}:${version}`;
@@ -120,20 +127,25 @@ function buildAndUpload({
           // Load the cache object
           const cacheTarHash = cache.load()[imageId];
           // Load the .tar.xz hash
-          const tarHash = await getFileHash(imagePath);
+          const tarHash = await getFileHash(imagePathCompressed);
           if (imageId && tarHash && tarHash === cacheTarHash) {
-            task.skip(`Using cached verified tarball ${imagePath}`);
+            task.skip(`Using cached verified tarball ${imagePathCompressed}`);
           } else {
             task.output = `Saving docker image to file...`;
-            await execa.shell(`docker save ${imageTag} > ${imagePath}`);
+            await execa.shell(
+              `docker save ${imageTag} > ${imagePathUncompressed}`
+            );
 
             const logger = msg => {
               task.output = msg;
             };
-            await compressFile(imagePath, { timeout: buildTimeout, logger });
+            await compressFile(imagePathUncompressed, {
+              timeout: buildTimeout,
+              logger
+            });
 
             task.output = `Storing saved image to cache...`;
-            const newTarHash = await getFileHash(imagePath);
+            const newTarHash = await getFileHash(imagePathCompressed);
             if (imageId && newTarHash)
               cache.write({ key: imageId, value: newTarHash });
           }
@@ -145,11 +157,15 @@ function buildAndUpload({
       {
         title: "Upload image to IPFS",
         task: async (ctx, task) => {
-          const imageUpload = await ipfsAddFromFs(imagePath, ipfsProvider, {
-            logger: msg => {
-              task.output = msg;
+          const imageUpload = await ipfsAddFromFs(
+            imagePathCompressed,
+            ipfsProvider,
+            {
+              logger: msg => {
+                task.output = msg;
+              }
             }
-          });
+          );
           ctx.imageUpload = imageUpload;
         }
       },

@@ -7,7 +7,12 @@ const execa = require("execa");
  */
 
 function compressFile(path, { logger, timeout }) {
-  const cmdOg = `xz -e9T0 -vv -k -f ${path}`;
+  /**
+   * -e9T0: Compression settings (extreme and paralelized)
+   * -vv: Very verbose log to provide progress
+   * -f: overwrite the destination path if necessary
+   */
+  const cmdOg = `xz -e9T0 -vv -f ${path}`;
   const cmd = `${cmdOg} & xz_pid=$!
 while sleep 1; do
   kill -ALRM "$xz_pid" || break

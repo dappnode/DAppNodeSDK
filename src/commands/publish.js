@@ -2,6 +2,7 @@ const path = require("path");
 const Listr = require("listr");
 const buildAndUpload = require("../tasks/buildAndUpload");
 const generatePublishTx = require("../tasks/generatePublishTx");
+const createGithubRelease = require("../tasks/createGithubRelease");
 const getCurrentLocalVersion = require("../utils/versions/getCurrentLocalVersion");
 const increaseFromApmVersion = require("../utils/versions/increaseFromApmVersion");
 const outputTxData = require("../utils/outputTxData");
@@ -45,6 +46,9 @@ exports.builder = yargs =>
       description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
       default: "15min"
     })
+    .option("github_release", {
+      description: `Publish the release on the Github repo specified in the manifest. Requires a GITHUB_TOKEN ENV to authenticate`
+    })
     .require("type");
 
 exports.handler = async ({
@@ -53,6 +57,7 @@ exports.handler = async ({
   eth_provider,
   ipfs_provider,
   developer_address,
+  github_release,
   timeout
 }) => {
   // Parse options
@@ -60,12 +65,16 @@ exports.handler = async ({
   const ipfsProvider = provider || ipfs_provider;
   const developerAddress = developer_address;
   const userTimeout = timeout;
+  const githubRelease = github_release;
 
   const dir = "./";
   const silent = false;
   const verbose = false;
 
   const publishTasks = new Listr([
+    /**
+     * 1. Fetch current version from APM
+     */
     {
       title: "Fetch current version from APM",
       task: async ctx => {
@@ -81,9 +90,13 @@ exports.handler = async ({
             nextVersion = getCurrentLocalVersion({ dir });
           else throw e;
         }
+        ctx.nextVersion = nextVersion;
         ctx.buildDir = path.join(dir, `build_${nextVersion}`);
       }
     },
+    /**
+     * 2. Build and upload
+     */
     {
       title: "Build and upload",
       task: ctx =>
@@ -97,6 +110,7 @@ exports.handler = async ({
         })
     },
     /**
+     * 3. Generate transaction
      * Appends ctx.txData = {
      *   to: repo or registry address
      *   value: 0,
@@ -115,6 +129,21 @@ exports.handler = async ({
           dir,
           developerAddress,
           ethProvider,
+          verbose,
+          silent
+        })
+    },
+    /**
+     * 4. Create github release
+     * [ONLY] add the Release task if requested
+     */
+    {
+      title: "Release on github",
+      enabled: () => githubRelease,
+      task: ctx =>
+        createGithubRelease({
+          dir,
+          buildDir: ctx.buildDir,
           verbose,
           silent
         })
