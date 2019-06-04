@@ -1,6 +1,7 @@
 // node modules
 const yaml = require("js-yaml");
 const fs = require("fs");
+const path = require("path");
 const check = require("../utils/check");
 
 const DOCKERCOMPOSE = "docker-compose.yml";
@@ -15,7 +16,7 @@ const DOCKERCOMPOSE = "docker-compose.yml";
  * @return {String} path = './dappnode_package.json'
  */
 function getComposePath({ dir = "./", composeFileName = DOCKERCOMPOSE }) {
-  return `${dir}${composeFileName}`;
+  return path.join(dir, composeFileName);
 }
 
 /**

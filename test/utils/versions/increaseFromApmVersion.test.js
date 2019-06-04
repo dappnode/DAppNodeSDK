@@ -34,7 +34,7 @@ describe("increaseFromApmVersion", () => {
   before(async () => {
     await rmSafe(manifestPath);
     await rmSafe(composePath);
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
     generateAndWriteCompose({ manifest });
   });
 

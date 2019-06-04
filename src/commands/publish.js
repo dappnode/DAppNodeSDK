@@ -155,6 +155,6 @@ exports.handler = async ({
   outputTxData({
     txData,
     toConsole: !silent,
-    toFile: `${buildDir}/deploy.txt`
+    toFile: path.join(buildDir, "deploy.txt")
   });
 };

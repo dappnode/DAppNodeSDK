@@ -1,4 +1,5 @@
 const expect = require("chai").expect;
+const path = require("path");
 const fs = require("fs");
 const generatePublishTx = require("../../src/tasks/generatePublishTx");
 const { rmSafe, mkdirSafe } = require("../shellSafe");
@@ -13,7 +14,7 @@ const { rmSafe, mkdirSafe } = require("../shellSafe");
 describe("generatePublishTx", () => {
   const manifestPath = "./dappnode_package.json";
   const buildDir = "dnp_0.0.0";
-  const deployTextPath = `${buildDir}/deploy.txt`;
+  const deployTextPath = path.join(buildDir, "deploy.txt");
 
   before(async () => {
     await rmSafe(manifestPath);
@@ -26,7 +27,7 @@ describe("generatePublishTx", () => {
       name: "admin.dnp.dappnode.eth",
       version: "0.1.0"
     };
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
     const generatePublishTxTasks = generatePublishTx({
       manifestIpfsPath: "/ipfs/Qm",
@@ -58,7 +59,7 @@ describe("generatePublishTx", () => {
       name: "new-repo.dnp.dappnode.eth",
       version: "0.1.0"
     };
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
     const generatePublishTxTasks = generatePublishTx({
       manifestIpfsPath: "/ipfs/Qm",

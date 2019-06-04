@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 const check = require("../utils/check");
 
 const MANIFEST_NAME = "dappnode_package.json";
@@ -16,7 +17,7 @@ function getManifestPath({
   dir = "./",
   manifestFileName = MANIFEST_NAME
 } = {}) {
-  return `${dir}${manifestFileName}`;
+  return path.join(dir, manifestFileName);
 }
 
 /**

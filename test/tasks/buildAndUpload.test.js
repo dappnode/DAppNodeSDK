@@ -22,7 +22,7 @@ describe("buildAndUpload", () => {
   };
   const manifestPath = "./dappnode_package.json";
   const composePath = "./docker-compose.yml";
-  const buildDir = `./build_${version}/`;
+  const buildDir = `./build_${version}`;
 
   /**
    * [NOTE] using an extremely lightweight image to accelerate tests

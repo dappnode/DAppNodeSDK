@@ -18,7 +18,7 @@ describe("getNextVersionFromApm", () => {
 
   before(async () => {
     await rmSafe(manifestPath);
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
   });
 
   it("Should get the last version from APM", async () => {
