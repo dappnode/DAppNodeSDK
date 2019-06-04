@@ -1,7 +1,10 @@
 const path = require("path");
 const chalk = require("chalk");
+// Tasks
 const buildAndUpload = require("../tasks/buildAndUpload");
+// Utils
 const getCurrentLocalVersion = require("../utils/versions/getCurrentLocalVersion");
+const verifyIpfsConnection = require("../utils/verifyIpfsConnection");
 
 /**
  * INIT
@@ -38,6 +41,8 @@ exports.handler = async ({ provider, timeout }) => {
 
   const nextVersion = getCurrentLocalVersion({ dir });
   const buildDir = path.join(dir, `build_${nextVersion}`);
+
+  await verifyIpfsConnection({ ipfsProvider });
 
   const buildAndUploadTasks = buildAndUpload({
     dir,

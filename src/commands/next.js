@@ -1,4 +1,5 @@
 const getNextVersionFromApm = require("../utils/versions/getNextVersionFromApm");
+const verifyEthConnection = require("../utils/verifyEthConnection");
 
 exports.command = "next [type]";
 
@@ -20,11 +21,14 @@ exports.builder = yargs =>
 exports.handler = async ({ type, provider }) => {
   // Parse options
   const dir = "./";
+  const ethProvider = provider;
+
+  await verifyEthConnection({ ethProvider });
 
   // Execute command
   const nextVersion = await getNextVersionFromApm({
     type,
-    ethProvider: provider,
+    ethProvider,
     dir
   });
   // Output result: "0.1.8"

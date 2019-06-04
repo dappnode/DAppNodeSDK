@@ -4,6 +4,6 @@ DAppNodePackage-*
 # When testing commands with this package this files will be generated
 build
 build_*
-dappnode_package.json
+dappnode_package*.json
 docker-compose.yml
 .cache

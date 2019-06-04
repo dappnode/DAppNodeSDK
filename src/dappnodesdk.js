@@ -51,6 +51,8 @@ dappnodesdk.epilogue(
  */
 dappnodesdk.fail(function(msg, err, yargs) {
   if (err) {
+    // If the error is a network error, show the full error with status code and info
+    if (err.name === "HttpError") console.error(err);
     console.error(err.stack);
     process.exit(1);
   } else if (msg === welcomeMsg) {

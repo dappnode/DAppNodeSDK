@@ -35,29 +35,6 @@ function Apm(providerId) {
   const eth = new Eth(provider);
   const ens = new ENS({ provider, network: "1" });
 
-  // Verify if the connection is active
-  let connectionVerified = false;
-  async function verifyConnection() {
-    if (connectionVerified) return;
-    try {
-      const isListening = await eth.net_listening();
-      if (!isListening) throw Error("Network is not listening");
-      connectionVerified = true;
-    } catch (e) {
-      let msg;
-      if (!e.message.includes("Invalid JSON RPC response")) {
-        msg = e.message;
-      }
-      let host = `eth provider ${providerUrl}`;
-      if (host.includes("ethchain.dnp.dappnode.eth"))
-        host = "your DAppNode. Please make sure your VPN connection is active";
-      console.error(
-        `Could not connect to ${host} ${msg ? `- Error message: ${msg}` : ""}`
-      );
-      process.exit(1);
-    }
-  }
-
   // Ens throws if a node is not found
   //
   // ens.resolver('admin.dnp.dappnode.eth').addr()
@@ -67,7 +44,6 @@ function Apm(providerId) {
   //
   // Change behaviour to return null if not found
   async function resolve(ensDomain) {
-    await verifyConnection();
     try {
       return await ens.lookup(ensDomain);
     } catch (e) {
@@ -86,7 +62,6 @@ function Apm(providerId) {
   async function getLatestVersion(ensName) {
     if (!ensName)
       throw Error("getLatestVersion first argument ensName must be defined");
-    await verifyConnection();
     const repository = await getRepoContract(ensName);
     if (!repository) {
       const registry = getRegistryContract(ensName);
@@ -151,7 +126,8 @@ function Apm(providerId) {
     getLatestVersion,
     getRepoContract,
     getRegistryContract,
-    providerUrl
+    providerUrl,
+    provider
   };
 }
 

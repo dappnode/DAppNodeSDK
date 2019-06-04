@@ -1,11 +1,15 @@
 const path = require("path");
 const Listr = require("listr");
+// Tasks
 const buildAndUpload = require("../tasks/buildAndUpload");
 const generatePublishTx = require("../tasks/generatePublishTx");
 const createGithubRelease = require("../tasks/createGithubRelease");
+// Utils
 const getCurrentLocalVersion = require("../utils/versions/getCurrentLocalVersion");
 const increaseFromApmVersion = require("../utils/versions/increaseFromApmVersion");
 const outputTxData = require("../utils/outputTxData");
+const verifyIpfsConnection = require("../utils/verifyIpfsConnection");
+const verifyEthConnection = require("../utils/verifyEthConnection");
 
 /**
  * INIT
@@ -70,6 +74,9 @@ exports.handler = async ({
   const dir = "./";
   const silent = false;
   const verbose = false;
+
+  await verifyIpfsConnection({ ipfsProvider });
+  await verifyEthConnection({ ethProvider });
 
   const publishTasks = new Listr([
     /**
