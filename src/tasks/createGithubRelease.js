@@ -3,6 +3,7 @@ const path = require("path");
 const Listr = require("listr");
 const getRepoSlugFromManifest = require("../utils/getRepoSlugFromManifest");
 const getTxDataAdminUiLink = require("../utils/getTxDataAdminUiLink");
+const getCurrentCommitSha = require("../utils/getCurrentCommitSha");
 const Octokit = require("@octokit/rest");
 const mime = require("mime-types");
 const retry = require("async-retry");
@@ -30,7 +31,83 @@ function createGithubRelease({ dir, buildDir, verbose, silent }) {
   return new Listr(
     [
       /**
-       * 1. Create release
+       * 1. Handle tags
+       * - If the release is triggered in travis,
+       *   the trigger tag must be remove and replaced by the release tag
+       * - If the release is triggered locally, the commit should be
+       *   tagged and released on that tag
+       */
+      {
+        title: `Handle tags`,
+        task: async (ctx, task) => {
+          //   console.log(res);
+          // Get next version from context, fir
+          const { nextVersion } = ctx;
+          if (!nextVersion) throw Error("Missing ctx.nextVersion");
+          const tag = `v${nextVersion}`;
+          /**
+           * If the release is triggered in travis,
+           * the trigger tag must be removed
+           * Travis ENVs:
+           * - TRAVIS=true
+           * - CONTINUOUS_INTEGRATION=true
+           * - TRAVIS_TAG=release/patch
+           */
+          const { TRAVIS, TRAVIS_TAG, TRAVIS_COMMIT } = process.env;
+          if (TRAVIS && TRAVIS_TAG && TRAVIS_TAG.startsWith("release")) {
+            await octokit.git
+              .deleteRef({
+                owner,
+                repo,
+                ref: `tags/${TRAVIS_TAG}`
+              })
+              .catch(e => {
+                // Ignore error if the reference does not exist, can be deleted latter
+                if (e.message.includes("Reference does not exist")) return;
+                e.message = `Error deleting travis trigger tag: ${e.message}`;
+                throw e;
+              });
+          }
+          /**
+           * Check if the release tag exists remotely. If so, remove it
+           */
+          await octokit.git
+            .deleteRef({
+              owner,
+              repo,
+              ref: `tags/${tag}`
+            })
+            .catch(e => {
+              // Ignore error if the reference does not exist, first time creating tag
+              if (e.message.includes("Reference does not exist")) return;
+              e.message = `Error deleting existing tag ${tag}: ${e.message}`;
+              throw e;
+            });
+          /**
+           * Get the commit sha to be tagged
+           * - If on travis, use the current TRAVIS_COMMIT
+           * - Otherwise use the current HEAD commit
+           */
+          const sha = TRAVIS_COMMIT || (await getCurrentCommitSha());
+          /**
+           * Tag the current commit with the release tag
+           */
+          task.output = `Releasing commit ${sha} at tag ${tag}`;
+          await octokit.git
+            .createRef({
+              owner,
+              repo,
+              ref: `refs/tags/${tag}`,
+              sha
+            })
+            .catch(e => {
+              e.message = `Error creating tag ${tag} at ${sha}: ${e.message}`;
+              throw e;
+            });
+        }
+      },
+      /**
+       * 2. Create release
        * - nextVersion comes from the first task in `publish`
        */
       {
@@ -42,61 +119,62 @@ function createGithubRelease({ dir, buildDir, verbose, silent }) {
           if (!nextVersion) throw Error("Missing ctx.nextVersion");
           const tag = `v${nextVersion}`;
 
-          // Get release information to know if it exists
-          const currentRelease = await octokit.repos
-            .getReleaseByTag({
-              owner: owner,
-              repo: repo,
-              tag: tag
-            })
-            .then(res => res.data)
-            .catch(e => {
-              if (e.status === 404) return;
-              else throw e;
-            });
-
-          if (currentRelease) {
-            task.output = "Deleting existing release...";
-            for (const asset of currentRelease.assets) {
-              await octokit.repos.deleteReleaseAsset({
+          /**
+           * Delete all releases that have the name tag or name
+           * If there are no releases, repos.listReleases will return []
+           */
+          task.output = "Deleting existing release...";
+          const releases = await octokit.repos
+            .listReleases({ owner, repo })
+            .then(res => res.data);
+          const matchingReleases = releases.filter(
+            ({ tag_name, name }) => tag_name === tag || name === tag
+          );
+          for (const matchingRelease of matchingReleases) {
+            for (const asset of matchingRelease.assets) {
+              await octokit.repos
+                .deleteReleaseAsset({
+                  owner,
+                  repo,
+                  asset_id: asset.id
+                })
+                .catch(e => {
+                  e.message = `Error deleting release asset: ${e.message}`;
+                  throw e;
+                });
+            }
+            await octokit.repos
+              .deleteRelease({
                 owner,
                 repo,
-                asset_id: asset.id
+                release_id: matchingRelease.id
+              })
+              .catch(e => {
+                e.message = `Error deleting release: ${e.message}`;
+                throw e;
               });
-            }
-            await octokit.repos.deleteRelease({
-              owner,
-              repo,
-              release_id: currentRelease.id
-            });
           }
 
+          // Create release
           task.output = `Creating release for tag ${tag}...`;
-
-          // Edit or create release
-          const releaseData = {
-            owner,
-            repo,
-            tag_name: tag,
-            name: tag,
-            body: getReleaseBody({ txData }),
-            prerelease: true,
-            // Specific for updateRelease
-            release_id: (currentRelease || {}).id
-          };
-
           const release = await octokit.repos
-            .createRelease(releaseData)
+            .createRelease({
+              owner,
+              repo,
+              tag_name: tag,
+              name: tag,
+              body: getReleaseBody({ txData }),
+              prerelease: true
+            })
             .catch(e => {
-              // Log full error for further details
-              console.log(e);
+              e.message = `Error creating release: ${e.message}`;
               throw e;
             });
           ctx.uploadUrl = release.data.upload_url;
         }
       },
       /**
-       * 2. Upload release assets
+       * 3. Upload release assets
        * - buildDir comes from the first task in `publish`
        * - `release` comes from this previous task
        */
@@ -119,16 +197,21 @@ function createGithubRelease({ dir, buildDir, verbose, silent }) {
               // The uploadReleaseAssetApi fails sometimes, retry 3 times
               await retry(
                 async () => {
-                  await octokit.repos.uploadReleaseAsset({
-                    url,
-                    file: fs.createReadStream(file),
-                    headers: {
-                      "Content-Type":
-                        mime.lookup(file) || "application/octet-stream",
-                      "Content-Length": fs.statSync(file).size
-                    },
-                    name: path.basename(file)
-                  });
+                  await octokit.repos
+                    .uploadReleaseAsset({
+                      url,
+                      file: fs.createReadStream(file),
+                      headers: {
+                        "Content-Type":
+                          mime.lookup(file) || "application/octet-stream",
+                        "Content-Length": fs.statSync(file).size
+                      },
+                      name: path.basename(file)
+                    })
+                    .catch(e => {
+                      e.message = `Error uploading release asset: ${e.message}`;
+                      throw e;
+                    });
                 },
                 { retries: 3 }
               );
