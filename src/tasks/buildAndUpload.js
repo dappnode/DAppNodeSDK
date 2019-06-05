@@ -11,6 +11,8 @@ const {
   readManifest,
   writeManifest
 } = require("../utils/manifest");
+const validateManifest = require("../utils/validateManifest");
+
 // Commands
 const compressFile = require("../utils/commands/compressFile");
 const execaProgress = require("../utils/commands/execaProgress");
@@ -39,6 +41,19 @@ function buildAndUpload({
   // Load manifest #### Deleted check functions. Verify manifest beforehand
   const manifest = readManifest({ dir });
   const manifestPath = getManifestPath({ dir });
+  /**
+   * ValidateManifest will call `process.exit(1)` if manifest is invalid
+   * Prefill the image upload data to verify the rest
+   */
+  validateManifest({
+    ...manifest,
+    image: {
+      ...manifest.image,
+      path: "dappnode.dnp.dappnode.eth_0.0.0.tar.xz",
+      hash: "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp",
+      size: 100
+    }
+  });
 
   // Define variables from manifest
   const version = manifest.version;
@@ -180,6 +195,11 @@ function buildAndUpload({
           manifest.image.path = imageUpload.path;
           manifest.image.hash = `/ipfs/${imageUpload.hash}`;
           manifest.image.size = imageUpload.size;
+          /**
+           * ValidateManifest will call `process.exit(1)` if manifest is invalid
+           * Fully validate the entire manifest
+           */
+          validateManifest(manifest);
           // Update manifest
           writeManifest({ manifest, dir });
           writeManifest({ manifest, dir: buildDir });

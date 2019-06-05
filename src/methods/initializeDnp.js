@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 const semver = require("semver");
 const inquirer = require("inquirer");
 const { writeManifest } = require("../utils/manifest");
@@ -16,13 +17,29 @@ async function initializeDnp({ dir = "./", useDefaults }) {
     description: `${defaultName} description`,
     avatar: "",
     type: "service",
-    author: defaultAuthor
+    author: defaultAuthor,
+    license: "GLP-3.0"
   };
 
   if (!useDefaults) {
     console.log(`This utility will walk you through creating a dappnode_package.json file.
 It only covers the most common items, and tries to guess sensible defaults.
 `);
+  }
+
+  if (fs.existsSync(path.join(dir, "dappnode_package.json"))) {
+    const continueAnswer = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "continue",
+        message:
+          "This directory is already initialized. Are you sure you want to overwrite the existing manifest?"
+      }
+    ]);
+    if (!continueAnswer.continue) {
+      console.log("Stopping");
+      process.exit(1);
+    }
   }
 
   const answers = useDefaults
@@ -56,16 +73,6 @@ It only covers the most common items, and tries to guess sensible defaults.
           default: defaultAnswers.description
         },
         {
-          type: "input",
-          message: "Avatar",
-          name: "avatar",
-          default: defaultAnswers.avatar,
-          validate: val =>
-            !fs.existsSync(val) && val != ""
-              ? "the avatar must be an png or jpg in the local path. You can leave this field empty"
-              : true
-        },
-        {
           type: "list",
           name: "type",
           message: "Type",
@@ -80,9 +87,9 @@ It only covers the most common items, and tries to guess sensible defaults.
         },
         {
           type: "input",
-          message:
-            'Keywords (tags) separated by semicolons (eg: "DAppNodeCore;IPFS" )',
-          name: "keywords"
+          message: "License",
+          name: "license",
+          default: defaultAnswers.license
         }
       ]);
 
@@ -91,7 +98,7 @@ It only covers the most common items, and tries to guess sensible defaults.
     name: (answers.name || "").toLowerCase() + ".public.dappnode.eth",
     version: answers.version,
     description: answers.description,
-    avatar: answers.avatar,
+    avatar: "",
     type: answers.type,
     image: {
       path: "",
@@ -100,27 +107,19 @@ It only covers the most common items, and tries to guess sensible defaults.
       restart: "always"
     },
     author: answers.author,
-    license: "",
-    dependencies: {}
+    license: answers.license
   };
 
-  // Append objects
-  if (answers.volumes) manifest.image.volumes = answers.volumes.split(";");
-  if (answers.ports) manifest.image.ports = answers.ports.split(";");
-  if (answers.keywords) manifest.keywords = answers.keywords.split(";");
-
   // Create folders
-  const path = dir;
-  await shell(`mkdir -p ${path}`, { silent: true });
-  await shell(`mkdir -p ${path}/build`, { silent: true });
+  await shell(`mkdir -p ${path.join(dir, "build")}`, { silent: true });
 
   // Write manifest and compose
-  writeManifest({ manifest, dir: path });
-  generateAndWriteCompose({ manifest, dir: path });
+  writeManifest({ manifest, dir });
+  generateAndWriteCompose({ manifest, dir });
 
   // Initialize Dockerfile
   fs.writeFileSync(
-    `${path}/build/Dockerfile`,
+    path.join(dir, "build", "Dockerfile"),
     `FROM alpine
 
 WORKDIR /usr/src/app
@@ -128,6 +127,8 @@ WORKDIR /usr/src/app
 CMD [ "echo", "happy buidl" ]
 `
   );
+
+  console.log(`Initialized DNP ${manifest.name}`);
 }
 
 module.exports = initializeDnp;

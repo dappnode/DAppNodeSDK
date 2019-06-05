@@ -32,6 +32,7 @@
   },
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
+    "@dappnode/dnp-manifest": "^0.0.4",
     "@octokit/rest": "^16.27.3",
     "async-retry": "^1.2.3",
     "chalk": "^2.4.2",

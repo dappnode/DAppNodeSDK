@@ -59,7 +59,7 @@ exports.handler = async ({
 
   console.log(`
   ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
-  Manifest hash :  ${manifestIpfsPath}
-  Install link  :  ${getLinks.installDnp({ manifestIpfsPath })}
+  Manifest hash : ${manifestIpfsPath}
+  Install link  : ${getLinks.installDnp({ manifestIpfsPath })}
 `);
 };

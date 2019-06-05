@@ -220,27 +220,25 @@ exports.handler = async ({
       To: txData.to,
       Value: txData.value,
       Data: txData.data,
-      "Gas limit": txData.gasLimit
+      Gas: txData.gasLimit
     };
 
     console.log(`
   ${chalk.green(`DNP (DAppNode Package) published (version ${nextVersion})`)} 
-  Manifest hash :  ${manifestIpfsPath}
-  Install link  :  ${getLinks.installDnp({ manifestIpfsPath })}
+  Manifest hash : ${manifestIpfsPath}
+  Install link  : ${getLinks.installDnp({ manifestIpfsPath })}
 
-  ${chalk.gray(
-    "You must execute this transaction in mainnet to publish a new version of this DNP."
-  )}
+  ${"You must execute this transaction in mainnet to publish a new version of this DNP."}
   
-${Object.keys(txDataToPrint)
-  .map(key => `  ${chalk.green(key)}: ${txDataToPrint[key]}`)
-  .join("\n")}
+${chalk.gray(
+  Object.keys(txDataToPrint)
+    .map(key => `  ${key.padEnd(5)} : ${txDataToPrint[key]}`)
+    .join("\n")
+)}
 
-  ${chalk.gray(
-    "You can also execute this transaction with Metamask by following this pre-filled link"
-  )}
+  ${"You can also execute this transaction with Metamask by following this pre-filled link"}
   
-  ${getLinks.publishTx({ txData })}
+  ${chalk.cyan(getLinks.publishTx({ txData }))}
 `);
   }
 };
