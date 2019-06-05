@@ -108,10 +108,11 @@ exports.handler = async ({
     if (TRAVIS) {
       ethProvider = "infura";
       ipfsProvider = "infura";
+      // Activate verbose to see logs easier afterwards
+      verbose = true;
     }
     githubRelease = true;
     createNextGithubBranch = true;
-    // Compute the type if it's not specified
   }
 
   /**
@@ -131,86 +132,89 @@ exports.handler = async ({
   await verifyIpfsConnection({ ipfsProvider });
   await verifyEthConnection({ ethProvider });
 
-  const publishTasks = new Listr([
-    /**
-     * 1. Fetch current version from APM
-     */
-    {
-      title: "Fetch current version from APM",
-      task: async ctx => {
-        let nextVersion;
-        try {
-          nextVersion = await increaseFromApmVersion({
-            type,
-            ethProvider,
-            dir
-          });
-        } catch (e) {
-          if (e.message.includes("NOREPO"))
-            nextVersion = getCurrentLocalVersion({ dir });
-          else throw e;
+  const publishTasks = new Listr(
+    [
+      /**
+       * 1. Fetch current version from APM
+       */
+      {
+        title: "Fetch current version from APM",
+        task: async ctx => {
+          let nextVersion;
+          try {
+            nextVersion = await increaseFromApmVersion({
+              type,
+              ethProvider,
+              dir
+            });
+          } catch (e) {
+            if (e.message.includes("NOREPO"))
+              nextVersion = getCurrentLocalVersion({ dir });
+            else throw e;
+          }
+          ctx.nextVersion = nextVersion;
+          ctx.buildDir = path.join(dir, `build_${nextVersion}`);
         }
-        ctx.nextVersion = nextVersion;
-        ctx.buildDir = path.join(dir, `build_${nextVersion}`);
+      },
+      /**
+       * 2. Build and upload
+       */
+      {
+        title: "Build and upload",
+        task: ctx =>
+          buildAndUpload({
+            dir,
+            buildDir: ctx.buildDir,
+            ipfsProvider,
+            userTimeout,
+            verbose,
+            silent
+          })
+      },
+      /**
+       * 3. Generate transaction
+       * Appends ctx.txData = {
+       *   to: repo or registry address
+       *   value: 0,
+       *   data: newVersionCall.encodeABI(),
+       *   gasLimit: 300000,
+       *   ensName,
+       *   currentVersion,
+       *   manifestIpfsPath
+       * }
+       */
+      {
+        title: "Generate transaction",
+        task: ctx =>
+          generatePublishTx({
+            manifestIpfsPath: ctx.manifestIpfsPath,
+            dir,
+            developerAddress,
+            ethProvider,
+            deployTextPath: path.join(ctx.buildDir, "deploy.txt"),
+            verbose,
+            silent
+          })
+      },
+      /**
+       * 4. Create github release
+       * [ONLY] add the Release task if requested
+       */
+      {
+        title: "Release on github",
+        enabled: () => githubRelease,
+        task: ctx =>
+          createGithubRelease({
+            dir,
+            buildDir: ctx.buildDir,
+            createNextGithubBranch,
+            verbose,
+            silent
+          })
       }
-    },
-    /**
-     * 2. Build and upload
-     */
-    {
-      title: "Build and upload",
-      task: ctx =>
-        buildAndUpload({
-          dir,
-          buildDir: ctx.buildDir,
-          ipfsProvider,
-          userTimeout,
-          verbose,
-          silent
-        })
-    },
-    /**
-     * 3. Generate transaction
-     * Appends ctx.txData = {
-     *   to: repo or registry address
-     *   value: 0,
-     *   data: newVersionCall.encodeABI(),
-     *   gasLimit: 300000,
-     *   ensName,
-     *   currentVersion,
-     *   manifestIpfsPath
-     * }
-     */
-    {
-      title: "Generate transaction",
-      task: ctx =>
-        generatePublishTx({
-          manifestIpfsPath: ctx.manifestIpfsPath,
-          dir,
-          developerAddress,
-          ethProvider,
-          deployTextPath: path.join(ctx.buildDir, "deploy.txt"),
-          verbose,
-          silent
-        })
-    },
-    /**
-     * 4. Create github release
-     * [ONLY] add the Release task if requested
-     */
-    {
-      title: "Release on github",
-      enabled: () => githubRelease,
-      task: ctx =>
-        createGithubRelease({
-          dir,
-          buildDir: ctx.buildDir,
-          createNextGithubBranch,
-          verbose,
-          silent
-        })
-    }
-  ]);
+    ],
+    { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+  );
 
   const tasksFinalCtx = await publishTasks.run();
   const { txData, nextVersion, manifestIpfsPath } = tasksFinalCtx;

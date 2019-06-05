@@ -18,7 +18,15 @@ describe("buildAndUpload", () => {
   const manifest = {
     name: ensName,
     version,
-    image: {}
+    description: "Mock DNP for testing the SDK cli",
+    avatar: "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp",
+    type: "service",
+    image: {
+      path: "dappnode.dnp.dappnode.eth_0.0.0.tar.xz",
+      hash: "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp",
+      size: 100
+    },
+    license: "GLP-3.0"
   };
   const manifestPath = "./dappnode_package.json";
   const composePath = "./docker-compose.yml";

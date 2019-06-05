@@ -7,6 +7,7 @@
     "test": "mocha \"./{,!(node_modules)/**}/*.test.js\" ",
     "test:file": "mocha ",
     "lint": "./node_modules/.bin/eslint . --ext .js --fix",
+    "tag-and-publish": "npm version patch -m 'Bump version' && git push origin master && git push --tags",
     "pre-commit": "npm run lint && npm run test"
   },
   "bin": {
@@ -24,7 +25,7 @@
   "author": "DAppNode Association <admin@dappnode.io> (https://github.com/dappnode)",
   "contributors": [
     "Eduardo Antuña <eduadiez@gmail.com> (https://github.com/eduadiez)",
-    "dappLion (https://github.com/dapplion)"
+    "dappLion <dapplion@dappnode.io> (https://github.com/dapplion)"
   ],
   "license": "GPL-3.0",
   "bugs": {
