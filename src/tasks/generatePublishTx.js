@@ -1,10 +1,13 @@
+const fs = require("fs");
 const Listr = require("listr");
-const semverToArray = require("../utils/semverToArray");
-const { readManifest } = require("../utils/manifest");
-
-const Apm = require("../utils/Apm");
 const abi = require("ethjs-abi");
 const { isHexString } = require("ethjs-util");
+// Utils
+const Apm = require("../utils/Apm");
+const semverToArray = require("../utils/semverToArray");
+const { readManifest } = require("../utils/manifest");
+const getLinks = require("../utils/getLinks");
+const { throwYargsErr } = require("../utils/yargsErr");
 const isZeroAddress = address => parseInt(address) === 0;
 
 /**
@@ -23,6 +26,7 @@ function generatePublishTx({
   dir,
   developerAddress,
   ethProvider,
+  deployTextPath,
   verbose,
   silent
 }) {
@@ -71,8 +75,9 @@ function generatePublishTx({
         title: "Generate transaction",
         task: async ctx => {
           const { registry, repository } = ctx;
-          // If repository exists, push new version to it
+
           if (repository) {
+            // If repository exists, push new version to it
             const newVersionCallAbi = repository.abi.find(
               ({ name }) => name === "newVersion"
             );
@@ -97,16 +102,15 @@ function generatePublishTx({
               currentVersion,
               manifestIpfsPath
             };
-          }
-          // If repo does not exist, create a new repo and push version
-          else {
+          } else {
+            // If repo does not exist, create a new repo and push version
             // A developer address must be provided by the option -a or --developer_address.
             if (
               !developerAddress ||
               !isHexString(developerAddress) ||
               isZeroAddress(developerAddress)
             ) {
-              throw Error(
+              throwYargsErr(
                 `A new Aragon Package Manager Repo for ${ensName} must be created. 
 You must specify the developer address that will control it
 
@@ -150,6 +154,27 @@ with command option:
               manifestIpfsPath,
               developerAddress
             };
+          }
+
+          /**
+           * Write Tx data in a file for future reference
+           */
+          if (deployTextPath) {
+            const txData = ctx.txData;
+            fs.writeFileSync(
+              deployTextPath,
+              JSON.stringify(
+                {
+                  To: txData.to,
+                  Value: txData.value,
+                  Data: txData.data,
+                  GasLimit: txData.gasLimit,
+                  PrefilledLink: getLinks.publishTx({ txData })
+                },
+                null,
+                2
+              )
+            );
           }
         }
       }

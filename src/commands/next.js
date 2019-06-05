@@ -9,12 +9,14 @@ exports.builder = yargs =>
   yargs
     .positional("type", {
       description: "Semver update type: [ major | minor | patch ]",
-      choices: ["major", "minor", "patch"]
+      choices: ["major", "minor", "patch"],
+      type: "string"
     })
     .option("p", {
       alias: "provider",
       description: `Specify an ipfs provider: "dappnode" (default), "infura", "localhost:5002"`,
-      default: "dappnode"
+      default: "dappnode",
+      type: "string"
     })
     .require("type");
 

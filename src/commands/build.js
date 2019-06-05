@@ -5,6 +5,7 @@ const buildAndUpload = require("../tasks/buildAndUpload");
 // Utils
 const getCurrentLocalVersion = require("../utils/versions/getCurrentLocalVersion");
 const verifyIpfsConnection = require("../utils/verifyIpfsConnection");
+const getLinks = require("../utils/getLinks");
 
 /**
  * INIT
@@ -59,8 +60,6 @@ exports.handler = async ({
   console.log(`
   ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
   Manifest hash :  ${manifestIpfsPath}
-  Install link  :  http://my.dappnode/#/installer/${encodeURIComponent(
-    manifestIpfsPath
-  )}
+  Install link  :  ${getLinks.installDnp({ manifestIpfsPath })}
 `);
 };

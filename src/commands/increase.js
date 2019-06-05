@@ -8,7 +8,8 @@ exports.builder = yargs =>
   yargs
     .positional("type", {
       description: "Semver update type: [ major | minor | patch ]",
-      choices: ["major", "minor", "patch"]
+      choices: ["major", "minor", "patch"],
+      type: "string"
     })
     .require("type");
 

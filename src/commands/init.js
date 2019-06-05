@@ -14,7 +14,8 @@ exports.builder = yargs =>
   yargs.option("y", {
     alias: "yes",
     description:
-      "Answer yes or the default option to all initialization questions"
+      "Answer yes or the default option to all initialization questions",
+    type: "boolean"
   });
 
 exports.handler = async ({ yes: useDefaults, dir }) => {

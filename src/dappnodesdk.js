@@ -16,11 +16,13 @@ dappnodesdk.alias("v", "version");
 dappnodesdk.option("directory", {
   alias: "dir",
   description: "Change the base directory",
-  default: "./"
+  default: "./",
+  type: "string"
 });
 
 dappnodesdk.option("silent", {
-  description: "Silence output to terminal"
+  description: "Silence output to terminal",
+  type: "boolean"
 });
 
 dappnodesdk.option("verbose", {
@@ -31,7 +33,8 @@ dappnodesdk.option("verbose", {
       global.DEBUG_MODE = true;
       return true;
     }
-  }
+  },
+  type: "boolean"
 });
 
 // blank scriptName so that help text doesn't display the cli name before each command
