@@ -70,6 +70,7 @@ exports.handler = async ({
   const developerAddress = developer_address;
   const userTimeout = timeout;
   const githubRelease = github_release;
+  const createNextGithubBranch = false;
 
   const dir = "./";
   const silent = false;
@@ -151,6 +152,7 @@ exports.handler = async ({
         createGithubRelease({
           dir,
           buildDir: ctx.buildDir,
+          createNextGithubBranch,
           verbose,
           silent
         })
