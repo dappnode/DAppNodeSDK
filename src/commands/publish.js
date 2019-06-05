@@ -10,6 +10,10 @@ const increaseFromApmVersion = require("../utils/versions/increaseFromApmVersion
 const outputTxData = require("../utils/outputTxData");
 const verifyIpfsConnection = require("../utils/verifyIpfsConnection");
 const verifyEthConnection = require("../utils/verifyEthConnection");
+const { throwYargsErr } = require("../utils/yargsErr");
+
+const validTypes = ["major", "minor", "patch"];
+const typesList = validTypes.join(" | ");
 
 /**
  * INIT
@@ -25,8 +29,11 @@ exports.describe =
 exports.builder = yargs =>
   yargs
     .positional("type", {
-      description: "Semver update type: [ major | minor | patch ]",
-      choices: ["major", "minor", "patch"]
+      description: `Semver update type: [ ${typesList} ]. Can also be provided with env RELEASE_TYPE=[type] or via TRAVIS_TAG=release (patch), TRAVIS_TAG=release/[type]`,
+      choices: validTypes,
+      coerce: (...args) => {
+        console.log({ args });
+      }
     })
     .option("p", {
       alias: "provider",
@@ -53,7 +60,12 @@ exports.builder = yargs =>
     .option("github_release", {
       description: `Publish the release on the Github repo specified in the manifest. Requires a GITHUB_TOKEN ENV to authenticate`
     })
-    .require("type");
+    .option("create_next_branch", {
+      description: `Create the next release branch on the DNP's Github repo. Requires a GITHUB_TOKEN ENV to authenticate`
+    })
+    .option("dappnode_team_preset", {
+      description: `Specific set of options used for internal DAppNode releases. Caution: options may change without notice.`
+    });
 
 exports.handler = async ({
   type,
@@ -61,20 +73,52 @@ exports.handler = async ({
   eth_provider,
   ipfs_provider,
   developer_address,
+  timeout,
   github_release,
-  timeout
+  create_next_branch,
+  dappnode_team_preset,
+  // Global options
+  dir,
+  silent,
+  verbose
 }) => {
   // Parse options
-  const ethProvider = provider || eth_provider;
-  const ipfsProvider = provider || ipfs_provider;
-  const developerAddress = developer_address;
-  const userTimeout = timeout;
-  const githubRelease = github_release;
-  const createNextGithubBranch = false;
+  let ethProvider = provider || eth_provider;
+  let ipfsProvider = provider || ipfs_provider;
+  let developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
+  let userTimeout = timeout;
+  let githubRelease = github_release;
+  let createNextGithubBranch = create_next_branch;
 
-  const dir = "./";
-  const silent = false;
-  const verbose = false;
+  const { TRAVIS, TRAVIS_TAG, RELEASE_TYPE } = process.env;
+
+  /**
+   * Specific set of options used for internal DAppNode releases.
+   * Caution: options may change without notice.
+   */
+  if (dappnode_team_preset) {
+    if (TRAVIS) {
+      ethProvider = "infura";
+      ipfsProvider = "infura";
+    }
+    githubRelease = true;
+    createNextGithubBranch = true;
+    // Compute the type if it's not specified
+  }
+
+  /**
+   * Custom options to pass the type argument
+   */
+  if (!type && RELEASE_TYPE) type = RELEASE_TYPE;
+  if (!type && TRAVIS_TAG.startsWith("release"))
+    type = TRAVIS_TAG.split("release/")[1] || "patch";
+
+  /**
+   * Make sure the release type exists and is correct
+   */
+  if (!type) throwYargsErr(`Missing required argument [type]: ${typesList}`);
+  if (!validTypes.includes(type))
+    throwYargsErr(`Invalid release type "${type}", must be: ${typesList}`);
 
   await verifyIpfsConnection({ ipfsProvider });
   await verifyEthConnection({ ethProvider });

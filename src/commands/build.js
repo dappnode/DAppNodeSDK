@@ -29,16 +29,17 @@ exports.builder = yargs =>
       default: "15min"
     });
 
-exports.handler = async ({ provider, timeout }) => {
+exports.handler = async ({
+  provider,
+  timeout,
+  // Global options
+  dir,
+  silent,
+  verbose
+}) => {
   // Parse options
   const ipfsProvider = provider;
   const userTimeout = timeout;
-  //   const dir = parent.dir || "./"; // general option
-  //   const silent = parent.silent; // general option
-  const dir = "./";
-  const silent = false;
-  const verbose = false;
-
   const nextVersion = getCurrentLocalVersion({ dir });
   const buildDir = path.join(dir, `build_${nextVersion}`);
 

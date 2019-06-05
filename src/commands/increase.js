@@ -12,10 +12,7 @@ exports.builder = yargs =>
     })
     .require("type");
 
-exports.handler = async ({ type }) => {
-  // Parse options
-  const dir = "./";
-
+exports.handler = async ({ type, dir }) => {
   // Execute command
   const nextVersion = await increaseFromLocalVersion({ type, dir });
   // Output result: "0.1.8"

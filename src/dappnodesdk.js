@@ -2,6 +2,7 @@
 
 const chalk = require("chalk");
 const figlet = require("figlet");
+const { isYargsErr } = require("./utils/yargsErr");
 
 // Set up commands
 const dappnodesdk = require("yargs")
@@ -12,6 +13,12 @@ dappnodesdk.alias("h", "help");
 dappnodesdk.alias("v", "version");
 
 // Set global options
+dappnodesdk.option("directory", {
+  alias: "dir",
+  description: "Change the base directory",
+  default: "./"
+});
+
 dappnodesdk.option("silent", {
   description: "Silence output to terminal"
 });
@@ -27,7 +34,7 @@ dappnodesdk.option("verbose", {
   }
 });
 
-// blank scriptName so that help text doesn't display "aragon" before each command
+// blank scriptName so that help text doesn't display the cli name before each command
 dappnodesdk.scriptName("");
 
 // Display ascii art, then help
@@ -50,6 +57,11 @@ dappnodesdk.epilogue(
  * - #### TODO, track known errors and show them nicely
  */
 dappnodesdk.fail(function(msg, err, yargs) {
+  // Rebrand custom errors as yargs native errors, to display help
+  if (isYargsErr(err)) {
+    msg = isYargsErr(err);
+    err = null;
+  }
   if (err) {
     // If the error is a network error, show the full error with status code and info
     if (err.name === "HttpError") console.error(err);
@@ -75,77 +87,3 @@ ${msg}
 
 // Run CLI
 dappnodesdk.parse();
-
-// Methods
-// const getNextVersionFromApm = require("./methods/getNextVersionFromApm");
-// const increaseFromLocalVersion = require("./methods/increaseFromLocalVersion");
-// const increaseFromApmVersion = require("./methods/increaseFromApmVersion");
-// const buildAndUpload = require("./methods/buildAndUpload");
-// const generatePublishTx = require("./methods/generatePublishTx");
-// const initializeDnp = require("./methods/initializeDnp");
-// const getCurrentLocalVersion = require("./methods/getCurrentLocalVersion");
-// // Utils
-// const {
-//   readManifest,
-//   writeManifest,
-//   manifestFromCompose
-// } = require("./utils/manifest");
-// const { readCompose, generateAndWriteCompose } = require("./utils/compose");
-// const outputTxData = require("./utils/outputTxData");
-// const warpErrors = require("./utils/warpErrors");
-
-// Generic options for all commands
-// dappnodesdk
-//   .option("-d, --directory [dir]", "Change the default directory: ./")
-//   .option(
-//     "-s, --silent",
-//     "Prevent the command from outputing progress logs to the console"
-//   );
-
-/**
- * Additional help and customization
- * - When no command is provided display help
- * - When an unkown command is provided display help
- */
-
-// const sdkDescription =
-//   "dappnodesdk is a tool to make as simple as possible the creation of new dappnode packages. \n  It helps to initialize and publish an Aragon Package Manager Repo in the ethereum mainnet.";
-// const sdkVersion = require("../package.json").version;
-
-// Show version in -v command
-// dappnodesdk.version(sdkVersion, "-v, --version");
-
-// display help by default (e.g. if no command was provided)
-// REF: https://www.npmjs.com/package/commander#outputhelpcb
-// if (!process.argv.slice(2).length) {
-//   // Display ascii art, then help
-//   console.log(`
-// ${chalk.bold.hex("#2FBCB2")(figlet.textSync("    dappnode sdk"))}
-// \t\t\t\t\t\t\t\t${chalk.hex("#2FBCB2")(sdkVersion)}
-
-//   ${sdkDescription}
-
-//   To view available commands and options run:
-
-//     dappnodesdk --help
-
-// `);
-// }
-
-// Display error message for unkown command. Show instructions to type the help command
-// dappnodesdk.command("*", { noHelp: true }).action(() => {
-//   console.log(`
-//   Unkown command. To view available commands and options run:
-
-//     dappnodesdk --help
-// `);
-// });
-
-// Extend help by providing examples
-// dappnodesdk.on("--help", () => {
-//   console.log(`\nTutorial:
-//   https://github.com/dappnode/DAppNodeSDK
-// `);
-// });
-
-// dappnodesdk.parse(process.argv);

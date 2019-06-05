@@ -110,7 +110,13 @@ function generatePublishTx({
                 `A new Aragon Package Manager Repo for ${ensName} must be created. 
 You must specify the developer address that will control it
 
-dappnodesdk publish [type] --developer_address 0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B
+with ENV:
+
+  DEVELOPER_ADDRESS=0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B dappnodesdk publish [type]
+
+with command option:
+
+  dappnodesdk publish [type] --developer_address 0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B
 `
               );
             }

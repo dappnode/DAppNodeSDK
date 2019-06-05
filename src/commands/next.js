@@ -18,9 +18,7 @@ exports.builder = yargs =>
     })
     .require("type");
 
-exports.handler = async ({ type, provider }) => {
-  // Parse options
-  const dir = "./";
+exports.handler = async ({ type, provider, dir }) => {
   const ethProvider = provider;
 
   await verifyEthConnection({ ethProvider });
