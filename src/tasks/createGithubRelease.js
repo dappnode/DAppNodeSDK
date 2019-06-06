@@ -244,59 +244,72 @@ function createGithubRelease({
         title: "Create next version branch",
         enabled: () => createNextGithubBranch,
         task: async (ctx, task) => {
-          const latestSha = ctx.latestSha;
-          const path = "dappnode_package.json";
-          const nextVersion = await increaseFromLocalVersion({
-            type: "patch",
-            dir
-          });
-          const manifest = readManifest({ dir });
-          const branch = `v${nextVersion}`;
-          // Create the next branch
-          task.output = `Creating next branch ${branch}...`;
-          await octokit.git.createRef({
-            owner,
-            repo,
-            ref: `refs/heads/${branch}`,
-            sha: latestSha
-          });
-          // Fetch the manifest file's sha for the `updateFile` call
-          task.output = `Advancing manifest version to ${nextVersion}...`;
-          const manifestSha = await octokit.repos
-            .getContents({
+          try {
+            const latestSha = ctx.latestSha;
+            const path = "dappnode_package.json";
+            const nextVersion = await increaseFromLocalVersion({
+              type: "patch",
+              dir
+            });
+            const manifest = readManifest({ dir });
+            const branch = `v${nextVersion}`;
+
+            // Create the next branch
+            task.output = `Creating next branch ${branch}...`;
+            try {
+              await octokit.git.createRef({
+                owner,
+                repo,
+                ref: `refs/heads/${branch}`,
+                sha: latestSha
+              });
+            } catch (e) {
+              // If the next version branch already exists, skip
+              if (e.message.includes("Reference already exists")) return;
+              else throw e;
+            }
+
+            // Fetch the manifest file's sha for the `updateFile` call
+            task.output = `Advancing manifest version to ${nextVersion}...`;
+            const manifestSha = await octokit.repos
+              .getContents({ owner, repo, path })
+              .then(res => res.data.sha);
+
+            // Update the manifest making a commit to the next branch
+            await octokit.repos.updateFile({
               owner,
               repo,
-              path
-            })
-            .then(res => res.data.sha);
-          // Update the manifest making a commit to the next branch
-          await octokit.repos.updateFile({
-            owner,
-            repo,
-            path,
-            branch,
-            message: `Advance manifest to new version: ${nextVersion}`,
-            // API requires content in Base64
-            content: Buffer.from(JSON.stringify(manifest, null, 2)).toString(
-              "base64"
-            ),
-            sha: manifestSha,
-            "author.name": "dappnode",
-            "author.email": "dappnode@dappnode.io",
-            "committer.name": "dappnode",
-            "committer.email": "dappnode@dappnode.io"
-          });
-          // Open a PR from next branch to master
-          task.output = `Openning a PR to master...`;
-          await octokit.pulls
-            .create({
-              owner,
-              repo,
-              title: `${branch} Release`,
-              head: branch, // from
-              base: "master" // to
-            })
-            .then(res => res.data);
+              path,
+              branch,
+              message: `Advance manifest to new version: ${nextVersion}`,
+              // API requires content in Base64
+              content: Buffer.from(JSON.stringify(manifest, null, 2)).toString(
+                "base64"
+              ),
+              sha: manifestSha,
+              "author.name": "dappnode",
+              "author.email": "dappnode@dappnode.io",
+              "committer.name": "dappnode",
+              "committer.email": "dappnode@dappnode.io"
+            });
+
+            // Open a PR from next branch to master
+            task.output = `Openning a PR to master...`;
+            await octokit.pulls
+              .create({
+                owner,
+                repo,
+                title: `${branch} Release`,
+                head: branch, // from
+                base: "master" // to
+              })
+              .then(res => res.data);
+          } catch (e) {
+            // Non-essential step, don't stop release for a failure on this task
+            console.log("\n".repeat(10));
+            console.log(`Error creating next version branch:\n${e.stack}`);
+            console.log("\n".repeat(10));
+          }
         }
       }
     ],
