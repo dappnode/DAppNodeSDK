@@ -107,7 +107,7 @@ exports.handler = async ({
   if (dappnode_team_preset) {
     if (TRAVIS) {
       ethProvider = "infura";
-      ipfsProvider = "infura";
+      ipfsProvider = "travis_dappnode_node";
       // Activate verbose to see logs easier afterwards
       verbose = true;
     }
