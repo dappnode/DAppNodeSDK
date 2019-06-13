@@ -49,6 +49,20 @@ function createGithubRelease({
       {
         title: `Handle tags`,
         task: async (ctx, task) => {
+          /**
+           * First, check if the repo exists
+           */
+          try {
+            await octokit.repos.get({ owner, repo });
+          } catch (e) {
+            if (e.status === 404)
+              throw Error(
+                `Repo does not exist: ${owner}/${repo}. Check the manifest.repository object and correct the repo URL`
+              );
+            e.message = `Error verifying repo ${owner}/${repo}: ${e.message}`;
+            throw e;
+          }
+
           //   console.log(res);
           // Get next version from context, fir
           const { nextVersion } = ctx;

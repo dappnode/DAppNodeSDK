@@ -15,7 +15,7 @@ function getRepoSlugFromManifest({ dir }) {
   if (type !== "git" || !url || !url.includes(githubBaseUrl)) return;
   // Get repo slug from the repoUrl, i.e. "https://github.com/dappnode/DNP_VPN"
   const repoSlug = url.split(githubBaseUrl)[1] || "";
-  return repoSlug.replace(/\/+$/, "");
+  return repoSlug.replace(/\/+$/, "").replace(".git", "");
 }
 
 module.exports = getRepoSlugFromManifest;
