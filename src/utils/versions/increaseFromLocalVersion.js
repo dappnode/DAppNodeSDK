@@ -1,8 +1,8 @@
-const { readManifest, writeManifest } = require("../utils/manifest");
-const { updateCompose } = require("../utils/compose");
+const { readManifest, writeManifest } = require("../manifest");
+const { updateCompose } = require("../compose");
 const semver = require("semver");
-const check = require("../utils/check");
-const checkSemverType = require("../utils/checkSemverType");
+const check = require("../check");
+const checkSemverType = require("../checkSemverType");
 
 async function increaseFromLocalVersion({ type, dir }) {
   // Check variables

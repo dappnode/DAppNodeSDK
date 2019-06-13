@@ -1,5 +1,5 @@
-const { readManifest } = require("../utils/manifest");
-const check = require("../utils/check");
+const { readManifest } = require("../manifest");
+const check = require("../check");
 
 function getCurrentLocalVersion({ dir }) {
   // Load manifest

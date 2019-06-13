@@ -1,8 +1,9 @@
-const Ens = require("ethereum-ens");
-const Web3 = require("web3");
+const Eth = require("ethjs");
+const ENS = require("ethjs-ens");
+
 const arrayToSemver = require("../utils/arrayToSemver");
-const repoAbi = require("@aragon/os/build/contracts/Repo.json").abi;
-const registryAbi = require("@aragon/os/build/contracts/APMRegistry.json").abi;
+const repoAbi = require("../contracts/RepoAbi.json");
+const registryAbi = require("../contracts/ApmRegistryAbi.json");
 
 function getEthereumProviderUrl(provider = "dappnode") {
   if (provider === "dappnode") {
@@ -24,39 +25,15 @@ function getEthereumProviderUrl(provider = "dappnode") {
  * - "ws://localhost:8546"
  * @return {Object} apm instance
  */
-function Apm(provider) {
+function Apm(providerId) {
   // Initialize ens and web3 instances
-  // Use http providers to avoid opened websocket connection
+  // Use http Ids to avoid opened websocket connection
   // This application does not need subscriptions and performs very few requests per use
-  const providerUrl = getEthereumProviderUrl(provider);
-  const web3 = new Web3(providerUrl);
-  const _provider = web3.currentProvider;
-  // Correct incompatibility between modules
-  _provider.sendAsync = _provider.sendAsync || _provider.send;
-  const ens = new Ens(_provider);
+  const providerUrl = getEthereumProviderUrl(providerId);
 
-  // Verify if the connection is active
-  let connectionVerified = false;
-  async function verifyConnection() {
-    if (connectionVerified) return;
-    try {
-      const isListening = await web3.eth.net.isListening();
-      if (!isListening) throw Error("Network is not listening");
-      connectionVerified = true;
-    } catch (e) {
-      let msg;
-      if (!e.message.includes("Invalid JSON RPC response")) {
-        msg = e.message;
-      }
-      let host = `eth provider ${web3.currentProvider.host}`;
-      if (host.includes("ethchain.dnp.dappnode.eth"))
-        host = "your DAppNode. Please make sure your VPN connection is active";
-      console.error(
-        `Could not connect to ${host} ${msg ? `- Error message: ${msg}` : ""}`
-      );
-      process.exit(1);
-    }
-  }
+  const provider = new Eth.HttpProvider(providerUrl);
+  const eth = new Eth(provider);
+  const ens = new ENS({ provider, network: "1" });
 
   // Ens throws if a node is not found
   //
@@ -67,11 +44,11 @@ function Apm(provider) {
   //
   // Change behaviour to return null if not found
   async function resolve(ensDomain) {
-    await verifyConnection();
     try {
-      return await ens.resolver(ensDomain).addr();
+      return await ens.lookup(ensDomain);
     } catch (e) {
-      if (e.message.includes("not found")) return null;
+      // This error is particular for ethjs
+      if (e.message.includes("ENS name not defined")) return null;
       else throw e;
     }
   }
@@ -85,7 +62,6 @@ function Apm(provider) {
   async function getLatestVersion(ensName) {
     if (!ensName)
       throw Error("getLatestVersion first argument ensName must be defined");
-    await verifyConnection();
     const repository = await getRepoContract(ensName);
     if (!repository) {
       const registry = getRegistryContract(ensName);
@@ -98,15 +74,15 @@ function Apm(provider) {
           `Error: there must exist a registry for DNP name ${ensName}`
         );
     }
-    const res = await repository.methods
+    return repository
       .getLatest()
-      .call()
+      .then(res => arrayToSemver(res.semanticVersion))
       .catch(e => {
         // Rename error for user comprehension
         e.message = `Error getting latest version of ${ensName}: ${e.message}`;
         throw e;
       });
-    return arrayToSemver(res.semanticVersion);
+    // return arrayToSemver(res.semanticVersion);
   }
 
   /**
@@ -121,7 +97,7 @@ function Apm(provider) {
       throw Error("getRepoContract first argument ensName must be defined");
     const repoAddress = await resolve(ensName);
     if (!repoAddress) return null;
-    return new web3.eth.Contract(repoAbi, repoAddress);
+    return eth.contract(repoAbi).at(repoAddress);
   }
 
   /**
@@ -142,7 +118,7 @@ function Apm(provider) {
       .join(".");
     const registryAddress = await resolve(repoId);
     if (!registryAddress) return null;
-    return new web3.eth.Contract(registryAbi, registryAddress);
+    return eth.contract(registryAbi).at(registryAddress);
   }
 
   // return exposed methods
@@ -150,7 +126,8 @@ function Apm(provider) {
     getLatestVersion,
     getRepoContract,
     getRegistryContract,
-    providerUrl
+    providerUrl,
+    provider
   };
 }
 

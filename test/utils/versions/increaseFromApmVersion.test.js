@@ -2,9 +2,9 @@ const expect = require("chai").expect;
 const fs = require("fs");
 const yaml = require("js-yaml");
 const semver = require("semver");
-const rmSafe = require("../rmSafe");
-const increaseFromApmVersion = require("../../src/methods/increaseFromApmVersion");
-const { generateAndWriteCompose } = require("../../src/utils/compose");
+const { rmSafe } = require("../../shellSafe");
+const increaseFromApmVersion = require("../../../src/utils/versions/increaseFromApmVersion");
+const { generateAndWriteCompose } = require("../../../src/utils/compose");
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -34,7 +34,7 @@ describe("increaseFromApmVersion", () => {
   before(async () => {
     await rmSafe(manifestPath);
     await rmSafe(composePath);
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
     generateAndWriteCompose({ manifest });
   });
 

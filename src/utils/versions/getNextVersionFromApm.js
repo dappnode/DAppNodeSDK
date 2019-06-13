@@ -1,8 +1,8 @@
-const { readManifest } = require("../utils/manifest");
+const { readManifest } = require("../manifest");
 const semver = require("semver");
-const Apm = require("../utils/Apm");
-const check = require("../utils/check");
-const checkSemverType = require("../utils/checkSemverType");
+const Apm = require("../Apm");
+const check = require("../check");
+const checkSemverType = require("../checkSemverType");
 
 async function getNextVersionFromApm({ type, ethProvider, dir }) {
   // Check variables

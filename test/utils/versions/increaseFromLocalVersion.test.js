@@ -1,9 +1,9 @@
 const expect = require("chai").expect;
 const fs = require("fs");
 const yaml = require("js-yaml");
-const rmSafe = require("../rmSafe");
-const increaseFromLocalVersion = require("../../src/methods/increaseFromLocalVersion");
-const { generateAndWriteCompose } = require("../../src/utils/compose");
+const { rmSafe } = require("../../shellSafe");
+const increaseFromLocalVersion = require("../../../src/utils/versions/increaseFromLocalVersion");
+const { generateAndWriteCompose } = require("../../../src/utils/compose");
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -33,7 +33,7 @@ describe("increaseFromLocalVersion", () => {
   before(async () => {
     await rmSafe(manifestPath);
     await rmSafe(composePath);
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
     generateAndWriteCompose({ manifest });
   });
 

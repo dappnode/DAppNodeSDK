@@ -1,8 +1,8 @@
 const expect = require("chai").expect;
 const fs = require("fs");
-const rmSafe = require("../rmSafe");
+const { rmSafe, shellSafe } = require("../shellSafe");
 const yaml = require("js-yaml");
-const buildAndUpload = require("../../src/methods/buildAndUpload");
+const buildAndUpload = require("../../src/tasks/buildAndUpload");
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -12,26 +12,39 @@ const buildAndUpload = require("../../src/methods/buildAndUpload");
 // and output it to the console and to ./dnp_0.0.0/deploy.txt
 
 describe("buildAndUpload", () => {
+  const ensName = "sdk-test.dnp.dappnode.eth";
   const version = "0.1.0";
+  const imageTag = `${ensName}:${version}`;
   const manifest = {
-    name: "admin.dnp.dappnode.eth",
+    name: ensName,
     version,
-    image: {}
+    description: "Mock DNP for testing the SDK cli",
+    avatar: "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp",
+    type: "service",
+    image: {
+      path: "dappnode.dnp.dappnode.eth_0.0.0.tar.xz",
+      hash: "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp",
+      size: 100
+    },
+    license: "GLP-3.0"
   };
   const manifestPath = "./dappnode_package.json";
   const composePath = "./docker-compose.yml";
-  const buildDir = `./build_${version}/`;
+  const buildDir = `./build_${version}`;
 
-  const Dockerfile = `FROM alpine:3.1
-WORKDIR /usr/src/app
-CMD [ "echo", "happy buidl" ]
-`;
+  /**
+   * [NOTE] using an extremely lightweight image to accelerate tests
+   */
+  const Dockerfile = `
+FROM hello-world
+ENV test=1
+`.trim();
 
   const compose = {
     version: "3.4",
     services: {
-      "admin.public.dappnode.eth": {
-        image: `admin.public.dappnode.eth:${version}`,
+      [ensName]: {
+        image: imageTag,
         build: "./build"
       }
     }
@@ -43,16 +56,18 @@ CMD [ "echo", "happy buidl" ]
     await rmSafe("./build");
     await rmSafe(buildDir);
     fs.mkdirSync("./build");
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
-    fs.writeFileSync(composePath, yaml.dump(compose, { indent: 4 }));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    fs.writeFileSync(composePath, yaml.dump(compose, { indent: 2 }));
     fs.writeFileSync("./build/Dockerfile", Dockerfile);
   });
 
   it("Should build and upload the current version", async () => {
-    const manifestIpfsPath = await buildAndUpload({
+    const buildAndUploadTasks = buildAndUpload({
       buildDir,
-      ipfsProvider: "infura"
+      ipfsProvider: "infura",
+      verbose: true
     });
+    const { manifestIpfsPath } = await buildAndUploadTasks.run();
     // Check returned hash is correct
     expect(manifestIpfsPath).to.include("/ipfs/Qm");
     // Check that the deploy.txt file is correct
@@ -65,5 +80,6 @@ CMD [ "echo", "happy buidl" ]
     await rmSafe(composePath);
     await rmSafe("./build");
     await rmSafe(buildDir);
+    await shellSafe(`docker image rm -f ${imageTag}`);
   });
 });

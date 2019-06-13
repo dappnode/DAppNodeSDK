@@ -1,6 +1,7 @@
 // node modules
 const yaml = require("js-yaml");
 const fs = require("fs");
+const path = require("path");
 const check = require("../utils/check");
 
 const DOCKERCOMPOSE = "docker-compose.yml";
@@ -15,7 +16,7 @@ const DOCKERCOMPOSE = "docker-compose.yml";
  * @return {String} path = './dappnode_package.json'
  */
 function getComposePath({ dir = "./", composeFileName = DOCKERCOMPOSE }) {
-  return `${dir}${composeFileName}`;
+  return path.join(dir, composeFileName);
 }
 
 /**
@@ -150,7 +151,7 @@ function generateCompose({ manifest }) {
   if (Object.getOwnPropertyNames(volumes).length)
     dockerCompose.volumes = volumes;
 
-  return yaml.dump(dockerCompose, { indent: 4 });
+  return yaml.dump(dockerCompose, { indent: 2 });
 }
 
 function updateCompose({ manifest, dir, composeFileName }) {
@@ -161,7 +162,7 @@ function updateCompose({ manifest, dir, composeFileName }) {
   //       image: 'wamp.dnp.dappnode.eth:0.1.1'
   dockerCompose.services[manifest.name].image =
     manifest.name + ":" + manifest.version;
-  const composeYaml = yaml.dump(dockerCompose, { indent: 4 });
+  const composeYaml = yaml.dump(dockerCompose, { indent: 2 });
   writeCompose({ composeYaml, dir, composeFileName });
 }
 

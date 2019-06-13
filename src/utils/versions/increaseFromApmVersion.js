@@ -1,7 +1,7 @@
-const { readManifest, writeManifest } = require("../utils/manifest");
-const { updateCompose } = require("../utils/compose");
-const check = require("../utils/check");
-const getNextVersionFromApm = require("../methods/getNextVersionFromApm");
+const { readManifest, writeManifest } = require("../manifest");
+const { updateCompose } = require("../compose");
+const check = require("../check");
+const getNextVersionFromApm = require("./getNextVersionFromApm");
 
 async function increaseFromApmVersion({ type, ethProvider, dir }) {
   // Check variables
