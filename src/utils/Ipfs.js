@@ -1,27 +1,27 @@
-const IpfsAPI = require('ipfs-http-client');
+const IpfsAPI = require("ipfs-http-client");
 
-function getIpfsProviderUrl(provider = 'dappnode') {
-  if (provider === 'dappnode') {
-    return 'http://my.ipfs.dnp.dappnode.eth';
-  } else if (provider === 'infura') {
-    return 'https://ipfs.infura.io';
+function getIpfsProviderUrl(provider = "dappnode") {
+  if (provider === "dappnode") {
+    return "http://my.ipfs.dnp.dappnode.eth";
+  } else if (provider === "infura") {
+    return "https://ipfs.infura.io";
   } else {
     return provider;
   }
 }
 
 function parseIpfsProviderUrl(provider) {
-  if (provider.includes('://')) {
+  if (provider.includes("://")) {
     // http://my.ipfs.dnp.dappnode.eth
     // http://my.ipfs.dnp.dappnode.eth:5002
-    const [protocol, hostAndPort] = provider.split('://');
-    const [host, port = 5001] = hostAndPort.split(':');
-    return {host, port, protocol};
+    const [protocol, hostAndPort] = provider.split("://");
+    const [host, port = 5001] = hostAndPort.split(":");
+    return { host, port, protocol };
   } else {
     // my.ipfs.dnp.dappnode.eth
     // my.ipfs.dnp.dappnode.eth:5002
-    const [host, port = 5001] = provider.split(':');
-    return {host, port, protocol: 'https'};
+    const [host, port = 5001] = provider.split(":");
+    return { host, port, protocol: "https" };
   }
 }
 
@@ -46,6 +46,5 @@ function Ipfs(provider) {
   // return exposed methods
   return ipfs;
 }
-
 
 module.exports = Ipfs;

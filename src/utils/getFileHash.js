@@ -1,6 +1,6 @@
-const {promisify} = require('util');
-const fs = require('fs');
-const web3Utils = require('web3-utils');
+const { promisify } = require("util");
+const fs = require("fs");
+const crypto = require("crypto");
 
 /**
  * Hashes a file's buffer
@@ -10,11 +10,15 @@ const web3Utils = require('web3-utils');
  */
 function getFileHash(path) {
   return promisify(fs.readFile)(path)
-      .then(web3Utils.sha3)
-      .catch((e) => {
-        if (e.code === 'ENOENT') return null;
-        else throw e;
-      });
+    .then(data => {
+      const hash = crypto.createHash("sha256");
+      hash.update(data);
+      return hash.digest("hex");
+    })
+    .catch(e => {
+      if (e.code === "ENOENT") return null;
+      else throw e;
+    });
 }
 
 module.exports = getFileHash;
