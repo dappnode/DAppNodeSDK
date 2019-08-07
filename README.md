@@ -39,7 +39,7 @@ the script increases the current version of the repository based on the specifie
 for more information about versioning check [semver](https://semver.org/)
 
 ```
-$ dappnodesdk publish < patch | minor | mayor >
+$ dappnodesdk publish < patch | minor | major >
 ```
 
 Please take in account that the package version is not the internal version of the package you want to upload.
