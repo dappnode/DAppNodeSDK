@@ -73,13 +73,6 @@ It only covers the most common items, and tries to guess sensible defaults.
           default: defaultAnswers.description
         },
         {
-          type: "list",
-          name: "type",
-          message: "Type",
-          default: defaultAnswers.type,
-          choices: ["service", "library", "dncore"]
-        },
-        {
           type: "input",
           message: "Author",
           name: "author",
@@ -99,14 +92,22 @@ It only covers the most common items, and tries to guess sensible defaults.
     version: answers.version,
     description: answers.description,
     avatar: "",
-    type: answers.type,
+    type: "service",
     image: {
       path: "",
       hash: "",
       size: "",
+      volumes: [],
+      ports: [],
+      environment: [],
       restart: "always"
     },
+    dependencies: {},
     author: answers.author,
+    categories: ["Developer tools"],
+    links: {
+      homepage: "https://your-project-homepage-or-docs.io"
+    },
     license: answers.license
   };
 
