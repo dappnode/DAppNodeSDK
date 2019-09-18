@@ -28,11 +28,18 @@ exports.builder = yargs =>
       alias: "timeout",
       description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
       default: "15min"
+    })
+    .option("r", {
+      alias: "release_type",
+      description: `Specify release type`,
+      choices: ["manifest", "directory"],
+      default: "manifest"
     });
 
 exports.handler = async ({
   provider,
   timeout,
+  release_type,
   // Global options
   dir,
   silent,
@@ -41,6 +48,7 @@ exports.handler = async ({
   // Parse options
   const ipfsProvider = provider;
   const userTimeout = timeout;
+  const isDirectoryRelease = release_type === "directory";
   const nextVersion = getCurrentLocalVersion({ dir });
   const buildDir = path.join(dir, `build_${nextVersion}`);
 
@@ -51,15 +59,16 @@ exports.handler = async ({
     buildDir,
     ipfsProvider,
     userTimeout,
+    isDirectoryRelease,
     verbose,
     silent
   });
 
-  const { manifestIpfsPath } = await buildAndUploadTasks.run();
+  const { releaseIpfsPath } = await buildAndUploadTasks.run();
 
   console.log(`
   ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
-  Manifest hash : ${manifestIpfsPath}
-  Install link  : ${getLinks.installDnp({ manifestIpfsPath })}
+  ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseIpfsPath}
+  Install link : ${getLinks.installDnp({ releaseIpfsPath })}
 `);
 };

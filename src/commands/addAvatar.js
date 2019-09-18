@@ -1,10 +1,9 @@
-const path = require("path");
-const fs = require("fs");
 const chalk = require("chalk");
 const Listr = require("listr");
 // Utils
 const verifyIpfsConnection = require("../utils/verifyIpfsConnection");
 const { readManifest, writeManifest } = require("../utils/manifest");
+const getPathRootAvatarAndVerify = require("../utils/getPathRootAvatarAndVerify");
 // Commands
 const ipfsAddFromFs = require("../utils/commands/ipfsAddFromFs");
 
@@ -42,34 +41,9 @@ exports.handler = async ({
       {
         title: "Uploading avatar to IPFS",
         task: async (ctx, task) => {
-          /**
-           * Try to find the avatar in the DNP folder
-           */
-          function getAvatarPath() {
-            const files = fs.readdirSync(dir);
-            const pngFiles = files.filter(file => file.endsWith(".png"));
-            // If there is no .png throw Error
-            if (pngFiles.length === 0)
-              throw Error(`No .png avatar found in ${dir}`);
-            // If there is only one png assume it's the avatar
-            if (pngFiles.length === 1) return pngFiles[0];
-            // Else, find if only one the .png contains the word avatar
-            const pngAvatarFiles = files.filter(file =>
-              file.toLowerCase().includes("avatar")
-            );
-            if (pngAvatarFiles.length === 1) return pngAvatarFiles[0];
-            // At this point stop due to inconclusive results
-            throw Error(
-              `There are more than one .png, specify which should be the avatar by adding "avatar" to the file name`
-            );
-          }
-          const avatarPath = path.join(dir, getAvatarPath());
+          const avatarPath = getPathRootAvatarAndVerify(dir);
           task.output = `Found ${avatarPath}`;
-          const avatarUpload = await ipfsAddFromFs(avatarPath, ipfsProvider, {
-            logger: msg => {
-              task.output = msg;
-            }
-          });
+          const avatarUpload = await ipfsAddFromFs(avatarPath, ipfsProvider);
           const avatarIpfsPath = `/ipfs/${avatarUpload.hash}`;
 
           const manifest = readManifest({ dir });

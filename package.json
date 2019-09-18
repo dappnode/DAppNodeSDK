@@ -42,6 +42,7 @@
     "ethjs-ens": "^2.0.1",
     "execa": "^1.0.0",
     "figlet": "^1.2.3",
+    "image-size": "^0.8.1",
     "inquirer": "^6.2.1",
     "ipfs-http-client": "^30.1.3",
     "joi": "^14.3.1",

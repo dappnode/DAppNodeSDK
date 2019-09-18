@@ -1,7 +1,8 @@
 const Ipfs = require("../Ipfs");
 const fs = require("fs");
 
-function ipfsAddFromFs(path, ipfsProvider, { logger }) {
+function ipfsAddFromFs(path, ipfsProvider, options) {
+  const logger = (options || {}).logger || function() {};
   const ipfs = new Ipfs(ipfsProvider);
 
   const showProgress = !(ipfsProvider || "").includes("infura");

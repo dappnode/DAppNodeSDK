@@ -63,16 +63,27 @@ ENV test=1
 
   it("Should build and upload the current version", async () => {
     const buildAndUploadTasks = buildAndUpload({
+      dir: "./",
       buildDir,
       ipfsProvider: "infura",
       verbose: true
     });
-    const { manifestIpfsPath } = await buildAndUploadTasks.run();
+    const { releaseIpfsPath } = await buildAndUploadTasks.run();
     // Check returned hash is correct
-    expect(manifestIpfsPath).to.include("/ipfs/Qm");
-    // Check that the deploy.txt file is correct
-    // const deployText = fs.readFileSync(deployTextPath, 'utf8');
-    // expect(deployText).to.include(expectedString);
+    expect(releaseIpfsPath).to.include("/ipfs/Qm");
+  }).timeout(60 * 1000);
+
+  it("Should build and upload the current version as directory type release", async () => {
+    const buildAndUploadTasks = buildAndUpload({
+      dir: "./",
+      buildDir,
+      ipfsProvider: "infura",
+      isDirectoryRelease: true,
+      verbose: true
+    });
+    const { releaseIpfsPath } = await buildAndUploadTasks.run();
+    // Check returned hash is correct
+    expect(releaseIpfsPath).to.include("/ipfs/Qm");
   }).timeout(60 * 1000);
 
   after(async () => {

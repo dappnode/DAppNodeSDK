@@ -1,20 +1,25 @@
-const chalk = require("chalk");
+const processExit = require("./processExit");
 const manifestUtils = require("@dappnode/dnp-manifest");
 
-function validateManifest(manifest) {
+const fakeHash = "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp";
+
+function validateManifest(manifest, options) {
+  if (options && options.prerelease) {
+    manifest.avatar = manifest.avatar || fakeHash;
+    manifest.image = {
+      ...manifest.image,
+      path: "dappnode.dnp.dappnode.eth_0.0.0.tar.xz",
+      hash: fakeHash,
+      size: 100
+    };
+  }
+
   const { valid, errors } = manifestUtils.validateManifest(manifest);
   if (valid) return;
 
   // If not valid, print errors and stop execution
 
-  console.error(`
-
-  ${chalk.red("Invalid manifest:")}
-${errors.map(msg => `  - ${msg}`).join("\n")}
-
-`);
-
-  process.exit(1);
+  processExit("Invalid manifest:", errors.map(msg => `  - ${msg}`).join("\n"));
 }
 
 module.exports = validateManifest;
