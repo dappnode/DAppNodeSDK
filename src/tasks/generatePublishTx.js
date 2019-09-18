@@ -22,7 +22,7 @@ const isZeroAddress = address => parseInt(address) === 0;
  */
 
 function generatePublishTx({
-  releaseIpfsPath,
+  releaseMultiHash,
   dir,
   developerAddress,
   ethProvider,
@@ -37,7 +37,7 @@ function generatePublishTx({
 
   // Compute tx data
   const contentURI =
-    "0x" + Buffer.from(releaseIpfsPath, "utf8").toString("hex");
+    "0x" + Buffer.from(releaseMultiHash, "utf8").toString("hex");
   const contractAddress = "0x0000000000000000000000000000000000000000";
   const currentVersion = version;
   const ensName = name;
@@ -99,7 +99,7 @@ function generatePublishTx({
               gasLimit: 300000,
               ensName,
               currentVersion,
-              releaseIpfsPath
+              releaseMultiHash
             };
           } else {
             // If repo does not exist, create a new repo and push version
@@ -150,7 +150,7 @@ with command option:
               gasLimit: 1100000,
               ensName,
               currentVersion,
-              releaseIpfsPath,
+              releaseMultiHash,
               developerAddress
             };
           }

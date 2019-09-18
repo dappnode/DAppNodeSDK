@@ -90,6 +90,7 @@ exports.handler = async ({
   developer_address,
   timeout,
   release_type,
+  upload_to,
   github_release,
   create_next_branch,
   dappnode_team_preset,
@@ -101,11 +102,13 @@ exports.handler = async ({
   // Parse optionsalias: "release",
   let ethProvider = provider || eth_provider;
   let ipfsProvider = provider || ipfs_provider;
+  let swarmProvider = provider;
   let githubRelease = github_release;
   let createNextGithubBranch = create_next_branch;
   const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
   const userTimeout = timeout;
-  const isDirectoryRelease = release_type === "directory";
+  const uploadToSwarm = upload_to === "swarm";
+  const isDirectoryRelease = uploadToSwarm || release_type === "directory";
 
   const { TRAVIS, TRAVIS_TAG, RELEASE_TYPE } = process.env;
 
@@ -175,8 +178,10 @@ exports.handler = async ({
             dir,
             buildDir: ctx.buildDir,
             ipfsProvider,
+            swarmProvider,
             userTimeout,
             isDirectoryRelease,
+            uploadToSwarm,
             verbose,
             silent
           })
@@ -190,14 +195,14 @@ exports.handler = async ({
        *   gasLimit: 300000,
        *   ensName,
        *   currentVersion,
-       *   releaseIpfsPath
+       *   releaseMultiHash
        * }
        */
       {
         title: "Generate transaction",
         task: ctx =>
           generatePublishTx({
-            releaseIpfsPath: ctx.releaseIpfsPath,
+            releaseMultiHash: ctx.releaseMultiHash,
             dir,
             developerAddress,
             ethProvider,
@@ -226,7 +231,7 @@ exports.handler = async ({
   );
 
   const tasksFinalCtx = await publishTasks.run();
-  const { txData, nextVersion, releaseIpfsPath } = tasksFinalCtx;
+  const { txData, nextVersion, releaseMultiHash } = tasksFinalCtx;
 
   if (!silent) {
     const txDataToPrint = {
@@ -238,8 +243,8 @@ exports.handler = async ({
 
     console.log(`
   ${chalk.green(`DNP (DAppNode Package) published (version ${nextVersion})`)} 
-  ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseIpfsPath}
-  Install link : ${getLinks.installDnp({ releaseIpfsPath })}
+  ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseMultiHash}
+  Install link : ${getLinks.installDnp({ releaseMultiHash })}
 
   ${"You must execute this transaction in mainnet to publish a new version of this DNP."}
   

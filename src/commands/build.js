@@ -34,12 +34,19 @@ exports.builder = yargs =>
       description: `Specify release type`,
       choices: ["manifest", "directory"],
       default: "manifest"
+    })
+    .option("u", {
+      alias: "upload_to",
+      description: `Specify where to upload the release`,
+      choices: ["ipfs", "swarm"],
+      default: "ipfs"
     });
 
 exports.handler = async ({
   provider,
   timeout,
   release_type,
+  upload_to,
   // Global options
   dir,
   silent,
@@ -47,8 +54,10 @@ exports.handler = async ({
 }) => {
   // Parse options
   const ipfsProvider = provider;
+  const swarmProvider = provider;
   const userTimeout = timeout;
-  const isDirectoryRelease = release_type === "directory";
+  const uploadToSwarm = upload_to === "swarm";
+  const isDirectoryRelease = uploadToSwarm || release_type === "directory";
   const nextVersion = getCurrentLocalVersion({ dir });
   const buildDir = path.join(dir, `build_${nextVersion}`);
 
@@ -58,17 +67,19 @@ exports.handler = async ({
     dir,
     buildDir,
     ipfsProvider,
+    swarmProvider,
     userTimeout,
     isDirectoryRelease,
+    uploadToSwarm,
     verbose,
     silent
   });
 
-  const { releaseIpfsPath } = await buildAndUploadTasks.run();
+  const { releaseMultiHash } = await buildAndUploadTasks.run();
 
   console.log(`
   ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
-  ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseIpfsPath}
-  Install link : ${getLinks.installDnp({ releaseIpfsPath })}
+  ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseMultiHash}
+  Install link : ${getLinks.installDnp({ releaseMultiHash })}
 `);
 };

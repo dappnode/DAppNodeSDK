@@ -68,9 +68,9 @@ ENV test=1
       ipfsProvider: "infura",
       verbose: true
     });
-    const { releaseIpfsPath } = await buildAndUploadTasks.run();
+    const { releaseMultiHash } = await buildAndUploadTasks.run();
     // Check returned hash is correct
-    expect(releaseIpfsPath).to.include("/ipfs/Qm");
+    expect(releaseMultiHash).to.include("/ipfs/Qm");
   }).timeout(60 * 1000);
 
   it("Should build and upload the current version as directory type release", async () => {
@@ -81,9 +81,9 @@ ENV test=1
       isDirectoryRelease: true,
       verbose: true
     });
-    const { releaseIpfsPath } = await buildAndUploadTasks.run();
+    const { releaseMultiHash } = await buildAndUploadTasks.run();
     // Check returned hash is correct
-    expect(releaseIpfsPath).to.include("/ipfs/Qm");
+    expect(releaseMultiHash).to.include("/ipfs/Qm");
   }).timeout(60 * 1000);
 
   after(async () => {

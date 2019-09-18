@@ -1,15 +1,23 @@
 const Ipfs = require("../Ipfs");
-const fs = require("fs");
 const path = require("path");
+const getDirSize = require("../getDirSize");
 
+/**
+ * Uploads a directory from the fs
+ * @param {*} dirPath
+ * @param {*} ipfsProvider
+ * @param {*} param2
+ * @returns {string} "/ipfs/QmasUHASUDBIAUBSDIbaisd"
+ */
 async function ipfsAddDirFromFs(dirPath, ipfsProvider, { logger }) {
   const ipfs = new Ipfs(ipfsProvider);
 
   const showProgress = !(ipfsProvider || "").includes("infura");
   // Create progress logger, log to Listr inter task output
-  const totalSize = fs.statSync(dirPath).size;
+  const totalSize = getDirSize(dirPath);
   const progress = prog => {
-    logger("Uploading... " + ((prog / totalSize) * 100).toFixed(2) + "%");
+    const completedFraction = prog / totalSize > 1 ? 1 : prog / totalSize;
+    logger("Uploading... " + (completedFraction * 100).toFixed(2) + "%");
   };
   const entries = await ipfs.addFromFs(dirPath, {
     pin: true,
@@ -23,7 +31,7 @@ async function ipfsAddDirFromFs(dirPath, ipfsProvider, { logger }) {
   );
   if (!rootEntry)
     throw Error(`No root entry found: ${JSON.stringify(entries)}`);
-  else return rootEntry;
+  else return `/ipfs/${rootEntry.hash}`;
 }
 
 module.exports = ipfsAddDirFromFs;

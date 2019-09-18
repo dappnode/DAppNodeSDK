@@ -31,7 +31,7 @@ function writeReleaseRecord(dir, version, newReleaseRecord) {
   );
 }
 
-function addReleaseRecord({ dir, version, hash, type, ipfsProvider }) {
+function addReleaseRecord({ dir, version, hash, type, to }) {
   const releaseRecord = readReleaseRecord(dir, version);
   const { uploadedTo = {}, hash: previousHash } = releaseRecord;
 
@@ -40,7 +40,7 @@ function addReleaseRecord({ dir, version, hash, type, ipfsProvider }) {
     type,
     uploadedTo: {
       ...(hash === previousHash ? uploadedTo : {}),
-      [ipfsProvider]: new Date().toUTCString()
+      [to]: new Date().toUTCString()
     }
   });
 }

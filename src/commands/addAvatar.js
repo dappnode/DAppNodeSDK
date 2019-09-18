@@ -43,14 +43,13 @@ exports.handler = async ({
         task: async (ctx, task) => {
           const avatarPath = getPathRootAvatarAndVerify(dir);
           task.output = `Found ${avatarPath}`;
-          const avatarUpload = await ipfsAddFromFs(avatarPath, ipfsProvider);
-          const avatarIpfsPath = `/ipfs/${avatarUpload.hash}`;
 
           const manifest = readManifest({ dir });
-          manifest.avatar = avatarIpfsPath;
+          // Starts with /ipfs/
+          manifest.avatar = await ipfsAddFromFs(avatarPath, ipfsProvider);
           writeManifest({ manifest, dir });
 
-          ctx.avatarIpfsPath = avatarIpfsPath;
+          ctx.avatarIpfsPath = manifest.avatar;
         }
       }
     ],

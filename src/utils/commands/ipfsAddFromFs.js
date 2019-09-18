@@ -1,6 +1,13 @@
 const Ipfs = require("../Ipfs");
 const fs = require("fs");
 
+/**
+ * A single file from the fs
+ * @param {*} path
+ * @param {*} ipfsProvider
+ * @param {*} options
+ * @returns {string} "/ipfs/QmasUHASUDBIAUBSDIbaisd"
+ */
 function ipfsAddFromFs(path, ipfsProvider, options) {
   const logger = (options || {}).logger || function() {};
   const ipfs = new Ipfs(ipfsProvider);
@@ -16,7 +23,7 @@ function ipfsAddFromFs(path, ipfsProvider, options) {
       pin: true,
       ...(showProgress ? { progress } : {})
     })
-    .then(res => res[0]);
+    .then(res => `/ipfs/${res[0].hash}`);
 }
 
 module.exports = ipfsAddFromFs;

@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const lodash = require("lodash");
 const Listr = require("listr");
 const execa = require("execa");
 const timestring = require("timestring");
@@ -21,6 +22,7 @@ const compressFile = require("../utils/commands/compressFile");
 const execaProgress = require("../utils/commands/execaProgress");
 const ipfsAddFromFs = require("../utils/commands/ipfsAddFromFs");
 const ipfsAddDirFromFs = require("../utils/commands/ipfsAddDirFromFs");
+const swarmAddDirFromFs = require("../utils/commands/swarmAddDirFromFs");
 
 // Define build timeout (20 min)
 const defaultBuildTimeout = 20 * 60 * 1000;
@@ -29,11 +31,16 @@ function buildAndUpload({
   dir,
   buildDir,
   ipfsProvider,
+  swarmProvider,
   userTimeout,
   isDirectoryRelease,
+  uploadToSwarm,
   verbose,
   silent
 }) {
+  // Enforce here also, just in case
+  if (uploadToSwarm) isDirectoryRelease = true;
+
   /**
    * Parse userTimeout
    * It's not a number assume it's a timestring formated string
@@ -55,7 +62,6 @@ function buildAndUpload({
   const imagePathUncompressed = path.join(buildDir, `${name}_${version}.tar`);
   const imagePathCompressed = `${imagePathUncompressed}.xz`;
   const imageFileName = path.parse(imagePathCompressed).base;
-  const manifestBuildPath = path.join(buildDir, `dappnode_package.json`);
   const composeBuildPath = path.join(buildDir, `docker-compose.yml`);
   const avatarBuildPath = path.join(buildDir, `avatar.png`);
   const imageTag = `${name}:${version}`;
@@ -75,9 +81,18 @@ function buildAndUpload({
         fs.unlinkSync(path.join(buildDir, file));
 
       if (isDirectoryRelease) {
-        fs.copyFileSync(manifestPath, manifestBuildPath);
         fs.copyFileSync(composeRootPath, composeBuildPath);
         fs.copyFileSync(avatarRootPath, avatarBuildPath);
+        // #### Validate and clean manifest
+        // #### Do not add empty volumes, ports, environment fields
+        // #### Make sure "restart" is set to "always" if no value
+        delete manifest.image.hash;
+        delete manifest.image.path;
+        delete manifest.image.size;
+        writeManifest({
+          manifest: lodash.omit(manifest, ["avatar"]),
+          dir: buildDir
+        });
       }
 
       // Validate. ValidateManifest will call `process.exit(1)` if manifest is invalid
@@ -133,11 +148,11 @@ function buildAndUpload({
     }
   };
 
-  const uploadDirectoryTypeReleaseTasks = [
+  const uploadDirectoryReleaseToSwarmTasks = [
     {
-      title: "Upload directory release to IPFS",
+      title: "Upload directory release to Swarm",
       task: async (ctx, task) => {
-        ctx.releaseUpload = await ipfsAddDirFromFs(buildDir, ipfsProvider, {
+        ctx.releaseHash = await swarmAddDirFromFs(buildDir, swarmProvider, {
           logger: msg => {
             task.output = msg;
           }
@@ -146,19 +161,33 @@ function buildAndUpload({
     }
   ];
 
-  const uploadManifestTypeReleaseTasks = [
+  const uploadDirectoryReleaseToIpfsTasks = [
+    {
+      title: "Upload directory release to IPFS",
+      task: async (ctx, task) => {
+        // Starts with /ipfs/
+        ctx.releaseHash = await ipfsAddDirFromFs(buildDir, ipfsProvider, {
+          logger: msg => {
+            task.output = msg;
+          }
+        });
+      }
+    }
+  ];
+
+  const uploadManifestReleaseToIpfsTasks = [
     {
       title: "Upload avatar to IPFS",
       task: async () => {
-        const avatarUpload = await ipfsAddFromFs(avatarRootPath, ipfsProvider);
-        // Mutate manifest
-        manifest.avatar = `/ipfs/${avatarUpload.hash}`;
+        // Mutate manifest, already starts with /ipfs/
+        manifest.avatar = await ipfsAddFromFs(avatarRootPath, ipfsProvider);
       }
     },
     {
       title: "Upload image to IPFS",
       task: async (_, task) => {
-        const imageUpload = await ipfsAddFromFs(
+        // Starts with /ipfs/
+        const imageUploadHash = await ipfsAddFromFs(
           imagePathCompressed,
           ipfsProvider,
           {
@@ -170,9 +199,9 @@ function buildAndUpload({
         // Mutate manifest
         manifest.image = {
           ...manifest.image,
-          path: imageUpload.path,
-          hash: `/ipfs/${imageUpload.hash}`,
-          size: imageUpload.size
+          path: path.parse(imagePathCompressed).base,
+          hash: imageUploadHash, // Already starts with /ipfs/
+          size: fs.statSync(imagePathCompressed).size
         };
       }
     },
@@ -184,8 +213,8 @@ function buildAndUpload({
         // Update manifest
         writeManifest({ manifest, dir });
         writeManifest({ manifest, dir: buildDir });
-
-        ctx.releaseUpload = await ipfsAddFromFs(manifestPath, ipfsProvider, {
+        // Starts with /ipfs/
+        ctx.releaseHash = await ipfsAddFromFs(manifestPath, ipfsProvider, {
           logger: msg => {
             task.output = msg;
           }
@@ -200,13 +229,13 @@ function buildAndUpload({
       addReleaseRecord({
         dir,
         version,
-        hash: `/ipfs/${ctx.releaseUpload.hash}`,
+        hash: ctx.releaseHash,
         type: isDirectoryRelease ? "directory" : "manifest",
-        ipfsProvider
+        to: uploadToSwarm ? swarmProvider : ipfsProvider
       });
 
       // "return" result for next tasks
-      ctx.releaseIpfsPath = `/ipfs/${ctx.releaseUpload.hash}`;
+      ctx.releaseMultiHash = ctx.releaseHash;
     }
   };
 
@@ -215,9 +244,11 @@ function buildAndUpload({
       copyFilesTask,
       buildDockerImageTask,
       saveAndComposeImageTask,
-      ...(isDirectoryRelease
-        ? uploadDirectoryTypeReleaseTasks
-        : uploadManifestTypeReleaseTasks),
+      ...(uploadToSwarm
+        ? uploadDirectoryReleaseToSwarmTasks
+        : isDirectoryRelease
+        ? uploadDirectoryReleaseToIpfsTasks
+        : uploadManifestReleaseToIpfsTasks),
       writeResultsTask
     ],
     { renderer: verbose ? "verbose" : silent ? "silent" : "default" }

@@ -29,7 +29,7 @@ describe("generatePublishTx", () => {
 
     const generatePublishTxTasks = generatePublishTx({
       dir: "./",
-      releaseIpfsPath: "/ipfs/Qm",
+      releaseMultiHash: "/ipfs/Qm",
       buildDir,
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
@@ -47,7 +47,7 @@ describe("generatePublishTx", () => {
       gasLimit: 300000,
       ensName: "admin.dnp.dappnode.eth",
       currentVersion: "0.1.0",
-      releaseIpfsPath: "/ipfs/Qm"
+      releaseMultiHash: "/ipfs/Qm"
     });
     // I am not sure if the Data property will be the same
     expect(txData.data).to.be.a("string");
@@ -62,7 +62,7 @@ describe("generatePublishTx", () => {
 
     const generatePublishTxTasks = generatePublishTx({
       dir: "./",
-      releaseIpfsPath: "/ipfs/Qm",
+      releaseMultiHash: "/ipfs/Qm",
       buildDir,
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
@@ -79,7 +79,7 @@ describe("generatePublishTx", () => {
       gasLimit: 1100000,
       ensName: "new-repo.dnp.dappnode.eth",
       currentVersion: "0.1.0",
-      releaseIpfsPath: "/ipfs/Qm",
+      releaseMultiHash: "/ipfs/Qm",
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B"
     });
     // I am not sure if the Data property will be the same
