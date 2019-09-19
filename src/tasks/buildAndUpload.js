@@ -86,9 +86,11 @@ function buildAndUpload({
         // #### Validate and clean manifest
         // #### Do not add empty volumes, ports, environment fields
         // #### Make sure "restart" is set to "always" if no value
-        delete manifest.image.hash;
-        delete manifest.image.path;
-        delete manifest.image.size;
+        if (manifest.image) {
+          delete manifest.image.hash;
+          delete manifest.image.path;
+          delete manifest.image.size;
+        }
         writeManifest({
           manifest: lodash.omit(manifest, ["avatar"]),
           dir: buildDir
