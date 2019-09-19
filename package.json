@@ -37,7 +37,6 @@
     "@octokit/rest": "^16.27.3",
     "async-retry": "^1.2.3",
     "chalk": "^2.4.2",
-    "ethereum-ens": "^0.7.4",
     "ethjs": "^0.4.0",
     "ethjs-ens": "^2.0.1",
     "execa": "^1.0.0",
