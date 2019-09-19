@@ -9,7 +9,7 @@ function publishTx({ txData }) {
   const txDataShortKeys = {
     r: txData.ensName,
     v: txData.currentVersion,
-    h: txData.manifestIpfsPath
+    h: txData.releaseMultiHash
   };
   // Only add developerAddress if necessary to not pollute the link
   if (txData.developerAddress) txDataShortKeys.d = txData.developerAddress;
@@ -18,10 +18,10 @@ function publishTx({ txData }) {
 
 /**
  * Get link to install a DNP from its path
- * @param {string} manifestIpfsPath
+ * @param {string} releaseMultiHash
  */
-function installDnp({ manifestIpfsPath }) {
-  return `${adminUiBaseUrl}/installer/${encodeURIComponent(manifestIpfsPath)}`;
+function installDnp({ releaseMultiHash }) {
+  return `${adminUiBaseUrl}/installer/${encodeURIComponent(releaseMultiHash)}`;
 }
 
 // Utils

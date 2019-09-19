@@ -11,7 +11,7 @@ function getTxDataAdminUiLink({ txData }) {
   const txDataShortKeys = {
     r: txData.ensName,
     v: txData.currentVersion,
-    h: txData.manifestIpfsPath
+    h: txData.releaseMultiHash
   };
   // Only add developerAddress if necessary to not pollute the link
   if (txData.developerAddress) txDataShortKeys.d = txData.developerAddress;

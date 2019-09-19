@@ -4,6 +4,8 @@ const { rmSafe, shellSafe } = require("../shellSafe");
 const yaml = require("js-yaml");
 const buildAndUpload = require("../../src/tasks/buildAndUpload");
 
+const ipfsProvider = "http://ipfs.dappnode.io";
+
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
 // ./dnp_0.0.0/             => build directory
@@ -30,6 +32,8 @@ describe("buildAndUpload", () => {
   };
   const manifestPath = "./dappnode_package.json";
   const composePath = "./docker-compose.yml";
+  const avatarPath = "./test-avatar.png";
+  const avatarSourcePath = "test/test-avatar-source.png";
   const buildDir = `./build_${version}`;
 
   /**
@@ -59,20 +63,32 @@ ENV test=1
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
     fs.writeFileSync(composePath, yaml.dump(compose, { indent: 2 }));
     fs.writeFileSync("./build/Dockerfile", Dockerfile);
+    fs.copyFileSync(avatarSourcePath, avatarPath);
   });
 
   it("Should build and upload the current version", async () => {
     const buildAndUploadTasks = buildAndUpload({
+      dir: "./",
       buildDir,
-      ipfsProvider: "infura",
+      ipfsProvider: ipfsProvider,
       verbose: true
     });
-    const { manifestIpfsPath } = await buildAndUploadTasks.run();
+    const { releaseMultiHash } = await buildAndUploadTasks.run();
     // Check returned hash is correct
-    expect(manifestIpfsPath).to.include("/ipfs/Qm");
-    // Check that the deploy.txt file is correct
-    // const deployText = fs.readFileSync(deployTextPath, 'utf8');
-    // expect(deployText).to.include(expectedString);
+    expect(releaseMultiHash).to.include("/ipfs/Qm");
+  }).timeout(60 * 1000);
+
+  it("Should build and upload the current version as directory type release", async () => {
+    const buildAndUploadTasks = buildAndUpload({
+      dir: "./",
+      buildDir,
+      ipfsProvider: ipfsProvider,
+      isDirectoryRelease: true,
+      verbose: true
+    });
+    const { releaseMultiHash } = await buildAndUploadTasks.run();
+    // Check returned hash is correct
+    expect(releaseMultiHash).to.include("/ipfs/Qm");
   }).timeout(60 * 1000);
 
   after(async () => {

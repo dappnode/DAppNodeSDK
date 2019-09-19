@@ -61,6 +61,12 @@ exports.builder = yargs =>
       default: "15min",
       type: "string"
     })
+    .option("r", {
+      alias: "release_type",
+      description: `Specify release type`,
+      choices: ["manifest", "directory"],
+      default: "manifest"
+    })
     .option("github_release", {
       description: `Publish the release on the Github repo specified in the manifest. Requires a GITHUB_TOKEN ENV to authenticate`,
       type: "boolean"
@@ -73,6 +79,7 @@ exports.builder = yargs =>
       description: `Specific set of options used for internal DAppNode releases. Caution: options may change without notice.`,
       type: "boolean"
     });
+
 // Do not add `.require("type")`, it is verified below
 
 exports.handler = async ({
@@ -82,6 +89,8 @@ exports.handler = async ({
   ipfs_provider,
   developer_address,
   timeout,
+  release_type,
+  upload_to,
   github_release,
   create_next_branch,
   dappnode_team_preset,
@@ -90,13 +99,16 @@ exports.handler = async ({
   silent,
   verbose
 }) => {
-  // Parse options
+  // Parse optionsalias: "release",
   let ethProvider = provider || eth_provider;
   let ipfsProvider = provider || ipfs_provider;
-  let developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
-  let userTimeout = timeout;
+  let swarmProvider = provider;
   let githubRelease = github_release;
   let createNextGithubBranch = create_next_branch;
+  const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
+  const userTimeout = timeout;
+  const uploadToSwarm = upload_to === "swarm";
+  const isDirectoryRelease = uploadToSwarm || release_type === "directory";
 
   const { TRAVIS, TRAVIS_TAG, RELEASE_TYPE } = process.env;
 
@@ -166,7 +178,10 @@ exports.handler = async ({
             dir,
             buildDir: ctx.buildDir,
             ipfsProvider,
+            swarmProvider,
             userTimeout,
+            isDirectoryRelease,
+            uploadToSwarm,
             verbose,
             silent
           })
@@ -180,18 +195,17 @@ exports.handler = async ({
        *   gasLimit: 300000,
        *   ensName,
        *   currentVersion,
-       *   manifestIpfsPath
+       *   releaseMultiHash
        * }
        */
       {
         title: "Generate transaction",
         task: ctx =>
           generatePublishTx({
-            manifestIpfsPath: ctx.manifestIpfsPath,
+            releaseMultiHash: ctx.releaseMultiHash,
             dir,
             developerAddress,
             ethProvider,
-            deployTextPath: path.join(ctx.buildDir, "deploy.txt"),
             verbose,
             silent
           })
@@ -217,7 +231,7 @@ exports.handler = async ({
   );
 
   const tasksFinalCtx = await publishTasks.run();
-  const { txData, nextVersion, manifestIpfsPath } = tasksFinalCtx;
+  const { txData, nextVersion, releaseMultiHash } = tasksFinalCtx;
 
   if (!silent) {
     const txDataToPrint = {
@@ -229,8 +243,8 @@ exports.handler = async ({
 
     console.log(`
   ${chalk.green(`DNP (DAppNode Package) published (version ${nextVersion})`)} 
-  Manifest hash : ${manifestIpfsPath}
-  Install link  : ${getLinks.installDnp({ manifestIpfsPath })}
+  ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseMultiHash}
+  Install link : ${getLinks.installDnp({ releaseMultiHash })}
 
   ${"You must execute this transaction in mainnet to publish a new version of this DNP."}
   

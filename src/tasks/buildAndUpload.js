@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const lodash = require("lodash");
 const Listr = require("listr");
 const execa = require("execa");
 const timestring = require("timestring");
@@ -12,212 +13,243 @@ const {
   writeManifest
 } = require("../utils/manifest");
 const validateManifest = require("../utils/validateManifest");
+const getPathRootAvatarAndVerify = require("../utils/getPathRootAvatarAndVerify");
+const getPathRootCompose = require("../utils/getPathRootCompose");
+const { addReleaseRecord } = require("../utils/releaseRecord");
 
 // Commands
 const compressFile = require("../utils/commands/compressFile");
 const execaProgress = require("../utils/commands/execaProgress");
 const ipfsAddFromFs = require("../utils/commands/ipfsAddFromFs");
+const ipfsAddDirFromFs = require("../utils/commands/ipfsAddDirFromFs");
+const swarmAddDirFromFs = require("../utils/commands/swarmAddDirFromFs");
 
 // Define build timeout (20 min)
-let buildTimeout = 20 * 60 * 1000;
+const defaultBuildTimeout = 20 * 60 * 1000;
 
 function buildAndUpload({
   dir,
   buildDir,
   ipfsProvider,
+  swarmProvider,
   userTimeout,
+  isDirectoryRelease,
+  uploadToSwarm,
   verbose,
   silent
 }) {
-  // Parse userTimeout
-  if (userTimeout) {
-    // It's not a number assume it's a timestring formated string
-    // Otherwise assume it's in seconds
-    buildTimeout =
-      parseInt(isNaN(userTimeout) ? timestring(userTimeout) : userTimeout) *
-      1000;
-  }
+  // Enforce here also, just in case
+  if (uploadToSwarm) isDirectoryRelease = true;
+
+  /**
+   * Parse userTimeout
+   * It's not a number assume it's a timestring formated string
+   * Otherwise assume it's in seconds
+   */
+  const buildTimeout = userTimeout
+    ? parseInt(isNaN(userTimeout) ? timestring(userTimeout) : userTimeout) *
+      1000
+    : defaultBuildTimeout;
 
   // Load manifest #### Deleted check functions. Verify manifest beforehand
   const manifest = readManifest({ dir });
   const manifestPath = getManifestPath({ dir });
-  /**
-   * ValidateManifest will call `process.exit(1)` if manifest is invalid
-   * Prefill the image upload data to verify the rest
-   */
-  validateManifest({
-    ...manifest,
-    image: {
-      ...manifest.image,
-      path: "dappnode.dnp.dappnode.eth_0.0.0.tar.xz",
-      hash: "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp",
-      size: 100
-    }
-  });
 
   // Define variables from manifest
-  const version = manifest.version;
-  const ensName = manifest.name;
-  const shortName = manifest.name.split(".")[0];
+  const { name, version } = manifest;
 
   // Construct directories and names
-  const imagePathUncompressed = path.join(
-    buildDir,
-    `${ensName}_${version}.tar`
-  );
-  const imagePathCompressed = path.join(
-    buildDir,
-    `${ensName}_${version}.tar.xz`
-  );
-  const composePath = path.join(buildDir, `docker-compose-${shortName}.yml`);
-  const uploadPath = path.join(buildDir, `upload.json`);
-  const imageTag = `${ensName}:${version}`;
+  const imagePathUncompressed = path.join(buildDir, `${name}_${version}.tar`);
+  const imagePathCompressed = `${imagePathUncompressed}.xz`;
+  const imageFileName = path.parse(imagePathCompressed).base;
+  const composeBuildPath = path.join(buildDir, `docker-compose.yml`);
+  const avatarBuildPath = path.join(buildDir, `avatar.png`);
+  const imageTag = `${name}:${version}`;
+  // Root paths, this functions may throw
+  const avatarRootPath = getPathRootAvatarAndVerify(dir);
+  const composeRootPath = getPathRootCompose(dir);
+
+  const copyFilesTask = {
+    title: "Copy files and validate",
+    task: async () => {
+      // Create dir
+      fs.mkdirSync(buildDir, { recursive: true }); // Ok on existing dir
+      const buildFiles = fs.readdirSync(buildDir);
+
+      // Clean all files except the image
+      for (const file of buildFiles.filter(file => file !== imageFileName))
+        fs.unlinkSync(path.join(buildDir, file));
+
+      if (isDirectoryRelease) {
+        fs.copyFileSync(composeRootPath, composeBuildPath);
+        fs.copyFileSync(avatarRootPath, avatarBuildPath);
+        // #### Validate and clean manifest
+        // #### Do not add empty volumes, ports, environment fields
+        // #### Make sure "restart" is set to "always" if no value
+        delete manifest.image.hash;
+        delete manifest.image.path;
+        delete manifest.image.size;
+        writeManifest({
+          manifest: lodash.omit(manifest, ["avatar"]),
+          dir: buildDir
+        });
+      }
+
+      // Validate. ValidateManifest will call `process.exit(1)` if manifest is invalid
+      validateManifest(manifest, {
+        prerelease: true,
+        noImage: isDirectoryRelease
+      });
+    }
+  };
+
+  const buildDockerImageTask = {
+    title: "Build docker image",
+    task: async (_, task) => {
+      const logger = msg => {
+        task.output = msg;
+      };
+      await execaProgress("docker-compose build", { logger });
+    }
+  };
+
+  /**
+   * Save docker image
+   * This step is extremely expensive computationally.
+   * A local cache file will prevent unnecessary compressions if the image hasn't changed
+   */
+  const saveAndComposeImageTask = {
+    title: "Save and compress image",
+    task: async (_, task) => {
+      // Load image ID. Clean resulting string: Remove double quotes
+      const imageId = await getImageId(imageTag);
+      // Load the cache object
+      const cacheTarHash = cache.load()[imageId];
+      // Load the .tar.xz hash
+      const tarHash = await getFileHash(imagePathCompressed);
+      if (imageId && tarHash && tarHash === cacheTarHash) {
+        task.skip(`Using cached verified tarball ${imagePathCompressed}`);
+      } else {
+        task.output = `Saving docker image to file...`;
+        await execa.shell(`docker save ${imageTag} > ${imagePathUncompressed}`);
+
+        await compressFile(imagePathUncompressed, {
+          timeout: buildTimeout,
+          logger: msg => {
+            task.output = msg;
+          }
+        });
+
+        task.output = `Storing saved image to cache...`;
+        const newTarHash = await getFileHash(imagePathCompressed);
+        if (imageId && newTarHash)
+          cache.write({ key: imageId, value: newTarHash });
+      }
+    }
+  };
+
+  const uploadDirectoryReleaseToSwarmTasks = [
+    {
+      title: "Upload directory release to Swarm",
+      task: async (ctx, task) => {
+        ctx.releaseHash = await swarmAddDirFromFs(buildDir, swarmProvider, {
+          logger: msg => {
+            task.output = msg;
+          }
+        });
+      }
+    }
+  ];
+
+  const uploadDirectoryReleaseToIpfsTasks = [
+    {
+      title: "Upload directory release to IPFS",
+      task: async (ctx, task) => {
+        // Starts with /ipfs/
+        ctx.releaseHash = await ipfsAddDirFromFs(buildDir, ipfsProvider, {
+          logger: msg => {
+            task.output = msg;
+          }
+        });
+      }
+    }
+  ];
+
+  const uploadManifestReleaseToIpfsTasks = [
+    {
+      title: "Upload avatar to IPFS",
+      task: async () => {
+        // Mutate manifest, already starts with /ipfs/
+        manifest.avatar = await ipfsAddFromFs(avatarRootPath, ipfsProvider);
+      }
+    },
+    {
+      title: "Upload image to IPFS",
+      task: async (_, task) => {
+        // Starts with /ipfs/
+        const imageUploadHash = await ipfsAddFromFs(
+          imagePathCompressed,
+          ipfsProvider,
+          {
+            logger: msg => {
+              task.output = msg;
+            }
+          }
+        );
+        // Mutate manifest
+        manifest.image = {
+          ...manifest.image,
+          path: path.parse(imagePathCompressed).base,
+          hash: imageUploadHash, // Already starts with /ipfs/
+          size: fs.statSync(imagePathCompressed).size
+        };
+      }
+    },
+    {
+      title: "Upload manifest to IPFS",
+      task: async (ctx, task) => {
+        // validateManifest calls `process.exit(1)` in case of error
+        validateManifest(manifest);
+        // Update manifest
+        writeManifest({ manifest, dir });
+        writeManifest({ manifest, dir: buildDir });
+        // Starts with /ipfs/
+        ctx.releaseHash = await ipfsAddFromFs(manifestPath, ipfsProvider, {
+          logger: msg => {
+            task.output = msg;
+          }
+        });
+      }
+    }
+  ];
+
+  const writeResultsTask = {
+    title: "Save upload results",
+    task: async ctx => {
+      addReleaseRecord({
+        dir,
+        version,
+        hash: ctx.releaseHash,
+        type: isDirectoryRelease ? "directory" : "manifest",
+        to: uploadToSwarm ? swarmProvider : ipfsProvider
+      });
+
+      // "return" result for next tasks
+      ctx.releaseMultiHash = ctx.releaseHash;
+    }
+  };
 
   return new Listr(
     [
-      /**
-       * 0. Prepare files and folders
-       */
-      {
-        title: "Copy files to new build folder",
-        task: async () => {
-          // Create the build directory. What if it's already created?
-          await execa.shell(`mkdir -p ${buildDir}`);
-          // Copy the docker-compose. Expects only one docker-compose,
-          // will fail if there are multiple docker-compose
-          await execa.shell(`cp docker-compose*.yml ${composePath}`);
-          // Copy all .env files, if any
-          if (
-            await execa
-              .shell(`ls *.env`)
-              .then(() => true)
-              .catch(() => false)
-          ) {
-            await execa.shell(`cp *.env ${buildDir}`);
-          }
-        }
-      },
-      /**
-       * 1. Upload avatar to IPFS
-       */
-      {
-        title: "Upload avatar to IPFS",
-        task: async () => {
-          // log('uploading avatar to IPFS...');
-          // const file = [{
-          // path: manifest.avatar,
-          // content: FILESYSTEM.createReadStream(manifest.avatar),
-          // }];
-          // const avatarHash = await ipfs.files.add(file).then((res) => res[0].hash);
-          // manifest.avatar = `/ipfs/${avatarHash}`;
-          // log(`Uploaded avatar, hash: /ipfs/${avatarHash}`);
-
-          if (manifest.avatar && manifest.avatar.startsWith("/ipfs/")) {
-            // pin avatar
-          }
-        }
-      },
-      /**
-       * 2. Build Dockerfile
-       */
-      {
-        title: "Build docker image",
-        task: async (_, task) => {
-          const logger = msg => {
-            task.output = msg;
-          };
-          await execaProgress("docker-compose build", { logger });
-        }
-      },
-      /**
-       * 3. Save docker image
-       * This step is extremely expensive computationally.
-       * A local cache file will prevent unnecessary compressions if the image hasn't changed
-       */
-      {
-        title: "Save and compress image",
-        task: async (ctx, task) => {
-          // Load image ID. Clean resulting string: Remove double quotes
-          const imageId = await getImageId(imageTag);
-          // Load the cache object
-          const cacheTarHash = cache.load()[imageId];
-          // Load the .tar.xz hash
-          const tarHash = await getFileHash(imagePathCompressed);
-          if (imageId && tarHash && tarHash === cacheTarHash) {
-            task.skip(`Using cached verified tarball ${imagePathCompressed}`);
-          } else {
-            task.output = `Saving docker image to file...`;
-            await execa.shell(
-              `docker save ${imageTag} > ${imagePathUncompressed}`
-            );
-
-            const logger = msg => {
-              task.output = msg;
-            };
-            await compressFile(imagePathUncompressed, {
-              timeout: buildTimeout,
-              logger
-            });
-
-            task.output = `Storing saved image to cache...`;
-            const newTarHash = await getFileHash(imagePathCompressed);
-            if (imageId && newTarHash)
-              cache.write({ key: imageId, value: newTarHash });
-          }
-        }
-      },
-      /**
-       * 4. Upload docker image to IPFS
-       */
-      {
-        title: "Upload image to IPFS",
-        task: async (ctx, task) => {
-          const imageUpload = await ipfsAddFromFs(
-            imagePathCompressed,
-            ipfsProvider,
-            {
-              logger: msg => {
-                task.output = msg;
-              }
-            }
-          );
-          ctx.imageUpload = imageUpload;
-        }
-      },
-      /**
-       * 5. Save and upload manifest
-       */
-      {
-        title: "Save and upload manifest to IPFS",
-        task: async (ctx, task) => {
-          const { imageUpload } = ctx;
-          // Edit manifest
-          manifest.image.path = imageUpload.path;
-          manifest.image.hash = `/ipfs/${imageUpload.hash}`;
-          manifest.image.size = imageUpload.size;
-          /**
-           * ValidateManifest will call `process.exit(1)` if manifest is invalid
-           * Fully validate the entire manifest
-           */
-          validateManifest(manifest);
-          // Update manifest
-          writeManifest({ manifest, dir });
-          writeManifest({ manifest, dir: buildDir });
-
-          const manifestUpload = await ipfsAddFromFs(
-            manifestPath,
-            ipfsProvider,
-            {
-              logger: msg => {
-                task.output = msg;
-              }
-            }
-          );
-          // Write manifest IPFS upload results = {path, hash, size}
-          fs.writeFileSync(uploadPath, JSON.stringify(manifestUpload, null, 2));
-          ctx.manifestIpfsPath = `/ipfs/${manifestUpload.hash}`;
-        }
-      }
+      copyFilesTask,
+      buildDockerImageTask,
+      saveAndComposeImageTask,
+      ...(uploadToSwarm
+        ? uploadDirectoryReleaseToSwarmTasks
+        : isDirectoryRelease
+        ? uploadDirectoryReleaseToIpfsTasks
+        : uploadManifestReleaseToIpfsTasks),
+      writeResultsTask
     ],
     { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
   );

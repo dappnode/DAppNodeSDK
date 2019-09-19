@@ -1,5 +1,4 @@
 const expect = require("chai").expect;
-const path = require("path");
 const fs = require("fs");
 const generatePublishTx = require("../../src/tasks/generatePublishTx");
 const { rmSafe, mkdirSafe } = require("../shellSafe");
@@ -14,7 +13,6 @@ const { rmSafe, mkdirSafe } = require("../shellSafe");
 describe("generatePublishTx", () => {
   const manifestPath = "./dappnode_package.json";
   const buildDir = "dnp_0.0.0";
-  const deployTextPath = path.join(buildDir, "deploy.txt");
 
   before(async () => {
     await rmSafe(manifestPath);
@@ -30,7 +28,8 @@ describe("generatePublishTx", () => {
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
     const generatePublishTxTasks = generatePublishTx({
-      manifestIpfsPath: "/ipfs/Qm",
+      dir: "./",
+      releaseMultiHash: "/ipfs/Qm",
       buildDir,
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
@@ -48,7 +47,7 @@ describe("generatePublishTx", () => {
       gasLimit: 300000,
       ensName: "admin.dnp.dappnode.eth",
       currentVersion: "0.1.0",
-      manifestIpfsPath: "/ipfs/Qm"
+      releaseMultiHash: "/ipfs/Qm"
     });
     // I am not sure if the Data property will be the same
     expect(txData.data).to.be.a("string");
@@ -62,7 +61,8 @@ describe("generatePublishTx", () => {
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
     const generatePublishTxTasks = generatePublishTx({
-      manifestIpfsPath: "/ipfs/Qm",
+      dir: "./",
+      releaseMultiHash: "/ipfs/Qm",
       buildDir,
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
@@ -79,7 +79,7 @@ describe("generatePublishTx", () => {
       gasLimit: 1100000,
       ensName: "new-repo.dnp.dappnode.eth",
       currentVersion: "0.1.0",
-      manifestIpfsPath: "/ipfs/Qm",
+      releaseMultiHash: "/ipfs/Qm",
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B"
     });
     // I am not sure if the Data property will be the same
@@ -88,7 +88,6 @@ describe("generatePublishTx", () => {
 
   after(async () => {
     await rmSafe(manifestPath);
-    await rmSafe(deployTextPath);
     await rmSafe(buildDir);
   });
 });

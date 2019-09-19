@@ -1,4 +1,3 @@
-const fs = require("fs");
 const Listr = require("listr");
 const abi = require("ethjs-abi");
 const { isHexString } = require("ethjs-util");
@@ -8,6 +7,7 @@ const semverToArray = require("../utils/semverToArray");
 const { readManifest } = require("../utils/manifest");
 const getLinks = require("../utils/getLinks");
 const { throwYargsErr } = require("../utils/yargsErr");
+const { addReleaseTx } = require("../utils/releaseRecord");
 const isZeroAddress = address => parseInt(address) === 0;
 
 /**
@@ -22,11 +22,10 @@ const isZeroAddress = address => parseInt(address) === 0;
  */
 
 function generatePublishTx({
-  manifestIpfsPath,
+  releaseMultiHash,
   dir,
   developerAddress,
   ethProvider,
-  deployTextPath,
   verbose,
   silent
 }) {
@@ -34,15 +33,15 @@ function generatePublishTx({
   const apm = new Apm(ethProvider);
 
   // Load manifest ##### Verify manifest object
-  const manifest = readManifest({ dir });
+  const { name, version } = readManifest({ dir });
 
   // Compute tx data
   const contentURI =
-    "0x" + Buffer.from(manifestIpfsPath, "utf8").toString("hex");
+    "0x" + Buffer.from(releaseMultiHash, "utf8").toString("hex");
   const contractAddress = "0x0000000000000000000000000000000000000000";
-  const currentVersion = manifest.version;
-  const ensName = manifest.name;
-  const shortName = manifest.name.split(".")[0];
+  const currentVersion = version;
+  const ensName = name;
+  const shortName = name.split(".")[0];
 
   return new Listr(
     [
@@ -100,7 +99,7 @@ function generatePublishTx({
               gasLimit: 300000,
               ensName,
               currentVersion,
-              manifestIpfsPath
+              releaseMultiHash
             };
           } else {
             // If repo does not exist, create a new repo and push version
@@ -151,7 +150,7 @@ with command option:
               gasLimit: 1100000,
               ensName,
               currentVersion,
-              manifestIpfsPath,
+              releaseMultiHash,
               developerAddress
             };
           }
@@ -159,23 +158,11 @@ with command option:
           /**
            * Write Tx data in a file for future reference
            */
-          if (deployTextPath) {
-            const txData = ctx.txData;
-            fs.writeFileSync(
-              deployTextPath,
-              JSON.stringify(
-                {
-                  To: txData.to,
-                  Value: txData.value,
-                  Data: txData.data,
-                  GasLimit: txData.gasLimit,
-                  PrefilledLink: getLinks.publishTx({ txData })
-                },
-                null,
-                2
-              )
-            );
-          }
+          addReleaseTx({
+            dir,
+            version,
+            link: getLinks.publishTx({ txData: ctx.txData })
+          });
         }
       }
     ],

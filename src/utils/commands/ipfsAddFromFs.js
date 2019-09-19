@@ -1,7 +1,15 @@
 const Ipfs = require("../Ipfs");
 const fs = require("fs");
 
-function ipfsAddFromFs(path, ipfsProvider, { logger }) {
+/**
+ * A single file from the fs
+ * @param {*} path
+ * @param {*} ipfsProvider
+ * @param {*} options
+ * @returns {string} "/ipfs/QmasUHASUDBIAUBSDIbaisd"
+ */
+function ipfsAddFromFs(path, ipfsProvider, options) {
+  const logger = (options || {}).logger || function() {};
   const ipfs = new Ipfs(ipfsProvider);
 
   const showProgress = !(ipfsProvider || "").includes("infura");
@@ -15,7 +23,7 @@ function ipfsAddFromFs(path, ipfsProvider, { logger }) {
       pin: true,
       ...(showProgress ? { progress } : {})
     })
-    .then(res => res[0]);
+    .then(res => `/ipfs/${res[0].hash}`);
 }
 
 module.exports = ipfsAddFromFs;
