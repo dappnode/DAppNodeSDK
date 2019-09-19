@@ -4,6 +4,8 @@ const { rmSafe, shellSafe } = require("../shellSafe");
 const yaml = require("js-yaml");
 const buildAndUpload = require("../../src/tasks/buildAndUpload");
 
+const ipfsProvider = "http://ipfs.dappnode.io";
+
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
 // ./dnp_0.0.0/             => build directory
@@ -30,6 +32,8 @@ describe("buildAndUpload", () => {
   };
   const manifestPath = "./dappnode_package.json";
   const composePath = "./docker-compose.yml";
+  const avatarPath = "./test-avatar.png";
+  const avatarSourcePath = "test/test-avatar-source.png";
   const buildDir = `./build_${version}`;
 
   /**
@@ -59,13 +63,14 @@ ENV test=1
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
     fs.writeFileSync(composePath, yaml.dump(compose, { indent: 2 }));
     fs.writeFileSync("./build/Dockerfile", Dockerfile);
+    fs.copyFileSync(avatarSourcePath, avatarPath);
   });
 
   it("Should build and upload the current version", async () => {
     const buildAndUploadTasks = buildAndUpload({
       dir: "./",
       buildDir,
-      ipfsProvider: "infura",
+      ipfsProvider: ipfsProvider,
       verbose: true
     });
     const { releaseMultiHash } = await buildAndUploadTasks.run();
@@ -77,7 +82,7 @@ ENV test=1
     const buildAndUploadTasks = buildAndUpload({
       dir: "./",
       buildDir,
-      ipfsProvider: "infura",
+      ipfsProvider: ipfsProvider,
       isDirectoryRelease: true,
       verbose: true
     });

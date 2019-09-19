@@ -1,15 +1,22 @@
 const processExit = require("./processExit");
 const sizeOf = require("image-size");
 
-const expectedSize = 300;
+const maxSize = 300;
+const minSize = 200;
 
 function verifyAvatar(avatarPath) {
   const { width, height } = sizeOf(avatarPath);
 
-  if (width !== expectedSize || height !== expectedSize)
+  if (width !== height)
     processExit(
-      "Wrong avatar size",
-      `Avatar png must be ${expectedSize} x ${expectedSize} but it's ${width} x ${height}`
+      "Wrong avatar aspect ratio",
+      `Avatar png must be a square (1:1), but it's ${width} x ${height}`
+    );
+
+  if (width < minSize || width > maxSize)
+    processExit(
+      "Wrong avatar aspect size",
+      `Avatar png must be a square (1:1) between ${minSize} and ${maxSize} px wide, but it's ${width} x ${height}`
     );
 }
 

@@ -8,4 +8,5 @@ dappnode_package*.json
 docker-compose.yml
 .cache
 test-avatar.png
+avatar.png
 releases.json

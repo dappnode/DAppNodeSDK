@@ -6,7 +6,7 @@ const { writeManifest } = require("../utils/manifest");
 const { generateAndWriteCompose } = require("../utils/compose");
 const shell = require("../utils/shell");
 
-async function initializeDnp({ dir = "./", useDefaults }) {
+async function initializeDnp({ dir = "./", useDefaults, force }) {
   // shell outputs tend to include trailing spaces and new lines
   const defaultName = await shell('echo "${PWD##*/}"', { silent: true });
   const defaultAuthor = await shell("whoami", { silent: true });
@@ -27,7 +27,7 @@ It only covers the most common items, and tries to guess sensible defaults.
 `);
   }
 
-  if (fs.existsSync(path.join(dir, "dappnode_package.json"))) {
+  if (fs.existsSync(path.join(dir, "dappnode_package.json")) && !force) {
     const continueAnswer = await inquirer.prompt([
       {
         type: "confirm",
