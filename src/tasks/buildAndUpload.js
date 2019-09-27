@@ -80,15 +80,20 @@ function buildAndUpload({
       for (const file of buildFiles.filter(file => file !== imageFileName))
         fs.unlinkSync(path.join(buildDir, file));
 
+      // Files should be copied for any type of release so they are available
+      // in Github releases
+      fs.copyFileSync(composeRootPath, composeBuildPath);
+      fs.copyFileSync(avatarRootPath, avatarBuildPath);
+
       if (isDirectoryRelease) {
-        fs.copyFileSync(composeRootPath, composeBuildPath);
-        fs.copyFileSync(avatarRootPath, avatarBuildPath);
         // #### Validate and clean manifest
         // #### Do not add empty volumes, ports, environment fields
         // #### Make sure "restart" is set to "always" if no value
-        delete manifest.image.hash;
-        delete manifest.image.path;
-        delete manifest.image.size;
+        if (manifest.image) {
+          delete manifest.image.hash;
+          delete manifest.image.path;
+          delete manifest.image.size;
+        }
         writeManifest({
           manifest: lodash.omit(manifest, ["avatar"]),
           dir: buildDir
