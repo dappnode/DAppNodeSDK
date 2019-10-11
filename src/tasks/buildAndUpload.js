@@ -23,6 +23,7 @@ const execaProgress = require("../utils/commands/execaProgress");
 const ipfsAddFromFs = require("../utils/commands/ipfsAddFromFs");
 const ipfsAddDirFromFs = require("../utils/commands/ipfsAddDirFromFs");
 const swarmAddDirFromFs = require("../utils/commands/swarmAddDirFromFs");
+const { updateCompose } = require("../utils/compose");
 
 // Define build timeout (20 min)
 const defaultBuildTimeout = 20 * 60 * 1000;
@@ -111,6 +112,9 @@ function buildAndUpload({
   const buildDockerImageTask = {
     title: "Build docker image",
     task: async (_, task) => {
+      // Before building make sure the imageTag in the docker-compose is correct
+      updateCompose({ name, version });
+
       const logger = msg => {
         task.output = msg;
       };
