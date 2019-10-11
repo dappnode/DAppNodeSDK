@@ -154,14 +154,13 @@ function generateCompose({ manifest }) {
   return yaml.dump(dockerCompose, { indent: 2 });
 }
 
-function updateCompose({ manifest, dir, composeFileName }) {
+function updateCompose({ name, version, composeFileName, dir }) {
   const dockerCompose = readCompose({ dir, composeFileName });
   // Only update the imageName field
   //   services:
   //     wamp.dnp.dappnode.eth:
   //       image: 'wamp.dnp.dappnode.eth:0.1.1'
-  dockerCompose.services[manifest.name].image =
-    manifest.name + ":" + manifest.version;
+  dockerCompose.services[name].image = name + ":" + version;
   const composeYaml = yaml.dump(dockerCompose, { indent: 2 });
   writeCompose({ composeYaml, dir, composeFileName });
 }

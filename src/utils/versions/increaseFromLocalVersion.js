@@ -28,7 +28,8 @@ async function increaseFromLocalVersion({ type, dir }) {
 
   // Mofidy and write the manifest and docker-compose
   writeManifest({ manifest, dir });
-  updateCompose({ manifest, dir });
+  const { name, version } = manifest;
+  updateCompose({ name, version, dir });
 
   return nextVersion;
 }
