@@ -31,7 +31,8 @@ wait "$xz_pid"`;
       logger(data);
     });
     xz.on("close", code => {
-      if (code === 0) resolve();
+      // execa can return null or 0
+      if (!code) resolve();
       else reject(Error(`Error compressing ${path}: ${stderr}`));
     });
   });
