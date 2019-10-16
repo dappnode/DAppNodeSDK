@@ -21,7 +21,8 @@ function execaProgress(cmd, { logger = () => {}, ...options } = {}) {
 
   return new Promise((resolve, reject) => {
     process.on("exit", code => {
-      if (code === 0) resolve(stdout);
+      // execa can return null or 0
+      if (!code) resolve(stdout);
       else reject(stderr);
     });
   });
