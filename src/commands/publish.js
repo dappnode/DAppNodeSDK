@@ -151,7 +151,7 @@ exports.handler = async ({
        */
       {
         title: "Fetch current version from APM",
-        task: async ctx => {
+        task: async (ctx, task) => {
           let nextVersion;
           try {
             nextVersion = await increaseFromApmVersion({
@@ -166,6 +166,7 @@ exports.handler = async ({
           }
           ctx.nextVersion = nextVersion;
           ctx.buildDir = path.join(dir, `build_${nextVersion}`);
+          task.title = task.title + ` (next version: ${nextVersion})`;
         }
       },
       /**
