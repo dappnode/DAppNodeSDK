@@ -56,6 +56,18 @@ function buildAndUpload({
   const manifest = readManifest({ dir });
   const manifestPath = getManifestPath({ dir });
 
+  // Make sure the release is of correct type
+  if (isDirectoryRelease && manifest.image)
+    throw Error(`You are building a directory type release but there are image settings in the manifest.
+Please, move all image settings from the manifest to the docker-compose.yml 
+and remove the manifest.image property
+`);
+  // If there is no manifest.image prop, assume directory type
+  if (!manifest.image && !isDirectoryRelease) {
+    console.warn("Assuming directory type release");
+    isDirectoryRelease = true;
+  }
+
   // Define variables from manifest
   const { name, version } = manifest;
 

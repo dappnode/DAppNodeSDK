@@ -93,15 +93,6 @@ It only covers the most common items, and tries to guess sensible defaults.
     description: answers.description,
     avatar: "",
     type: "service",
-    image: {
-      path: "",
-      hash: "",
-      size: "",
-      volumes: [],
-      ports: [],
-      environment: [],
-      restart: "always"
-    },
     dependencies: {},
     author: answers.author,
     categories: ["Developer tools"],
@@ -116,7 +107,14 @@ It only covers the most common items, and tries to guess sensible defaults.
 
   // Write manifest and compose
   writeManifest({ manifest, dir });
-  generateAndWriteCompose({ manifest, dir });
+  generateAndWriteCompose({
+    manifest: {
+      name: manifest.name,
+      version: manifest.version,
+      image: {}
+    },
+    dir
+  });
 
   // Initialize Dockerfile
   fs.writeFileSync(
@@ -129,7 +127,19 @@ CMD [ "echo", "happy buidl" ]
 `
   );
 
-  console.log(`Initialized DNP ${manifest.name}`);
+  console.log(`
+Your DAppNodePackage is ready: ${manifest.name}
+
+To start, you can:
+
+ - Develop your dockerized app in   ./build
+ - Add settings in the compose at   ./docker-compose.yml
+ - Add metadata in the manifest at  ./dappnode_package.json
+
+Once ready, you can build, install, and test it by running
+
+  dappnodesdk build 
+`);
 }
 
 module.exports = initializeDnp;
