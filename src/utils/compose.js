@@ -98,11 +98,11 @@ function generateCompose({ manifest }) {
 
   const service = {};
 
+  service.build = "./build";
+
   // Image name
   service.image = manifest.name + ":" + manifest.version;
-  if (manifest.restart) service.restart = manifest.restart;
-
-  service.build = "./build";
+  service.restart = manifest.image.restart || "always";
 
   // Volumes
   if (manifest.image.volumes) {
