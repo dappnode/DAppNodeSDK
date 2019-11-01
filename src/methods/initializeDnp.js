@@ -127,7 +127,19 @@ CMD [ "echo", "happy buidl" ]
 `
   );
 
-  console.log(`Initialized DNP ${manifest.name}`);
+  console.log(`
+Your DAppNodePackage is ready: ${manifest.name}
+
+To start, you can:
+
+ - Develop your dockerized app in   ./build
+ - Add settings in the compose at   ./docker-compose.yml
+ - Add metadata in the manifest at  ./dappnode_package.json
+
+Once ready, you can build, install, and test it by running
+
+  dappnodesdk build 
+`);
 }
 
 module.exports = initializeDnp;
