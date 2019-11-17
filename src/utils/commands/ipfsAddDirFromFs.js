@@ -7,7 +7,7 @@ const getDirSize = require("../getDirSize");
  * @param {*} dirPath
  * @param {*} ipfsProvider
  * @param {*} param2
- * @returns {string} "/ipfs/QmasUHASUDBIAUBSDIbaisd"
+ * @returns {Promise<string>} "/ipfs/QmasUHASUDBIAUBSDIbaisd"
  */
 async function ipfsAddDirFromFs(dirPath, ipfsProvider, { logger }) {
   const ipfs = new Ipfs(ipfsProvider);
@@ -19,6 +19,7 @@ async function ipfsAddDirFromFs(dirPath, ipfsProvider, { logger }) {
     const completedFraction = prog / totalSize > 1 ? 1 : prog / totalSize;
     logger("Uploading... " + (completedFraction * 100).toFixed(2) + "%");
   };
+
   const entries = await ipfs.addFromFs(dirPath, {
     pin: true,
     recursive: true,

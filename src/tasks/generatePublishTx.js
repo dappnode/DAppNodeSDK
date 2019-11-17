@@ -6,8 +6,8 @@ const Apm = require("../utils/Apm");
 const semverToArray = require("../utils/semverToArray");
 const { readManifest } = require("../utils/manifest");
 const getLinks = require("../utils/getLinks");
-const { throwYargsErr } = require("../utils/yargsErr");
 const { addReleaseTx } = require("../utils/releaseRecord");
+const { YargsError } = require("../params");
 const isZeroAddress = address => parseInt(address) === 0;
 
 /**
@@ -109,7 +109,7 @@ function generatePublishTx({
               !isHexString(developerAddress) ||
               isZeroAddress(developerAddress)
             ) {
-              throwYargsErr(
+              throw new YargsError(
                 `A new Aragon Package Manager Repo for ${ensName} must be created. 
 You must specify the developer address that will control it
 

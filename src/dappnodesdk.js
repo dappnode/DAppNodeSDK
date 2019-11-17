@@ -2,7 +2,7 @@
 
 const chalk = require("chalk");
 const figlet = require("figlet");
-const { isYargsErr } = require("./utils/yargsErr");
+const { CliError, YargsError } = require("./params");
 
 // Set up commands
 const dappnodesdk = require("yargs")
@@ -61,11 +61,16 @@ dappnodesdk.epilogue(
  */
 dappnodesdk.fail(function(msg, err, yargs) {
   // Rebrand custom errors as yargs native errors, to display help
-  if (isYargsErr(err)) {
-    msg = isYargsErr(err);
+  if (err instanceof YargsError) {
+    msg = err.message;
     err = null;
   }
+
   if (err) {
+    if (err instanceof CliError) {
+      console.error(` ${chalk.red("✖")} ${err.message}\n`);
+      process.exit(1);
+    }
     // If the error is a network error, show the full error with status code and info
     if (err.name === "HttpError") console.error(err);
     console.error(err.stack);

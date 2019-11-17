@@ -1,12 +1,18 @@
 node_modules
 DAppNodePackage-*
 .vscode
+
+.cache
+
 # When testing commands with this package this files will be generated
+# Test build files
 build
 build_*
 dappnode_package*.json
 docker-compose.yml
-.cache
 test-avatar.png
 avatar.png
 releases.json
+setup.schema.json
+setup-ui.json
+disclaimer.md

@@ -6,7 +6,7 @@ const fs = require("fs");
  * @param {*} path
  * @param {*} ipfsProvider
  * @param {*} options
- * @returns {string} "/ipfs/QmasUHASUDBIAUBSDIbaisd"
+ * @returns {Promise<string>} "/ipfs/QmasUHASUDBIAUBSDIbaisd"
  */
 function ipfsAddFromFs(path, ipfsProvider, options) {
   const logger = (options || {}).logger || function() {};
