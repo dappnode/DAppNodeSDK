@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const chalk = require("chalk");
 const semver = require("semver");
 const inquirer = require("inquirer");
 const { writeManifest } = require("../utils/manifest");
@@ -128,7 +129,7 @@ CMD [ "echo", "happy buidl" ]
   );
 
   console.log(`
-Your DAppNodePackage is ready: ${manifest.name}
+${chalk.green("Your DAppNodePackage is ready")}: ${manifest.name}
 
 To start, you can:
 

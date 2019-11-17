@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const check = require("../utils/check");
+const { CliError } = require("../params");
 
 const MANIFEST_NAME = "dappnode_package.json";
 
@@ -55,7 +56,7 @@ function readManifest({ dir, manifestFileName } = {}) {
     data = fs.readFileSync(path, "utf8");
   } catch (e) {
     if (e.code === "ENOENT") {
-      throw Error(
+      throw new CliError(
         `No manifest found at ${path}. Make sure you are in a directory with an initialized DNP.`
       );
     } else {

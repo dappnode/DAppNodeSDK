@@ -1,5 +1,5 @@
-const processExit = require("./processExit");
 const manifestUtils = require("@dappnode/dnp-manifest");
+const { CliError } = require("../params");
 
 const fakeHash = "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp";
 
@@ -19,7 +19,10 @@ function validateManifest(manifest, options) {
 
   // If not valid, print errors and stop execution
 
-  processExit("Invalid manifest:", errors.map(msg => `  - ${msg}`).join("\n"));
+  throw new CliError(
+    "Invalid manifest:",
+    errors.map(msg => `  - ${msg}`).join("\n")
+  );
 }
 
 module.exports = validateManifest;

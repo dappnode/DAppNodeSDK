@@ -83,7 +83,7 @@ ENV test=1
     // Rewrite the manifest to not contain image
     fs.writeFileSync(
       manifestPath,
-      JSON.stringify(omit(manifest, "image"), null, 2)
+      JSON.stringify(omit(manifest, "image", "avatar"), null, 2)
     );
 
     const buildAndUploadTasks = buildAndUpload({
