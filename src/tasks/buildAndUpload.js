@@ -114,6 +114,7 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
 
       const additionalFiles = [
         releaseFiles.setupSchema,
+        releaseFiles.setupTarget,
         releaseFiles.setupUiJson,
         releaseFiles.disclaimer
       ];

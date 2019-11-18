@@ -7,6 +7,7 @@ const releaseFilesRegex = {
   compose: /compose.*\.yml$/,
   avatar: /avatar.*\.png$/,
   setupSchema: /setup\..*\.json$/,
+  setupTarget: /setup-target\..*json$/,
   setupUiJson: /setup-ui\..*json$/,
   disclaimer: /disclaimer\.md$/i
 };
@@ -41,6 +42,12 @@ const releaseFiles = {
     regex: releaseFilesRegex.setupSchema,
     defaultName: "setup.schema.json",
     id: "setupSchema"
+  },
+  setupTarget: {
+    required: false,
+    regex: releaseFilesRegex.setupTarget,
+    defaultName: "setup-target.json",
+    id: "setupTarget"
   },
   setupUiJson: {
     required: false,
