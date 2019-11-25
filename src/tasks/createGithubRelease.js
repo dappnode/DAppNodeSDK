@@ -9,7 +9,8 @@ const getRepoSlugFromManifest = require("../utils/getRepoSlugFromManifest");
 const getTxDataAdminUiLink = require("../utils/getTxDataAdminUiLink");
 const getCurrentCommitSha = require("../utils/getCurrentCommitSha");
 const increaseFromLocalVersion = require("../utils/versions/increaseFromLocalVersion");
-const { readManifest } = require("../utils/manifest");
+const { readManifestString } = require("../utils/manifest");
+const { readComposeString } = require("../utils/compose");
 
 /**
  * Create (or edit) a Github release, then upload all assets
@@ -260,12 +261,14 @@ function createGithubRelease({
         task: async (ctx, task) => {
           try {
             const latestSha = ctx.latestSha;
-            const path = "dappnode_package.json";
+            const manifestPath = "dappnode_package.json";
+            const composePath = "docker-compose.yml";
             const nextVersion = await increaseFromLocalVersion({
               type: "patch",
               dir
             });
-            const manifest = readManifest({ dir });
+            const manifestString = readManifestString({ dir });
+            const composeString = readComposeString({ dir });
             const branch = `v${nextVersion}`;
 
             // Create the next branch
@@ -286,21 +289,41 @@ function createGithubRelease({
             // Fetch the manifest file's sha for the `updateFile` call
             task.output = `Advancing manifest version to ${nextVersion}...`;
             const manifestSha = await octokit.repos
-              .getContents({ owner, repo, path })
+              .getContents({ owner, repo, path: manifestPath })
               .then(res => res.data.sha);
 
             // Update the manifest making a commit to the next branch
             await octokit.repos.updateFile({
               owner,
               repo,
-              path,
+              path: manifestPath,
               branch,
               message: `Advance manifest to new version: ${nextVersion}`,
               // API requires content in Base64
-              content: Buffer.from(JSON.stringify(manifest, null, 2)).toString(
-                "base64"
-              ),
+              content: Buffer.from(manifestString).toString("base64"),
               sha: manifestSha,
+              "author.name": "dappnode",
+              "author.email": "dappnode@dappnode.io",
+              "committer.name": "dappnode",
+              "committer.email": "dappnode@dappnode.io"
+            });
+
+            // Fetch the manifest file's sha for the `updateFile` call
+            task.output = `Advancing compose version to ${nextVersion}...`;
+            const composeSha = await octokit.repos
+              .getContents({ owner, repo, path: composePath })
+              .then(res => res.data.sha);
+
+            // Update the manifest making a commit to the next branch
+            await octokit.repos.updateFile({
+              owner,
+              repo,
+              path: composePath,
+              branch,
+              message: `Advance compose to new version: ${nextVersion}`,
+              // API requires content in Base64
+              content: Buffer.from(composeString).toString("base64"),
+              sha: composeSha,
               "author.name": "dappnode",
               "author.email": "dappnode@dappnode.io",
               "committer.name": "dappnode",

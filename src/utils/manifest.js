@@ -39,7 +39,7 @@ function writeManifest({ manifest, dir, manifestFileName }) {
 }
 
 /**
- * Reads a manifest. Without arguments defaults to read the manifest at './dappnode_package.json'
+ * Reads a manifest raw data. Without arguments defaults to read the manifest at './dappnode_package.json'
  *
  * @param {Object} kwargs: {
  *   dir: './folder', [optional] directory to load the manifest from
@@ -47,7 +47,7 @@ function writeManifest({ manifest, dir, manifestFileName }) {
  * }
  * @return {Object} manifest object
  */
-function readManifest({ dir, manifestFileName } = {}) {
+function readManifestString({ dir, manifestFileName } = {}) {
   const path = getManifestPath({ dir, manifestFileName });
 
   // Recommended way of checking a file existance https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
@@ -63,6 +63,21 @@ function readManifest({ dir, manifestFileName } = {}) {
       throw e;
     }
   }
+
+  return data;
+}
+
+/**
+ * Reads a manifest. Without arguments defaults to read the manifest at './dappnode_package.json'
+ *
+ * @param {Object} kwargs: {
+ *   dir: './folder', [optional] directory to load the manifest from
+ *   manifestFileName: 'manifest-admin.json', [optional] name of the manifest file
+ * }
+ * @return {Object} manifest object
+ */
+function readManifest({ dir, manifestFileName } = {}) {
+  const data = readManifestString({ dir, manifestFileName });
 
   // Parse manifest in try catch block to show a comprehensive error message
   let manifest;
@@ -109,5 +124,6 @@ module.exports = {
   getManifestPath,
   writeManifest,
   readManifest,
+  readManifestString,
   manifestFromCompose
 };
