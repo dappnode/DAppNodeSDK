@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const lodash = require("lodash");
 const Listr = require("listr");
 const execa = require("execa");
 const timestring = require("timestring");
@@ -13,9 +12,10 @@ const {
   writeManifest
 } = require("../utils/manifest");
 const validateManifest = require("../utils/validateManifest");
-const getPathRootAvatarAndVerify = require("../utils/getPathRootAvatarAndVerify");
-const getPathRootCompose = require("../utils/getPathRootCompose");
+const verifyAvatar = require("../utils/verifyAvatar");
+const getAssetPath = require("../utils/getAssetPath");
 const { addReleaseRecord } = require("../utils/releaseRecord");
+const { releaseFiles, CliError } = require("../params");
 
 // Commands
 const compressFile = require("../utils/commands/compressFile");
@@ -58,10 +58,15 @@ function buildAndUpload({
 
   // Make sure the release is of correct type
   if (isDirectoryRelease && manifest.image)
-    throw Error(`You are building a directory type release but there are image settings in the manifest.
+    throw new CliError(`You are building a directory type release but there are image settings in the manifest.
 Please, move all image settings from the manifest to the docker-compose.yml 
 and remove the manifest.image property
 `);
+  if (isDirectoryRelease && manifest.avatar)
+    throw new CliError(`You are building a directory type release but the avatar in declared in the manifest.
+Just delete the 'manifest.avatar' property, and it will be added in the release automatically
+`);
+
   // If there is no manifest.image prop, assume directory type
   if (!manifest.image && !isDirectoryRelease) {
     console.warn("Assuming directory type release");
@@ -79,11 +84,12 @@ and remove the manifest.image property
   const avatarBuildPath = path.join(buildDir, `avatar.png`);
   const imageTag = `${name}:${version}`;
   // Root paths, this functions may throw
-  const avatarRootPath = getPathRootAvatarAndVerify(dir);
-  const composeRootPath = getPathRootCompose(dir);
+  const composeRootPath = getAssetPath(releaseFiles.compose, dir);
+  const avatarRootPath = getAssetPath(releaseFiles.avatar, dir);
+  verifyAvatar(avatarRootPath);
 
-  const copyFilesTask = {
-    title: "Copy files and validate",
+  const createReleaseDirTask = {
+    title: "Create release dir",
     task: async () => {
       // Create dir
       fs.mkdirSync(buildDir, { recursive: true }); // Ok on existing dir
@@ -92,32 +98,43 @@ and remove the manifest.image property
       // Clean all files except the image
       for (const file of buildFiles.filter(file => file !== imageFileName))
         fs.unlinkSync(path.join(buildDir, file));
+    }
+  };
 
-      // Files should be copied for any type of release so they are available
-      // in Github releases
+  // Files should be copied for any type of release so they are available
+  // in Github releases
+
+  const copyFilesDirectoryTypeTask = {
+    title: "Copy files and validate (directory)",
+    task: async () => {
       fs.copyFileSync(composeRootPath, composeBuildPath);
       fs.copyFileSync(avatarRootPath, avatarBuildPath);
+      writeManifest({ manifest, dir: buildDir });
+      validateManifest(manifest, { prerelease: true, noImage: true });
 
-      if (isDirectoryRelease) {
-        // #### Validate and clean manifest
-        // #### Do not add empty volumes, ports, environment fields
-        // #### Make sure "restart" is set to "always" if no value
-        if (manifest.image) {
-          delete manifest.image.hash;
-          delete manifest.image.path;
-          delete manifest.image.size;
-        }
-        writeManifest({
-          manifest: lodash.omit(manifest, ["avatar"]),
-          dir: buildDir
-        });
+      const additionalFiles = [
+        releaseFiles.setupSchema,
+        releaseFiles.setupTarget,
+        releaseFiles.setupUiJson,
+        releaseFiles.disclaimer
+      ];
+      for (const releaseFile of additionalFiles) {
+        const filePath = getAssetPath(releaseFile, dir);
+        if (filePath)
+          fs.copyFileSync(
+            filePath,
+            path.join(buildDir, releaseFile.defaultName)
+          );
       }
+    }
+  };
 
-      // Validate. ValidateManifest will call `process.exit(1)` if manifest is invalid
-      validateManifest(manifest, {
-        prerelease: true,
-        noImage: isDirectoryRelease
-      });
+  const copyFilesManifestTypeTask = {
+    title: "Copy files and validate",
+    task: async () => {
+      fs.copyFileSync(composeRootPath, composeBuildPath);
+      fs.copyFileSync(avatarRootPath, avatarBuildPath);
+      validateManifest(manifest, { prerelease: true });
     }
   };
 
@@ -262,7 +279,10 @@ and remove the manifest.image property
 
   return new Listr(
     [
-      copyFilesTask,
+      createReleaseDirTask,
+      isDirectoryRelease
+        ? copyFilesDirectoryTypeTask
+        : copyFilesManifestTypeTask,
       buildDockerImageTask,
       saveAndComposeImageTask,
       ...(uploadToSwarm

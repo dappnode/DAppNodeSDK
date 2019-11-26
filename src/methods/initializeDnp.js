@@ -1,10 +1,13 @@
 const fs = require("fs");
 const path = require("path");
+const chalk = require("chalk");
 const semver = require("semver");
 const inquirer = require("inquirer");
 const { writeManifest } = require("../utils/manifest");
 const { generateAndWriteCompose } = require("../utils/compose");
+const defaultAvatar = require("../assets/defaultAvatar");
 const shell = require("../utils/shell");
+const { releaseFiles } = require("../params");
 
 async function initializeDnp({ dir = "./", useDefaults, force }) {
   // shell outputs tend to include trailing spaces and new lines
@@ -116,6 +119,16 @@ It only covers the most common items, and tries to guess sensible defaults.
     dir
   });
 
+  // Add default avatar so users can run the command right away
+  const files = fs.readdirSync(dir);
+  const avatarFile = files.find(file => releaseFiles.avatar.regex.test(file));
+  if (!avatarFile) {
+    fs.writeFileSync(
+      path.join(dir, "avatar-default.png"),
+      Buffer.from(defaultAvatar, "base64")
+    );
+  }
+
   // Initialize Dockerfile
   fs.writeFileSync(
     path.join(dir, "build", "Dockerfile"),
@@ -128,7 +141,7 @@ CMD [ "echo", "happy buidl" ]
   );
 
   console.log(`
-Your DAppNodePackage is ready: ${manifest.name}
+${chalk.green("Your DAppNodePackage is ready")}: ${manifest.name}
 
 To start, you can:
 

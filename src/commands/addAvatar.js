@@ -1,9 +1,11 @@
 const chalk = require("chalk");
 const Listr = require("listr");
 // Utils
+const verifyAvatar = require("../utils/verifyAvatar");
+const getAssetPath = require("../utils/getAssetPath");
+const releaseFiles = require("../params");
 const verifyIpfsConnection = require("../utils/verifyIpfsConnection");
 const { readManifest, writeManifest } = require("../utils/manifest");
-const getPathRootAvatarAndVerify = require("../utils/getPathRootAvatarAndVerify");
 // Commands
 const ipfsAddFromFs = require("../utils/commands/ipfsAddFromFs");
 
@@ -41,7 +43,8 @@ exports.handler = async ({
       {
         title: "Uploading avatar to IPFS",
         task: async (ctx, task) => {
-          const avatarPath = getPathRootAvatarAndVerify(dir);
+          const avatarPath = getAssetPath(releaseFiles.avatar, dir);
+          verifyAvatar(avatarPath);
           task.output = `Found ${avatarPath}`;
 
           const manifest = readManifest({ dir });

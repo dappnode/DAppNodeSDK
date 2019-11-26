@@ -10,8 +10,8 @@ const getCurrentLocalVersion = require("../utils/versions/getCurrentLocalVersion
 const increaseFromApmVersion = require("../utils/versions/increaseFromApmVersion");
 const verifyIpfsConnection = require("../utils/verifyIpfsConnection");
 const verifyEthConnection = require("../utils/verifyEthConnection");
-const { throwYargsErr } = require("../utils/yargsErr");
 const getLinks = require("../utils/getLinks");
+const { YargsError } = require("../params");
 
 const validTypes = ["major", "minor", "patch"];
 const typesList = validTypes.join(" | ");
@@ -137,9 +137,12 @@ exports.handler = async ({
   /**
    * Make sure the release type exists and is correct
    */
-  if (!type) throwYargsErr(`Missing required argument [type]: ${typesList}`);
+  if (!type)
+    throw new YargsError(`Missing required argument [type]: ${typesList}`);
   if (!validTypes.includes(type))
-    throwYargsErr(`Invalid release type "${type}", must be: ${typesList}`);
+    throw new YargsError(
+      `Invalid release type "${type}", must be: ${typesList}`
+    );
 
   await verifyIpfsConnection({ ipfsProvider });
   await verifyEthConnection({ ethProvider });
@@ -151,7 +154,7 @@ exports.handler = async ({
        */
       {
         title: "Fetch current version from APM",
-        task: async ctx => {
+        task: async (ctx, task) => {
           let nextVersion;
           try {
             nextVersion = await increaseFromApmVersion({
@@ -166,6 +169,7 @@ exports.handler = async ({
           }
           ctx.nextVersion = nextVersion;
           ctx.buildDir = path.join(dir, `build_${nextVersion}`);
+          task.title = task.title + ` (next version: ${nextVersion})`;
         }
       },
       /**

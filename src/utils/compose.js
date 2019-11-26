@@ -34,17 +34,16 @@ function generateAndWriteCompose({ manifest, dir, composeFileName }) {
 }
 
 /**
- * Generates and writes the docker-compose.
+ * Read a compose data (string, without parsing)
  * Without arguments defaults to write the manifest at './docker-compose.yml'
  *
  * @param {Object} kwargs: {
- *   manifest: <manifest object>
  *   dir: './folder', [optional] directory to load the manifest from
  *   composeFileName: 'manifest-admin.json', [optional] name of the manifest file
  * }
  * @return {Object} compose object
  */
-function readCompose({ dir, composeFileName }) {
+function readComposeString({ dir, composeFileName }) {
   const path = getComposePath({ dir, composeFileName });
 
   // Recommended way of checking a file existance https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
@@ -60,6 +59,22 @@ function readCompose({ dir, composeFileName }) {
       throw e;
     }
   }
+
+  return data;
+}
+
+/**
+ * Read a compose parsed data
+ * Without arguments defaults to write the manifest at './docker-compose.yml'
+ *
+ * @param {Object} kwargs: {
+ *   dir: './folder', [optional] directory to load the manifest from
+ *   composeFileName: 'manifest-admin.json', [optional] name of the manifest file
+ * }
+ * @return {Object} compose object
+ */
+function readCompose({ dir, composeFileName }) {
+  const data = readComposeString({ dir, composeFileName });
 
   // Parse compose in try catch block to show a comprehensive error message
   let compose;
@@ -170,5 +185,6 @@ module.exports = {
   generateCompose,
   updateCompose,
   readCompose,
-  writeCompose
+  writeCompose,
+  readComposeString
 };
