@@ -9,7 +9,8 @@ const releaseFilesRegex = {
   setupSchema: /setup\..*\.json$/,
   setupTarget: /setup-target\..*json$/,
   setupUiJson: /setup-ui\..*json$/,
-  disclaimer: /disclaimer\.md$/i
+  disclaimer: /disclaimer\.md$/i,
+  gettingStarted: /getting.*started\.md$/i
 };
 
 const releaseFiles = {
@@ -60,6 +61,12 @@ const releaseFiles = {
     regex: releaseFilesRegex.disclaimer,
     defaultName: "disclaimer.md",
     id: "disclaimer"
+  },
+  gettingStarted: {
+    required: false,
+    regex: releaseFilesRegex.gettingStarted,
+    defaultName: "getting-started.md",
+    id: "gettingStarted"
   }
 };
 
