@@ -140,7 +140,7 @@ CMD [ "echo", "happy buidl" ]
 `
   );
 
-  console.log(`
+  return `
 ${chalk.green("Your DAppNodePackage is ready")}: ${manifest.name}
 
 To start, you can:
@@ -152,7 +152,7 @@ To start, you can:
 Once ready, you can build, install, and test it by running
 
   dappnodesdk build 
-`);
+`;
 }
 
 module.exports = initializeDnp;

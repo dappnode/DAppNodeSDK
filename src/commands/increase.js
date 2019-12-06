@@ -17,5 +17,5 @@ exports.handler = async ({ type, dir }) => {
   // Execute command
   const nextVersion = await increaseFromLocalVersion({ type, dir });
   // Output result: "0.1.8"
-  console.log(nextVersion);
+  return nextVersion;
 };

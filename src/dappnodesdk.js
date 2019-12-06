@@ -81,16 +81,26 @@ dappnodesdk.fail(function(msg, err, yargs) {
   } else if (msg) {
     console.error(`
 ${yargs.help()}
-${chalk.gray(`
-${"#".repeat(80)}
-${"#".repeat(80)}
-`)}
+
+${chalk.gray(`${"#".repeat(80)}\n`.repeat(2))}
+
 ${msg}
 `);
   } else {
     console.error("Unknown error");
   }
   process.exit(1);
+});
+
+/**
+ * Handle command finalization
+ * - Log final result
+ * - Close any active processes
+ * - Exit process
+ */
+dappnodesdk.onFinishCommand(finalLog => {
+  console.log(finalLog);
+  process.exit();
 });
 
 // Run CLI

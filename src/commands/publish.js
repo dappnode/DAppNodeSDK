@@ -245,7 +245,7 @@ exports.handler = async ({
       Gas: txData.gasLimit
     };
 
-    console.log(`
+    return `
   ${chalk.green(`DNP (DAppNode Package) published (version ${nextVersion})`)} 
   ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseMultiHash}
   Install link : ${getLinks.installDnp({ releaseMultiHash })}
@@ -261,6 +261,6 @@ ${chalk.gray(
   ${"You can also execute this transaction with Metamask by following this pre-filled link"}
   
   ${chalk.cyan(getLinks.publishTx({ txData }))}
-`);
+`;
   }
 };

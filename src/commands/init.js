@@ -24,6 +24,5 @@ exports.builder = yargs =>
       type: "boolean"
     });
 
-exports.handler = async ({ yes: useDefaults, force, dir }) => {
+exports.handler = async ({ yes: useDefaults, force, dir }) =>
   await initializeDnp({ dir, useDefaults, force });
-};

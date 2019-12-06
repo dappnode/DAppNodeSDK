@@ -32,5 +32,5 @@ exports.handler = async ({ type, provider, dir }) => {
     dir
   });
   // Output result: "0.1.8"
-  console.log(nextVersion);
+  return nextVersion;
 };
