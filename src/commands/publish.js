@@ -248,7 +248,7 @@ exports.handler = async ({
     console.log(`
   ${chalk.green(`DNP (DAppNode Package) published (version ${nextVersion})`)} 
   ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseMultiHash}
-  Install link : ${getLinks.installDnp({ releaseMultiHash })}
+  ${getLinks.installDnp({ releaseMultiHash })}
 
   ${"You must execute this transaction in mainnet to publish a new version of this DNP."}
   
