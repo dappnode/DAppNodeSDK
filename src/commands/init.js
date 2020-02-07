@@ -16,8 +16,30 @@ const stringsToRemoveFromName = [
   "DAppNodePackage"
 ];
 
+// Manifest
+const manifestPath = "dappnode_package.json";
 const publicRepoDomain = ".public.dappnode.eth";
 const defaultVersion = "0.1.0";
+
+// Avatar
+const avatarPath = "avatar-default.png";
+const avatarData = defaultAvatar;
+
+// Dockerfile
+const dockerfilePath = path.join("build", "Dockerfile");
+const dockerfileData = `FROM alpine
+
+WORKDIR /usr/src/app
+
+CMD [ "echo", "happy buidl" ]
+`;
+
+// .gitignore
+const gitignorePath = ".gitignore";
+const gitignoreCheck = "build_*";
+const gitignoreData = `# DAppNodeSDK release directories
+build_*
+`;
 
 /**
  * INIT
@@ -65,7 +87,7 @@ It only covers the most common items, and tries to guess sensible defaults.
 `);
   }
 
-  if (fs.existsSync(path.join(dir, "dappnode_package.json")) && !force) {
+  if (fs.existsSync(path.join(dir, manifestPath)) && !force) {
     const continueAnswer = await inquirer.prompt([
       {
         type: "confirm",
@@ -157,21 +179,16 @@ It only covers the most common items, and tries to guess sensible defaults.
   const avatarFile = files.find(file => releaseFiles.avatar.regex.test(file));
   if (!avatarFile) {
     fs.writeFileSync(
-      path.join(dir, "avatar-default.png"),
-      Buffer.from(defaultAvatar, "base64")
+      path.join(dir, avatarPath),
+      Buffer.from(avatarData, "base64")
     );
   }
 
   // Initialize Dockerfile
-  fs.writeFileSync(
-    path.join(dir, "build", "Dockerfile"),
-    `FROM alpine
+  fs.writeFileSync(path.join(dir, dockerfilePath), dockerfileData);
 
-WORKDIR /usr/src/app
-
-CMD [ "echo", "happy buidl" ]
-`
-  );
+  // Initialize .gitignore
+  writeGitIgnore(path.join(dir, gitignorePath));
 
   console.log(`
 ${chalk.green("Your DAppNodePackage is ready")}: ${manifest.name}
@@ -204,4 +221,17 @@ function getDnpName(name) {
 
   // Append public domain
   return name.endsWith(".eth") ? name : name + publicRepoDomain;
+}
+
+/**
+ * Make sure there's a gitignore for the builds or create it
+ */
+function writeGitIgnore(filepath) {
+  if (fs.existsSync(filepath)) {
+    const currentGitignore = fs.readFileSync(filepath, "utf8");
+    if (!currentGitignore.includes(gitignoreCheck))
+      fs.writeFileSync(filepath, currentGitignore + gitignoreData);
+  } else {
+    fs.writeFileSync(filepath, gitignoreData);
+  }
 }
