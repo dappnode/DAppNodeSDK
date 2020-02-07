@@ -75,6 +75,8 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
 
   // Define variables from manifest
   const { name, version } = manifest;
+  if (/[A-Z]/.test(name))
+    throw new CliError("Package name in the manifest must be lowercase");
 
   // Construct directories and names
   const imagePathUncompressed = path.join(buildDir, `${name}_${version}.tar`);
