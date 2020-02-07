@@ -43,7 +43,23 @@ $ dappnodesdk publish < patch | minor | major >
 ```
 
 Please take in account that the package version is not the internal version of the package you want to upload.
-We use Aragon package manager, and it only lets starting with version 1 and increment one by one. Valid initial versions are 1.0.0, 0.1.0 or 0.0.1
+We use Aragon package manager, and it only lets starting with version 1 and increment one by one. Valid initial versions are `1.0.0`, `0.1.0` or `0.0.1`
+
+## Troubleshoot
+
+If your system does not find the binary `dappnodesdk`, please try these other methods
+
+- Run with `npx` which may handle better global NPM packages
+
+```
+npx @dappnode/dappnodesdk <command>
+```
+
+- Prefix the binary with the location of your global NPM package installation, for example:
+
+```
+~/.npm-packages/bin/dappnodesdk <command>
+```
 
 ## License
 

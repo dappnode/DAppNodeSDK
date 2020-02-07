@@ -37,17 +37,16 @@ exports.builder = yargs =>
     .option("p", {
       alias: "provider",
       description: `Specify a provider (overwrittes ipfs_provider and eth_provider): "dappnode" (default), "infura", "http://localhost:8545"`,
-      default: "dappnode",
+      // Must NOT add a default here, so options can overwrite each other in the handler
+      // default: "dappnode",
       type: "string"
     })
     .option("eth_provider", {
       description: `Specify an eth provider: "dappnode" (default), "infura", "localhost:5002"`,
-      default: "dappnode",
       type: "string"
     })
     .option("ipfs_provider", {
       description: `Specify an ipfs provider: "dappnode" (default), "infura", "http://localhost:8545"`,
-      default: "dappnode",
       type: "string"
     })
     .option("a", {
@@ -100,8 +99,8 @@ exports.handler = async ({
   verbose
 }) => {
   // Parse optionsalias: "release",
-  let ethProvider = provider || eth_provider;
-  let ipfsProvider = provider || ipfs_provider;
+  let ethProvider = provider || eth_provider || "dappnode";
+  let ipfsProvider = provider || ipfs_provider || "dappnode";
   let swarmProvider = provider;
   let githubRelease = github_release;
   let createNextGithubBranch = create_next_branch;
