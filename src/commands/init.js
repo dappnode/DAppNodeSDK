@@ -27,11 +27,11 @@ const avatarData = defaultAvatar;
 
 // Dockerfile
 const dockerfilePath = path.join("build", "Dockerfile");
-const dockerfileData = `FROM alpine
+const dockerfileData = `FROM busybox
 
 WORKDIR /usr/src/app
 
-CMD [ "echo", "happy buidl" ]
+ENTRYPOINT echo "happy buidl $USERNAME!"
 `;
 
 // .gitignore
