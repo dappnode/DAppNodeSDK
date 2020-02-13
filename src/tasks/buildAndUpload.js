@@ -27,6 +27,10 @@ const { updateCompose } = require("../utils/compose");
 // Define build timeout (20 min)
 const defaultBuildTimeout = 20 * 60 * 1000;
 
+// Pretty percent uploaded reporting
+const percentToUploadMessage = percent =>
+  `Uploading... ${(percent * 100).toFixed(2)}%`;
+
 function buildAndUpload({
   dir,
   buildDir,
@@ -192,11 +196,13 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
     {
       title: "Upload directory release to Swarm",
       task: async (ctx, task) => {
-        ctx.releaseHash = await swarmAddDirFromFs(buildDir, swarmProvider, {
-          logger: msg => {
+        ctx.releaseHash = await swarmAddDirFromFs(
+          buildDir,
+          swarmProvider,
+          msg => {
             task.output = msg;
           }
-        });
+        );
       }
     }
   ];
@@ -210,7 +216,7 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
           buildDir,
           ipfsProvider,
           percent => {
-            task.output = `Uploading... ${(percent * 100).toFixed(2)}%`;
+            task.output = percentToUploadMessage(percent);
           }
         );
       }
@@ -232,10 +238,8 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
         const imageUploadHash = await ipfsAddFromFs(
           imagePathCompressed,
           ipfsProvider,
-          {
-            logger: msg => {
-              task.output = msg;
-            }
+          percent => {
+            task.output = percentToUploadMessage(percent);
           }
         );
         // Mutate manifest
@@ -256,11 +260,13 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
         writeManifest({ manifest, dir });
         writeManifest({ manifest, dir: buildDir });
         // Starts with /ipfs/
-        ctx.releaseHash = await ipfsAddFromFs(manifestPath, ipfsProvider, {
-          logger: msg => {
-            task.output = msg;
+        ctx.releaseHash = await ipfsAddFromFs(
+          manifestPath,
+          ipfsProvider,
+          percent => {
+            task.output = percentToUploadMessage(percent);
           }
-        });
+        );
       }
     }
   ];

@@ -1,7 +1,7 @@
 const Swarm = require("../Swarm");
 const getDirSize = require("../getDirSize");
 
-async function swarmAddDirFromFs(dirPath, swarmProvider, { logger }) {
+async function swarmAddDirFromFs(dirPath, swarmProvider, logger) {
   const swarm = new Swarm(swarmProvider);
 
   // Create progress logger, log to Listr inter task output

@@ -9,7 +9,7 @@ describe("Apm constructor", () => {
   it("Should get a new instance of Apm", async () => {
     apm = new Apm("infura");
     expect(apm).to.be.ok;
-    expect(apm.providerUrl).to.equal("https://mainnet.infura.io");
+    expect(apm.providerUrl).to.include("https://mainnet.infura.io");
   });
 
   it("Should get the contract the registry contract of a DNP name", async () => {
