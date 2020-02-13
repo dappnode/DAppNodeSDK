@@ -1,5 +1,5 @@
 const tarFS = require("tar-fs");
-const request = require("request");
+const got = require("got");
 
 function getSwarmGatewayUrl(provider = "dappnode") {
   if (provider === "dappnode") {
@@ -24,27 +24,20 @@ function getSwarmGatewayUrl(provider = "dappnode") {
 function Swarm(provider) {
   const gatewayUrl = getSwarmGatewayUrl(provider);
 
-  async function addDirFromFs(path, progress) {
-    const url = `${gatewayUrl}/bzz:/`;
-    let totalData = 0;
-    return new Promise((resolve, reject) => {
-      request.post(
-        url,
-        {
-          headers: { "content-type": "application/x-tar" },
-          body: tarFS.pack(path).on("data", chunk => {
-            totalData += chunk.length;
-            progress(totalData);
-          })
-        },
-        (err, res, body) => {
-          if (err) reject(err);
-          else if (res.statusCode !== 200)
-            reject(`Status code ${res.statusCode}`);
-          else resolve(body);
-        }
-      );
+  async function addDirFromFs(path, onProgress) {
+    const res = await got({
+      prefixUrl: gatewayUrl,
+      url: "/bzz:/",
+      method: "POST",
+      headers: { "content-type": "application/x-tar" },
+      body: tarFS.pack(path)
+    }).on("uploadProgress", progress => {
+      // Report upload progress
+      // { percent: 0.9995998225975282, transferred: 733675762, total: 733969480 }
+      if (onProgress) onProgress(progress.percent);
     });
+
+    return res.body;
   }
 
   // return exposed methods
