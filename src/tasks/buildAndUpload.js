@@ -20,8 +20,7 @@ const { releaseFiles, CliError } = require("../params");
 // Commands
 const compressFile = require("../utils/commands/compressFile");
 const execaProgress = require("../utils/commands/execaProgress");
-const ipfsAddFromFs = require("../utils/commands/ipfsAddFromFs");
-const ipfsAddDirFromFs = require("../utils/commands/ipfsAddDirFromFs");
+const ipfsAddFromFs = require("../utils/ipfs/ipfsAddFromFs");
 const swarmAddDirFromFs = require("../utils/commands/swarmAddDirFromFs");
 const { updateCompose } = require("../utils/compose");
 
@@ -207,11 +206,13 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
       title: "Upload directory release to IPFS",
       task: async (ctx, task) => {
         // Starts with /ipfs/
-        ctx.releaseHash = await ipfsAddDirFromFs(buildDir, ipfsProvider, {
-          logger: msg => {
-            task.output = msg;
+        ctx.releaseHash = await ipfsAddFromFs(
+          buildDir,
+          ipfsProvider,
+          percent => {
+            task.output = `Uploading... ${(percent * 100).toFixed(2)}%`;
           }
-        });
+        );
       }
     }
   ];

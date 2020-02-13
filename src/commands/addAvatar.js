@@ -6,8 +6,7 @@ const getAssetPath = require("../utils/getAssetPath");
 const releaseFiles = require("../params");
 const verifyIpfsConnection = require("../utils/verifyIpfsConnection");
 const { readManifest, writeManifest } = require("../utils/manifest");
-// Commands
-const ipfsAddFromFs = require("../utils/commands/ipfsAddFromFs");
+const ipfsAddFromFs = require("../utils/ipfs/ipfsAddFromFs");
 
 /**
  * INIT
