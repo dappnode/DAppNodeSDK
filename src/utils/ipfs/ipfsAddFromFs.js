@@ -1,6 +1,7 @@
 const fs = require("fs");
-const FormData = require("form-data");
+const path = require("path");
 const got = require("got");
+const FormData = require("form-data");
 const traverseDir = require("./traverseDir");
 const { normalizeIpfsProvider } = require("./ipfsProvider");
 
@@ -13,12 +14,21 @@ const { normalizeIpfsProvider } = require("./ipfsProvider");
  */
 async function ipfsAddFromFs(dirOrFile, ipfsProvider, onProgress) {
   // Create form and append all files recursively
-  const filePaths = traverseDir(dirOrFile);
+
   const form = new FormData();
-  for (const filePath of filePaths) {
-    form.append(`file-${filePath}`, fs.createReadStream(filePath), {
-      filepath: filePath
-    });
+  // Automatically detect if recursive if needed if directory
+  if (fs.lstatSync(dirOrFile).isDirectory()) {
+    const dirDir = path.parse(dirOrFile).dir;
+    const filePaths = traverseDir(dirOrFile);
+    for (const filePath of filePaths) {
+      form.append(`file-${filePath}`, fs.createReadStream(filePath), {
+        // Compute filepaths from the provided dirOrFile and below only
+        filepath: path.relative(dirDir, filePath)
+      });
+    }
+  } else {
+    // Add single files without providing a filepath
+    form.append("file", fs.createReadStream(dirOrFile));
   }
 
   // Parse the ipfsProvider the a full base apiUrl
