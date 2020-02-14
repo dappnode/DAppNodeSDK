@@ -26,7 +26,10 @@ function parseIpfsProviderUrl(provider) {
 function normalizeIpfsProvider(provider) {
   const providerUrl = getIpfsProviderUrl(provider);
   const { host, port, protocol } = parseIpfsProviderUrl(providerUrl);
-  return `${protocol}://${host}:${port}`;
+  const fullUrl = `${protocol}://${host}:${port}`;
+  // #### TEMP: Make sure the URL is correct
+  new URL(fullUrl);
+  return fullUrl;
 }
 
 module.exports = {
