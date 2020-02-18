@@ -9,7 +9,9 @@ function getEthereumProviderUrl(provider = "dappnode") {
   if (provider === "dappnode") {
     return "http://my.ethchain.dnp.dappnode.eth:8545";
   } else if (provider === "infura") {
-    return "https://mainnet.infura.io";
+    // Make sure to change this common Infura token
+    // if it stops working or you prefer to use your own
+    return "https://mainnet.infura.io/v3/bb15bacfcdbe45819caede241dcf8b0d";
   } else {
     return provider;
   }

@@ -20,13 +20,16 @@ const { releaseFiles, CliError } = require("../params");
 // Commands
 const compressFile = require("../utils/commands/compressFile");
 const execaProgress = require("../utils/commands/execaProgress");
-const ipfsAddFromFs = require("../utils/commands/ipfsAddFromFs");
-const ipfsAddDirFromFs = require("../utils/commands/ipfsAddDirFromFs");
+const ipfsAddFromFs = require("../utils/ipfs/ipfsAddFromFs");
 const swarmAddDirFromFs = require("../utils/commands/swarmAddDirFromFs");
 const { updateCompose } = require("../utils/compose");
 
 // Define build timeout (20 min)
 const defaultBuildTimeout = 20 * 60 * 1000;
+
+// Pretty percent uploaded reporting
+const percentToUploadMessage = percent =>
+  `Uploading... ${(percent * 100).toFixed(2)}%`;
 
 function buildAndUpload({
   dir,
@@ -193,11 +196,13 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
     {
       title: "Upload directory release to Swarm",
       task: async (ctx, task) => {
-        ctx.releaseHash = await swarmAddDirFromFs(buildDir, swarmProvider, {
-          logger: msg => {
+        ctx.releaseHash = await swarmAddDirFromFs(
+          buildDir,
+          swarmProvider,
+          msg => {
             task.output = msg;
           }
-        });
+        );
       }
     }
   ];
@@ -207,11 +212,13 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
       title: "Upload directory release to IPFS",
       task: async (ctx, task) => {
         // Starts with /ipfs/
-        ctx.releaseHash = await ipfsAddDirFromFs(buildDir, ipfsProvider, {
-          logger: msg => {
-            task.output = msg;
+        ctx.releaseHash = await ipfsAddFromFs(
+          buildDir,
+          ipfsProvider,
+          percent => {
+            task.output = percentToUploadMessage(percent);
           }
-        });
+        );
       }
     }
   ];
@@ -231,10 +238,8 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
         const imageUploadHash = await ipfsAddFromFs(
           imagePathCompressed,
           ipfsProvider,
-          {
-            logger: msg => {
-              task.output = msg;
-            }
+          percent => {
+            task.output = percentToUploadMessage(percent);
           }
         );
         // Mutate manifest
@@ -255,11 +260,13 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
         writeManifest({ manifest, dir });
         writeManifest({ manifest, dir: buildDir });
         // Starts with /ipfs/
-        ctx.releaseHash = await ipfsAddFromFs(manifestPath, ipfsProvider, {
-          logger: msg => {
-            task.output = msg;
+        ctx.releaseHash = await ipfsAddFromFs(
+          manifestPath,
+          ipfsProvider,
+          percent => {
+            task.output = percentToUploadMessage(percent);
           }
-        });
+        );
       }
     }
   ];

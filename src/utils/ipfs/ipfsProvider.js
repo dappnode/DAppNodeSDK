@@ -1,5 +1,3 @@
-const IpfsAPI = require("ipfs-http-client");
-
 function getIpfsProviderUrl(provider = "dappnode") {
   if (provider === "dappnode") {
     return "http://my.ipfs.dnp.dappnode.eth";
@@ -25,26 +23,15 @@ function parseIpfsProviderUrl(provider) {
   }
 }
 
-/**
- *
- * @param {String} provider user selected provider. Possible values:
- * - null
- * - "dappnode"
- * - "infura"
- * - "localhost:5002"
- * - "my.ipfs.dnp.dappnode.eth"
- * @return {Object} apm instance
- */
-function Ipfs(provider) {
-  // Initialize ens and web3 instances
-  // Use http providers to avoid opened websocket connection
-  // This application does not need subscriptions and performs very few requests per use
+function normalizeIpfsProvider(provider) {
   const providerUrl = getIpfsProviderUrl(provider);
-  const providerObject = parseIpfsProviderUrl(providerUrl);
-  const ipfs = new IpfsAPI(providerObject);
-
-  // return exposed methods
-  return ipfs;
+  const { host, port, protocol } = parseIpfsProviderUrl(providerUrl);
+  const fullUrl = `${protocol}://${host}:${port}`;
+  // #### TEMP: Make sure the URL is correct
+  new URL(fullUrl);
+  return fullUrl;
 }
 
-module.exports = Ipfs;
+module.exports = {
+  normalizeIpfsProvider
+};

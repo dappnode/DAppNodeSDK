@@ -1,4 +1,4 @@
-const Ipfs = require("./Ipfs");
+const ipfsVersion = require("./ipfs/ipfsVersion");
 
 /**
  * Verify the IPFS connection
@@ -6,8 +6,7 @@ const Ipfs = require("./Ipfs");
  */
 async function verifyIpfsConnection({ ipfsProvider }) {
   try {
-    const ipfs = new Ipfs(ipfsProvider);
-    await ipfs.version();
+    await ipfsVersion(ipfsProvider);
   } catch (e) {
     if (e.code === "ENOTFOUND") {
       if (ipfsProvider === "dappnode") {
