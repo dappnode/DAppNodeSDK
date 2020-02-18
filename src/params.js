@@ -6,6 +6,7 @@ const releaseFilesRegex = {
   image: /\.tar\.xz$/,
   compose: /compose.*\.yml$/,
   avatar: /avatar.*\.png$/,
+  setupWizard: /setup-wizard\..*json$/,
   setupSchema: /setup\..*\.json$/,
   setupTarget: /setup-target\..*json$/,
   setupUiJson: /setup-ui\..*json$/,
@@ -37,6 +38,12 @@ const releaseFiles = {
     regex: releaseFilesRegex.avatar,
     defaultName: "avatar.png",
     id: "avatar"
+  },
+  setupWizard: {
+    required: false,
+    regex: releaseFilesRegex.setupWizard,
+    defaultName: "setup-wizard.json",
+    id: "setupWizard"
   },
   setupSchema: {
     required: false,

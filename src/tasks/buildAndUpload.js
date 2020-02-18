@@ -118,6 +118,7 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
       validateManifest(manifest, { prerelease: true, noImage: true });
 
       const additionalFiles = [
+        releaseFiles.setupWizard,
         releaseFiles.setupSchema,
         releaseFiles.setupTarget,
         releaseFiles.setupUiJson,
