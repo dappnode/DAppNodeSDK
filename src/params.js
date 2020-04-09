@@ -1,6 +1,16 @@
 class CliError extends Error {}
 class YargsError extends Error {}
 
+/**
+ * Plain text file with should contain the IPFS hash of the release
+ * Necessary for the installer script to fetch the latest content hash
+ * of the eth clients. The resulting hashes are used by the DAPPMANAGER
+ * to install an eth client when the user does not want to use a remote node
+ *
+ * /ipfs/QmNqDvqAyy3pN3PvymB6chM7S1FgYyive8LosVKUuaDdfd
+ */
+const contentHashFile = "content-hash";
+
 const releaseFilesRegex = {
   manifest: /dappnode_package.*\.json$/,
   image: /\.tar\.xz$/,
@@ -80,5 +90,6 @@ const releaseFiles = {
 module.exports = {
   CliError,
   YargsError,
-  releaseFiles
+  releaseFiles,
+  contentHashFile
 };
