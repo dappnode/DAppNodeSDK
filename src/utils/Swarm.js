@@ -18,7 +18,7 @@ function getSwarmGatewayUrl(provider = "dappnode") {
  * - "dappnode"
  * - "infura"
  * - "localhost:5002"
- * - "my.ipfs.dnp.dappnode.eth"
+ * - "ipfs.dappnode"
  * @return {Object} apm instance
  */
 function Swarm(provider) {
