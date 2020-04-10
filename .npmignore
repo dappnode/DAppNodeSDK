@@ -1,0 +1,6 @@
+# Don't include test files in release
+test/
+
+# Skip visual assets and docs
+img/
+doc/
