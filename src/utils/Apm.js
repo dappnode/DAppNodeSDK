@@ -7,7 +7,9 @@ const registryAbi = require("../contracts/ApmRegistryAbi.json");
 
 function getEthereumProviderUrl(provider = "dappnode") {
   if (provider === "dappnode") {
-    return "http://my.ethchain.dnp.dappnode.eth:8545";
+    return "http://fullnode.dappnode:8545";
+  } else if (provider === "remote") {
+    return "https://web3.dappnode.net";
   } else if (provider === "infura") {
     // Make sure to change this common Infura token
     // if it stops working or you prefer to use your own
@@ -114,10 +116,7 @@ function Apm(providerId) {
   async function getRegistryContract(ensName) {
     if (!ensName)
       throw Error("getRegistryContract first argument ensName must be defined");
-    const repoId = ensName
-      .split(".")
-      .slice(1)
-      .join(".");
+    const repoId = ensName.split(".").slice(1).join(".");
     const registryAddress = await resolve(repoId);
     if (!registryAddress) return null;
     return eth.contract(registryAbi).at(registryAddress);
