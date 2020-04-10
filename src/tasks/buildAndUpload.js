@@ -15,7 +15,7 @@ const validateManifest = require("../utils/validateManifest");
 const verifyAvatar = require("../utils/verifyAvatar");
 const getAssetPath = require("../utils/getAssetPath");
 const { addReleaseRecord } = require("../utils/releaseRecord");
-const { releaseFiles, CliError } = require("../params");
+const { releaseFiles, contentHashFile, CliError } = require("../params");
 
 // Commands
 const compressFile = require("../utils/commands/compressFile");
@@ -282,6 +282,12 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
         type: isDirectoryRelease ? "directory" : "manifest",
         to: uploadToSwarm ? swarmProvider : ipfsProvider
       });
+
+      // Plain text file with should contain the IPFS hash of the release
+      // Necessary for the installer script to fetch the latest content hash
+      // of the eth clients. The resulting hashes are used by the DAPPMANAGER
+      // to install an eth client when the user does not want to use a remote node
+      fs.writeFileSync(path.join(buildDir, contentHashFile), ctx.releaseHash);
 
       // "return" result for next tasks
       ctx.releaseMultiHash = ctx.releaseHash;
