@@ -18,8 +18,8 @@ async function ipfsVersion(ipfsProvider) {
   const res = await got({
     prefixUrl: apiUrl,
     url: "/api/v0/version",
-    method: "GET",
-    responseType: "json"
+    method: "POST",
+    responseType: "json",
   });
 
   return res.body;

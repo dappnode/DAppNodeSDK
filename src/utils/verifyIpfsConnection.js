@@ -8,6 +8,10 @@ async function verifyIpfsConnection({ ipfsProvider }) {
   try {
     await ipfsVersion(ipfsProvider);
   } catch (e) {
+    // On IPFS version 0.5 only POST methods are allowed
+    // Tolerate errors 405 to be more backwards compatible
+    if (e.message.includes("Method Not Allowed")) return;
+
     if (e.code === "ENOTFOUND") {
       if (ipfsProvider === "dappnode") {
         error(`Can't connect to DAppNode, check your VPN connection`);
