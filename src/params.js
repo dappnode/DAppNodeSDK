@@ -16,7 +16,7 @@ const releaseFilesRegex = {
   image: /\.tar\.xz$/,
   compose: /compose.*\.yml$/,
   avatar: /avatar.*\.png$/,
-  setupWizard: /setup-wizard\..*json$/,
+  setupWizard: /setup-wizard\..*(json|yaml|yml)$/,
   setupSchema: /setup\..*\.json$/,
   setupTarget: /setup-target\..*json$/,
   setupUiJson: /setup-ui\..*json$/,
