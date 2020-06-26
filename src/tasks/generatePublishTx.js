@@ -22,8 +22,8 @@ const isZeroAddress = address => parseInt(address) === 0;
  */
 
 function generatePublishTx({
-  releaseMultiHash,
   dir,
+  releaseMultiHash,
   developerAddress,
   ethProvider,
   verbose,
