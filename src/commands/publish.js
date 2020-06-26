@@ -205,8 +205,8 @@ exports.handler = async ({
         title: "Generate transaction",
         task: ctx =>
           generatePublishTx({
-            releaseMultiHash: ctx.releaseMultiHash,
             dir,
+            releaseMultiHash: ctx.releaseMultiHash,
             developerAddress,
             ethProvider,
             verbose,
@@ -224,6 +224,7 @@ exports.handler = async ({
           createGithubRelease({
             dir,
             buildDir: ctx.buildDir,
+            releaseMultiHash: ctx.releaseMultiHash,
             createNextGithubBranch,
             verbose,
             silent

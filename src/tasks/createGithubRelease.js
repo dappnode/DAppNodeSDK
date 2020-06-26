@@ -11,6 +11,7 @@ const getCurrentCommitSha = require("../utils/getCurrentCommitSha");
 const increaseFromLocalVersion = require("../utils/versions/increaseFromLocalVersion");
 const { readManifestString } = require("../utils/manifest");
 const { readComposeString } = require("../utils/compose");
+const { contentHashFile } = require("../params");
 
 /**
  * Create (or edit) a Github release, then upload all assets
@@ -19,6 +20,7 @@ const { readComposeString } = require("../utils/compose");
 function createGithubRelease({
   dir,
   buildDir,
+  releaseMultiHash,
   createNextGithubBranch,
   verbose,
   silent
@@ -210,6 +212,13 @@ function createGithubRelease({
           if (!buildDir) throw Error("buildDir not provided");
           if (!url) throw Error("uploadUrl not provided");
 
+          // Plain text file with should contain the IPFS hash of the release
+          // Necessary for the installer script to fetch the latest content hash
+          // of the eth clients. The resulting hashes are used by the DAPPMANAGER
+          // to install an eth client when the user does not want to use a remote node
+          const contentHashPath = path.join(buildDir, contentHashFile);
+          fs.writeFileSync(contentHashPath, releaseMultiHash);
+
           // Gather files from the build directory
           const files = fs
             .readdirSync(buildDir)
@@ -245,6 +254,10 @@ function createGithubRelease({
               throw e;
             }
           }
+
+          // Clean content hash file so the directory uploaded to IPFS is the same
+          // as the local build_* dir. User can then `ipfs add -r` and get the same hash
+          fs.unlinkSync(contentHashPath);
         }
       },
       /**
