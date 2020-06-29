@@ -122,8 +122,15 @@ exports.handler = async ({
       // Activate verbose to see logs easier afterwards
       verbose = true;
     }
+
     githubRelease = true;
-    createNextGithubBranch = true;
+
+    if (
+      !process.env.GITHUB_REF ||
+      process.env.GITHUB_REF == "refs/heads/master"
+    ) {
+      createNextGithubBranch = true;
+    }
   }
 
   /**
