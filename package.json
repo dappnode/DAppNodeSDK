@@ -4,9 +4,9 @@
   "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
   "main": "dappnodesdk.js",
   "scripts": {
-    "test": "mocha \"./{,!(node_modules)/**}/*.test.js\" ",
-    "test:file": "mocha ",
-    "lint": "./node_modules/.bin/eslint . --ext .js --fix",
+    "test": "npm run test:file \"./{,!(node_modules)/**}/*.test.ts\"",
+    "test:file": "mocha -r ts-node/register --exit",
+    "lint": "./node_modules/.bin/eslint . --ext .ts --fix",
     "tag-and-publish": "npm version patch -m 'Bump version' && git push origin master && git push --tags",
     "pre-commit": "npm run lint && npm run test"
   },
@@ -56,6 +56,7 @@
   },
   "devDependencies": {
     "@types/async-retry": "^1.4.2",
+    "@types/chai": "^4.2.11",
     "@types/execa": "^2.0.0",
     "@types/figlet": "^1.2.0",
     "@types/inquirer": "^6.5.0",

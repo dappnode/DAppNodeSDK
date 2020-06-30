@@ -34,7 +34,7 @@ export interface Manifest {
   description?: string;
   type?: string;
   author?: string;
-  license: string;
+  license?: string;
   avatar?: string;
   image?: ManifestImage;
   repository?: any;

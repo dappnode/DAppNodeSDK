@@ -1,9 +1,11 @@
-const expect = require("chai").expect;
-const fs = require("fs");
-const yaml = require("js-yaml");
-const { rmSafe } = require("../../shellSafe");
-const increaseFromLocalVersion = require("../../../src/utils/versions/increaseFromLocalVersion");
-const { generateAndWriteCompose } = require("../../../src/utils/compose");
+import { expect } from "chai";
+import fs from "fs";
+import yaml from "js-yaml";
+import semver from "semver";
+import { rmSafe } from "../../shellSafe";
+import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion";
+import { generateAndWriteCompose } from "../../../src/utils/compose";
+import { Manifest, Compose } from "../../../src/types";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -13,9 +15,9 @@ const { generateAndWriteCompose } = require("../../../src/utils/compose");
 // - modify the existing manifest and increase its version
 // - generate a docker compose with the next version
 
-describe("increaseFromLocalVersion", () => {
+describe("increaseFromApmVersion", () => {
   const ensName = "admin.dnp.dappnode.eth";
-  const manifest = {
+  const manifest: Manifest = {
     name: ensName,
     version: "0.1.0",
     avatar: "/ipfs/QmUG9Y13BvmKC4RzFu85F7Ai63emnEYrci4pqbbLxt3mt1",
@@ -29,38 +31,37 @@ describe("increaseFromLocalVersion", () => {
   };
   const manifestPath = "./dappnode_package.json";
   const composePath = "./docker-compose.yml";
+  const dir = "./";
 
   before(async () => {
     await rmSafe(manifestPath);
     await rmSafe(composePath);
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-    generateAndWriteCompose({ manifest });
+    generateAndWriteCompose(dir, manifest);
   });
 
   it("Should get the last version from APM", async () => {
-    const nextVersion = await increaseFromLocalVersion({
+    const nextVersion = await increaseFromApmVersion({
       type: "patch",
-      ethProvider: "infura"
+      ethProvider: "infura",
+      dir
     });
 
     // Check that the console output contains a valid semver version
-    expect(nextVersion).to.equal(
-      "0.1.1",
-      "Should output to console the next version"
-    );
+    expect(semver.valid(nextVersion)).to.be.ok;
 
     // Check that the compose was edited correctly to the next version
     const composeString = fs.readFileSync(composePath, "utf8");
-    const compose = yaml.safeLoad(composeString);
+    const compose = yaml.safeLoad(composeString) as Compose;
     expect(compose.services[ensName].image).to.equal(
-      "admin.dnp.dappnode.eth:0.1.1",
+      `admin.dnp.dappnode.eth:${nextVersion}`,
       "compose should be edited to the next version"
     );
     // Check that the manifest was edited correctly to the next version
     const newManifestString = fs.readFileSync(manifestPath, "utf8");
     const newManifest = JSON.parse(newManifestString);
     expect(newManifest.version).to.equal(
-      "0.1.1",
+      nextVersion,
       "manifest should be edited to the next version"
     );
   }).timeout(60 * 1000);

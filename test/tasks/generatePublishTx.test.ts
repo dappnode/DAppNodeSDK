@@ -1,7 +1,7 @@
-const expect = require("chai").expect;
-const fs = require("fs");
-const generatePublishTx = require("../../src/tasks/generatePublishTx");
-const { rmSafe, mkdirSafe } = require("../shellSafe");
+import { expect } from "chai";
+import fs from "fs";
+import { generatePublishTx } from "../../src/tasks/generatePublishTx";
+import { rmSafe, mkdirSafe } from "../shellSafe";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -30,7 +30,6 @@ describe("generatePublishTx", () => {
     const generatePublishTxTasks = generatePublishTx({
       dir: "./",
       releaseMultiHash: "/ipfs/Qm",
-      buildDir,
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
       verbose: true
@@ -63,7 +62,6 @@ describe("generatePublishTx", () => {
     const generatePublishTxTasks = generatePublishTx({
       dir: "./",
       releaseMultiHash: "/ipfs/Qm",
-      buildDir,
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
       verbose: true

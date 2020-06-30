@@ -1,9 +1,8 @@
-const expect = require("chai").expect;
-const fs = require("fs");
-const { rmSafe, shellSafe } = require("../shellSafe");
-const { omit } = require("lodash");
-const yaml = require("js-yaml");
-const buildAndUpload = require("../../src/tasks/buildAndUpload");
+import { expect } from "chai";
+import fs from "fs";
+import yaml from "js-yaml";
+import { rmSafe, shellSafe } from "../shellSafe";
+import { buildAndUpload } from "../../src/tasks/buildAndUpload";
 
 const ipfsProvider = "http://ipfs.dappnode.io";
 
@@ -72,7 +71,11 @@ ENV test=1
       dir: "./",
       buildDir,
       ipfsProvider: ipfsProvider,
-      verbose: true
+      verbose: true,
+      swarmProvider: "",
+      userTimeout: "15min",
+      isDirectoryRelease: false,
+      uploadToSwarm: false
     });
     const { releaseMultiHash } = await buildAndUploadTasks.run();
     // Check returned hash is correct
@@ -81,17 +84,17 @@ ENV test=1
 
   it("Should build and upload the current version as directory type release", async () => {
     // Rewrite the manifest to not contain image
-    fs.writeFileSync(
-      manifestPath,
-      JSON.stringify(omit(manifest, "image", "avatar"), null, 2)
-    );
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
     const buildAndUploadTasks = buildAndUpload({
       dir: "./",
       buildDir,
       ipfsProvider: ipfsProvider,
       isDirectoryRelease: true,
-      verbose: true
+      verbose: true,
+      swarmProvider: "",
+      userTimeout: "15min",
+      uploadToSwarm: false
     });
     const { releaseMultiHash } = await buildAndUploadTasks.run();
     // Check returned hash is correct

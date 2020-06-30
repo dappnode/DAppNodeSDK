@@ -1,8 +1,9 @@
-const expect = require("chai").expect;
-const fs = require("fs");
-const semver = require("semver");
-const { rmSafe } = require("../../shellSafe");
-const getNextVersionFromApm = require("../../../src/utils/versions/getNextVersionFromApm");
+import { expect } from "chai";
+import fs from "fs";
+import semver from "semver";
+import { rmSafe } from "../../shellSafe";
+
+import { getNextVersionFromApm } from "../../../src/utils/versions/getNextVersionFromApm";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -24,7 +25,8 @@ describe("getNextVersionFromApm", () => {
   it("Should get the last version from APM", async () => {
     const nextVersion = await getNextVersionFromApm({
       type: "patch",
-      ethProvider: "infura"
+      ethProvider: "infura",
+      dir: "./"
     });
     // Check that the console output contains a valid semver version
     expect(semver.valid(nextVersion)).to.be.ok;

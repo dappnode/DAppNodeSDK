@@ -1,6 +1,6 @@
-const expect = require("chai").expect;
-const Apm = require("../../src/utils/Apm");
-const semver = require("semver");
+import semver from "semver";
+import { expect } from "chai";
+import { Apm } from "../../src/utils/Apm";
 
 describe("Apm constructor", () => {
   const dnpName = "admin.dnp.dappnode.eth";

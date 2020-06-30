@@ -1,6 +1,6 @@
-const expect = require("chai").expect;
-const fs = require("fs");
-const shell = require("../../src/utils/shell");
+import { expect } from "chai";
+import fs from "fs";
+import { shell } from "../../src/utils/shell";
 
 describe("shell utility", () => {
   const scriptPath = "test-script.sh";
