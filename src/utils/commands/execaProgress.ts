@@ -3,29 +3,20 @@ import execa from "execa";
 /**
  * Custom execa with progress logging
  */
-export function execaProgress(cmd, { logger = () => {}, ...options } = {}) {
-  let stdout = "";
-  let stderr = "";
-
-  const process = execa.shell(cmd, options);
-  process.stdout.on("data", chunk => {
-    const data = chunk.toString().trim();
-    stdout += data;
-    logger(data);
-  });
-  process.stderr.on("data", chunk => {
-    const data = chunk.toString().trim();
-    stderr += data;
-    logger(data);
-  });
-
-  return new Promise((resolve, reject) => {
-    process.on("exit", code => {
-      // execa can return null or 0
-      if (!code) resolve(stdout);
-      else reject(stderr);
+export async function execaProgress(
+  cmd: string,
+  onData: (data: string) => void
+) {
+  const child = execa(cmd);
+  if (child.stdout)
+    child.stdout.on("data", chunk => {
+      onData(chunk.toString().trim());
     });
-  });
-}
+  if (child.stderr)
+    child.stderr.on("data", chunk => {
+      onData(chunk.toString().trim());
+    });
 
-module.exports = execaProgress;
+  const { stdout } = await child;
+  return stdout;
+}

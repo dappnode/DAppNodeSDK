@@ -1,3 +1,5 @@
+import { URL } from "url";
+
 function getIpfsProviderUrl(provider = "dappnode") {
   if (provider === "dappnode") {
     return "http://ipfs.dappnode";

@@ -10,15 +10,16 @@ const defaultTimeout = 3 * 60 * 1000; // ms
 
 export async function shell(
   cmd: string,
-  options: { silent: boolean; timeout: number }
+  options?: { silent?: boolean; timeout?: number }
 ) {
   const { silent = false, timeout = defaultTimeout } = options || {};
   try {
-    const { stdout } = await execa.shell(cmd, {
-      stdout: silent ? null : process.stdout,
-      stderr: silent ? null : process.stderr,
-      timeout
-    });
+    const child = execa(cmd, { timeout });
+    if (!silent) {
+      if (child.stdout) child.stdout.pipe(process.stdout);
+      if (child.stderr) child.stderr.pipe(process.stderr);
+    }
+    const { stdout } = await child;
     return stdout;
   } catch (e) {
     if (e.timedOut) e.message = `${e.message} - timed out ${timeout} ms`;

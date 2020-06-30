@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
-const chalk = require("chalk");
-const figlet = require("figlet");
-const { CliError, YargsError } = require("./params");
+import yargs from "yargs";
+import chalk from "chalk";
+import figlet from "figlet";
+import { CliError, YargsError } from "./params";
 
 // Set up commands
-const dappnodesdk = require("yargs")
+const dappnodesdk = yargs
   .usage(`Usage: dappnodesdk <command> [options]`)
   .commandDir("./commands");
 
@@ -30,6 +31,7 @@ dappnodesdk.option("verbose", {
   alias: "debug",
   coerce: debug => {
     if (debug || process.env.DEBUG) {
+      // @ts-ignore
       global.DEBUG_MODE = true;
       return true;
     }
@@ -59,11 +61,12 @@ dappnodesdk.epilogue(
  *   Just show the error with the stack
  * - #### TODO, track known errors and show them nicely
  */
-dappnodesdk.fail(function(msg, err, yargs) {
+dappnodesdk.fail((msg, err, yargs) => {
   // Rebrand custom errors as yargs native errors, to display help
   if (err instanceof YargsError) {
     msg = err.message;
-    err = null;
+    // @ts-ignore
+    err = undefined;
   }
 
   if (err) {

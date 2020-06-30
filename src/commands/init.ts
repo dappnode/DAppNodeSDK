@@ -1,13 +1,15 @@
-const fs = require("fs");
-const path = require("path");
-const chalk = require("chalk");
-const semver = require("semver");
-const inquirer = require("inquirer");
-const { writeManifest } = require("../utils/manifest");
-const { generateAndWriteCompose } = require("../utils/compose");
-const defaultAvatar = require("../assets/defaultAvatar");
-const shell = require("../utils/shell");
-const { releaseFiles } = require("../params");
+import fs from "fs";
+import path from "path";
+import chalk from "chalk";
+import { BuilderCallback } from "yargs";
+import semver from "semver";
+import inquirer from "inquirer";
+import { writeManifest } from "../utils/manifest";
+import { generateAndWriteCompose } from "../utils/compose";
+import defaultAvatar from "../assets/defaultAvatar";
+import { shell } from "../utils/shell";
+import { releaseFiles } from "../params";
+import { CliGlobalOptions, Manifest } from "../types";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",
@@ -41,17 +43,11 @@ const gitignoreData = `# DAppNodeSDK release directories
 build_*
 `;
 
-/**
- * INIT
- *
- * Initialize the repository
- */
+export const command = "init";
 
-exports.command = "init";
+export const describe = "Initialize a new DAppNodePackage (DNP) repository";
 
-exports.describe = "Initialize a new DAppNodePackage (DNP) repository";
-
-exports.builder = yargs =>
+export const builder: BuilderCallback<any, any> = yargs =>
   yargs
     .option("y", {
       alias: "yes",
@@ -65,7 +61,16 @@ exports.builder = yargs =>
       type: "boolean"
     });
 
-exports.handler = async ({ yes: useDefaults, force, dir }) => {
+interface CliCommandOptions {
+  yes?: boolean;
+  force?: boolean;
+}
+
+export const handler = async ({
+  yes: useDefaults,
+  force,
+  dir
+}: CliCommandOptions & CliGlobalOptions) => {
   // shell outputs tend to include trailing spaces and new lines
   const directoryName = await shell('echo "${PWD##*/}"', { silent: true });
   const defaultAuthor = await shell("whoami", { silent: true });
@@ -147,7 +152,7 @@ It only covers the most common items, and tries to guess sensible defaults.
       ]);
 
   // Construct DNP
-  const manifest = {
+  const manifest: Manifest = {
     name: answers.name ? getDnpName(answers.name) : defaultName,
     version: answers.version || defaultVersion,
     description: answers.description,
@@ -164,15 +169,8 @@ It only covers the most common items, and tries to guess sensible defaults.
   await shell(`mkdir -p ${path.join(dir, "build")}`, { silent: true });
 
   // Write manifest and compose
-  writeManifest({ manifest, dir });
-  generateAndWriteCompose({
-    manifest: {
-      name: manifest.name,
-      version: manifest.version,
-      image: {}
-    },
-    dir
-  });
+  writeManifest(dir, manifest);
+  generateAndWriteCompose(dir, manifest);
 
   // Add default avatar so users can run the command right away
   const files = fs.readdirSync(dir);
@@ -207,10 +205,10 @@ Once ready, you can build, install, and test it by running
 
 /**
  * Parses a directory or generic package name and returns a full ENS guessed name
- * @param {string} name "DAppNodePackage-vipnode"
- * @return {string} "vipnode.public.dappnode.eth"
+ * @param name "DAppNodePackage-vipnode"
+ * @return "vipnode.public.dappnode.eth"
  */
-function getDnpName(name) {
+function getDnpName(name: string): string {
   // Remove prepended strings if any
   for (const stringToRemove of stringsToRemoveFromName) {
     name = name.replace(stringToRemove, "");
@@ -226,7 +224,7 @@ function getDnpName(name) {
 /**
  * Make sure there's a gitignore for the builds or create it
  */
-function writeGitIgnore(filepath) {
+function writeGitIgnore(filepath: string) {
   if (fs.existsSync(filepath)) {
     const currentGitignore = fs.readFileSync(filepath, "utf8");
     if (!currentGitignore.includes(gitignoreCheck))

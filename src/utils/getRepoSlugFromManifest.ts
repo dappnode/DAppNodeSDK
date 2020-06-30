@@ -7,7 +7,7 @@ const githubBaseUrl = "https://github.com/";
  *
  * @returns repoSlug = "dappnode/DNP_ADMIN"
  */
-export function getRepoSlugFromManifest({ dir }: { dir: string }): string {
+export function getRepoSlugFromManifest(dir: string): string {
   const manifest = readManifest(dir);
   const { type, url } = manifest.repository || {};
   // Ignore faulty manifests

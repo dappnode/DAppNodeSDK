@@ -1,14 +1,18 @@
-const Listr = require("listr");
-const abi = require("ethjs-abi");
-const { isHexString } = require("ethjs-util");
+import Listr from "listr";
+import { ethers } from "ethers";
 // Utils
-const Apm = require("../utils/Apm");
-const semverToArray = require("../utils/semverToArray");
-const { readManifest } = require("../utils/manifest");
-const getLinks = require("../utils/getLinks");
-const { addReleaseTx } = require("../utils/releaseRecord");
-const { YargsError } = require("../params");
-const isZeroAddress = address => parseInt(address) === 0;
+import {
+  Apm,
+  encodeNewVersionCall,
+  encodeNewRepoWithVersionCall
+} from "../utils/Apm";
+import { readManifest } from "../utils/manifest";
+import { getPublishTxLink } from "../utils/getLinks";
+import { addReleaseTx } from "../utils/releaseRecord";
+import { YargsError } from "../params";
+import { CliGlobalOptions } from "../types";
+
+const isZeroAddress = (address: string) => parseInt(address) === 0;
 
 /**
  * Generates the transaction data necessary to publish the package.
@@ -21,19 +25,23 @@ const isZeroAddress = address => parseInt(address) === 0;
  * - Show it on screen
  */
 
-function generatePublishTx({
+export function generatePublishTx({
   dir,
   releaseMultiHash,
   developerAddress,
   ethProvider,
   verbose,
   silent
-}) {
+}: {
+  releaseMultiHash: string;
+  developerAddress?: string;
+  ethProvider: string;
+} & CliGlobalOptions) {
   // Init APM instance
   const apm = new Apm(ethProvider);
 
   // Load manifest ##### Verify manifest object
-  const { name, version } = readManifest({ dir });
+  const { name, version } = readManifest(dir);
 
   // Compute tx data
   const contentURI =
@@ -76,26 +84,14 @@ function generatePublishTx({
           const { registry, repository } = ctx;
 
           if (repository) {
-            // If repository exists, push new version to it
-            const newVersionCallAbi = repository.abi.find(
-              ({ name }) => name === "newVersion"
-            );
-            if (!newVersionCallAbi)
-              throw Error("Repository ABI doesn't have newVersion()");
-
             ctx.txData = {
               to: repository.address,
               value: 0,
-              // newVersion(
-              //     uint16[3] _newSemanticVersion,
-              //     address _contractAddress,
-              //     bytes _contentURI
-              // )
-              data: abi.encodeMethod(newVersionCallAbi, [
-                semverToArray(currentVersion), // uint16[3] _newSemanticVersion
-                contractAddress, // address _contractAddress
-                contentURI // bytes _contentURI
-              ]),
+              data: encodeNewVersionCall({
+                version: currentVersion,
+                contractAddress,
+                contentURI
+              }),
               gasLimit: 300000,
               ensName,
               currentVersion,
@@ -106,7 +102,7 @@ function generatePublishTx({
             // A developer address must be provided by the option -a or --developer_address.
             if (
               !developerAddress ||
-              !isHexString(developerAddress) ||
+              !ethers.utils.isAddress(developerAddress) ||
               isZeroAddress(developerAddress)
             ) {
               throw new YargsError(
@@ -124,29 +120,16 @@ with command option:
               );
             }
 
-            const newRepoWithVersionCallAbi = registry.abi.find(
-              ({ name }) => name === "newRepoWithVersion"
-            );
-            if (!newRepoWithVersionCallAbi)
-              throw Error("Registry ABI doesn't have newRepoWithVersion()");
-
             ctx.txData = {
               to: registry.address,
               value: 0,
-              // newRepoWithVersion(
-              //     string _name,
-              //     address _dev,
-              //     uint16[3] _initialSemanticVersion,
-              //     address _contractAddress,
-              //     bytes _contentURI
-              // )
-              data: abi.encodeMethod(newRepoWithVersionCallAbi, [
-                shortName, // string _name
-                developerAddress, // address _dev
-                semverToArray(currentVersion), // uint16[3] _initialSemanticVersion
-                contractAddress, // address _contractAddress
-                contentURI // bytes _contentURI
-              ]),
+              data: encodeNewRepoWithVersionCall({
+                name: shortName,
+                developerAddress,
+                version: currentVersion,
+                contractAddress,
+                contentURI
+              }),
               gasLimit: 1100000,
               ensName,
               currentVersion,
@@ -161,7 +144,7 @@ with command option:
           addReleaseTx({
             dir,
             version,
-            link: getLinks.publishTx({ txData: ctx.txData })
+            link: getPublishTxLink(ctx.txData)
           });
         }
       }
@@ -169,5 +152,3 @@ with command option:
     { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
   );
 }
-
-module.exports = generatePublishTx;

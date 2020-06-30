@@ -5,6 +5,8 @@ const maxSize = 300;
 const minSize = 200;
 
 export function verifyAvatar(avatarPath: string) {
+  // image-size has conflicting types to its documentation
+  // @ts-ignore
   const { width, height } = sizeOf(avatarPath);
 
   if (width !== height)

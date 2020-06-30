@@ -1,5 +1,5 @@
-class CliError extends Error {}
-class YargsError extends Error {}
+export class CliError extends Error {}
+export class YargsError extends Error {}
 
 /**
  * Plain text file with should contain the IPFS hash of the release
@@ -9,7 +9,7 @@ class YargsError extends Error {}
  *
  * /ipfs/QmNqDvqAyy3pN3PvymB6chM7S1FgYyive8LosVKUuaDdfd
  */
-const contentHashFile = "content-hash";
+export const contentHashFile = "content-hash";
 
 const releaseFilesRegex = {
   manifest: /dappnode_package.*\.json$/,
@@ -24,7 +24,7 @@ const releaseFilesRegex = {
   gettingStarted: /getting.*started\.md$/i
 };
 
-const releaseFiles = {
+export const releaseFiles = {
   manifest: {
     required: true,
     regex: releaseFilesRegex.manifest,
@@ -85,11 +85,4 @@ const releaseFiles = {
     defaultName: "getting-started.md",
     id: "gettingStarted"
   }
-};
-
-module.exports = {
-  CliError,
-  YargsError,
-  releaseFiles,
-  contentHashFile
 };

@@ -1,8 +1,8 @@
-import Eth from "ethjs";
-import ENS from "ethjs-ens";
+import { ethers } from "ethers";
 import { arrayToSemver } from "../utils/arrayToSemver";
 import repoAbi from "../contracts/RepoAbi.json";
 import registryAbi from "../contracts/ApmRegistryAbi.json";
+import { semverToArray } from "./semverToArray";
 
 function getEthereumProviderUrl(provider = "dappnode") {
   if (provider === "dappnode") {
@@ -19,7 +19,6 @@ function getEthereumProviderUrl(provider = "dappnode") {
 }
 
 /**
- *
  * @param provider user selected provider. Possible values:
  * - null
  * - "dappnode"
@@ -28,15 +27,17 @@ function getEthereumProviderUrl(provider = "dappnode") {
  * - "ws://localhost:8546"
  * @return apm instance
  */
-export function Apm(providerId: string) {
-  // Initialize ens and web3 instances
-  // Use http Ids to avoid opened websocket connection
-  // This application does not need subscriptions and performs very few requests per use
-  const providerUrl = getEthereumProviderUrl(providerId);
+export class Apm {
+  provider: ethers.providers.JsonRpcProvider;
 
-  const provider = new Eth.HttpProvider(providerUrl);
-  const eth = new Eth(provider);
-  const ens = new ENS({ provider, network: "1" });
+  constructor(providerId: string) {
+    // Initialize ens and web3 instances
+    // Use http Ids to avoid opened websocket connection
+    // This application does not need subscriptions and performs very few requests per use
+    const providerUrl = getEthereumProviderUrl(providerId);
+
+    this.provider = new ethers.providers.JsonRpcProvider(providerUrl);
+  }
 
   // Ens throws if a node is not found
   //
@@ -46,9 +47,9 @@ export function Apm(providerId: string) {
   // ==> Unhandled rejection Error: ENS name not found
   //
   // Change behaviour to return null if not found
-  async function resolve(ensDomain: string) {
+  async resolve(ensDomain: string) {
     try {
-      return await ens.lookup(ensDomain);
+      return await this.provider.resolveName(ensDomain);
     } catch (e) {
       // This error is particular for ethjs
       if (e.message.includes("ENS name not defined")) return null;
@@ -62,12 +63,12 @@ export function Apm(providerId: string) {
    * @param ensName: "admin.dnp.dappnode.eth"
    * @return latest semver version = '0.1.0'
    */
-  async function getLatestVersion(ensName: string) {
+  async getLatestVersion(ensName: string) {
     if (!ensName)
       throw Error("getLatestVersion first argument ensName must be defined");
-    const repository = await getRepoContract(ensName);
+    const repository = await this.getRepoContract(ensName);
     if (!repository) {
-      const registry = getRegistryContract(ensName);
+      const registry = this.getRegistryContract(ensName);
       if (registry)
         throw Error(
           `Error NOREPO: you must first deploy the repo of ${ensName} using the command publish`
@@ -77,15 +78,15 @@ export function Apm(providerId: string) {
           `Error: there must exist a registry for DNP name ${ensName}`
         );
     }
-    return repository
-      .getLatest()
-      .then(res => arrayToSemver(res.semanticVersion))
-      .catch(e => {
-        // Rename error for user comprehension
-        e.message = `Error getting latest version of ${ensName}: ${e.message}`;
-        throw e;
-      });
-    // return arrayToSemver(res.semanticVersion);
+
+    try {
+      const res = await repository.getLatest();
+      return arrayToSemver(res.semanticVersion);
+    } catch (e) {
+      // Rename error for user comprehension
+      e.message = `Error getting latest version of ${ensName}: ${e.message}`;
+      throw e;
+    }
   }
 
   /**
@@ -95,12 +96,10 @@ export function Apm(providerId: string) {
    * @param ensName: "admin.dnp.dappnode.eth"
    * @return contract instance of the Repo "admin.dnp.dappnode.eth"
    */
-  async function getRepoContract(ensName: string) {
-    if (!ensName)
-      throw Error("getRepoContract first argument ensName must be defined");
-    const repoAddress = await resolve(ensName);
+  async getRepoContract(ensName: string) {
+    const repoAddress = await this.resolve(ensName);
     if (!repoAddress) return null;
-    return eth.contract(repoAbi).at(repoAddress);
+    return new ethers.Contract(repoAddress, repoAbi, this.provider);
   }
 
   /**
@@ -112,21 +111,66 @@ export function Apm(providerId: string) {
    * @param ensName: "admin.dnp.dappnode.eth"
    * @return contract instance of the Registry "dnp.dappnode.eth"
    */
-  async function getRegistryContract(ensName: string) {
-    if (!ensName)
-      throw Error("getRegistryContract first argument ensName must be defined");
+  async getRegistryContract(ensName: string) {
     const repoId = ensName.split(".").slice(1).join(".");
-    const registryAddress = await resolve(repoId);
+    const registryAddress = await this.resolve(repoId);
     if (!registryAddress) return null;
-    return eth.contract(registryAbi).at(registryAddress);
+    return new ethers.Contract(registryAddress, registryAbi, this.provider);
   }
+}
 
-  // return exposed methods
-  return {
-    getLatestVersion,
-    getRepoContract,
-    getRegistryContract,
-    providerUrl,
-    provider
-  };
+/**
+ * newVersion(
+ *   uint16[3] _newSemanticVersion,
+ *   address _contractAddress,
+ *   bytes _contentURI
+ * )
+ */
+export function encodeNewVersionCall({
+  version,
+  contractAddress,
+  contentURI
+}: {
+  version: string;
+  contractAddress: string;
+  contentURI: string;
+}) {
+  const repo = new ethers.utils.Interface(repoAbi);
+  return repo.encodeFunctionData("newVersion", [
+    semverToArray(version), // uint16[3] _newSemanticVersion
+    contractAddress, // address _contractAddress
+    contentURI // bytes _contentURI
+  ]);
+}
+
+/**
+ * newRepoWithVersion(
+ *   string _name,
+ *   address _dev,
+ *   uint16[3] _initialSemanticVersion,
+ *   address _contractAddress,
+ *   bytes _contentURI
+ * )
+ */
+export function encodeNewRepoWithVersionCall({
+  name,
+  developerAddress,
+  version,
+  contractAddress,
+  contentURI
+}: {
+  name: string;
+  developerAddress: string;
+  version: string;
+  contractAddress: string;
+  contentURI: string;
+}) {
+  const registry = new ethers.utils.Interface(registryAbi);
+  return registry.encodeFunctionData("newRepoWithVersion", [
+    name, // string _name
+    developerAddress, // address _dev
+    semverToArray(version), // uint16[3] _initialSemanticVersion
+    contractAddress, // address _contractAddress
+    contentURI // bytes _contentURI
+  ]);
 }

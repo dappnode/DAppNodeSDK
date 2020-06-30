@@ -1,8 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { check } from "../utils/check";
 import { CliError } from "../params";
-import { Manifest, Compose } from "../types";
+import { Manifest, ManifestImage, Compose } from "../types";
 
 const manifestFileName = "dappnode_package.json";
 
@@ -29,8 +28,6 @@ export function getManifestPath(dir = "./") {
  * }
  */
 export function writeManifest(dir: string, manifest: Manifest) {
-  check(manifest, "manifest", "object");
-
   const path = getManifestPath(dir);
   const data = JSON.stringify(manifest, null, 2);
   fs.writeFileSync(path, data);
@@ -79,8 +76,6 @@ export function readManifest(dir: string): Manifest {
 }
 
 export function manifestFromCompose(compose: Compose): Manifest {
-  check(compose, "docker-compose object", "object");
-
   const name = Object.keys(compose.services)[0];
   const version = compose.services[name].image.split(":")[1];
   const service = compose.services[name];
@@ -94,8 +89,8 @@ export function manifestFromCompose(compose: Compose): Manifest {
     image: {
       path: "",
       hash: "",
-      size: ""
-    },
+      size: 0
+    } as ManifestImage,
     author: "",
     license: ""
   };

@@ -4,6 +4,7 @@ import path from "path";
 interface ReleaseRecord {
   hash: string;
   type: string;
+  link: string;
   uploadedTo: {
     [location: string]: string;
   };

@@ -1,23 +1,19 @@
-const path = require("path");
-const chalk = require("chalk");
+import path from "path";
+import chalk from "chalk";
+import { BuilderCallback } from "yargs";
 // Tasks
-const buildAndUpload = require("../tasks/buildAndUpload");
+import { buildAndUpload } from "../tasks/buildAndUpload";
 // Utils
-const getCurrentLocalVersion = require("../utils/versions/getCurrentLocalVersion");
-const verifyIpfsConnection = require("../utils/verifyIpfsConnection");
-const getLinks = require("../utils/getLinks");
+import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
+import { verifyIpfsConnection } from "../utils/verifyIpfsConnection";
+import { getInstallDnpLink } from "../utils/getLinks";
+import { CliGlobalOptions } from "../types";
 
-/**
- * INIT
- *
- * Initialize the repository
- */
+export const command = "build";
 
-exports.command = "build";
+export const describe = "Build a new version (only generates the ipfs hash)";
 
-exports.describe = "Build a new version (only generates the ipfs hash)";
-
-exports.builder = yargs =>
+export const builder: BuilderCallback<any, any> = yargs =>
   yargs
     .option("p", {
       alias: "provider",
@@ -42,7 +38,14 @@ exports.builder = yargs =>
       default: "ipfs"
     });
 
-exports.handler = async ({
+interface CliCommandOptions {
+  provider: string;
+  timeout: string;
+  release_type: "manifest" | "directory";
+  upload_to: "ipfs" | "swarm";
+}
+
+export const handler = async ({
   provider,
   timeout,
   release_type,
@@ -51,7 +54,7 @@ exports.handler = async ({
   dir,
   silent,
   verbose
-}) => {
+}: CliCommandOptions & CliGlobalOptions) => {
   // Parse options
   const ipfsProvider = provider;
   const swarmProvider = provider;
@@ -61,7 +64,7 @@ exports.handler = async ({
   const nextVersion = getCurrentLocalVersion({ dir });
   const buildDir = path.join(dir, `build_${nextVersion}`);
 
-  await verifyIpfsConnection({ ipfsProvider });
+  await verifyIpfsConnection(ipfsProvider);
 
   const buildAndUploadTasks = buildAndUpload({
     dir,
@@ -80,6 +83,6 @@ exports.handler = async ({
   console.log(`
   ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
   ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseMultiHash}
-  ${getLinks.installDnp({ releaseMultiHash })}
+  ${getInstallDnpLink(releaseMultiHash)}
 `);
 };

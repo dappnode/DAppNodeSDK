@@ -7,7 +7,7 @@ const adminUiBaseUrl = "http://my.dappnode/#";
  * Get link to publish a TX from a txData object
  * @param txData
  */
-export function publishTx(txData: TxData) {
+export function getPublishTxLink(txData: TxData) {
   // txData => Admin UI link
   const txDataShortKeys: { [key: string]: string } = {
     r: txData.ensName,
@@ -25,6 +25,6 @@ export function publishTx(txData: TxData) {
  * Get link to install a DNP from its path
  * @param {string} releaseMultiHash
  */
-export function installDnp(releaseMultiHash: string) {
+export function getInstallDnpLink(releaseMultiHash: string) {
   return `${adminUiBaseUrl}/installer/${encodeURIComponent(releaseMultiHash)}`;
 }

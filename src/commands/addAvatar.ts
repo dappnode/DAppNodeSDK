@@ -1,41 +1,41 @@
-const chalk = require("chalk");
-const Listr = require("listr");
+import chalk from "chalk";
+import Listr from "listr";
+import { BuilderCallback } from "yargs";
 // Utils
-const verifyAvatar = require("../utils/verifyAvatar");
-const getAssetPath = require("../utils/getAssetPath");
-const releaseFiles = require("../params");
-const verifyIpfsConnection = require("../utils/verifyIpfsConnection");
-const { readManifest, writeManifest } = require("../utils/manifest");
-const ipfsAddFromFs = require("../utils/ipfs/ipfsAddFromFs");
+import { verifyAvatar } from "../utils/verifyAvatar";
+import { getAssetPath } from "../utils/getAssetPath";
+import { releaseFiles } from "../params";
+import { verifyIpfsConnection } from "../utils/verifyIpfsConnection";
+import { readManifest, writeManifest } from "../utils/manifest";
+import { ipfsAddFromFs } from "../utils/ipfs/ipfsAddFromFs";
+import { CliGlobalOptions } from "../types";
 
-/**
- * INIT
- *
- * Initialize the repository
- */
+export const command = "add_avatar";
 
-exports.command = "add_avatar";
+export const describe = "Upload .png avatar and add it to the manifest";
 
-exports.describe = "Upload .png avatar and add it to the manifest";
-
-exports.builder = yargs =>
+export const builder: BuilderCallback<any, any> = yargs =>
   yargs.option("p", {
     alias: "provider",
     description: `Specify an ipfs provider: "dappnode" (default), "infura", "localhost:5002"`,
     default: "dappnode"
   });
 
-exports.handler = async ({
+interface CliCommandOptions {
+  provider: string;
+}
+
+export const handler = async ({
   provider,
   // Global options
   dir,
   silent,
   verbose
-}) => {
+}: CliCommandOptions & CliGlobalOptions) => {
   // Parse options
   const ipfsProvider = provider;
 
-  await verifyIpfsConnection({ ipfsProvider });
+  await verifyIpfsConnection(ipfsProvider);
 
   const addAvatarTasks = new Listr(
     [
@@ -43,13 +43,14 @@ exports.handler = async ({
         title: "Uploading avatar to IPFS",
         task: async (ctx, task) => {
           const avatarPath = getAssetPath(releaseFiles.avatar, dir);
+          if (!avatarPath) throw Error("Avatar path not found");
           verifyAvatar(avatarPath);
           task.output = `Found ${avatarPath}`;
 
-          const manifest = readManifest({ dir });
+          const manifest = readManifest(dir);
           // Starts with /ipfs/
           manifest.avatar = await ipfsAddFromFs(avatarPath, ipfsProvider);
-          writeManifest({ manifest, dir });
+          writeManifest(dir, manifest);
 
           ctx.avatarIpfsPath = manifest.avatar;
         }

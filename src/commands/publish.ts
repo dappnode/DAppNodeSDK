@@ -1,33 +1,29 @@
-const path = require("path");
-const Listr = require("listr");
-const chalk = require("chalk");
+import path from "path";
+import Listr from "listr";
+import chalk from "chalk";
+import { BuilderCallback } from "yargs";
 // Tasks
-const buildAndUpload = require("../tasks/buildAndUpload");
-const generatePublishTx = require("../tasks/generatePublishTx");
-const createGithubRelease = require("../tasks/createGithubRelease");
+import { buildAndUpload } from "../tasks/buildAndUpload";
+import { generatePublishTx } from "../tasks/generatePublishTx";
+import { createGithubRelease } from "../tasks/createGithubRelease";
 // Utils
-const getCurrentLocalVersion = require("../utils/versions/getCurrentLocalVersion");
-const increaseFromApmVersion = require("../utils/versions/increaseFromApmVersion");
-const verifyIpfsConnection = require("../utils/verifyIpfsConnection");
-const verifyEthConnection = require("../utils/verifyEthConnection");
-const getLinks = require("../utils/getLinks");
-const { YargsError } = require("../params");
+import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
+import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion";
+import { verifyIpfsConnection } from "../utils/verifyIpfsConnection";
+import { verifyEthConnection } from "../utils/verifyEthConnection";
+import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
+import { YargsError } from "../params";
+import { CliGlobalOptions, ReleaseType } from "../types";
 
 const validTypes = ["major", "minor", "patch"];
 const typesList = validTypes.join(" | ");
 
-/**
- * Publish
- *
- * Publish a new version
- */
+export const command = "publish [type]";
 
-exports.command = "publish [type]";
-
-exports.describe =
+export const describe =
   "Publish a new version of the package in an Aragon Package Manager Repository";
 
-exports.builder = yargs =>
+export const builder: BuilderCallback<any, any> = yargs =>
   yargs
     .positional("type", {
       description: `Semver update type. Can also be provided with env RELEASE_TYPE=[type] or via TRAVIS_TAG=release (patch), TRAVIS_TAG=release/[type]`,
@@ -66,6 +62,12 @@ exports.builder = yargs =>
       choices: ["manifest", "directory"],
       default: "manifest"
     })
+    .option("u", {
+      alias: "upload_to",
+      description: `Specify where to upload the release`,
+      choices: ["ipfs", "swarm"],
+      default: "ipfs"
+    })
     .option("github_release", {
       description: `Publish the release on the Github repo specified in the manifest. Requires a GITHUB_TOKEN ENV to authenticate`,
       type: "boolean"
@@ -79,9 +81,23 @@ exports.builder = yargs =>
       type: "boolean"
     });
 
+interface CliCommandOptions {
+  type: ReleaseType;
+  provider?: string;
+  eth_provider?: string;
+  ipfs_provider?: string;
+  developer_address?: string;
+  timeout: string;
+  release_type: string;
+  upload_to: string;
+  github_release?: boolean;
+  create_next_branch?: boolean;
+  dappnode_team_preset: boolean;
+}
+
 // Do not add `.require("type")`, it is verified below
 
-exports.handler = async ({
+export const handler = async ({
   type,
   provider,
   eth_provider,
@@ -97,13 +113,13 @@ exports.handler = async ({
   dir,
   silent,
   verbose
-}) => {
+}: CliCommandOptions & CliGlobalOptions) => {
   // Parse optionsalias: "release",
   let ethProvider = provider || eth_provider || "dappnode";
   let ipfsProvider = provider || ipfs_provider || "dappnode";
-  let swarmProvider = provider;
-  let githubRelease = github_release;
-  let createNextGithubBranch = create_next_branch;
+  let swarmProvider = provider || "dappnode";
+  let githubRelease = Boolean(github_release);
+  let createNextGithubBranch = Boolean(create_next_branch);
   const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
   const userTimeout = timeout;
   const uploadToSwarm = upload_to === "swarm";
@@ -136,9 +152,12 @@ exports.handler = async ({
   /**
    * Custom options to pass the type argument
    */
-  if (!type && RELEASE_TYPE) type = RELEASE_TYPE;
-  if (!type && TRAVIS_TAG && TRAVIS_TAG.startsWith("release"))
-    type = TRAVIS_TAG.split("release/")[1] || "patch";
+  if (!type && RELEASE_TYPE) {
+    type = RELEASE_TYPE as ReleaseType;
+  }
+  if (!type && TRAVIS_TAG && TRAVIS_TAG.startsWith("release")) {
+    type = (TRAVIS_TAG.split("release/")[1] || "patch") as ReleaseType;
+  }
 
   /**
    * Make sure the release type exists and is correct
@@ -150,8 +169,8 @@ exports.handler = async ({
       `Invalid release type "${type}", must be: ${typesList}`
     );
 
-  await verifyIpfsConnection({ ipfsProvider });
-  await verifyEthConnection({ ethProvider });
+  await verifyIpfsConnection(ipfsProvider);
+  await verifyEthConnection(ethProvider);
 
   const publishTasks = new Listr(
     [
@@ -245,7 +264,7 @@ exports.handler = async ({
   const { txData, nextVersion, releaseMultiHash } = tasksFinalCtx;
 
   if (!silent) {
-    const txDataToPrint = {
+    const txDataToPrint: { [key: string]: string } = {
       To: txData.to,
       Value: txData.value,
       Data: txData.data,
@@ -255,7 +274,7 @@ exports.handler = async ({
     console.log(`
   ${chalk.green(`DNP (DAppNode Package) published (version ${nextVersion})`)} 
   ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseMultiHash}
-  ${getLinks.installDnp({ releaseMultiHash })}
+  ${getInstallDnpLink(releaseMultiHash)}
 
   ${"You must execute this transaction in mainnet to publish a new version of this DNP."}
   
@@ -267,7 +286,7 @@ ${chalk.gray(
 
   ${"You can also execute this transaction with Metamask by following this pre-filled link"}
   
-  ${chalk.cyan(getLinks.publishTx({ txData }))}
+  ${chalk.cyan(getPublishTxLink(txData))}
 `);
   }
 };

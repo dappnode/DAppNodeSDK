@@ -1,6 +1,6 @@
 import fs from "fs";
 import chalk from "chalk";
-import * as getLink from "./getLinks";
+import { getPublishTxLink } from "./getLinks";
 import { TxData } from "../types";
 
 export function outputTxData({
@@ -12,7 +12,7 @@ export function outputTxData({
   toConsole: string;
   toFile: string;
 }) {
-  const adminUiLink = getLink.publishTx(txData);
+  const adminUiLink = getPublishTxLink(txData);
 
   const txDataToPrint: { [key: string]: string } = {
     To: txData.to,

@@ -1,18 +1,22 @@
-const fs = require("fs");
-const path = require("path");
-const got = require("got");
-const FormData = require("form-data");
-const traverseDir = require("./traverseDir");
-const { normalizeIpfsProvider } = require("./ipfsProvider");
+import fs from "fs";
+import path from "path";
+import got from "got";
+import FormData from "form-data";
+import { traverseDir } from "./traverseDir";
+import { normalizeIpfsProvider } from "./ipfsProvider";
 
 /**
  * Uploads a directory or file from the fs
- * @param {string} dirOrFile "docs"
- * @param {string} ipfsProvider "dappnode" | "http://localhost:5001"
- * @param {(percent: number) => void} [onProgress] Report upload progress, 0.4631
- * @returns {Promise<string>} "/ipfs/Qm..."
+ * @param dirOrFile "docs"
+ * @param ipfsProvider "dappnode" | "http://localhost:5001"
+ * @param onProgress Report upload progress, 0.4631
+ * @returns "/ipfs/Qm..."
  */
-async function ipfsAddFromFs(dirOrFile, ipfsProvider, onProgress) {
+export async function ipfsAddFromFs(
+  dirOrFile: string,
+  ipfsProvider: string,
+  onProgress?: (percent: number) => void
+): Promise<string> {
   // Create form and append all files recursively
 
   const form = new FormData();
@@ -47,15 +51,10 @@ async function ipfsAddFromFs(dirOrFile, ipfsProvider, onProgress) {
 
   // res.body = '{"Name":"dir/file","Hash":"Qm...","Size":"2203"}\n{"Name":"dir","Hash":"Qm...","Size":"24622"}\n'
   // Trim last \n, split entries by \n and then select the last which is the root directory
-  const lastFileUnparsed = res.body
-    .trim()
-    .split("\n")
-    .slice(-1)[0];
+  const lastFileUnparsed = res.body.trim().split("\n").slice(-1)[0];
   if (!lastFileUnparsed) throw Error(`No files in response body ${res.body}`);
 
   // Parse the JSON and return the hash of the root directory
   const lastFile = JSON.parse(lastFileUnparsed);
   return `/ipfs/${lastFile.Hash}`;
 }
-
-module.exports = ipfsAddFromFs;

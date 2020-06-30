@@ -1,8 +1,7 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import { check } from "./check";
-import { Manifest, Compose } from "../types";
+import { Manifest, Compose, ComposeService, ComposeVolumes } from "../types";
 
 const composeFileName = "docker-compose.yml";
 
@@ -63,19 +62,18 @@ export function readComposeString(dir: string) {
  * @param dir: './folder', [optional] directory to load the manifest from
  * @return compose object
  */
-export function readCompose(dir: string) {
+export function readCompose(dir: string): Compose {
   const data = readComposeString(dir);
 
   // Parse compose in try catch block to show a comprehensive error message
-  let compose;
   try {
-    compose = yaml.safeLoad(data);
+    const compose = yaml.safeLoad(data);
+    if (!compose) throw Error("result is undefined");
+    if (typeof compose === "string") throw Error("result is a string");
+    return compose as Compose;
   } catch (e) {
     throw Error(`Error parsing docker-compose: ${e.message}`);
   }
-
-  // Return compose object
-  return compose;
 }
 
 /**
@@ -89,23 +87,19 @@ export function writeCompose(dir: string, compose: Compose) {
 }
 
 export function generateCompose(manifest: Manifest): Compose {
-  check(manifest, "manifest", "object");
-  check(manifest.name, "manifest name", "string");
-  check(manifest.version, "manifest version", "string");
-  check(manifest.image, "manifest image", "object");
-
   const ensName = manifest.name.replace("/", "_").replace("@", "");
 
-  const service = {};
-
-  service.build = "./build";
+  const service: ComposeService = {
+    build: "./build",
+    image: manifest.name + ":" + manifest.version
+  };
 
   // Image name
   service.image = manifest.name + ":" + manifest.version;
-  service.restart = manifest.image.restart || "always";
+  service.restart = manifest.image?.restart || "always";
 
   // Volumes
-  if (manifest.image.volumes) {
+  if (manifest.image?.volumes) {
     service.volumes = [
       ...(manifest.image.volumes || []),
       ...(manifest.image.external_vol || [])
@@ -113,14 +107,14 @@ export function generateCompose(manifest: Manifest): Compose {
   }
 
   // Ports
-  if (manifest.image.ports) {
+  if (manifest.image?.ports) {
     service.ports = manifest.image.ports;
   }
 
   // Volumes
-  const volumes = {};
+  const volumes: ComposeVolumes = {};
   // Regular volumes
-  if (manifest.image.volumes) {
+  if (manifest.image?.volumes) {
     manifest.image.volumes.map(vol => {
       // Make sure it's a named volume
       if (!vol.startsWith("/") && !vol.startsWith("~")) {
@@ -131,7 +125,7 @@ export function generateCompose(manifest: Manifest): Compose {
   }
 
   // External volumes
-  if (manifest.image.external_vol) {
+  if (manifest.image?.external_vol) {
     manifest.image.external_vol.map(vol => {
       const volName = vol.split(":")[0];
       volumes[volName] = {

@@ -1,15 +1,22 @@
 import { readManifest, writeManifest } from "../manifest";
 import { updateCompose } from "../compose";
-import { check } from "../check";
 import { getNextVersionFromApm } from "./getNextVersionFromApm";
+import { ReleaseType } from "../../types";
 
-export async function increaseFromApmVersion({ type, ethProvider, dir }) {
+export async function increaseFromApmVersion({
+  type,
+  ethProvider,
+  dir
+}: {
+  type: ReleaseType;
+  ethProvider: string;
+  dir: string;
+}) {
   // Check variables
   const nextVersion = await getNextVersionFromApm({ type, ethProvider, dir });
 
   // Load manifest
   const manifest = readManifest(dir);
-  check(manifest, "manifest", "object");
 
   // Increase the version
   manifest.version = nextVersion;

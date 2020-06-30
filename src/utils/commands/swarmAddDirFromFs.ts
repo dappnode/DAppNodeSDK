@@ -1,19 +1,16 @@
 import { Swarm } from "../Swarm";
 import { getDirSize } from "../getDirSize";
 
-export async function swarmAddDirFromFs(dirPath, swarmProvider, logger) {
+export async function swarmAddDirFromFs(
+  dirPath: string,
+  swarmProvider: string,
+  onProgress?: (percent: number) => void
+) {
   const swarm = new Swarm(swarmProvider);
 
-  // Create progress logger, log to Listr inter task output
   const totalSize = getDirSize(dirPath);
-  const progress = prog => {
-    if (prog / totalSize > 1.05)
-      logger(`Uploading... ${prog} / ${totalSize} bytes`);
-    else if (prog / totalSize > 1) logger("Uploading... 100%");
-    else logger("Uploading... " + ((prog / totalSize) * 100).toFixed(2) + "%");
-  };
-  const rootHash = await swarm.addDirFromFs(dirPath, progress);
+  const rootHash = await swarm.addDirFromFs(dirPath, prog => {
+    if (onProgress) onProgress(prog / totalSize);
+  });
   return `/bzz/${rootHash}`;
 }
-
-module.exports = swarmAddDirFromFs;

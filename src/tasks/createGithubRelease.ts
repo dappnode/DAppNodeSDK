@@ -1,30 +1,35 @@
-const fs = require("fs");
-const path = require("path");
-const Listr = require("listr");
-const Octokit = require("@octokit/rest");
-const mime = require("mime-types");
-const retry = require("async-retry");
+import fs from "fs";
+import path from "path";
+import Listr from "listr";
+import Octokit from "@octokit/rest";
+import mime from "mime-types";
+import retry from "async-retry";
 // Utils
-const getRepoSlugFromManifest = require("../utils/getRepoSlugFromManifest");
-const getTxDataAdminUiLink = require("../utils/getTxDataAdminUiLink");
-const getCurrentCommitSha = require("../utils/getCurrentCommitSha");
-const increaseFromLocalVersion = require("../utils/versions/increaseFromLocalVersion");
-const { readManifestString } = require("../utils/manifest");
-const { readComposeString } = require("../utils/compose");
-const { contentHashFile } = require("../params");
+import { getRepoSlugFromManifest } from "../utils/getRepoSlugFromManifest";
+import { getPublishTxLink } from "../utils/getLinks";
+import { getCurrentCommitSha } from "../utils/getCurrentCommitSha";
+import { increaseFromLocalVersion } from "../utils/versions/increaseFromLocalVersion";
+import { readManifestString } from "../utils/manifest";
+import { readComposeString } from "../utils/compose";
+import { contentHashFile } from "../params";
+import { TxData, CliGlobalOptions } from "../types";
 
 /**
  * Create (or edit) a Github release, then upload all assets
  */
 
-function createGithubRelease({
+export function createGithubRelease({
   dir,
   buildDir,
   releaseMultiHash,
   createNextGithubBranch,
   verbose,
   silent
-}) {
+}: {
+  buildDir: string;
+  releaseMultiHash: string;
+  createNextGithubBranch: boolean;
+} & CliGlobalOptions) {
   // OAuth2 token from Github
   if (!process.env.GITHUB_TOKEN)
     throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
@@ -34,7 +39,7 @@ function createGithubRelease({
 
   // Gather repo data, repoSlug = "dappnode/DNP_ADMIN"
   const repoSlug =
-    getRepoSlugFromManifest({ dir }) || process.env.TRAVIS_REPO_SLUG || "";
+    getRepoSlugFromManifest(dir) || process.env.TRAVIS_REPO_SLUG || "";
   const [owner, repo] = repoSlug.split("/");
   if (!repoSlug) throw Error("No repoSlug provided");
   if (!owner) throw Error(`repoSlug "${repoSlug}" hasn't an owner`);
@@ -190,7 +195,7 @@ function createGithubRelease({
               repo,
               tag_name: tag,
               name: tag,
-              body: getReleaseBody({ txData }),
+              body: getReleaseBody(txData),
               prerelease: true
             })
             .catch(e => {
@@ -227,6 +232,7 @@ function createGithubRelease({
           // Upload files as assets one by one
           for (const file of files) {
             task.output = `Uploading ${file}...`;
+            const contentType = mime.lookup(file) || "application/octet-stream";
             try {
               // The uploadReleaseAssetApi fails sometimes, retry 3 times
               await retry(
@@ -236,9 +242,8 @@ function createGithubRelease({
                       url,
                       file: fs.createReadStream(file),
                       headers: {
-                        "Content-Type":
-                          mime.lookup(file) || "application/octet-stream",
-                        "Content-Length": fs.statSync(file).size
+                        "content-type": contentType,
+                        "content-length": fs.statSync(file).size
                       },
                       name: path.basename(file)
                     })
@@ -280,8 +285,8 @@ function createGithubRelease({
               type: "patch",
               dir
             });
-            const manifestString = readManifestString({ dir });
-            const composeString = readComposeString({ dir });
+            const manifestString = readManifestString(dir);
+            const composeString = readComposeString(dir);
             const branch = `v${nextVersion}`;
 
             // Create the next branch
@@ -315,10 +320,8 @@ function createGithubRelease({
               // API requires content in Base64
               content: Buffer.from(manifestString).toString("base64"),
               sha: manifestSha,
-              "author.name": "dappnode",
-              "author.email": "dappnode@dappnode.io",
-              "committer.name": "dappnode",
-              "committer.email": "dappnode@dappnode.io"
+              author: { name: "dappnode", email: "dappnode@dappnode.io" },
+              committer: { name: "dappnode", email: "dappnode@dappnode.io" }
             });
 
             // Fetch the manifest file's sha for the `updateFile` call
@@ -337,10 +340,8 @@ function createGithubRelease({
               // API requires content in Base64
               content: Buffer.from(composeString).toString("base64"),
               sha: composeSha,
-              "author.name": "dappnode",
-              "author.email": "dappnode@dappnode.io",
-              "committer.name": "dappnode",
-              "committer.email": "dappnode@dappnode.io"
+              author: { name: "dappnode", email: "dappnode@dappnode.io" },
+              committer: { name: "dappnode", email: "dappnode@dappnode.io" }
             });
 
             // Open a PR from next branch to master
@@ -373,8 +374,8 @@ function createGithubRelease({
  * Write the release body
  * #### TODO: Extend this to automatically write the body
  */
-function getReleaseBody({ txData }) {
-  const link = getTxDataAdminUiLink({ txData });
+function getReleaseBody(txData: TxData) {
+  const link = getPublishTxLink(txData);
   const changelog = "";
   return `
 # Changelog
@@ -393,5 +394,3 @@ Gas limit: ${txData.gasLimit}
 You can execute this transaction from the Admin UI with Metamask by following [this pre-filled link](${link})
 `.trim();
 }
-
-module.exports = createGithubRelease;
