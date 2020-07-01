@@ -15,7 +15,6 @@ import { Github } from "../utils/Github";
 /**
  * Create (or edit) a Github release, then upload all assets
  */
-
 export function createGithubRelease({
   dir,
   buildDir,
@@ -143,6 +142,8 @@ function getReleaseBody(txData: TxData) {
 # Changelog
 
 ${changelog}
+
+---
 
 ### Install package
 
