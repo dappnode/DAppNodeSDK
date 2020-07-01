@@ -72,7 +72,7 @@ export function createGithubRelease({
             await github.deleteTagIfExists(triggerTag);
 
           // Check if the release tag exists remotely. If so, remove it
-          await github.deleteTagIfExists(`tags/${tag}`);
+          await github.deleteTagIfExists(tag);
 
           // Get the commit sha to be tagged
           // - If on CI, use the current commit
