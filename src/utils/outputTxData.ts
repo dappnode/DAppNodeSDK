@@ -2,6 +2,7 @@ import fs from "fs";
 import chalk from "chalk";
 import { getPublishTxLink } from "./getLinks";
 import { TxData } from "../types";
+import { printObject } from "./print";
 
 export function outputTxData({
   txData,
@@ -14,16 +15,17 @@ export function outputTxData({
 }): void {
   const adminUiLink = getPublishTxLink(txData);
 
-  const txDataToPrint: { [key: string]: string | number } = {
+  const txDataToPrint = {
     To: txData.to,
     Value: txData.value,
     Data: txData.data,
     "Gas limit": txData.gasLimit
   };
 
-  const txDataString = Object.keys(txDataToPrint)
-    .map(key => `${key}: ${txDataToPrint[key]}`)
-    .join("\n");
+  const txDataString = printObject(
+    txDataToPrint,
+    (key, value) => `${key}: ${value}`
+  );
 
   // If requested output txDataToPrint to file
   if (toFile) {
@@ -40,9 +42,10 @@ ${adminUiLink}
     );
   }
 
-  const txDataStringColored = Object.keys(txDataToPrint)
-    .map(key => `  ${chalk.green(key)}: ${txDataToPrint[key]}`)
-    .join("\n");
+  const txDataStringColored = printObject(
+    txDataToPrint,
+    (key, value) => `  ${chalk.green(key)}: ${value}`
+  );
 
   // If requested output txDataToPrint to console
   if (toConsole) {

@@ -23,12 +23,7 @@ import { compressFile } from "../utils/commands/compressFile";
 import { ipfsAddFromFs } from "../utils/ipfs/ipfsAddFromFs";
 import { swarmAddDirFromFs } from "../utils/commands/swarmAddDirFromFs";
 import { updateCompose } from "../utils/compose";
-import { CliGlobalOptions } from "../types";
-
-interface ListContextBuildAndUpload {
-  releaseHash: string;
-  releaseMultiHash: string;
-}
+import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
 
 // Define build timeout (20 min)
 const defaultBuildTimeout = 20 * 60 * 1000;
@@ -54,7 +49,7 @@ export function buildAndUpload({
   userTimeout: string;
   isDirectoryRelease: boolean;
   uploadToSwarm: boolean;
-} & CliGlobalOptions): Listr<ListContextBuildAndUpload> {
+} & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
   // Enforce here also, just in case
   if (uploadToSwarm) isDirectoryRelease = true;
 
@@ -107,7 +102,7 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
   const avatarRootPath = getAssetPathRequired(releaseFiles.avatar, dir);
   if (avatarRootPath) verifyAvatar(avatarRootPath);
 
-  return new Listr<ListContextBuildAndUpload>(
+  return new Listr<ListrContextBuildAndPublish>(
     [
       {
         title: "Create release dir",

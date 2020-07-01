@@ -23,7 +23,7 @@ echo "hello"
     const errorMessage = await shell(`sh ${scriptPath}`, { timeout: 1 }).catch(
       e => e.message
     );
-    expect(errorMessage).to.include("timed out");
+    expect(errorMessage).to.include("timeout");
   });
 
   after(() => {

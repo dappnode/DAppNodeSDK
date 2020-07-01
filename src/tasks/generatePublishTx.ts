@@ -10,11 +10,7 @@ import { readManifest } from "../utils/manifest";
 import { getPublishTxLink } from "../utils/getLinks";
 import { addReleaseTx } from "../utils/releaseRecord";
 import { YargsError } from "../params";
-import { CliGlobalOptions, TxData } from "../types";
-
-interface ListContextGeneratePublishTx {
-  txData: TxData;
-}
+import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
@@ -40,7 +36,7 @@ export function generatePublishTx({
   releaseMultiHash: string;
   developerAddress?: string;
   ethProvider: string;
-} & CliGlobalOptions): Listr<ListContextGeneratePublishTx> {
+} & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
   // Init APM instance
   const apm = new Apm(ethProvider);
 
@@ -55,7 +51,7 @@ export function generatePublishTx({
   const ensName = name;
   const shortName = name.split(".")[0];
 
-  return new Listr<ListContextGeneratePublishTx>(
+  return new Listr<ListrContextBuildAndPublish>(
     [
       {
         title: "Generate transaction",

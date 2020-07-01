@@ -6,6 +6,16 @@ export interface CliGlobalOptions {
   verbose?: boolean;
 }
 
+export interface ListrContextBuildAndPublish {
+  // Build and upload
+  releaseHash: string;
+  releaseMultiHash: string;
+  // create Github release
+  nextVersion: string;
+  txData: TxData;
+  uploadUrl: string;
+}
+
 // Interal types
 
 export type ReleaseType = "major" | "minor" | "patch";

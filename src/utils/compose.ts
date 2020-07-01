@@ -11,7 +11,7 @@ const composeFileName = "docker-compose.yml";
  * @param dir: './folder', [optional] directory to load the manifest from
  * @return path = './dappnode_package.json'
  */
-function getComposePath(dir = "./"): string {
+export function getComposePath(dir = "./"): string {
   return path.join(dir, composeFileName);
 }
 

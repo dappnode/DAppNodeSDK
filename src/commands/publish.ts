@@ -14,6 +14,8 @@ import { verifyEthConnection } from "../utils/verifyEthConnection";
 import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
 import { YargsError } from "../params";
 import { CliGlobalOptions, ReleaseType } from "../types";
+import { createNextBranch } from "../tasks/createNextBranch";
+import { printObject } from "../utils/print";
 
 const validTypes = ["major", "minor", "patch"];
 const typesList = validTypes.join(" | ");
@@ -174,9 +176,7 @@ export const handler = async ({
 
   const publishTasks = new Listr(
     [
-      /**
-       * 1. Fetch current version from APM
-       */
+      // 1. Fetch current version from APM
       {
         title: "Fetch current version from APM",
         task: async (ctx, task) => {
@@ -197,9 +197,8 @@ export const handler = async ({
           task.title = task.title + ` (next version: ${nextVersion})`;
         }
       },
-      /**
-       * 2. Build and upload
-       */
+
+      // 2. Build and upload
       {
         title: "Build and upload",
         task: ctx =>
@@ -215,18 +214,8 @@ export const handler = async ({
             silent
           })
       },
-      /**
-       * 3. Generate transaction
-       * Appends ctx.txData = {
-       *   to: repo or registry address
-       *   value: 0,
-       *   data: newVersionCall.encodeABI(),
-       *   gasLimit: 300000,
-       *   ensName,
-       *   currentVersion,
-       *   releaseMultiHash
-       * }
-       */
+
+      // 3. Generate transaction
       {
         title: "Generate transaction",
         task: ctx =>
@@ -239,10 +228,9 @@ export const handler = async ({
             silent
           })
       },
-      /**
-       * 4. Create github release
-       * [ONLY] add the Release task if requested
-       */
+
+      // 4. Create github release
+      // [ONLY] add the Release task if requested
       {
         title: "Release on github",
         enabled: () => githubRelease,
@@ -251,7 +239,19 @@ export const handler = async ({
             dir,
             buildDir: ctx.buildDir,
             releaseMultiHash: ctx.releaseMultiHash,
-            createNextGithubBranch,
+            verbose,
+            silent
+          })
+      },
+
+      // 5. Create create next release branch and open PR
+      // [ONLY] if requested
+      {
+        title: "Start next release cycle",
+        enabled: () => createNextGithubBranch,
+        task: () =>
+          createNextBranch({
+            dir,
             verbose,
             silent
           })
@@ -264,7 +264,7 @@ export const handler = async ({
   const { txData, nextVersion, releaseMultiHash } = tasksFinalCtx;
 
   if (!silent) {
-    const txDataToPrint: { [key: string]: string } = {
+    const txDataToPrint = {
       To: txData.to,
       Value: txData.value,
       Data: txData.data,
@@ -279,9 +279,7 @@ export const handler = async ({
   ${"You must execute this transaction in mainnet to publish a new version of this DNP."}
   
 ${chalk.gray(
-  Object.keys(txDataToPrint)
-    .map(key => `  ${key.padEnd(5)} : ${txDataToPrint[key]}`)
-    .join("\n")
+  printObject(txDataToPrint, (key, value) => `  ${key.padEnd(5)} : ${value}`)
 )}
 
   ${"You can also execute this transaction with Metamask by following this pre-filled link"}

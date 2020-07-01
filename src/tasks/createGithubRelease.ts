@@ -8,18 +8,12 @@ import retry from "async-retry";
 import { getRepoSlugFromManifest } from "../utils/getRepoSlugFromManifest";
 import { getPublishTxLink } from "../utils/getLinks";
 import { getCurrentCommitSha } from "../utils/getCurrentCommitSha";
-import { increaseFromLocalVersion } from "../utils/versions/increaseFromLocalVersion";
-import { readManifestString } from "../utils/manifest";
-import { readComposeString } from "../utils/compose";
 import { contentHashFile } from "../params";
-import { TxData, CliGlobalOptions } from "../types";
-
-interface ListContextCreateGithubRelease {
-  nextVersion: string;
-  txData: TxData;
-  latestSha: string;
-  uploadUrl: string;
-}
+import {
+  TxData,
+  CliGlobalOptions,
+  ListrContextBuildAndPublish
+} from "../types";
 
 /**
  * Create (or edit) a Github release, then upload all assets
@@ -29,14 +23,12 @@ export function createGithubRelease({
   dir,
   buildDir,
   releaseMultiHash,
-  createNextGithubBranch,
   verbose,
   silent
 }: {
   buildDir: string;
   releaseMultiHash: string;
-  createNextGithubBranch: boolean;
-} & CliGlobalOptions): Listr<ListContextCreateGithubRelease> {
+} & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
   // OAuth2 token from Github
   if (!process.env.GITHUB_TOKEN)
     throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
@@ -52,7 +44,7 @@ export function createGithubRelease({
   if (!owner) throw Error(`repoSlug "${repoSlug}" hasn't an owner`);
   if (!repo) throw Error(`repoSlug "${repoSlug}" hasn't a repo`);
 
-  return new Listr<ListContextCreateGithubRelease>(
+  return new Listr<ListrContextBuildAndPublish>(
     [
       /**
        * 1. Handle tags
@@ -142,7 +134,6 @@ export function createGithubRelease({
               e.message = `Error creating tag ${tag} at ${sha}: ${e.message}`;
               throw e;
             });
-          ctx.latestSha = sha;
         }
       },
       /**
@@ -271,111 +262,6 @@ export function createGithubRelease({
           // Clean content hash file so the directory uploaded to IPFS is the same
           // as the local build_* dir. User can then `ipfs add -r` and get the same hash
           fs.unlinkSync(contentHashPath);
-        }
-      },
-      /**
-       * 4. Create the next version branch and advance versions
-       * - Run `dappnodesdk increase patch` to compute next version
-       * - Run `git checkout -b v${FUTURE_VERSION}`
-       * - git add dappnode_package.json docker-compose.yml
-       * - git commit -m "Advance manifest and docker-compose versions to new version: $FUTURE_VERSION"
-       * - git push origin $BRANCH_NAME
-       */
-      {
-        title: "Create next version branch",
-        enabled: () => createNextGithubBranch,
-        task: async (ctx, task) => {
-          try {
-            const latestSha = ctx.latestSha;
-            const manifestPath = "dappnode_package.json";
-            const composePath = "docker-compose.yml";
-            const nextVersion = await increaseFromLocalVersion({
-              type: "patch",
-              dir
-            });
-            const manifestString = readManifestString(dir);
-            const composeString = readComposeString(dir);
-            const branch = `v${nextVersion}`;
-
-            // Create the next branch
-            task.output = `Creating next branch ${branch}...`;
-            try {
-              await octokit.git.createRef({
-                owner,
-                repo,
-                ref: `refs/heads/${branch}`,
-                sha: latestSha
-              });
-            } catch (e) {
-              // If the next version branch already exists, skip
-              if (e.message.includes("Reference already exists")) return;
-              else throw e;
-            }
-
-            // Fetch the manifest file's sha for the `updateFile` call
-            task.output = `Advancing manifest version to ${nextVersion}...`;
-            const manifestSha = await octokit.repos
-              // @ts-ignore
-              .getContents({ owner, repo, path: manifestPath })
-              // @ts-ignore
-              .then(res => res.data.sha);
-
-            // Update the manifest making a commit to the next branch
-            // @ts-ignore
-            await octokit.repos.updateFile({
-              owner,
-              repo,
-              path: manifestPath,
-              branch,
-              message: `Advance manifest to new version: ${nextVersion}`,
-              // API requires content in Base64
-              content: Buffer.from(manifestString).toString("base64"),
-              sha: manifestSha,
-              author: { name: "dappnode", email: "dappnode@dappnode.io" },
-              committer: { name: "dappnode", email: "dappnode@dappnode.io" }
-            });
-
-            // Fetch the manifest file's sha for the `updateFile` call
-            task.output = `Advancing compose version to ${nextVersion}...`;
-
-            const composeSha = await octokit.repos
-              // @ts-ignore
-              .getContents({ owner, repo, path: composePath })
-              // @ts-ignore
-              .then(res => res.data.sha);
-
-            // Update the manifest making a commit to the next branch
-            // @ts-ignore
-            await octokit.repos.updateFile({
-              owner,
-              repo,
-              path: composePath,
-              branch,
-              message: `Advance compose to new version: ${nextVersion}`,
-              // API requires content in Base64
-              content: Buffer.from(composeString).toString("base64"),
-              sha: composeSha,
-              author: { name: "dappnode", email: "dappnode@dappnode.io" },
-              committer: { name: "dappnode", email: "dappnode@dappnode.io" }
-            });
-
-            // Open a PR from next branch to master
-            task.output = `Openning a PR to master...`;
-            await octokit.pulls
-              .create({
-                owner,
-                repo,
-                title: `${branch} Release`,
-                head: branch, // from
-                base: "master" // to
-              })
-              .then(res => res.data);
-          } catch (e) {
-            // Non-essential step, don't stop release for a failure on this task
-            console.log("\n".repeat(10));
-            console.log(`Error creating next version branch:\n${e.stack}`);
-            console.log("\n".repeat(10));
-          }
         }
       }
     ],
