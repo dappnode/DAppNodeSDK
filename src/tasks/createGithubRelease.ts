@@ -50,11 +50,14 @@ export function createGithubRelease({
   if (!owner) throw Error(`repoSlug "${repoSlug}" hasn't an owner`);
   if (!repo) throw Error(`repoSlug "${repoSlug}" hasn't a repo`);
 
+  const isCi = process.env.CI;
+  const triggerTag = process.env.GITHUB_REF || process.env.TRAVIS_TAG;
+
   return new Listr<ListrContextBuildAndPublish>(
     [
       /**
        * 1. Handle tags
-       * - If the release is triggered in travis,
+       * - If the release is triggered in CI,
        *   the trigger tag must be remove and replaced by the release tag
        * - If the release is triggered locally, the commit should be
        *   tagged and released on that tag
@@ -82,20 +85,18 @@ export function createGithubRelease({
           if (!nextVersion) throw Error("Missing ctx.nextVersion");
           const tag = `v${nextVersion}`;
           /**
-           * If the release is triggered in travis,
+           * If the release is triggered in CI,
            * the trigger tag must be removed
            * Travis ENVs:
            * - TRAVIS=true
-           * - CONTINUOUS_INTEGRATION=true
            * - TRAVIS_TAG=release/patch
            */
-          const { TRAVIS, TRAVIS_TAG, TRAVIS_COMMIT } = process.env;
-          if (TRAVIS && TRAVIS_TAG && TRAVIS_TAG.startsWith("release")) {
+          if (isCi && triggerTag && triggerTag.startsWith("release")) {
             await octokit.git
               .deleteRef({
                 owner,
                 repo,
-                ref: `tags/${TRAVIS_TAG}`
+                ref: triggerTag
               })
               .catch(e => {
                 // Ignore error if the reference does not exist, can be deleted latter
@@ -121,10 +122,13 @@ export function createGithubRelease({
             });
           /**
            * Get the commit sha to be tagged
-           * - If on travis, use the current TRAVIS_COMMIT
+           * - If on CI, use the current commit
            * - Otherwise use the current HEAD commit
            */
-          const sha = TRAVIS_COMMIT || (await getCurrentCommitSha());
+          const sha =
+            process.env.GITHUB_SHA ||
+            process.env.TRAVIS_COMMIT ||
+            (await getCurrentCommitSha());
           /**
            * Tag the current commit with the release tag
            */

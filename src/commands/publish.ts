@@ -127,14 +127,16 @@ export const handler = async ({
   const uploadToSwarm = upload_to === "swarm";
   const isDirectoryRelease = uploadToSwarm || release_type === "directory";
 
-  const { TRAVIS, TRAVIS_TAG, RELEASE_TYPE } = process.env;
+  const isCi = process.env.CI;
+  const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
+  const typeFromEnv = process.env.RELEASE_TYPE;
 
   /**
    * Specific set of options used for internal DAppNode releases.
    * Caution: options may change without notice.
    */
   if (dappnode_team_preset) {
-    if (TRAVIS) {
+    if (isCi) {
       ethProvider = "infura";
       ipfsProvider = "http://ipfs.dappnode.io";
       // Activate verbose to see logs easier afterwards
@@ -154,11 +156,11 @@ export const handler = async ({
   /**
    * Custom options to pass the type argument
    */
-  if (!type && RELEASE_TYPE) {
-    type = RELEASE_TYPE as ReleaseType;
+  if (!type && typeFromEnv) {
+    type = typeFromEnv as ReleaseType;
   }
-  if (!type && TRAVIS_TAG && TRAVIS_TAG.startsWith("release")) {
-    type = (TRAVIS_TAG.split("release/")[1] || "patch") as ReleaseType;
+  if (!type && tag && tag.includes("release")) {
+    type = (tag.split("release/")[1] || "patch") as ReleaseType;
   }
 
   /**

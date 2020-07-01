@@ -26,7 +26,11 @@ export function createNextBranch({
 
   // Gather repo data, repoSlug = "dappnode/DNP_ADMIN"
   const repoSlug =
-    getRepoSlugFromManifest(dir) || process.env.TRAVIS_REPO_SLUG || "";
+    getRepoSlugFromManifest(dir) ||
+    process.env.TRAVIS_REPO_SLUG ||
+    process.env.GITHUB_REPOSITORY ||
+    "";
+
   const [owner, repo] = repoSlug.split("/");
   if (!repoSlug) throw Error("No repoSlug provided");
   if (!owner) throw Error(`repoSlug "${repoSlug}" hasn't an owner`);
