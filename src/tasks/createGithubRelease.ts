@@ -1,0 +1,167 @@
+import fs from "fs";
+import path from "path";
+import Listr from "listr";
+import { getRepoSlugFromManifest } from "../utils/getRepoSlugFromManifest";
+import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
+import { getCurrentCommitSha } from "../utils/getCurrentCommitSha";
+import { contentHashFile } from "../params";
+import {
+  TxData,
+  CliGlobalOptions,
+  ListrContextBuildAndPublish
+} from "../types";
+import { Github } from "../utils/Github";
+
+/**
+ * Create (or edit) a Github release, then upload all assets
+ */
+export function createGithubRelease({
+  dir,
+  buildDir,
+  releaseMultiHash,
+  verbose,
+  silent
+}: {
+  buildDir: string;
+  releaseMultiHash: string;
+} & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
+  // OAuth2 token from Github
+  if (!process.env.GITHUB_TOKEN)
+    throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
+
+  const github = new Github(dir);
+
+  // Gather repo data, repoSlug = "dappnode/DNP_ADMIN"
+  const repoSlug =
+    getRepoSlugFromManifest(dir) ||
+    process.env.TRAVIS_REPO_SLUG ||
+    process.env.GITHUB_REPOSITORY ||
+    "";
+  const [owner, repo] = repoSlug.split("/");
+  if (!repoSlug)
+    throw Error(
+      "manifest.repository must be properly defined to create a Github release"
+    );
+  if (!owner) throw Error(`repoSlug "${repoSlug}" hasn't an owner`);
+  if (!repo) throw Error(`repoSlug "${repoSlug}" hasn't a repo`);
+
+  const isCi = process.env.CI;
+  const triggerTag = process.env.GITHUB_REF || process.env.TRAVIS_TAG;
+
+  return new Listr<ListrContextBuildAndPublish>(
+    [
+      // 1. Handle tags
+      // - If the release is triggered in CI,
+      //   the trigger tag must be remove and replaced by the release tag
+      // - If the release is triggered locally, the commit should be
+      //   tagged and released on that tag
+      {
+        title: `Handle tags`,
+        task: async (ctx, task) => {
+          // Sanity check, make sure repo exists
+          await github.assertRepoExists();
+
+          // Get next version from context
+          if (!ctx.nextVersion) throw Error("Missing ctx.nextVersion");
+          const tag = `v${ctx.nextVersion}`;
+
+          // If the release is triggered in CI,
+          // the trigger tag must be removed ("release/patch")
+          if (isCi && triggerTag && triggerTag.startsWith("release"))
+            await github.deleteTagIfExists(triggerTag);
+
+          // Check if the release tag exists remotely. If so, remove it
+          await github.deleteTagIfExists(tag);
+
+          // Get the commit sha to be tagged
+          // - If on CI, use the current commit
+          // - Otherwise use the current HEAD commit
+          const currentCommitSha =
+            process.env.GITHUB_SHA ||
+            process.env.TRAVIS_COMMIT ||
+            (await getCurrentCommitSha());
+
+          // Tag the current commit with the release tag
+          task.output = `Releasing commit ${currentCommitSha} at tag ${tag}`;
+          await github.createTag(tag, currentCommitSha);
+        }
+      },
+
+      // 2. Create release
+      // - nextVersion comes from the first task in `publish`
+      // - buildDir comes from the first task in `publish`
+      {
+        title: `Create release`,
+        task: async (ctx, task) => {
+          //   console.log(res);
+          // Get next version from context, fir
+          const { nextVersion, txData } = ctx;
+          if (!nextVersion) throw Error("Missing ctx.nextVersion");
+          const tag = `v${nextVersion}`;
+
+          // Delete all releases that have the name tag or name
+          // If there are no releases, repos.listReleases will return []
+          task.output = "Deleting existing release...";
+          await github.deteleReleaseAndAssets(tag);
+
+          // Plain text file with should contain the IPFS hash of the release
+          // Necessary for the installer script to fetch the latest content hash
+          // of the eth clients. The resulting hashes are used by the DAPPMANAGER
+          // to install an eth client when the user does not want to use a remote node
+          const contentHashPath = path.join(buildDir, contentHashFile);
+          fs.writeFileSync(contentHashPath, releaseMultiHash);
+
+          task.output = `Creating release for tag ${tag}...`;
+          await github.createReleaseAndUploadAssets(tag, {
+            body: getReleaseBody(txData),
+            // Tag as pre-release until it is actually published in APM mainnet
+            prerelease: true,
+            assetsDir: buildDir
+          });
+
+          // Clean content hash file so the directory uploaded to IPFS is the same
+          // as the local build_* dir. User can then `ipfs add -r` and get the same hash
+          fs.unlinkSync(contentHashPath);
+        }
+      }
+    ],
+    { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+  );
+}
+
+// Utils
+
+/**
+ * Write the release body
+ * #### TODO: Extend this to automatically write the body
+ */
+function getReleaseBody(txData: TxData) {
+  const link = getPublishTxLink(txData);
+  const changelog = "";
+  return `
+# Changelog
+
+${changelog}
+
+---
+
+### Install package
+
+${getInstallDnpLink(txData.releaseMultiHash)}
+
+\`\`\`
+${txData.releaseMultiHash}
+\`\`\`
+
+### Publish transaction
+
+\`\`\`
+To: ${txData.to}
+Value: ${txData.value}
+Data: ${txData.data}
+Gas limit: ${txData.gasLimit}
+\`\`\`
+
+You can execute this transaction from the Admin UI with Metamask by following [this pre-filled link](${link})
+`.trim();
+}

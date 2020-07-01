@@ -4,6 +4,9 @@ DAppNodePackage-*
 
 .cache
 
+# Build artifacts
+dist
+
 # When testing commands with this package this files will be generated
 # Test build files
 build
