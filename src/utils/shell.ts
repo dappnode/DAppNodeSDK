@@ -1,4 +1,4 @@
-import execa from "execa";
+import { exec, spawn, ExecException } from "child_process";
 
 /**
  * If timeout is greater than 0, the parent will send the signal
@@ -7,22 +7,77 @@ import execa from "execa";
  */
 
 const defaultTimeout = 3 * 60 * 1000; // ms
+const defaultMaxBuffer = 1e7; // bytes
 
+/**
+ * Run arbitrary commands in a shell
+ * If the child process exits with code > 0, rejects
+ * Note: using exec instead of spawn since it's not as safe to run
+ * complex arbirary commands. For example:
+ * - The executable docker-compose may not be detected, causing ENOENT
+ * - Doing cmd > cmd2 may fail
+ * - Flags may not be passed properly
+ */
 export async function shell(
   cmd: string,
-  options?: { silent?: boolean; timeout?: number }
-) {
-  const { silent = false, timeout = defaultTimeout } = options || {};
-  try {
-    const child = execa.command(cmd, { timeout });
-    if (!silent) {
-      if (child.stdout) child.stdout.pipe(process.stdout);
-      if (child.stderr) child.stderr.pipe(process.stderr);
+  options?: {
+    timeout?: number;
+    maxBuffer?: number;
+    pipeToMain?: boolean;
+    onData?: (data: string) => void;
+  }
+): Promise<string> {
+  const {
+    timeout = defaultTimeout,
+    maxBuffer = defaultMaxBuffer,
+    pipeToMain = false,
+    onData
+  } = options || {};
+
+  return new Promise((resolve, reject) => {
+    const proc = exec(cmd, { timeout, maxBuffer }, (err, stdout, stderr) => {
+      if (err) {
+        // Rethrow a typed error, and ignore the internal NodeJS stack trace
+        if (err.signal === "SIGTERM")
+          reject(new ShellError(err, `cmd timeout ${timeout}: ${cmd}`));
+        else reject(new ShellError(err));
+      } else {
+        resolve(stdout.trim());
+      }
+    });
+    if (pipeToMain) {
+      if (proc.stdout) proc.stdout.pipe(process.stdout);
+      if (proc.stderr) proc.stderr.pipe(process.stderr);
     }
-    const { stdout } = await child;
-    return stdout;
-  } catch (e) {
-    if (e.timedOut) e.message = `${e.message} - timed out ${timeout} ms`;
-    throw e;
+    if (onData) {
+      const onChunkData = (chunk: Buffer) => onData(chunk.toString().trim());
+      if (proc.stdout) proc.stdout.on("data", onChunkData);
+      if (proc.stderr) proc.stderr.on("data", onChunkData);
+    }
+  });
+}
+
+/**
+ * Typed error implementing the native node child exception error
+ * Can be rethrow to ignore the internal NodeJS stack trace
+ */
+export class ShellError extends Error implements ExecException {
+  cmd?: string;
+  killed?: boolean;
+  code?: number;
+  signal?: NodeJS.Signals;
+  stdout?: string;
+  stderr?: string;
+  constructor(
+    e: ExecException & { stdout?: string; stderr?: string },
+    message?: string
+  ) {
+    super(message || e.message);
+    this.cmd = e.cmd;
+    this.killed = e.killed;
+    this.code = e.code;
+    this.signal = e.signal;
+    this.stdout = e.stdout;
+    this.stderr = e.stderr;
   }
 }

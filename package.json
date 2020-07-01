@@ -39,7 +39,6 @@
     "async-retry": "^1.2.3",
     "chalk": "^2.4.2",
     "ethers": "^5.0.3",
-    "execa": "^4.0.2",
     "figlet": "^1.2.3",
     "form-data": "^3.0.0",
     "got": "^10.5.5",
@@ -57,7 +56,6 @@
   "devDependencies": {
     "@types/async-retry": "^1.4.2",
     "@types/chai": "^4.2.11",
-    "@types/execa": "^2.0.0",
     "@types/figlet": "^1.2.0",
     "@types/inquirer": "^6.5.0",
     "@types/js-yaml": "^3.12.5",

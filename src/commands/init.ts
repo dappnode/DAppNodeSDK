@@ -72,8 +72,8 @@ export const handler = async ({
   dir
 }: CliCommandOptions & CliGlobalOptions) => {
   // shell outputs tend to include trailing spaces and new lines
-  const directoryName = await shell('echo "${PWD##*/}"', { silent: true });
-  const defaultAuthor = await shell("whoami", { silent: true });
+  const directoryName = await shell('echo "${PWD##*/}"');
+  const defaultAuthor = await shell("whoami");
   const defaultName = getDnpName(directoryName);
 
   const defaultAnswers = {
@@ -166,7 +166,7 @@ It only covers the most common items, and tries to guess sensible defaults.
   };
 
   // Create folders
-  await shell(`mkdir -p ${path.join(dir, "build")}`, { silent: true });
+  await shell(`mkdir -p ${path.join(dir, "build")}`);
 
   // Write manifest and compose
   writeManifest(dir, manifest);

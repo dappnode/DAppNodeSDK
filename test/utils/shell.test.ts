@@ -17,7 +17,7 @@ echo "hello"
 
   it("Execute a command without crashing", async () => {
     // Check that the output is correct
-    const output = await shell(`sh ${scriptPath}`, { silent: true });
+    const output = await shell(`sh ${scriptPath}`);
     expect(output).to.equal("hello");
     // Check that it errors on timeout
     const errorMessage = await shell(`sh ${scriptPath}`, { timeout: 1 }).catch(

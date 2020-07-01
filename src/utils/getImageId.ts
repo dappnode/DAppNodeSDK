@@ -12,8 +12,7 @@ export async function getImageId(
 ): Promise<string | undefined> {
   try {
     const id = await shell(
-      `docker inspect --format='{{json .Id}}' ${imageTag}`,
-      { silent: true }
+      `docker inspect --format='{{json .Id}}' ${imageTag}`
     );
     return id.replace(/['"]+/g, "");
   } catch (e) {

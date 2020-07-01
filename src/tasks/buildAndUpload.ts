@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import Listr from "listr";
-import execa from "execa";
 // @ts-ignore
 import timestring from "timestring";
 import { getFileHash } from "../utils/getFileHash";
@@ -17,10 +16,10 @@ import { verifyAvatar } from "../utils/verifyAvatar";
 import { getAssetPath, getAssetPathRequired } from "../utils/getAssetPath";
 import { addReleaseRecord } from "../utils/releaseRecord";
 import { releaseFiles, CliError } from "../params";
+import { shell } from "../utils/shell";
 
 // Commands
 import { compressFile } from "../utils/commands/compressFile";
-import { execaProgress } from "../utils/commands/execaProgress";
 import { ipfsAddFromFs } from "../utils/ipfs/ipfsAddFromFs";
 import { swarmAddDirFromFs } from "../utils/commands/swarmAddDirFromFs";
 import { updateCompose } from "../utils/compose";
@@ -167,10 +166,11 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
         task: async (_, task) => {
           // Before building make sure the imageTag in the docker-compose is correct
           updateCompose({ name, version, dir });
-          await execaProgress(
-            "docker-compose build",
-            data => (task.output = data)
-          );
+          await shell("docker-compose build", {
+            timeout: buildTimeout,
+            maxBuffer: 100 * 1e6,
+            onData: data => (task.output = data)
+          });
         }
       },
 
@@ -192,7 +192,7 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
             task.skip(`Using cached verified tarball ${imagePathCompressed}`);
           } else {
             task.output = `Saving docker image to file...`;
-            await execa(`docker save ${imageTag} > ${imagePathUncompressed}`);
+            await shell(`docker save ${imageTag} > ${imagePathUncompressed}`);
 
             await compressFile(imagePathUncompressed, {
               timeout: buildTimeout,
