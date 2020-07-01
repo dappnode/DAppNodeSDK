@@ -29,6 +29,14 @@ export function createNextBranch({
         title: "Create next version branch",
         task: async (ctx, task) => {
           try {
+            // Openning next version branches in dev branches is confusing and never usefull
+            // Actual releases are always done in master.
+            const currenBranch = await shell(`git rev-parse --abbrev-ref HEAD`);
+            if (currenBranch !== "master") {
+              task.skip(`Next version branches are only created from master`);
+              return;
+            }
+
             const manifestPath = getManifestPath();
             const composePath = getComposePath();
             const nextVersion = await increaseFromLocalVersion({
@@ -42,10 +50,10 @@ export function createNextBranch({
             const remoteBranchInfo = await shell(
               `git ls-remote --heads origin ${branch}`
             );
-            if (remoteBranchInfo)
-              throw Error(
-                `Next version branch ${branch} already exists in origin: ${remoteBranchInfo}`
-              );
+            if (remoteBranchInfo) {
+              task.skip(`Next version branch ${branch} already exists`);
+              return;
+            }
 
             // Using the git CLI directly since you can't create and push
             // a commit that has two files (at least in an easy way)
