@@ -1,8 +1,6 @@
 import fs from "fs";
 import path from "path";
 import Listr from "listr";
-// @ts-ignore
-import timestring from "timestring";
 import { getFileHash } from "../utils/getFileHash";
 import { getImageId } from "../utils/getImageId";
 import { loadCache, writeCache } from "../utils/cache";
@@ -17,6 +15,10 @@ import { getAssetPath, getAssetPathRequired } from "../utils/getAssetPath";
 import { addReleaseRecord } from "../utils/releaseRecord";
 import { releaseFiles, CliError } from "../params";
 import { shell } from "../utils/shell";
+// timestring does not have a @types package
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import timestring from "timestring";
 
 // Commands
 import { compressFile } from "../utils/commands/compressFile";
