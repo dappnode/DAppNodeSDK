@@ -22,8 +22,9 @@ ${id} naming must match ${regex.toString()}.
 Please rename it to ${defaultName}
 `);
   if (matchingFiles.length === 1) return path.join(dir, matchingFiles[0]);
-  else
-    throw Error(`More than one ${id} found in ${dir}.
+  if (matchingFiles.length > 1)
+    throw Error(`More than one ${id} found in ${dir}:
+  ${matchingFiles.join(", ")}
 Only one file can match ${regex.toString()}
 Please rename it to ${defaultName}      
 `);

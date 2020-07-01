@@ -17,18 +17,21 @@ describe("buildAndUpload", () => {
   const ensName = "sdk-test.dnp.dappnode.eth";
   const version = "0.1.0";
   const imageTag = `${ensName}:${version}`;
-  const manifest = {
+  const manifestWithoutImage = {
     name: ensName,
     version,
     description: "Mock DNP for testing the SDK cli",
-    avatar: "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp",
     type: "service",
+    license: "GLP-3.0"
+  };
+  const manifestWithImage = {
+    ...manifestWithoutImage,
+    avatar: "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp",
     image: {
       path: "dappnode.dnp.dappnode.eth_0.0.0.tar.xz",
       hash: "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp",
       size: 100
-    },
-    license: "GLP-3.0"
+    }
   };
   const manifestPath = "./dappnode_package.json";
   const composePath = "./docker-compose.yml";
@@ -60,7 +63,7 @@ ENV test=1
     await rmSafe("./build");
     await rmSafe(buildDir);
     fs.mkdirSync("./build");
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifestWithImage, null, 2));
     fs.writeFileSync(composePath, yaml.dump(compose, { indent: 2 }));
     fs.writeFileSync("./build/Dockerfile", Dockerfile);
     fs.copyFileSync(avatarSourcePath, avatarPath);
@@ -84,7 +87,10 @@ ENV test=1
 
   it("Should build and upload the current version as directory type release", async () => {
     // Rewrite the manifest to not contain image
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    fs.writeFileSync(
+      manifestPath,
+      JSON.stringify(manifestWithoutImage, null, 2)
+    );
 
     const buildAndUploadTasks = buildAndUpload({
       dir: "./",
