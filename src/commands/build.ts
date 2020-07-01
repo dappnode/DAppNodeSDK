@@ -13,7 +13,14 @@ export const command = "build";
 
 export const describe = "Build a new version (only generates the ipfs hash)";
 
-export const builder: BuilderCallback<any, any> = yargs =>
+interface CliCommandOptions {
+  provider: string;
+  timeout: string;
+  release_type: "manifest" | "directory";
+  upload_to: "ipfs" | "swarm";
+}
+
+export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
   yargs
     .option("p", {
       alias: "provider",
@@ -38,13 +45,6 @@ export const builder: BuilderCallback<any, any> = yargs =>
       default: "ipfs"
     });
 
-interface CliCommandOptions {
-  provider: string;
-  timeout: string;
-  release_type: "manifest" | "directory";
-  upload_to: "ipfs" | "swarm";
-}
-
 export const handler = async ({
   provider,
   timeout,
@@ -54,7 +54,7 @@ export const handler = async ({
   dir,
   silent,
   verbose
-}: CliCommandOptions & CliGlobalOptions) => {
+}: CliCommandOptions & CliGlobalOptions): Promise<void> => {
   // Parse options
   const ipfsProvider = provider;
   const swarmProvider = provider;

@@ -23,7 +23,21 @@ export const command = "publish [type]";
 export const describe =
   "Publish a new version of the package in an Aragon Package Manager Repository";
 
-export const builder: BuilderCallback<any, any> = yargs =>
+interface CliCommandOptions {
+  type: ReleaseType;
+  provider?: string;
+  eth_provider?: string;
+  ipfs_provider?: string;
+  developer_address?: string;
+  timeout: string;
+  release_type: string;
+  upload_to: string;
+  github_release?: boolean;
+  create_next_branch?: boolean;
+  dappnode_team_preset: boolean;
+}
+
+export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
   yargs
     .positional("type", {
       description: `Semver update type. Can also be provided with env RELEASE_TYPE=[type] or via TRAVIS_TAG=release (patch), TRAVIS_TAG=release/[type]`,
@@ -81,20 +95,6 @@ export const builder: BuilderCallback<any, any> = yargs =>
       type: "boolean"
     });
 
-interface CliCommandOptions {
-  type: ReleaseType;
-  provider?: string;
-  eth_provider?: string;
-  ipfs_provider?: string;
-  developer_address?: string;
-  timeout: string;
-  release_type: string;
-  upload_to: string;
-  github_release?: boolean;
-  create_next_branch?: boolean;
-  dappnode_team_preset: boolean;
-}
-
 // Do not add `.require("type")`, it is verified below
 
 export const handler = async ({
@@ -113,11 +113,11 @@ export const handler = async ({
   dir,
   silent,
   verbose
-}: CliCommandOptions & CliGlobalOptions) => {
+}: CliCommandOptions & CliGlobalOptions): Promise<void> => {
   // Parse optionsalias: "release",
   let ethProvider = provider || eth_provider || "dappnode";
   let ipfsProvider = provider || ipfs_provider || "dappnode";
-  let swarmProvider = provider || "dappnode";
+  const swarmProvider = provider || "dappnode";
   let githubRelease = Boolean(github_release);
   let createNextGithubBranch = Boolean(create_next_branch);
   const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;

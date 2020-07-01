@@ -11,7 +11,7 @@ export async function increaseFromApmVersion({
   type: ReleaseType;
   ethProvider: string;
   dir: string;
-}) {
+}): Promise<string> {
   // Check variables
   const nextVersion = await getNextVersionFromApm({ type, ethProvider, dir });
 

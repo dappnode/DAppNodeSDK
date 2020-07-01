@@ -10,7 +10,7 @@ export async function increaseFromLocalVersion({
 }: {
   type: ReleaseType;
   dir: string;
-}) {
+}): Promise<string> {
   // Check variables
   checkSemverType(type);
 

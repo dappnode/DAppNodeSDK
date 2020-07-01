@@ -1,16 +1,17 @@
 import Ajv from "ajv";
+import ajvErrors from "ajv-errors";
 import manifestSchema from "./manifest.schema.json";
 import { Manifest } from "../types";
 
 const ajv = new Ajv({ allErrors: true, jsonPointers: true });
-require("ajv-errors")(ajv);
+ajvErrors(ajv);
 // Precompile validator
 const validate = ajv.compile(manifestSchema);
 
 /**
  * Validates a manifest syncronously. Does NOT throw.
- * @param {object} manifest
- * @returns {object} = {
+ * @param manifest
+ * @returns = {
  *   valid: false|true
  *   errors: [
  *     "manifest should have required property 'description'",
@@ -18,10 +19,12 @@ const validate = ajv.compile(manifestSchema);
  *   ]
  * }
  */
-export function validateManifestSchema(manifest: Manifest) {
+export function validateManifestSchema(
+  manifest: Manifest
+): { valid: boolean; errors: string[] } {
   const valid = validate(manifest);
   return {
-    valid,
+    valid: Boolean(valid),
     errors: validate.errors ? validate.errors.map(processError) : []
   };
 }
@@ -66,7 +69,7 @@ export function validateManifestSchema(manifest: Manifest) {
 
 /**
  *
- * @param {object} errorObject from AJV:
+ * @param errorObject from AJV:
  * {
  *   keyword: "pattern",
  *   dataPath: "/avatar",
@@ -74,10 +77,10 @@ export function validateManifestSchema(manifest: Manifest) {
  *   params: { pattern: "^/(ipfs|bzz)/w+$" },
  *   message: 'should match pattern "^/(ipfs|bzz)/w+$"'
  * }
- * @returns {string} errorMessage:
+ * @returns errorMessage:
  * "manifest.avatar should match pattern "^/(ipfs|bzz)/w+$""
  */
-function processError(errorObject: Ajv.ErrorObject) {
+function processError(errorObject: Ajv.ErrorObject): string {
   const { dataPath, message } = errorObject;
   const path = `manifest${dataPath}`.replace(new RegExp("/", "g"), ".");
   return `${path} ${message}`;

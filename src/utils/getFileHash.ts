@@ -7,7 +7,7 @@ import crypto from "crypto";
  * @param path
  * @return file's sha3 hash: 0x36d2fe6d4582e8cc1e5ea4c6c05e44bc94b88f4567edca12ba5fd5745796edef
  */
-export function getFileHash(path: string) {
+export function getFileHash(path: string): Promise<string | null> {
   return fs.promises
     .readFile(path)
     .then(data => {

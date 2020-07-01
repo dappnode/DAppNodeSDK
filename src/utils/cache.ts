@@ -29,7 +29,13 @@ export function loadCache(): CacheObject {
   }
 }
 
-export function writeCache({ key, value }: { key: string; value: string }) {
+export function writeCache({
+  key,
+  value
+}: {
+  key: string;
+  value: string;
+}): void {
   const cache = loadCache();
   cache[key] = value;
   const cacheString = Object.keys(cache)

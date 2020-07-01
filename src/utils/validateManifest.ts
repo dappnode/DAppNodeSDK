@@ -7,7 +7,7 @@ const fakeHash = "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp";
 export function validateManifest(
   manifest: Manifest,
   options?: { prerelease?: boolean }
-) {
+): void {
   if (options && options.prerelease) {
     manifest.avatar = manifest.avatar || fakeHash;
     manifest.image = {

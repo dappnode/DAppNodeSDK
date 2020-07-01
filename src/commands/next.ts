@@ -7,7 +7,12 @@ export const command = "next [type]";
 
 export const describe = "Compute the next release version from local";
 
-export const builder: BuilderCallback<any, any> = yargs =>
+interface CliCommandOptions {
+  type: ReleaseType;
+  provider: string;
+}
+
+export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
   yargs
     .positional("type", {
       description: "Semver update type: [ major | minor | patch ]",
@@ -22,16 +27,11 @@ export const builder: BuilderCallback<any, any> = yargs =>
     })
     .require("type");
 
-interface CliCommandOptions {
-  type: ReleaseType;
-  provider: string;
-}
-
 export const handler = async ({
   type,
   provider,
   dir
-}: CliCommandOptions & CliGlobalOptions) => {
+}: CliCommandOptions & CliGlobalOptions): Promise<void> => {
   const ethProvider = provider;
 
   await verifyEthConnection(ethProvider);

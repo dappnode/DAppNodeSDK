@@ -11,10 +11,10 @@ export function outputTxData({
   txData: TxData;
   toConsole: string;
   toFile: string;
-}) {
+}): void {
   const adminUiLink = getPublishTxLink(txData);
 
-  const txDataToPrint: { [key: string]: string } = {
+  const txDataToPrint: { [key: string]: string | number } = {
     To: txData.to,
     Value: txData.value,
     Data: txData.data,

@@ -6,7 +6,7 @@ import { CliError } from "../params";
  * capturing HTTP errors
  * @param ethProvider
  */
-export async function verifyEthConnection(ethProvider: string) {
+export async function verifyEthConnection(ethProvider: string): Promise<void> {
   if (!ethProvider) throw Error("No ethProvider provided");
 
   const apm = new Apm(ethProvider);

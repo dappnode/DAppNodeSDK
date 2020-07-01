@@ -10,16 +10,20 @@ interface ReleaseRecord {
   };
 }
 
+interface ReleaseRecords {
+  [version: string]: ReleaseRecord;
+}
+
 const fileName = "releases.json";
 
-function readReleaseRecords(dir: string) {
+function readReleaseRecords(dir: string): ReleaseRecords {
   const releaseRecordPath = path.join(dir, fileName);
   return fs.existsSync(releaseRecordPath)
     ? JSON.parse(fs.readFileSync(releaseRecordPath, "utf8"))
     : {};
 }
 
-function readReleaseRecord(dir: string, version: string) {
+function readReleaseRecord(dir: string, version: string): ReleaseRecord {
   const releaseRecord = readReleaseRecords(dir);
   return releaseRecord[version] || {};
 }
@@ -28,7 +32,7 @@ function writeReleaseRecord(
   dir: string,
   version: string,
   newReleaseRecord: Partial<ReleaseRecord>
-) {
+): void {
   const releaseRecordPath = path.join(dir, fileName);
   const releaseRecord = readReleaseRecords(dir);
   const mergedReleaseRecord = {
@@ -56,7 +60,7 @@ export function addReleaseRecord({
   hash: string;
   type: string;
   to: string;
-}) {
+}): void {
   const releaseRecord = readReleaseRecord(dir, version);
   const { uploadedTo = {}, hash: previousHash } = releaseRecord;
 
@@ -78,6 +82,6 @@ export function addReleaseTx({
   dir: string;
   version: string;
   link: string;
-}) {
+}): void {
   writeReleaseRecord(dir, version, { link });
 }

@@ -10,9 +10,13 @@ import { readManifest } from "../utils/manifest";
 import { getPublishTxLink } from "../utils/getLinks";
 import { addReleaseTx } from "../utils/releaseRecord";
 import { YargsError } from "../params";
-import { CliGlobalOptions } from "../types";
+import { CliGlobalOptions, TxData } from "../types";
 
-const isZeroAddress = (address: string) => parseInt(address) === 0;
+interface ListContextGeneratePublishTx {
+  txData: TxData;
+}
+
+const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
 /**
  * Generates the transaction data necessary to publish the package.
@@ -36,7 +40,7 @@ export function generatePublishTx({
   releaseMultiHash: string;
   developerAddress?: string;
   ethProvider: string;
-} & CliGlobalOptions) {
+} & CliGlobalOptions): Listr<ListContextGeneratePublishTx> {
   // Init APM instance
   const apm = new Apm(ethProvider);
 
@@ -51,38 +55,12 @@ export function generatePublishTx({
   const ensName = name;
   const shortName = name.split(".")[0];
 
-  return new Listr(
+  return new Listr<ListContextGeneratePublishTx>(
     [
-      /**
-       * 1. Ensure that a valid registry exists
-       */
-      {
-        title: "Get registry contract",
-        task: async ctx => {
-          const registry = await apm.getRegistryContract(ensName);
-          if (!registry)
-            throw Error(`There must exist a registry for DNP name ${ensName}`);
-          ctx.registry = registry;
-        }
-      },
-      /**
-       * 2. Get current repo
-       */
-      {
-        title: "Get repo contract",
-        task: async ctx => {
-          const repository = await apm.getRepoContract(ensName);
-          ctx.repository = repository;
-        }
-      },
-      /**
-       * 3. Generate TX
-       */
       {
         title: "Generate transaction",
         task: async ctx => {
-          const { registry, repository } = ctx;
-
+          const repository = await apm.getRepoContract(ensName);
           if (repository) {
             ctx.txData = {
               to: repository.address,
@@ -98,6 +76,12 @@ export function generatePublishTx({
               releaseMultiHash
             };
           } else {
+            const registry = await apm.getRegistryContract(ensName);
+            if (!registry)
+              throw Error(
+                `There must exist a registry for DNP name ${ensName}`
+              );
+
             // If repo does not exist, create a new repo and push version
             // A developer address must be provided by the option -a or --developer_address.
             if (

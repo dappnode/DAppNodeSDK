@@ -9,7 +9,7 @@ import { shell } from "../shell";
 export async function compressFile(
   path: string,
   options: { onData: (data: string) => void; timeout: number }
-) {
+): Promise<string> {
   const { timeout, onData } = options || {};
   /**
    * -e9T0: Compression settings (extreme and paralelized)

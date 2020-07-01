@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import Listr from "listr";
-import Octokit from "@octokit/rest";
+import { Octokit } from "@octokit/rest";
 import mime from "mime-types";
 import retry from "async-retry";
 // Utils
@@ -13,6 +13,13 @@ import { readManifestString } from "../utils/manifest";
 import { readComposeString } from "../utils/compose";
 import { contentHashFile } from "../params";
 import { TxData, CliGlobalOptions } from "../types";
+
+interface ListContextCreateGithubRelease {
+  nextVersion: string;
+  txData: TxData;
+  latestSha: string;
+  uploadUrl: string;
+}
 
 /**
  * Create (or edit) a Github release, then upload all assets
@@ -29,7 +36,7 @@ export function createGithubRelease({
   buildDir: string;
   releaseMultiHash: string;
   createNextGithubBranch: boolean;
-} & CliGlobalOptions) {
+} & CliGlobalOptions): Listr<ListContextCreateGithubRelease> {
   // OAuth2 token from Github
   if (!process.env.GITHUB_TOKEN)
     throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
@@ -45,7 +52,7 @@ export function createGithubRelease({
   if (!owner) throw Error(`repoSlug "${repoSlug}" hasn't an owner`);
   if (!repo) throw Error(`repoSlug "${repoSlug}" hasn't a repo`);
 
-  return new Listr(
+  return new Listr<ListContextCreateGithubRelease>(
     [
       /**
        * 1. Handle tags
@@ -238,6 +245,7 @@ export function createGithubRelease({
               await retry(
                 async () => {
                   await octokit.repos
+                    // @ts-ignore
                     .uploadReleaseAsset({
                       url,
                       file: fs.createReadStream(file),
@@ -307,10 +315,13 @@ export function createGithubRelease({
             // Fetch the manifest file's sha for the `updateFile` call
             task.output = `Advancing manifest version to ${nextVersion}...`;
             const manifestSha = await octokit.repos
+              // @ts-ignore
               .getContents({ owner, repo, path: manifestPath })
+              // @ts-ignore
               .then(res => res.data.sha);
 
             // Update the manifest making a commit to the next branch
+            // @ts-ignore
             await octokit.repos.updateFile({
               owner,
               repo,
@@ -326,11 +337,15 @@ export function createGithubRelease({
 
             // Fetch the manifest file's sha for the `updateFile` call
             task.output = `Advancing compose version to ${nextVersion}...`;
+
             const composeSha = await octokit.repos
+              // @ts-ignore
               .getContents({ owner, repo, path: composePath })
+              // @ts-ignore
               .then(res => res.data.sha);
 
             // Update the manifest making a commit to the next branch
+            // @ts-ignore
             await octokit.repos.updateFile({
               owner,
               repo,

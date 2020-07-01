@@ -47,7 +47,12 @@ export const command = "init";
 
 export const describe = "Initialize a new DAppNodePackage (DNP) repository";
 
-export const builder: BuilderCallback<any, any> = yargs =>
+interface CliCommandOptions {
+  yes?: boolean;
+  force?: boolean;
+}
+
+export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
   yargs
     .option("y", {
       alias: "yes",
@@ -61,16 +66,11 @@ export const builder: BuilderCallback<any, any> = yargs =>
       type: "boolean"
     });
 
-interface CliCommandOptions {
-  yes?: boolean;
-  force?: boolean;
-}
-
 export const handler = async ({
   yes: useDefaults,
   force,
   dir
-}: CliCommandOptions & CliGlobalOptions) => {
+}: CliCommandOptions & CliGlobalOptions): Promise<void> => {
   // shell outputs tend to include trailing spaces and new lines
   const directoryName = await shell('echo "${PWD##*/}"');
   const defaultAuthor = await shell("whoami");

@@ -11,7 +11,7 @@ const composeFileName = "docker-compose.yml";
  * @param dir: './folder', [optional] directory to load the manifest from
  * @return path = './dappnode_package.json'
  */
-function getComposePath(dir = "./") {
+function getComposePath(dir = "./"): string {
   return path.join(dir, composeFileName);
 }
 
@@ -21,7 +21,7 @@ function getComposePath(dir = "./") {
  *
  * @param dir: './folder', [optional] directory to load the manifest from
  */
-export function generateAndWriteCompose(dir: string, manifest: Manifest) {
+export function generateAndWriteCompose(dir: string, manifest: Manifest): void {
   const composeYaml = generateCompose(manifest);
   writeCompose(dir, composeYaml);
 }
@@ -30,12 +30,10 @@ export function generateAndWriteCompose(dir: string, manifest: Manifest) {
  * Read a compose data (string, without parsing)
  * Without arguments defaults to write the manifest at './docker-compose.yml'
  *
- * @param {Object} kwargs: {
- *   dir: './folder', [optional] directory to load the manifest from
- * }
- * @return {Object} compose object
+ * @param dir: './folder', [optional] directory to load the manifest from
+ * @return compose object
  */
-export function readComposeString(dir: string) {
+export function readComposeString(dir: string): string {
   const path = getComposePath(dir);
 
   // Recommended way of checking a file existance https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
@@ -80,7 +78,7 @@ export function readCompose(dir: string): Compose {
  * Writes the docker-compose.
  * Without arguments defaults to write the manifest at './docker-compose.yml'
  */
-export function writeCompose(dir: string, compose: Compose) {
+export function writeCompose(dir: string, compose: Compose): void {
   const path = getComposePath(dir);
   const composeString = yaml.dump(compose, { indent: 2 });
   fs.writeFileSync(path, composeString);
@@ -156,7 +154,7 @@ export function updateCompose({
   name: string;
   version: string;
   dir: string;
-}) {
+}): void {
   const compose = readCompose(dir);
   // Only update the imageName field
   //   services:

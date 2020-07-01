@@ -1,4 +1,4 @@
-import { exec, spawn, ExecException } from "child_process";
+import { exec, ExecException } from "child_process";
 
 /**
  * If timeout is greater than 0, the parent will send the signal
@@ -34,7 +34,7 @@ export async function shell(
     onData
   } = options || {};
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject): void => {
     const proc = exec(cmd, { timeout, maxBuffer }, (err, stdout, stderr) => {
       if (err) {
         // Rethrow a typed error, and ignore the internal NodeJS stack trace
@@ -42,7 +42,7 @@ export async function shell(
           reject(new ShellError(err, `cmd timeout ${timeout}: ${cmd}`));
         else reject(new ShellError(err));
       } else {
-        resolve(stdout.trim());
+        resolve(stdout.trim() || stderr);
       }
     });
     if (pipeToMain) {
@@ -50,7 +50,8 @@ export async function shell(
       if (proc.stderr) proc.stderr.pipe(process.stderr);
     }
     if (onData) {
-      const onChunkData = (chunk: Buffer) => onData(chunk.toString().trim());
+      const onChunkData = (chunk: Buffer): void =>
+        onData(chunk.toString().trim());
       if (proc.stdout) proc.stdout.on("data", onChunkData);
       if (proc.stderr) proc.stderr.on("data", onChunkData);
     }

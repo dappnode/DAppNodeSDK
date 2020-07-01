@@ -12,9 +12,9 @@ export type ReleaseType = "major" | "minor" | "patch";
 
 export interface TxData {
   to: string;
-  value: string;
+  value: number;
   data: string;
-  gasLimit: string;
+  gasLimit: number;
   ensName: string;
   currentVersion: string;
   releaseMultiHash: string;
@@ -37,9 +37,19 @@ export interface Manifest {
   license?: string;
   avatar?: string;
   image?: ManifestImage;
-  repository?: any;
+  repository?: {
+    type?: string;
+    url?: string;
+    directory?: string;
+  };
   categories?: string[];
-  links?: any;
+  links?: {
+    homepage?: string;
+    ui?: string;
+    api?: string;
+    gateway?: string;
+    [linkName: string]: string | undefined;
+  };
 }
 
 export interface ManifestImage {

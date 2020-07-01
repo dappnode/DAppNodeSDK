@@ -1,6 +1,6 @@
 import { URL } from "url";
 
-function getIpfsProviderUrl(provider = "dappnode") {
+function getIpfsProviderUrl(provider = "dappnode"): string {
   if (provider === "dappnode") {
     return "http://ipfs.dappnode";
   } else if (provider === "remote") {
@@ -27,7 +27,7 @@ function parseIpfsProviderUrl(provider: string) {
   }
 }
 
-export function normalizeIpfsProvider(provider: string) {
+export function normalizeIpfsProvider(provider: string): string {
   const providerUrl = getIpfsProviderUrl(provider);
   const { host, port, protocol } = parseIpfsProviderUrl(providerUrl);
   const fullUrl = `${protocol}://${host}:${port}`;

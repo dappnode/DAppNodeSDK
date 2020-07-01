@@ -14,16 +14,16 @@ export const command = "add_avatar";
 
 export const describe = "Upload .png avatar and add it to the manifest";
 
-export const builder: BuilderCallback<any, any> = yargs =>
+interface CliCommandOptions {
+  provider: string;
+}
+
+export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
   yargs.option("p", {
     alias: "provider",
     description: `Specify an ipfs provider: "dappnode" (default), "infura", "localhost:5002"`,
     default: "dappnode"
   });
-
-interface CliCommandOptions {
-  provider: string;
-}
 
 export const handler = async ({
   provider,
@@ -31,7 +31,7 @@ export const handler = async ({
   dir,
   silent,
   verbose
-}: CliCommandOptions & CliGlobalOptions) => {
+}: CliCommandOptions & CliGlobalOptions): Promise<void> => {
   // Parse options
   const ipfsProvider = provider;
 

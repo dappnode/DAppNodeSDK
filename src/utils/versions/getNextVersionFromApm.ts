@@ -12,7 +12,7 @@ export async function getNextVersionFromApm({
   type: ReleaseType;
   ethProvider: string;
   dir: string;
-}) {
+}): Promise<string> {
   // Check variables
   checkSemverType(type);
 

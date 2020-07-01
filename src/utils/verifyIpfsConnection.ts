@@ -5,7 +5,9 @@ import { CliError } from "../params";
  * Verify the IPFS connection
  * @param ipfsProvider
  */
-export async function verifyIpfsConnection(ipfsProvider: string) {
+export async function verifyIpfsConnection(
+  ipfsProvider: string
+): Promise<void> {
   try {
     await ipfsVersion(ipfsProvider);
   } catch (e) {

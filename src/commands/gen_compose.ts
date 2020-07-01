@@ -6,7 +6,7 @@ export const command = "gen_compose";
 
 export const describe = "Generate the docker-compose.yml from the manifest";
 
-export const handler = async ({ dir }: CliGlobalOptions) => {
+export const handler = async ({ dir }: CliGlobalOptions): Promise<void> => {
   const manifest = readManifest(dir);
   generateAndWriteCompose(dir, manifest);
 };

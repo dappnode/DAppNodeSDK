@@ -1,7 +1,7 @@
 import tarFS from "tar-fs";
 import got from "got";
 
-function getSwarmGatewayUrl(provider = "dappnode") {
+function getSwarmGatewayUrl(provider = "dappnode"): string {
   if (provider === "dappnode") {
     return "http://swarm.dappnode";
   } else if (provider === "public") {
@@ -28,7 +28,10 @@ export class Swarm {
     this.url = getSwarmGatewayUrl(provider);
   }
 
-  async addDirFromFs(path: string, onProgress: (percent: number) => void) {
+  async addDirFromFs(
+    path: string,
+    onProgress: (percent: number) => void
+  ): Promise<string> {
     const res = await got({
       prefixUrl: this.url,
       url: "/bzz:/",

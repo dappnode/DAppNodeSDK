@@ -54,7 +54,7 @@ export function buildAndUpload({
   userTimeout: string;
   isDirectoryRelease: boolean;
   uploadToSwarm: boolean;
-} & CliGlobalOptions) {
+} & CliGlobalOptions): Listr<ListContextBuildAndUpload> {
   // Enforce here also, just in case
   if (uploadToSwarm) isDirectoryRelease = true;
 

@@ -6,7 +6,11 @@ export const command = "increase [type]";
 
 export const describe = "Increases the version defined in the manifest";
 
-export const builder: BuilderCallback<any, any> = yargs =>
+interface CliCommandOptions {
+  type: ReleaseType;
+}
+
+export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
   yargs
     .positional("type", {
       description: "Semver update type: [ major | minor | patch ]",
@@ -15,14 +19,10 @@ export const builder: BuilderCallback<any, any> = yargs =>
     })
     .require("type");
 
-interface CliCommandOptions {
-  type: ReleaseType;
-}
-
 export const handler = async ({
   type,
   dir
-}: CliCommandOptions & CliGlobalOptions) => {
+}: CliCommandOptions & CliGlobalOptions): Promise<void> => {
   // Execute command
   const nextVersion = await increaseFromLocalVersion({ type, dir });
   // Output result: "0.1.8"

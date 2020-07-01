@@ -4,7 +4,7 @@ import repoAbi from "../contracts/RepoAbi.json";
 import registryAbi from "../contracts/ApmRegistryAbi.json";
 import { semverToArray } from "./semverToArray";
 
-function getEthereumProviderUrl(provider = "dappnode") {
+function getEthereumProviderUrl(provider = "dappnode"): string {
   if (provider === "dappnode") {
     return "http://fullnode.dappnode:8545";
   } else if (provider === "remote") {
@@ -47,7 +47,7 @@ export class Apm {
   // ==> Unhandled rejection Error: ENS name not found
   //
   // Change behaviour to return null if not found
-  async resolve(ensDomain: string) {
+  async resolve(ensDomain: string): Promise<string | null> {
     try {
       return await this.provider.resolveName(ensDomain);
     } catch (e) {
@@ -63,7 +63,7 @@ export class Apm {
    * @param ensName: "admin.dnp.dappnode.eth"
    * @return latest semver version = '0.1.0'
    */
-  async getLatestVersion(ensName: string) {
+  async getLatestVersion(ensName: string): Promise<string> {
     if (!ensName)
       throw Error("getLatestVersion first argument ensName must be defined");
     const repository = await this.getRepoContract(ensName);
@@ -96,7 +96,7 @@ export class Apm {
    * @param ensName: "admin.dnp.dappnode.eth"
    * @return contract instance of the Repo "admin.dnp.dappnode.eth"
    */
-  async getRepoContract(ensName: string) {
+  async getRepoContract(ensName: string): Promise<ethers.Contract | null> {
     const repoAddress = await this.resolve(ensName);
     if (!repoAddress) return null;
     return new ethers.Contract(repoAddress, repoAbi, this.provider);
@@ -111,7 +111,7 @@ export class Apm {
    * @param ensName: "admin.dnp.dappnode.eth"
    * @return contract instance of the Registry "dnp.dappnode.eth"
    */
-  async getRegistryContract(ensName: string) {
+  async getRegistryContract(ensName: string): Promise<ethers.Contract | null> {
     const repoId = ensName.split(".").slice(1).join(".");
     const registryAddress = await this.resolve(repoId);
     if (!registryAddress) return null;
@@ -134,7 +134,7 @@ export function encodeNewVersionCall({
   version: string;
   contractAddress: string;
   contentURI: string;
-}) {
+}): string {
   const repo = new ethers.utils.Interface(repoAbi);
   return repo.encodeFunctionData("newVersion", [
     semverToArray(version), // uint16[3] _newSemanticVersion
@@ -164,7 +164,7 @@ export function encodeNewRepoWithVersionCall({
   version: string;
   contractAddress: string;
   contentURI: string;
-}) {
+}): string {
   const registry = new ethers.utils.Interface(registryAbi);
   return registry.encodeFunctionData("newRepoWithVersion", [
     name, // string _name

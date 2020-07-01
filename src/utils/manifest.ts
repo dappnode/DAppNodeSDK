@@ -8,26 +8,26 @@ const manifestFileName = "dappnode_package.json";
 /**
  * Get manifest path. Without arguments defaults to './dappnode_package.json'
  *
- * @param {Object} kwargs: {
+ * @param kwargs: {
  *   dir: './folder', [optional] directory to load the manifest from
  *   manifestFileName: 'manifest-admin.json', [optional] name of the manifest file
  * }
- * @return {String} path = './dappnode_package.json'
+ * @return path = './dappnode_package.json'
  */
-export function getManifestPath(dir = "./") {
+export function getManifestPath(dir = "./"): string {
   return path.join(dir, manifestFileName);
 }
 
 /**
  * Writes a manifest. Without arguments defaults to write the manifest at './dappnode_package.json'
  *
- * @param {Object} kwargs: {
+ * @param kwargs: {
  *   manifest: <manifest object>
  *   dir: './folder', [optional] directory to load the manifest from
  *   manifestFileName: 'manifest-admin.json', [optional] name of the manifest file
  * }
  */
-export function writeManifest(dir: string, manifest: Manifest) {
+export function writeManifest(dir: string, manifest: Manifest): void {
   const path = getManifestPath(dir);
   const data = JSON.stringify(manifest, null, 2);
   fs.writeFileSync(path, data);
