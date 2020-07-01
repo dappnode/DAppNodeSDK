@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
-    "@octokit/rest": "^18.0.0",
+    "@octokit/rest": "^16.27.3",
     "ajv": "^6.12.2",
     "ajv-errors": "^1.0.1",
     "async-retry": "^1.2.3",

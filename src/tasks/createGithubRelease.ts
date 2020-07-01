@@ -6,7 +6,7 @@ import mime from "mime-types";
 import retry from "async-retry";
 // Utils
 import { getRepoSlugFromManifest } from "../utils/getRepoSlugFromManifest";
-import { getPublishTxLink } from "../utils/getLinks";
+import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
 import { getCurrentCommitSha } from "../utils/getCurrentCommitSha";
 import { contentHashFile } from "../params";
 import {
@@ -38,9 +38,15 @@ export function createGithubRelease({
 
   // Gather repo data, repoSlug = "dappnode/DNP_ADMIN"
   const repoSlug =
-    getRepoSlugFromManifest(dir) || process.env.TRAVIS_REPO_SLUG || "";
+    getRepoSlugFromManifest(dir) ||
+    process.env.TRAVIS_REPO_SLUG ||
+    process.env.GITHUB_REPOSITORY ||
+    "";
   const [owner, repo] = repoSlug.split("/");
-  if (!repoSlug) throw Error("No repoSlug provided");
+  if (!repoSlug)
+    throw Error(
+      "manifest.repository must be properly defined to create a Github release"
+    );
   if (!owner) throw Error(`repoSlug "${repoSlug}" hasn't an owner`);
   if (!repo) throw Error(`repoSlug "${repoSlug}" hasn't a repo`);
 
@@ -200,7 +206,7 @@ export function createGithubRelease({
               e.message = `Error creating release: ${e.message}`;
               throw e;
             });
-          ctx.uploadUrl = release.data.upload_url;
+          ctx.githubReleaseUploadUrl = release.data.upload_url;
         }
       },
       /**
@@ -211,9 +217,9 @@ export function createGithubRelease({
       {
         title: "Upload release assets",
         task: async (ctx, task) => {
-          const url = ctx.uploadUrl;
+          const url = ctx.githubReleaseUploadUrl;
           if (!buildDir) throw Error("buildDir not provided");
-          if (!url) throw Error("uploadUrl not provided");
+          if (!url) throw Error("githubReleaseUploadUrl not provided");
 
           // Plain text file with should contain the IPFS hash of the release
           // Necessary for the installer script to fetch the latest content hash
@@ -235,25 +241,20 @@ export function createGithubRelease({
               // The uploadReleaseAssetApi fails sometimes, retry 3 times
               await retry(
                 async () => {
-                  await octokit.repos
-                    // @ts-ignore
-                    .uploadReleaseAsset({
-                      url,
-                      file: fs.createReadStream(file),
-                      headers: {
-                        "content-type": contentType,
-                        "content-length": fs.statSync(file).size
-                      },
-                      name: path.basename(file)
-                    })
-                    .catch(e => {
-                      e.message = `Error uploading release asset: ${e.message}`;
-                      throw e;
-                    });
+                  await octokit.repos.uploadReleaseAsset({
+                    url,
+                    file: fs.createReadStream(file),
+                    headers: {
+                      "content-type": contentType,
+                      "content-length": fs.statSync(file).size
+                    },
+                    name: path.basename(file)
+                  });
                 },
                 { retries: 3 }
               );
             } catch (e) {
+              e.message = `Error uploading release asset: ${e.message}`;
               console.log(e);
               throw e;
             }
@@ -283,7 +284,15 @@ function getReleaseBody(txData: TxData) {
 
 ${changelog}
 
-# Publish transaction
+### Install package
+
+${getInstallDnpLink(txData.releaseMultiHash)}
+
+\`\`\`
+${txData.releaseMultiHash}
+\`\`\`
+
+### Publish transaction
 
 \`\`\`
 To: ${txData.to}
