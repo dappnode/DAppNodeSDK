@@ -1,6 +1,5 @@
 import Listr from "listr";
 import { ethers } from "ethers";
-// Utils
 import {
   Apm,
   encodeNewVersionCall,

@@ -1,51 +1,30 @@
 import Listr from "listr";
-import { Octokit } from "@octokit/rest";
-// Utils
-import { getRepoSlugFromManifest } from "../utils/getRepoSlugFromManifest";
 import { increaseFromLocalVersion } from "../utils/versions/increaseFromLocalVersion";
 import { getManifestPath } from "../utils/manifest";
 import { getComposePath } from "../utils/compose";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
 import { shell } from "../utils/shell";
+import { Github } from "../utils/Github";
 
 /**
  * Create (or edit) a Github release, then upload all assets
  */
-
 export function createNextBranch({
   dir,
   verbose,
   silent
 }: CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
-  // OAuth2 token from Github
-  if (!process.env.GITHUB_TOKEN)
-    throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
-  const octokit = new Octokit({
-    auth: `token ${process.env.GITHUB_TOKEN}`
-  });
-
   // Gather repo data, repoSlug = "dappnode/DNP_ADMIN"
-  const repoSlug =
-    getRepoSlugFromManifest(dir) ||
-    process.env.TRAVIS_REPO_SLUG ||
-    process.env.GITHUB_REPOSITORY ||
-    "";
-
-  const [owner, repo] = repoSlug.split("/");
-  if (!repoSlug) throw Error("No repoSlug provided");
-  if (!owner) throw Error(`repoSlug "${repoSlug}" hasn't an owner`);
-  if (!repo) throw Error(`repoSlug "${repoSlug}" hasn't a repo`);
+  const github = new Github(dir);
 
   return new Listr<ListrContextBuildAndPublish>(
     [
-      /**
-       * Create the next version branch and advance versions
-       * - Run `dappnodesdk increase patch` to compute next version
-       * - Run `git checkout -b v${FUTURE_VERSION}`
-       * - git add dappnode_package.json docker-compose.yml
-       * - git commit -m "Advance manifest and docker-compose versions to new version: $FUTURE_VERSION"
-       * - git push origin $BRANCH_NAME
-       */
+      // Create the next version branch and advance versions
+      // - Run `dappnodesdk increase patch` to compute next version
+      // - Run `git checkout -b v${FUTURE_VERSION}`
+      // - git add dappnode_package.json docker-compose.yml
+      // - git commit -m "Advance manifest and docker-compose versions to new version: $FUTURE_VERSION"
+      // - git push origin $BRANCH_NAME
       {
         title: "Create next version branch",
         task: async (ctx, task) => {
@@ -80,12 +59,10 @@ export function createNextBranch({
 
             // Open a PR from next branch to master
             task.output = "Openning a PR to master...";
-            await octokit.pulls.create({
-              owner,
-              repo,
-              title: `${branch} Release`,
-              head: branch, // from
-              base: "master" // to
+            await github.openPR({
+              from: branch,
+              to: "master",
+              title: `${branch} Release`
             });
           } catch (e) {
             // Non-essential step, don't stop release for a failure on this task

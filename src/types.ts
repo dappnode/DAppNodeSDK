@@ -13,7 +13,6 @@ export interface ListrContextBuildAndPublish {
   // create Github release
   nextVersion: string;
   txData: TxData;
-  githubReleaseUploadUrl: string;
 }
 
 // Interal types
