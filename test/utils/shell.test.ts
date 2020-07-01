@@ -10,17 +10,17 @@ sleep .01
 echo "hello"
 `.trim();
 
-  before(() => {
+  before("Write test script", () => {
     fs.writeFileSync(scriptPath, scriptData);
+    fs.chmodSync(scriptPath, "0755"); // +x
   });
 
   it("Execute a command without crashing", async () => {
-    await shell(`chmod +x ${scriptPath}`);
     // Check that the output is correct
-    const output = await shell(`./${scriptPath}`, { silent: true });
+    const output = await shell(`sh ${scriptPath}`, { silent: true });
     expect(output).to.equal("hello");
     // Check that it errors on timeout
-    const errorMessage = await shell(`./${scriptPath}`, { timeout: 1 }).catch(
+    const errorMessage = await shell(`sh ${scriptPath}`, { timeout: 1 }).catch(
       e => e.message
     );
     expect(errorMessage).to.include("timed out");

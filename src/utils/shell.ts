@@ -14,7 +14,7 @@ export async function shell(
 ) {
   const { silent = false, timeout = defaultTimeout } = options || {};
   try {
-    const child = execa(cmd, { timeout });
+    const child = execa.command(cmd, { timeout });
     if (!silent) {
       if (child.stdout) child.stdout.pipe(process.stdout);
       if (child.stderr) child.stderr.pipe(process.stderr);
