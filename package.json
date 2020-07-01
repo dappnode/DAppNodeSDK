@@ -2,16 +2,18 @@
   "name": "@dappnode/dappnodesdk",
   "version": "0.2.12",
   "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
-  "main": "dappnodesdk.js",
+  "main": "dist/dappnodesdk.js",
+  "types": "dist/dappnodesdk.d.ts",
   "scripts": {
     "test": "npm run test:file \"./{,!(node_modules)/**}/*.test.ts\"",
     "test:file": "mocha -r ts-node/register --exit",
-    "lint": "./node_modules/.bin/eslint . --ext .ts --fix",
+    "lint": "eslint . --ext .ts --fix",
+    "prepublish": "tsc",
     "tag-and-publish": "npm version patch -m 'Bump version' && git push origin master && git push --tags",
     "pre-commit": "npm run lint && npm run test"
   },
   "bin": {
-    "dappnodesdk": "./src/dappnodesdk.js"
+    "dappnodesdk": "./dist/dappnodesdk.js"
   },
   "repository": {
     "type": "git",
