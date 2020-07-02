@@ -15,20 +15,12 @@ import { getAssetPath, getAssetPathRequired } from "../utils/getAssetPath";
 import { addReleaseRecord } from "../utils/releaseRecord";
 import { releaseFiles, CliError } from "../params";
 import { shell } from "../utils/shell";
-// timestring does not have a @types package
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import timestring from "timestring";
-
-// Commands
 import { compressFile } from "../utils/commands/compressFile";
 import { ipfsAddFromFs } from "../utils/ipfs/ipfsAddFromFs";
 import { swarmAddDirFromFs } from "../utils/commands/swarmAddDirFromFs";
 import { updateCompose } from "../utils/compose";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
-
-// Define build timeout (20 min)
-const defaultBuildTimeout = 20 * 60 * 1000;
+import { parseTimeout } from "../utils/timeout";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -55,18 +47,9 @@ export function buildAndUpload({
   // Enforce here also, just in case
   if (uploadToSwarm) isDirectoryRelease = true;
 
-  /**
-   * Parse userTimeout
-   * It's not a number assume it's a timestring formated string
-   * Otherwise assume it's in seconds
-   */
-  const buildTimeout = userTimeout
-    ? parseInt(
-        isNaN(parseInt(userTimeout)) ? timestring(userTimeout) : userTimeout
-      ) * 1000
-    : defaultBuildTimeout;
+  const buildTimeout = parseTimeout(userTimeout);
 
-  // Load manifest #### Deleted check functions. Verify manifest beforehand
+  // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
   const manifest = readManifest(dir);
   const manifestPath = getManifestPath(dir);
 
