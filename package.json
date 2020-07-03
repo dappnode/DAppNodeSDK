@@ -9,7 +9,7 @@
     "test:file": "mocha -r ts-node/register --exit",
     "lint": "eslint . --ext .ts --fix",
     "prepublish": "tsc",
-    "tag-and-publish": "npm version patch -m 'Bump version' && git push origin master && git push --tags",
+    "tag-and-publish": "npm version patch && git push origin master && git push --tags",
     "pre-commit": "npm run lint && npm run test"
   },
   "bin": {
