@@ -70,6 +70,11 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
     isDirectoryRelease = true;
   }
 
+  // Bump upstreamVersion if provided
+  if (process.env.UPSTREAM_VERSION) {
+    manifest.upstreamVersion = process.env.UPSTREAM_VERSION;
+  }
+
   // Define variables from manifest
   const { name, version } = manifest;
   if (/[A-Z]/.test(name))

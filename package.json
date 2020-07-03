@@ -40,6 +40,7 @@
     "ajv-errors": "^1.0.1",
     "async-retry": "^1.2.3",
     "chalk": "^2.4.2",
+    "dotenv": "^8.2.0",
     "ethers": "^5.0.3",
     "figlet": "^1.2.3",
     "form-data": "^3.0.0",
