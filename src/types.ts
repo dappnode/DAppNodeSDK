@@ -40,6 +40,7 @@ export interface TxDataShortKeys {
 export interface Manifest {
   name: string;
   version: string;
+  upstreamVersion?: string;
   description?: string;
   type?: string;
   author?: string;

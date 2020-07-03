@@ -3,7 +3,9 @@
 import yargs from "yargs";
 import chalk from "chalk";
 import figlet from "figlet";
+import dotenv from "dotenv";
 import { CliError, YargsError } from "./params";
+dotenv.config();
 
 // Set up commands
 const dappnodesdk = yargs
