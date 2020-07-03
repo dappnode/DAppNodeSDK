@@ -36,6 +36,7 @@ export async function ipfsAddFromFs(
   }
 
   // Parse the ipfsProvider the a full base apiUrl
+  let lastPercent = -1;
   const apiUrl = normalizeIpfsProvider(ipfsProvider);
   const res = await got({
     prefixUrl: apiUrl,
@@ -44,9 +45,13 @@ export async function ipfsAddFromFs(
     headers: form.getHeaders(),
     body: form
   }).on("uploadProgress", progress => {
-    // Report upload progress
+    // Report upload progress, and throttle to one update per percent point
     // { percent: 0.9995998225975282, transferred: 733675762, total: 733969480 }
-    if (onProgress) onProgress(progress.percent);
+    const currentRoundPercent = Math.round(100 * progress.percent);
+    if (lastPercent !== currentRoundPercent) {
+      lastPercent = currentRoundPercent;
+      if (onProgress) onProgress(progress.percent);
+    }
   });
 
   // res.body = '{"Name":"dir/file","Hash":"Qm...","Size":"2203"}\n{"Name":"dir","Hash":"Qm...","Size":"24622"}\n'

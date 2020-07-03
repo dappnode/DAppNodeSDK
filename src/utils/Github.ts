@@ -164,7 +164,7 @@ export class Github {
             async () => {
               await this.octokit.repos.uploadReleaseAsset({
                 url: release.data.upload_url,
-                file: fs.createReadStream(filepath),
+                data: fs.createReadStream(filepath),
                 headers: {
                   "content-type": contentType,
                   "content-length": fs.statSync(filepath).size
