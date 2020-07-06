@@ -27,8 +27,7 @@ interface CliCommandOptions {
 export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
   yargs
     .positional("repoSlug", {
-      description:
-        "Github repo slug to fetch releases from, i.e. 'dappnode/DNP_VPN'",
+      description: `Github repo slug to fetch releases from: "dappnode/DNP_VPN", "vpn"`,
       type: "string"
     })
     .option("p", {
@@ -54,6 +53,8 @@ export const handler = async ({
 }: CliCommandOptions & CliGlobalOptions): Promise<void> => {
   // Parse options
   const ipfsProvider = provider;
+  // Assume incomplete repo slugs refer to DAppNode core packages
+  if (!repoSlug.includes("/")) repoSlug = `dappnode/DNP_${repoSlug}`;
 
   await verifyIpfsConnection(ipfsProvider);
 
