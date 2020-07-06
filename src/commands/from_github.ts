@@ -4,12 +4,13 @@ import cliProgress from "cli-progress";
 import { BuilderCallback } from "yargs";
 import chalk from "chalk";
 import inquirer from "inquirer";
+import moment from "moment";
 import { CliGlobalOptions } from "../types";
 import { contentHashFile, releaseFiles } from "../params";
 import { ipfsAddDirFromUrls } from "../utils/ipfs/ipfsAddDirFromUrls";
 import { getInstallDnpLink } from "../utils/getLinks";
 import { verifyIpfsConnection } from "../utils/verifyIpfsConnection";
-import { githubGetReleases } from "../utils/githubGetReleases";
+import { githubGetReleases, GithubRelease } from "../utils/githubGetReleases";
 
 export const command = "from_github [repoSlug]";
 
@@ -19,7 +20,8 @@ export const describe =
 interface CliCommandOptions {
   repoSlug: string;
   provider: string;
-  latest: boolean;
+  latest?: boolean;
+  version?: string;
 }
 
 export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
@@ -38,34 +40,25 @@ export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
       description: "Fetch the latest release only, even if it's a prerelease",
       type: "boolean"
     })
+    .option("version", {
+      description: `Fetch a given version: v0.2.5`,
+      type: "string"
+    })
     .require("repoSlug");
 
 export const handler = async ({
   repoSlug,
   provider,
-  latest
+  latest,
+  version
 }: CliCommandOptions & CliGlobalOptions): Promise<void> => {
   // Parse options
   const ipfsProvider = provider;
 
   await verifyIpfsConnection(ipfsProvider);
 
-  const releases = await githubGetReleases(repoSlug);
-
   // Pick version interactively
-  const release = latest
-    ? releases[0]
-    : await inquirer
-        .prompt([
-          {
-            type: "list",
-            name: "name",
-            message: "which version to upload?",
-            choices: releases.map(r => r.name)
-          }
-        ])
-        .then(res => releases.find(r => r.name === res.name));
-  if (!release) throw Error(`release not defined`);
+  const release = await getSelectedGithubRelease({ repoSlug, latest, version });
 
   // Sanity check, make sure this release is an actual DAppNode Package
   for (const file of Object.values(releaseFiles))
@@ -127,3 +120,64 @@ export const handler = async ({
   console.log(`Release hash : ${releaseMultiHash}`);
   console.log(getInstallDnpLink(releaseMultiHash));
 };
+
+/**
+ * Given user options, choose a Github Release to get
+ * @param param0
+ */
+async function getSelectedGithubRelease({
+  repoSlug,
+  latest,
+  version
+}: {
+  repoSlug: string;
+  latest?: boolean;
+  version?: string;
+}): Promise<GithubRelease> {
+  const releases = await githubGetReleases(repoSlug);
+  if (releases.length === 0) throw Error(`${repoSlug} has no releases`);
+
+  if (latest) {
+    return releases[0];
+  }
+
+  if (version) {
+    const release = releases.find(r => r.name === version);
+    if (!release) {
+      const releaseList = releases.map(r => r.name).join(",");
+      throw Error(
+        `No release found for version ${version}. Available releases: ${releaseList}`
+      );
+    }
+    return release;
+  }
+
+  // Prompt for a specific version
+  const answers = await inquirer.prompt([
+    {
+      type: "list",
+      name: "name",
+      message: "which Github release to get?",
+      choices: releases.map(release => ({
+        name: prettyReleaseText(release),
+        value: release.name
+      }))
+    }
+  ]);
+  const chosenRelease = releases.find(r => r.name === answers.name);
+  if (!chosenRelease) throw Error(`chosenRelease ${answers.name} not found`);
+  return chosenRelease;
+}
+
+/**
+ * Print relevant information about a Github release
+ * @param release
+ */
+function prettyReleaseText(release: GithubRelease): string {
+  const parts: string[] = [
+    release.name,
+    moment(release.published_at).fromNow()
+  ];
+  if (release.prerelease) parts.push("(prerelease)");
+  return parts.join(" ");
+}
