@@ -31,9 +31,7 @@
     "upstreamVersion": {
       "type": "string",
       "description": "For DAppNode Packages that only wrap existing software (i.e. Bitcoin node, Ethereum node), the underlying software version can be specified here. It will be shown in the admin UI alongside the field `version`.",
-      "examples": ["2.6.0-beta"],
-      "pattern": "^((([0-9]+).([0-9]+).([0-9]+)))(-.*)?$",
-      "errorMessage": "should be a semantic version in the format x.y.z"
+      "examples": ["2.6.0-beta", "any-text"]
     },
     "shortDescription": {
       "type": "string",
