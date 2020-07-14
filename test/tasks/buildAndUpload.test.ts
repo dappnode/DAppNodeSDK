@@ -70,22 +70,6 @@ ENV test=1
   });
 
   it("Should build and upload the current version", async () => {
-    const buildAndUploadTasks = buildAndUpload({
-      dir: "./",
-      buildDir,
-      ipfsProvider: ipfsProvider,
-      verbose: true,
-      swarmProvider: "",
-      userTimeout: "15min",
-      isDirectoryRelease: false,
-      uploadToSwarm: false
-    });
-    const { releaseMultiHash } = await buildAndUploadTasks.run();
-    // Check returned hash is correct
-    expect(releaseMultiHash).to.include("/ipfs/Qm");
-  }).timeout(60 * 1000);
-
-  it("Should build and upload the current version as directory type release", async () => {
     // Rewrite the manifest to not contain image
     fs.writeFileSync(
       manifestPath,
@@ -96,7 +80,6 @@ ENV test=1
       dir: "./",
       buildDir,
       ipfsProvider: ipfsProvider,
-      isDirectoryRelease: true,
       verbose: true,
       swarmProvider: "",
       userTimeout: "15min",

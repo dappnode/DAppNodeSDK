@@ -32,7 +32,6 @@ interface CliCommandOptions {
   ipfs_provider?: string;
   developer_address?: string;
   timeout: string;
-  release_type: string;
   upload_to: string;
   github_release?: boolean;
   create_next_branch?: boolean;
@@ -72,12 +71,6 @@ export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
       default: "15min",
       type: "string"
     })
-    .option("r", {
-      alias: "release_type",
-      description: `Specify release type`,
-      choices: ["manifest", "directory"],
-      default: "manifest"
-    })
     .option("u", {
       alias: "upload_to",
       description: `Specify where to upload the release`,
@@ -106,7 +99,6 @@ export const handler = async ({
   ipfs_provider,
   developer_address,
   timeout,
-  release_type,
   upload_to,
   github_release,
   create_next_branch,
@@ -125,7 +117,6 @@ export const handler = async ({
   const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
   const userTimeout = timeout;
   const uploadToSwarm = upload_to === "swarm";
-  const isDirectoryRelease = uploadToSwarm || release_type === "directory";
 
   const isCi = process.env.CI;
   const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
@@ -210,7 +201,6 @@ export const handler = async ({
             ipfsProvider,
             swarmProvider,
             userTimeout,
-            isDirectoryRelease,
             uploadToSwarm,
             verbose,
             silent
@@ -275,7 +265,7 @@ export const handler = async ({
 
     console.log(`
   ${chalk.green(`DNP (DAppNode Package) published (version ${nextVersion})`)} 
-  ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseMultiHash}
+  Release hash : ${releaseMultiHash}
   ${getInstallDnpLink(releaseMultiHash)}
 
   ${"You must execute this transaction in mainnet to publish a new version of this DNP."}

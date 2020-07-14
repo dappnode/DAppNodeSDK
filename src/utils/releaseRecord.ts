@@ -3,7 +3,6 @@ import path from "path";
 
 interface ReleaseRecord {
   hash: string;
-  type: string;
   link: string;
   uploadedTo: {
     [location: string]: string;
@@ -52,13 +51,11 @@ export function addReleaseRecord({
   dir,
   version,
   hash,
-  type,
   to
 }: {
   dir: string;
   version: string;
   hash: string;
-  type: string;
   to: string;
 }): void {
   const releaseRecord = readReleaseRecord(dir, version);
@@ -66,7 +63,6 @@ export function addReleaseRecord({
 
   writeReleaseRecord(dir, version, {
     hash,
-    type,
     uploadedTo: {
       ...(hash === previousHash ? uploadedTo : {}),
       [to]: new Date().toUTCString()
