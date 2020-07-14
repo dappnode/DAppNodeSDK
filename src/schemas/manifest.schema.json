@@ -65,184 +65,6 @@
         "dncore": "DAppNode Packages that are part of the DAppNode core and have special permissions"
       }
     },
-    "image": {
-      "type": "object",
-      "description": "Docker compose properties from which this DAppNode Package's `docker-compose.yml` will be generated. Also includes upload data to fetch the image tarball from IPFS of BZZ.",
-      "required": ["hash", "size"],
-      "properties": {
-        "hash": {
-          "type": "string",
-          "description": "IPFS / BZZ hash of the DAppNode Package image.",
-          "examples": ["/ipfs/QmWwMb3XhuCH6JnCF6m6EQzA4mW9pHHtg7rqAfhDr2ofi8"],
-          "pattern": "^/(ipfs|bzz)/\\w+$",
-          "minLength": 46,
-          "errorMessage": "should be /ipfs/<hash> or /bzz/<hash>"
-        },
-        "size": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "Size of the DAppNode Package image in bytes. Necessary to show a correct download progress bar when user's install this DAppNode Package.",
-          "examples": [25738523]
-        },
-        "path": {
-          "type": "string",
-          "description": "The filename of the DAppNode Package image.",
-          "examples": ["ipfs.dnp.dappnode.eth_0.2.0.tar.xz"],
-          "minLength": 1,
-          "errorMessage": "should be an non-empty string"
-        },
-        "volumes": {
-          "type": "array",
-          "description": "DAppNode Package volume mappings.",
-          "examples": [
-            [
-              "/var/run/docker.sock:/var/run/docker.sock",
-              "/usr/src/dappnode/config:/usr/src/app/config:ro",
-              "ipfsdnpdappnodeeth_data:/data/ipfs"
-            ]
-          ],
-          "items": {
-            "type": "string",
-            "description": "Docker volumes short syntax `HOST:CONTAINER:ro` mapping. Go to the [docker-compose file volumes reference](https://docs.docker.com/compose/compose-file/#volumes) for valid values.",
-            "pattern": "^[^\\s]+:[^\\s]+$",
-            "errorMessage": "should be a docker volume mapping as HOST:CONTAINER:ro"
-          }
-        },
-        "external_vol": {
-          "type": "array",
-          "description": "DAppNode Package external volume mappings, volumes have been created outside of this DAppNode Package's compose.",
-          "examples": [
-            ["dncore_ethchaindnpdappnodeeth_data:/app/.ethchain:ro"],
-            [
-              "nginxproxydnpdappnodeeth_vhost.d:/etc/nginx/vhost.d",
-              "nginxproxydnpdappnodeeth_html:/usr/share/nginx/html"
-            ]
-          ],
-          "items": {
-            "type": "string",
-            "description": "Docker volumes short syntax `HOST:CONTAINER:ro` mapping. Go to the [docker-compose file external volumes reference](https://docs.docker.com/compose/compose-file/#external) for valid values.",
-            "pattern": "^[^\\s]+:[^\\s]+$",
-            "errorMessage": "should be a docker volume mapping as HOST:CONTAINER:ro"
-          }
-        },
-        "ports": {
-          "type": "array",
-          "description": "DAppNode Package port mappings.",
-          "examples": [
-            ["1194:1194/udp", "8090:3000/udp", "4001/tcp"],
-            ["4001/udp", "4001/tcp"],
-            ["4001"]
-          ],
-          "items": {
-            "type": "string",
-            "description": "Docker ports short syntax `HOST:CONTAINER/protocol`. Go to the [docker-compose file ports reference](https://docs.docker.com/compose/compose-file/#ports) for valid values.",
-            "minLength": 1,
-            "errorMessage": "should be an non-empty string"
-          }
-        },
-        "environment": {
-          "type": "array",
-          "description": "DAppNode Package environment variables. You must declare all ENVs even if they are empty.",
-          "examples": [
-            ["RACK_ENV=development", "SHOW=true", "EXTRA_OPTS=", "EMPTY_ENV"]
-          ],
-          "items": {
-            "type": "string",
-            "description": "Docker environment variables in array form, in the format `KEY=VALUE`. Go to the [docker-compose file environment reference](https://docs.docker.com/compose/compose-file/#environment) for valid values.",
-            "minLength": 1,
-            "errorMessage": "should be an non-empty string"
-          }
-        },
-        "restart": {
-          "type": "string",
-          "description": "Docker restart policy, 'always' is highly recommended. Go to the [docker-compose file restart reference](https://docs.docker.com/compose/compose-file/#restart) for more details.",
-          "default": "always",
-          "examples": ["always"],
-          "enum": ["always", "no", "on-failure", "unless-stopped"],
-          "enumDescriptions": {
-            "always": "Always restarts",
-            "no": "Does not restart under any circumstance",
-            "on-failure": "Restarts if the exit code indicates an on-failure error",
-            "unless-stopped": "Restarts unless Docker itself is stopped or restarted"
-          }
-        },
-        "privileged": {
-          "type": "boolean",
-          "description": "Grant the DAppNode Package (almost) all the capabilities of their host machine, regarding kernel features and device access. Go to this [docker article about priviledge mode](https://blog.docker.com/2013/09/docker-can-now-run-within-docker/) for more details.",
-          "examples": [true]
-        },
-        "cap_add": {
-          "type": "array",
-          "description": "Add container capabilities. Go to the [docker-compose file cap_add reference](https://docs.docker.com/compose/compose-file/#cap_add-cap_drop) for more details",
-          "examples": [["ALL"], ["NET_ADMIN", "SYS_ADMIN"]],
-          "items": {
-            "type": "string",
-            "description": "A valid docker capability key. Go to the [docker reference about Linux capabilities](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) for valid values and their meaning.",
-            "minLength": 1,
-            "errorMessage": "should be an non-empty string"
-          }
-        },
-        "cap_drop": {
-          "type": "array",
-          "description": "Drop container capabilities. Go to the [docker-compose file cap_drop reference](https://docs.docker.com/compose/compose-file/#cap_add-cap_drop) for more details",
-          "examples": [["NET_ADMIN", "SYS_ADMIN"]],
-          "items": {
-            "type": "string",
-            "description": "A valid docker capability key. Go to the [docker reference about Linux capabilities](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) for valid values and their meaning.",
-            "minLength": 1,
-            "errorMessage": "should be an non-empty string"
-          }
-        },
-        "devices": {
-          "type": "array",
-          "description": "Allows you to run devices inside the container without the `privileged` flag. Must be a list of device mappings. Uses the same format as the --device docker client create option.",
-          "examples": [["/dev/ttyUSB0:/dev/ttyUSB0", "/dev/sda:/dev/xvdc:rwm"]],
-          "items": {
-            "type": "string",
-            "description": "A valid docker device mapping. Go to the [docker reference about runtime privileges](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) for valid values and more details.",
-            "minLength": 1,
-            "errorMessage": "should be an non-empty string"
-          }
-        },
-        "subnet": {
-          "type": "string",
-          "description": "Specify the subnet. Go to the [docker-compose file ipv4_address-ipv6_address reference](https://docs.docker.com/compose/compose-file/#ipv4_address-ipv6_address) for valid values.",
-          "examples": ["172.33.0.0/16"],
-          "pattern": "^(?:[0-9]{1,3}.){3}[0-9]{1,3}/[0-9]+$"
-        },
-        "ipv4_address": {
-          "type": "string",
-          "description": "Specify a static IP address for containers for this service when joining the network. Go to the [docker-compose file ipv4_address-ipv6_address reference](https://docs.docker.com/compose/compose-file/#ipv4_address-ipv6_address) for valid values.",
-          "examples": ["172.33.1.4"],
-          "pattern": "^(?:[0-9]{1,3}.){3}[0-9]{1,3}$"
-        },
-        "network_mode": {
-          "type": "string",
-          "description": "Connect this DAppNode Package to a specific network. See https://docs.docker.com/engine/reference/run/#network-settings.",
-          "examples": ["host", "bridge", "none"],
-          "minLength": 1,
-          "errorMessage": "should be an non-empty string"
-        },
-        "command": {
-          "type": "string",
-          "description": "Override the default command. Go to the [docker-compose file command reference](https://docs.docker.com/compose/compose-file/#command) for valid values.",
-          "examples": ["bundle exec thin -p 3000"],
-          "minLength": 1,
-          "errorMessage": "should be an non-empty string"
-        },
-        "labels": {
-          "type": "array",
-          "description": "Labels to be added to the DAppNode Package's docker container.",
-          "examples": [["eth.dappnode.dnp.my-dnp.developer=Awesome_Name"]],
-          "items": {
-            "type": "string",
-            "description": "Use reverse-DNS notation (`eth.dappnode.dnp.my-dnp.developer`) to prevent label conflicts. Go to the [docker-compose file labels reference](https://docs.docker.com/compose/compose-file/#labels-2) for valid values.",
-            "minLength": 1,
-            "errorMessage": "should be an non-empty string"
-          }
-        }
-      }
-    },
     "chain": {
       "type": "string",
       "description": "Indicate that this DAppNode Package is a blockchain node so the admin UI shows its syncing status",
@@ -458,20 +280,24 @@
         "type": "string",
         "examples": ["Developer tools", "Blockchain", "Economic incentive"],
         "enum": [
-          "Developer tools",
           "Blockchain",
+          "Communications",
+          "Developer tools",
+          "ETH2.0",
           "Economic incentive",
+          "Monitoring",
           "Payment channels",
-          "Storage",
-          "Communications"
+          "Storage"
         ],
         "enumDescriptions": {
-          "Developer tools": "Packages that their main purpose is to aid in developing, i.e. testnets",
           "Blockchain": "Blockchain nodes, i.e. Bitcoin, Monero",
+          "Communications": "Decentralized networking or chat solutions, i.e. Swarm",
+          "Developer tools": "Packages that their main purpose is to aid in developing, i.e. testnets",
+          "ETH2.0": "Packages to participate or use the Eth2.0 network",
           "Economic incentive": "Packages that offer an economic incentive or reward to the admin that runs it, i.e. Lightning Network",
+          "Monitoring": "Packages that track metrics",
           "Payment channels": "Packages whose main purpose is to manage or control payment channels, i.e. Raiden",
-          "Storage": "Decentralized storage solutions, i.e. Swarm",
-          "Communications": "Decentralized networking or chat solutions, i.e. Swarm"
+          "Storage": "Decentralized storage solutions, i.e. Swarm"
         }
       }
     },

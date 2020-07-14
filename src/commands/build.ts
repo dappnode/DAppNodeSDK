@@ -16,7 +16,6 @@ export const describe = "Build a new version (only generates the ipfs hash)";
 interface CliCommandOptions {
   provider: string;
   timeout: string;
-  release_type: "manifest" | "directory";
   upload_to: "ipfs" | "swarm";
 }
 
@@ -32,12 +31,6 @@ export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
       description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
       default: "15min"
     })
-    .option("r", {
-      alias: "release_type",
-      description: `Specify release type`,
-      choices: ["manifest", "directory"],
-      default: "manifest"
-    })
     .option("u", {
       alias: "upload_to",
       description: `Specify where to upload the release`,
@@ -48,7 +41,6 @@ export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
 export const handler = async ({
   provider,
   timeout,
-  release_type,
   upload_to,
   // Global options
   dir,
@@ -60,7 +52,6 @@ export const handler = async ({
   const swarmProvider = provider;
   const userTimeout = timeout;
   const uploadToSwarm = upload_to === "swarm";
-  const isDirectoryRelease = uploadToSwarm || release_type === "directory";
   const nextVersion = getCurrentLocalVersion({ dir });
   const buildDir = path.join(dir, `build_${nextVersion}`);
 
@@ -72,7 +63,6 @@ export const handler = async ({
     ipfsProvider,
     swarmProvider,
     userTimeout,
-    isDirectoryRelease,
     uploadToSwarm,
     verbose,
     silent
@@ -82,7 +72,7 @@ export const handler = async ({
 
   console.log(`
   ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
-  ${isDirectoryRelease ? "Release" : "Manifest"} hash : ${releaseMultiHash}
+  Release hash : ${releaseMultiHash}
   ${getInstallDnpLink(releaseMultiHash)}
 `);
 };

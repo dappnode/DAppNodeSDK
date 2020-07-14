@@ -15,7 +15,7 @@ import { githubGetReleases, GithubRelease } from "../utils/githubGetReleases";
 export const command = "from_github [repoSlug]";
 
 export const describe =
-  "Gets an existing DNP Github release (assets) and upload it to IPFS. Only supports directory type releases";
+  "Gets an existing DNP Github release (assets) and upload it to IPFS";
 
 interface CliCommandOptions {
   repoSlug: string;

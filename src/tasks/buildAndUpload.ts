@@ -4,11 +4,7 @@ import Listr from "listr";
 import { getFileHash } from "../utils/getFileHash";
 import { getImageId } from "../utils/getImageId";
 import { loadCache, writeCache } from "../utils/cache";
-import {
-  getManifestPath,
-  readManifest,
-  writeManifest
-} from "../utils/manifest";
+import { readManifest, writeManifest } from "../utils/manifest";
 import { validateManifest } from "../utils/validateManifest";
 import { verifyAvatar } from "../utils/verifyAvatar";
 import { getAssetPath, getAssetPathRequired } from "../utils/getAssetPath";
@@ -31,7 +27,6 @@ export function buildAndUpload({
   ipfsProvider,
   swarmProvider,
   userTimeout,
-  isDirectoryRelease,
   uploadToSwarm,
   dir,
   verbose,
@@ -41,34 +36,26 @@ export function buildAndUpload({
   ipfsProvider: string;
   swarmProvider: string;
   userTimeout: string;
-  isDirectoryRelease: boolean;
   uploadToSwarm: boolean;
 } & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
-  // Enforce here also, just in case
-  if (uploadToSwarm) isDirectoryRelease = true;
-
   const buildTimeout = parseTimeout(userTimeout);
 
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
   const manifest = readManifest(dir);
-  const manifestPath = getManifestPath(dir);
 
   // Make sure the release is of correct type
-  if (isDirectoryRelease && manifest.image)
-    throw new CliError(`You are building a directory type release but there are image settings in the manifest.
-Please, move all image settings from the manifest to the docker-compose.yml 
-and remove the manifest.image property
+  if (manifest.image)
+    throw new CliError(`
+DAppNode packages expect all docker related data to be contained only
+in the docker-compose.yml. Please translate the settings in 'manifest.image'
+to your package's docker-compose.yml and then delete the 'manifest.image' prop.
 `);
-  if (isDirectoryRelease && manifest.avatar)
-    throw new CliError(`You are building a directory type release but the avatar in declared in the manifest.
-Just delete the 'manifest.avatar' property, and it will be added in the release automatically
+  if (manifest.avatar)
+    throw new CliError(`
+DAppNode packages expect the avatar to be located at the root folder as a file
+and not declared in the manifest. Please add your package avatar to this directory
+as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' property.
 `);
-
-  // If there is no manifest.image prop, assume directory type
-  if (!manifest.image && !isDirectoryRelease) {
-    console.warn("Assuming directory type release");
-    isDirectoryRelease = true;
-  }
 
   // Bump upstreamVersion if provided
   if (process.env.UPSTREAM_VERSION) {
@@ -109,42 +96,32 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
 
       // Files should be copied for any type of release so they are available
       // in Github releases
+      {
+        title: "Copy files and validate",
+        task: async () => {
+          fs.copyFileSync(composeRootPath, composeBuildPath);
+          fs.copyFileSync(avatarRootPath, avatarBuildPath);
+          writeManifest(buildDir, manifest);
+          validateManifest(manifest, { prerelease: true });
 
-      isDirectoryRelease
-        ? {
-            title: "Copy files and validate (directory)",
-            task: async () => {
-              fs.copyFileSync(composeRootPath, composeBuildPath);
-              fs.copyFileSync(avatarRootPath, avatarBuildPath);
-              writeManifest(buildDir, manifest);
-              validateManifest(manifest, { prerelease: true });
-
-              const additionalFiles = [
-                releaseFiles.setupWizard,
-                releaseFiles.setupSchema,
-                releaseFiles.setupTarget,
-                releaseFiles.setupUiJson,
-                releaseFiles.disclaimer,
-                releaseFiles.gettingStarted
-              ];
-              for (const releaseFile of additionalFiles) {
-                const filePath = getAssetPath(releaseFile, dir);
-                if (filePath)
-                  fs.copyFileSync(
-                    filePath,
-                    path.join(buildDir, releaseFile.defaultName)
-                  );
-              }
-            }
+          const additionalFiles = [
+            releaseFiles.setupWizard,
+            releaseFiles.setupSchema,
+            releaseFiles.setupTarget,
+            releaseFiles.setupUiJson,
+            releaseFiles.disclaimer,
+            releaseFiles.gettingStarted
+          ];
+          for (const releaseFile of additionalFiles) {
+            const filePath = getAssetPath(releaseFile, dir);
+            if (filePath)
+              fs.copyFileSync(
+                filePath,
+                path.join(buildDir, releaseFile.defaultName)
+              );
           }
-        : {
-            title: "Copy files and validate",
-            task: async () => {
-              fs.copyFileSync(composeRootPath, composeBuildPath);
-              fs.copyFileSync(avatarRootPath, avatarBuildPath);
-              validateManifest(manifest, { prerelease: true });
-            }
-          },
+        }
+      },
 
       {
         title: "Build docker image",
@@ -194,7 +171,7 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
 
       uploadToSwarm
         ? {
-            title: "Upload directory release to Swarm",
+            title: "Upload release to Swarm",
             task: async (ctx, task) => {
               ctx.releaseHash = await swarmAddDirFromFs(
                 buildDir,
@@ -203,49 +180,12 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
               );
             }
           }
-        : isDirectoryRelease
-        ? {
-            title: "Upload directory release to IPFS",
+        : {
+            title: "Upload release to IPFS",
             task: async (ctx, task) => {
               // Starts with /ipfs/
               ctx.releaseHash = await ipfsAddFromFs(
                 buildDir,
-                ipfsProvider,
-                percent => (task.output = percentToMessage(percent))
-              );
-            }
-          }
-        : {
-            title: "Upload manifest release to IPFS",
-            task: async (ctx, task) => {
-              // Mutate manifest, already starts with /ipfs/
-              manifest.avatar = await ipfsAddFromFs(
-                avatarRootPath,
-                ipfsProvider
-              );
-
-              // Starts with /ipfs/
-              const imageUploadHash = await ipfsAddFromFs(
-                imagePathCompressed,
-                ipfsProvider,
-                percent => (task.output = percentToMessage(percent))
-              );
-              // Mutate manifest
-              manifest.image = {
-                ...manifest.image,
-                path: path.parse(imagePathCompressed).base,
-                hash: imageUploadHash, // Already starts with /ipfs/
-                size: fs.statSync(imagePathCompressed).size
-              };
-
-              // validateManifest calls `process.exit(1)` in case of error
-              validateManifest(manifest);
-              // Update manifest
-              writeManifest(dir, manifest);
-              writeManifest(buildDir, manifest);
-              // Starts with /ipfs/
-              ctx.releaseHash = await ipfsAddFromFs(
-                manifestPath,
                 ipfsProvider,
                 percent => (task.output = percentToMessage(percent))
               );
@@ -259,7 +199,6 @@ Just delete the 'manifest.avatar' property, and it will be added in the release 
             dir,
             version,
             hash: ctx.releaseHash,
-            type: isDirectoryRelease ? "directory" : "manifest",
             to: uploadToSwarm ? swarmProvider : ipfsProvider
           });
 
