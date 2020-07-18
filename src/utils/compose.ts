@@ -160,6 +160,11 @@ export function updateCompose({
   //   services:
   //     wamp.dnp.dappnode.eth:
   //       image: 'wamp.dnp.dappnode.eth:0.1.1'
+  if (!compose.services[name]) {
+    throw Error(
+      `No service with name "${name}" found in docker-compose file.`
+    );
+  }
   compose.services[name].image = name + ":" + version;
   writeCompose(dir, compose);
 }
