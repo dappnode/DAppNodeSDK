@@ -55,6 +55,17 @@ export function createNextBranch({
               return;
             }
 
+            // Make sure git is configured in this environment
+            // Otherwise it will fail when run in a CI environemnt
+            // `git config user.email` returns exit code 1 if not configured
+            if (
+              process.env.CI &&
+              !(await shell(`git config user.email`).catch(() => false))
+            ) {
+              await shell(`git config user.email next-branch@bot`);
+              await shell(`git config user.name next-branch`);
+            }
+
             // Using the git CLI directly since you can't create and push
             // a commit that has two files (at least in an easy way)
             // CI runs should be authorized to use the CLI directly
