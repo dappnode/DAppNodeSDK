@@ -1,6 +1,8 @@
 export class CliError extends Error {}
 export class YargsError extends Error {}
 
+export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
+
 /**
  * Plain text file with should contain the IPFS hash of the release
  * Necessary for the installer script to fetch the latest content hash
