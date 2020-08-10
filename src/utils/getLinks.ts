@@ -1,4 +1,6 @@
 import querystring from "querystring";
+import { URL } from "url";
+import { publishTxAppUrl } from "../params";
 import { TxData } from "../types";
 
 const adminUiBaseUrl = "http://my.dappnode/#";
@@ -16,9 +18,10 @@ export function getPublishTxLink(txData: TxData): string {
   };
   // Only add developerAddress if necessary to not pollute the link
   if (txData.developerAddress) txDataShortKeys.d = txData.developerAddress;
-  const queryData = querystring.stringify(txDataShortKeys);
 
-  return `${adminUiBaseUrl}/sdk/publish/${queryData}`;
+  const url = new URL(publishTxAppUrl);
+  url.search = querystring.stringify(txDataShortKeys);
+  return url.toString();
 }
 
 /**
