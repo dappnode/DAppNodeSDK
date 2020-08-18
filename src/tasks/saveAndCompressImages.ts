@@ -35,7 +35,9 @@ export function saveAndCompressImages({
         const destPathUncomp = `${destPath}.temp`;
         await shell(`docker save ${imageTags.join(" ")} > ${destPathUncomp}`);
 
-        await compressFile(destPathUncomp, {
+        await compressFile({
+          srcPath: destPathUncomp,
+          destPath,
           timeout: buildTimeout,
           onData: msg => (task.output = msg)
         });
