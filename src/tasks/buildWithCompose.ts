@@ -1,6 +1,6 @@
 import { ListrTask } from "listr";
 import { shell } from "../utils/shell";
-import { saveAndCompressImages } from "./saveAndCompressImages";
+import { saveAndCompressImagesCached } from "./saveAndCompressImages";
 
 /**
  * Save docker image
@@ -31,7 +31,7 @@ export function buildWithCompose({
       }
     },
 
-    saveAndCompressImages({
+    saveAndCompressImagesCached({
       imageTags,
       destPath,
       buildTimeout

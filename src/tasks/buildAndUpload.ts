@@ -13,7 +13,7 @@ import {
   imageArchOther
 } from "../params";
 import { ipfsAddFromFs } from "../utils/ipfs/ipfsAddFromFs";
-import { swarmAddDirFromFs } from "../utils/commands/swarmAddDirFromFs";
+import { swarmAddDirFromFs } from "../utils/swarmAddDirFromFs";
 import { prepareComposeForBuild, getComposePath } from "../utils/compose";
 import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";

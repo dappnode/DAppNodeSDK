@@ -2,7 +2,7 @@ import { ListrTask } from "listr";
 import semver from "semver";
 import { shell } from "../utils/shell";
 import { Architecture } from "../types";
-import { saveAndCompressImages } from "./saveAndCompressImages";
+import { saveAndCompressImagesCached } from "./saveAndCompressImages";
 import { getDockerVersion } from "../utils/getDockerVersion";
 
 const minimumDockerVersion = "19.03.0";
@@ -89,12 +89,13 @@ export function buildWithBuildx({
         }
       }
     },
+
     /**
      * Save docker image
      * This step is extremely expensive computationally.
      * A local cache file will prevent unnecessary compressions if the image hasn't changed
      */
-    saveAndCompressImages({
+    saveAndCompressImagesCached({
       imageTags,
       destPath,
       buildTimeout

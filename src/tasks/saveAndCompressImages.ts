@@ -1,8 +1,8 @@
+import fs from "fs";
+import { spawn } from "child_process";
 import { ListrTask } from "listr";
 import { getFileHash } from "../utils/getFileHash";
 import { loadCache, writeCache, getCacheKey } from "../utils/cache";
-import { shell } from "../utils/shell";
-import { compressFile } from "../utils/commands/compressFile";
 import { ListrContextBuildAndPublish } from "../types";
 
 /**
@@ -10,7 +10,7 @@ import { ListrContextBuildAndPublish } from "../types";
  * This step is extremely expensive computationally.
  * A local cache file will prevent unnecessary compressions if the image hasn't changed
  */
-export function saveAndCompressImages({
+export function saveAndCompressImagesCached({
   imageTags,
   destPath,
   buildTimeout
@@ -32,11 +32,9 @@ export function saveAndCompressImages({
         task.skip(`Using cached verified tarball ${destPath}`);
       } else {
         task.output = `Saving docker image to file...`;
-        const destPathUncomp = `${destPath}.temp`;
-        await shell(`docker save ${imageTags.join(" ")} > ${destPathUncomp}`);
 
-        await compressFile({
-          srcPath: destPathUncomp,
+        await saveAndCompressImages({
+          imageTags,
           destPath,
           timeout: buildTimeout,
           onData: msg => (task.output = msg)
@@ -48,4 +46,65 @@ export function saveAndCompressImages({
       }
     }
   };
+}
+
+async function saveAndCompressImages({
+  imageTags,
+  destPath,
+  onData,
+  timeout
+}: {
+  imageTags: string[];
+  destPath: string;
+  onData?: (data: string) => void;
+  timeout?: number;
+}): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const dockerSave = spawn("docker", ["save", imageTags.join(" ")]);
+
+    // -e9T0: Compression settings (extreme and paralelized)
+    // -vv: Very verbose log to provide progress
+    // -c: Outputs the compressed result to stdout
+    // -f: Overwrite the destination path if necessary
+    const xz = spawn("xz", ["-e9T0", "-vv", "-c", "-f"], {
+      timeout
+    });
+
+    dockerSave.stdout.pipe(xz.stdin);
+
+    let lastStderr = "";
+    xz.stderr.on("data", chunk => {
+      const data = chunk.toString().trim();
+      lastStderr = data;
+      if (onData) onData(data);
+    });
+
+    xz.stdout.pipe(fs.createWriteStream(destPath));
+
+    // In order for xz to output update logs to stderr,
+    // a SIGALRM must be sent to the xz process every interval
+    // https://stackoverflow.com/questions/48452726/how-to-redirect-xzs-normal-stdout-when-do-tar-xz
+    const interval = setInterval(() => xz.kill("SIGALRM"), 1000);
+
+    xz.on("error", err => {
+      clearInterval(interval);
+      reject(Error(`Error compressing image: ${err.message} \n${lastStderr}`));
+    });
+
+    xz.on("exit", code => {
+      clearInterval(interval);
+      if (code) {
+        reject(
+          Error(`Error compressing image: xz exit ${code} \n${lastStderr}`)
+        );
+      } else {
+        resolve();
+      }
+    });
+
+    dockerSave.on("error", err => {
+      clearInterval(interval);
+      reject(Error(`Error saving image: ${err.message}`));
+    });
+  });
 }
