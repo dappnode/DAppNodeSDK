@@ -1,30 +1,20 @@
 import fs from "fs";
-import path from "path";
+import { getImageId } from "./getImageId";
+import { cachePath } from "../params";
 
-interface CacheObject {
-  [key: string]: string;
-}
+// Local cache specs. Path = $cachePath
+type CacheMap = Map<string, string>;
 
-// Local cache specs. Path = "DAppNodeSDK/.cache"
-// <key> <value>
-// <image-id 1> <tar.xz hash 1>
-// <image-id 2> <tar.xz hash 2>
-// sha256:0d31e5521ef6e92a0efb6110024da8a3517daac4b1e4bbbccaf063ce96641b1b 0x36d2fe6d4582e8cc1e5ea4c6c05e44bc94b88f4567edca12ba5fd5745796edef
-
-const cachePath = path.resolve(__dirname, "../../.cache");
-
-export function loadCache(): CacheObject {
+export function loadCache(): CacheMap {
   try {
     const cacheString = fs.readFileSync(cachePath, "utf8");
-    return cacheString
-      .trim()
-      .split("\n")
-      .reduce((obj, row) => {
-        const [key, value] = row.split(" ");
-        return { ...obj, [key]: value };
-      }, {} as CacheObject);
+    try {
+      return new Map(Object.entries(JSON.parse(cacheString)));
+    } catch (e) {
+      return new Map();
+    }
   } catch (e) {
-    if (e.code === "ENOENT") return {};
+    if (e.code === "ENOENT") return new Map();
     else throw e;
   }
 }
@@ -37,9 +27,22 @@ export function writeCache({
   value: string;
 }): void {
   const cache = loadCache();
-  cache[key] = value;
-  const cacheString = Object.keys(cache)
-    .map(key => `${key} ${cache[key]}`)
-    .join("\n");
+  cache.set(key, value);
+  const cacheString = JSON.stringify(Object.fromEntries(cache), null, 2);
   fs.writeFileSync(cachePath, cacheString);
+}
+
+/**
+ * Returns a single deterministic cache key from an array of image tags
+ * @param imageTags
+ * @returns "dappmanager.dnp.dappnode.eth:0.2.24/sha256:0d31e5521ef6e92a0efb6110024da8a3517daac4b1e4bbbccaf063ce96641b1b"
+ */
+export async function getCacheKey(imageTags: string[]): Promise<string> {
+  return (
+    await Promise.all(
+      imageTags
+        .sort()
+        .map(async imageTag => [imageTag, await getImageId(imageTag)].join("/"))
+    )
+  ).join(";");
 }

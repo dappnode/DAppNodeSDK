@@ -2,8 +2,6 @@ node_modules
 DAppNodePackage-*
 .vscode
 
-.cache
-
 # Build artifacts
 dist
 
@@ -19,3 +17,5 @@ releases.json
 setup.schema.json
 setup-ui.json
 disclaimer.md
+.cache
+.dappnodesdk-build-cache

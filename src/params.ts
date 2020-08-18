@@ -3,6 +3,8 @@ export class YargsError extends Error {}
 
 export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
 
+export const cachePath = ".dappnodesdk-build-cache";
+
 /**
  * Plain text file with should contain the IPFS hash of the release
  * Necessary for the installer script to fetch the latest content hash
@@ -25,6 +27,15 @@ const releaseFilesRegex = {
   disclaimer: /disclaimer\.md$/i,
   gettingStarted: /getting.*started\.md$/i
 };
+
+// Single arch images
+export const imageArchAmd64 = (name: string, version: string): string =>
+  `${name}_${version}.tar.xz`;
+export const imageArchOther = (
+  name: string,
+  version: string,
+  arch: string
+): string => `${name}_${version}_${arch.replace(/\//g, "-")}.txz`;
 
 export const releaseFiles = {
   manifest: {
