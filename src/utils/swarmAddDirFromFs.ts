@@ -1,5 +1,5 @@
-import { Swarm } from "../Swarm";
-import { getDirSize } from "../getDirSize";
+import { Swarm } from "./Swarm";
+import { getDirSize } from "./getDirSize";
 
 /**
  * @returns Resulting hash: "/bzz/a5e0183cee00112..."
