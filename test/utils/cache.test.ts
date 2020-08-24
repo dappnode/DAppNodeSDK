@@ -1,17 +1,18 @@
 import { expect } from "chai";
-import fs from "fs";
+import path from "path";
+import { testDir, cleanTestDir } from "../testUtils";
 import { loadCache, writeCache } from "../../src/utils/cache";
-import { cachePath } from "../../src/params";
 
 describe("util > cache", () => {
   const cacheEntry = ["image:version", "0x00000000"];
+  const cachePath = path.join(testDir, "docker-build-cache.json");
 
-  before("Clear cahce", () => fs.unlinkSync(cachePath));
-  after("Clear cahce", () => fs.unlinkSync(cachePath));
+  before("Clean testDir", cleanTestDir);
+  after("Clean testDir", cleanTestDir);
 
   it("should write to cache and load it", () => {
-    writeCache({ key: cacheEntry[0], value: cacheEntry[1] });
-    const cache = loadCache();
+    writeCache({ key: cacheEntry[0], value: cacheEntry[1] }, cachePath);
+    const cache = loadCache(cachePath);
     expect([...cache]).to.deep.equal([cacheEntry]);
   });
 });

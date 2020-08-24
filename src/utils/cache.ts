@@ -1,11 +1,23 @@
 import fs from "fs";
+import os from "os";
+import path from "path";
 import { getImageId } from "./getImageId";
-import { cachePath } from "../params";
 
 // Local cache specs. Path = $cachePath
 type CacheMap = Map<string, string>;
 
-export function loadCache(): CacheMap {
+function getCachePath(): string {
+  return path.join(
+    os.homedir(),
+    ".config",
+    "dappnodesdk",
+    "docker-build-cache.json"
+  );
+}
+
+export function loadCache(cachePath?: string): CacheMap {
+  if (!cachePath) cachePath = getCachePath();
+
   try {
     const cacheString = fs.readFileSync(cachePath, "utf8");
     try {
@@ -20,18 +32,18 @@ export function loadCache(): CacheMap {
   }
 }
 
-export function writeCache({
-  key,
-  value
-}: {
-  key: string;
-  value: string;
-}): void {
-  const cache = loadCache();
+export function writeCache(
+  { key, value }: { key: string; value: string },
+  cachePath?: string
+): void {
+  if (!cachePath) cachePath = getCachePath();
+
+  const cache = loadCache(cachePath);
   cache.set(key, value);
   const cacheObj: { [key: string]: string } = {};
   for (const [key, value] of cache) cacheObj[key] = value;
   const cacheString = JSON.stringify(cacheObj, null, 2);
+  fs.mkdirSync(path.dirname(cachePath), { recursive: true });
   fs.writeFileSync(cachePath, cacheString);
 }
 
