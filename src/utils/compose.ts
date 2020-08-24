@@ -188,5 +188,7 @@ export function prepareComposeForBuild({
         : `${serviceName}.${name}:${version}`;
   }
 
+  writeCompose(dir, compose);
+
   return Object.values(compose.services).map(service => service.image);
 }

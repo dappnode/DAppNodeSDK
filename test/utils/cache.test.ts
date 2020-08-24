@@ -3,7 +3,7 @@ import fs from "fs";
 import { loadCache, writeCache } from "../../src/utils/cache";
 import { cachePath } from "../../src/params";
 
-describe("semver to array conversions", () => {
+describe("util > cache", () => {
   const cacheEntry = ["image:version", "0x00000000"];
 
   before("Clear cahce", () => fs.unlinkSync(cachePath));
