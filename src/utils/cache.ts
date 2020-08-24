@@ -11,6 +11,7 @@ export function loadCache(): CacheMap {
     try {
       return new Map(Object.entries(JSON.parse(cacheString)));
     } catch (e) {
+      console.error(`Error parsing cache ${cachePath}`, e);
       return new Map();
     }
   } catch (e) {
@@ -28,7 +29,9 @@ export function writeCache({
 }): void {
   const cache = loadCache();
   cache.set(key, value);
-  const cacheString = JSON.stringify(Object.fromEntries(cache), null, 2);
+  const cacheObj: { [key: string]: string } = {};
+  for (const [key, value] of cache) cacheObj[key] = value;
+  const cacheString = JSON.stringify(cacheObj, null, 2);
   fs.writeFileSync(cachePath, cacheString);
 }
 
