@@ -109,6 +109,20 @@
         }
       }
     },
+    "architectures": {
+      "type": "array",
+      "description": "Build and distribute this package in multiple architectures using [Docker's buildx plugin](https://docs.docker.com/buildx/working-with-buildx/)",
+      "examples": [["amd64", "arm64"]],
+      "items": {
+        "type": "string",
+        "examples": ["amd64", "arm64"],
+        "enum": ["amd64", "arm64"],
+        "enumDescriptions": {
+          "amd64": "Default architecture, x86-64",
+          "arm64": "ARM architecture"
+        }
+      }
+    },
     "backup": {
       "type": "array",
       "description": "Allows users to download and restore a backup of key files of this package. If this property is non-empty array, a new view will be available in the admin UI for this DAppNode Package. The files or directories specified in the array will be bundled in a tarball. As long as the name properties stay the same, their associated paths can change in future versions. Then, when restoring an old backup, the new paths will be associated to files stored under the same name keys. **Note:** it is recommended to only backup lightweight files such as configs, keys or passwords.",

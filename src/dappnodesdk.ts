@@ -4,6 +4,8 @@ import yargs from "yargs";
 import chalk from "chalk";
 import figlet from "figlet";
 import dotenv from "dotenv";
+// "source-map-support" MUST be imported for stack traces to work properly after Typescript transpile
+import "source-map-support/register";
 import { CliError, YargsError } from "./params";
 dotenv.config();
 

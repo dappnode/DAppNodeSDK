@@ -3,7 +3,7 @@ import path from "path";
 import { spawn } from "child_process";
 import { ListrTask } from "listr";
 import { getFileHash } from "../utils/getFileHash";
-import { loadCache, writeCache, getCacheKey } from "../utils/cache";
+import { loadCache, writeToCache, getCacheKey } from "../utils/cache";
 import { ListrContextBuildAndPublish } from "../types";
 
 /**
@@ -44,7 +44,7 @@ export function saveAndCompressImagesCached({
 
         task.output = `Storing saved image to cache...`;
         const newTarHash = await getFileHash(destPath);
-        if (newTarHash) writeCache({ key: cacheKey, value: newTarHash });
+        if (newTarHash) writeToCache({ key: cacheKey, value: newTarHash });
       }
     }
   };
