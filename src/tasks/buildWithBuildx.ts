@@ -41,7 +41,7 @@ export function buildWithBuildx({
           );
 
         switch (architecture) {
-          case "linux/arm64":
+          case "arm64":
             await shell(
               `docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64`
             );
@@ -78,23 +78,19 @@ export function buildWithBuildx({
 
         // Make the built was done for the correct architecture
         switch (architecture) {
-          case "linux/arm64": {
+          case "arm64": {
             const res = await shell(
               `docker run --rm --entrypoint="" ${imageTags[0]} uname -m`
             );
             if (res !== "aarch64")
               throw Error(`Unexpected resulting architecture: ${res}`);
+            else task.output = `Validated ${imageTags[0]} architecture`;
             break;
           }
         }
       }
     },
 
-    /**
-     * Save docker image
-     * This step is extremely expensive computationally.
-     * A local cache file will prevent unnecessary compressions if the image hasn't changed
-     */
     saveAndCompressImagesCached({
       imageTags,
       destPath,

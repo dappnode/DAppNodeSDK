@@ -116,7 +116,9 @@ export function createGithubRelease({
             body: getReleaseBody(txData),
             // Tag as pre-release until it is actually published in APM mainnet
             prerelease: true,
-            assetsDir: buildDir
+            assetsDir: buildDir,
+            // Used to ignore duplicated legacy .tar.xz image
+            ignorePattern: /\.tar\.xz$/
           });
 
           // Clean content hash file so the directory uploaded to IPFS is the same

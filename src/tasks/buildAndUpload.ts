@@ -9,8 +9,8 @@ import { addReleaseRecord } from "../utils/releaseRecord";
 import {
   releaseFiles,
   CliError,
-  imageArchAmd64,
-  imageArchOther
+  getImagePath,
+  getLegacyImagePath
 } from "../params";
 import { ipfsAddFromFs } from "../utils/ipfs/ipfsAddFromFs";
 import { swarmAddDirFromFs } from "../utils/swarmAddDirFromFs";
@@ -19,6 +19,7 @@ import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
 import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
+import { parseArchitectures } from "../utils/parseArchitectures";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -71,12 +72,18 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
   // Update compose
   const imageTags = prepareComposeForBuild({ name, version, dir });
   const composePath = getComposePath(dir);
-  const architectures = manifest.architectures;
+  const architectures =
+    manifest.architectures && parseArchitectures(manifest.architectures);
+  const imagePathAmd = path.join(
+    buildDir,
+    getImagePath(name, version, "amd64")
+  );
+  const imagePathLegacy = path.join(
+    buildDir,
+    getLegacyImagePath(name, version)
+  );
 
   // Construct directories and names
-  const imagePathUncompressed = path.join(buildDir, `${name}_${version}.tar`);
-  const imagePathCompressed = `${imagePathUncompressed}.xz`;
-  const imageFileName = path.parse(imagePathCompressed).base;
   const composeBuildPath = path.join(buildDir, `docker-compose.yml`);
   const avatarBuildPath = path.join(buildDir, `avatar.png`);
   // Root paths, this functions may throw
@@ -92,9 +99,10 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
         fs.mkdirSync(buildDir, { recursive: true }); // Ok on existing dir
         const buildFiles = fs.readdirSync(buildDir);
 
-        // Clean all files except the image
-        for (const file of buildFiles.filter(file => file !== imageFileName))
-          fs.unlinkSync(path.join(buildDir, file));
+        // Clean all files except the images
+        for (const file of buildFiles)
+          if (!file.endsWith(".tar.xz") && !file.endsWith(".txz"))
+            fs.unlinkSync(path.join(buildDir, file));
       }
     },
 
@@ -144,9 +152,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
                   buildTimeout,
                   destPath: path.join(
                     buildDir,
-                    architecture === "linux/amd64"
-                      ? imageArchAmd64(name, version)
-                      : imageArchOther(name, version, architecture)
+                    getImagePath(name, version, architecture)
                   )
                 })
               )
@@ -156,7 +162,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
           imageTags,
           composePath,
           buildTimeout,
-          destPath: path.join(buildDir, imageArchAmd64(name, version))
+          destPath: imagePathAmd
         })),
 
     uploadToSwarm
@@ -173,6 +179,8 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
       : {
           title: "Upload release to IPFS",
           task: async (ctx, task) => {
+            if (fs.existsSync(imagePathAmd))
+              fs.copyFileSync(imagePathAmd, imagePathLegacy);
             // Starts with /ipfs/
             ctx.releaseHash = await ipfsAddFromFs(
               buildDir,

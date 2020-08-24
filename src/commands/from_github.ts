@@ -69,6 +69,16 @@ export const handler = async ({
     )
       throw Error(`Release assets do not contain required file ${file.id}`);
 
+  // Add extra file for legacy .tar.xz image
+  const imageAmdAsset = release.assets.find(asset =>
+    asset.name.endsWith("amd64.txz")
+  );
+  if (imageAmdAsset)
+    release.assets.push({
+      ...imageAmdAsset,
+      name: imageAmdAsset.name.replace("amd64.txz", ".tar.xz")
+    });
+
   const files = release.assets
     .filter(asset => asset.name !== contentHashFile)
     .map(asset => ({

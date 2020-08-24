@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { spawn } from "child_process";
 import { ListrTask } from "listr";
 import { getFileHash } from "../utils/getFileHash";
@@ -32,6 +33,7 @@ export function saveAndCompressImagesCached({
         task.skip(`Using cached verified tarball ${destPath}`);
       } else {
         task.output = `Saving docker image to file...`;
+        fs.mkdirSync(path.dirname(destPath), { recursive: true });
 
         await saveAndCompressImages({
           imageTags,

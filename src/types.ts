@@ -17,7 +17,7 @@ export interface ListrContextBuildAndPublish {
 
 // Interal types
 
-export type Architecture = "linux/amd64" | "linux/arm64";
+export type Architecture = "amd64" | "arm64";
 
 export type ReleaseType = "major" | "minor" | "patch";
 

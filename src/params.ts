@@ -1,3 +1,5 @@
+import { Architecture } from "./types";
+
 export class CliError extends Error {}
 export class YargsError extends Error {}
 
@@ -17,7 +19,6 @@ export const contentHashFile = "content-hash";
 
 const releaseFilesRegex = {
   manifest: /dappnode_package.*\.json$/,
-  image: /\.tar\.xz$/,
   compose: /compose.*\.yml$/,
   avatar: /avatar.*\.png$/,
   setupWizard: /setup-wizard\..*(json|yaml|yml)$/,
@@ -29,13 +30,15 @@ const releaseFilesRegex = {
 };
 
 // Single arch images
-export const imageArchAmd64 = (name: string, version: string): string =>
-  `${name}_${version}.tar.xz`;
-export const imageArchOther = (
+export const getArchTag = (arch: Architecture): string =>
+  arch.replace(/\//g, "-");
+export const getImagePath = (
   name: string,
   version: string,
-  arch: string
-): string => `${name}_${version}_${arch.replace(/\//g, "-")}.txz`;
+  arch: Architecture
+): string => `${name}_${version}_${getArchTag(arch)}.txz`;
+export const getLegacyImagePath = (name: string, version: string): string =>
+  `${name}_${version}.tar.xz`;
 
 export const releaseFiles = {
   manifest: {
@@ -43,12 +46,6 @@ export const releaseFiles = {
     regex: releaseFilesRegex.manifest,
     defaultName: "dappnode_package.json",
     id: "manifest"
-  },
-  image: {
-    required: true,
-    regex: releaseFilesRegex.image,
-    defaultName: "",
-    id: "image"
   },
   compose: {
     required: true,
