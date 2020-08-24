@@ -195,16 +195,17 @@ export const handler = async ({
       {
         title: "Build and upload",
         task: ctx =>
-          buildAndUpload({
-            dir,
-            buildDir: ctx.buildDir,
-            ipfsProvider,
-            swarmProvider,
-            userTimeout,
-            uploadToSwarm,
-            verbose,
-            silent
-          })
+          new Listr(
+            buildAndUpload({
+              dir,
+              buildDir: ctx.buildDir,
+              ipfsProvider,
+              swarmProvider,
+              userTimeout,
+              uploadToSwarm
+            }),
+            { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+          )
       },
 
       // 3. Generate transaction

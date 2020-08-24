@@ -137,9 +137,14 @@ export class Github {
    */
   async createReleaseAndUploadAssets(
     tag: string,
-    options?: { body?: string; prerelease?: boolean; assetsDir?: string }
+    options?: {
+      body?: string;
+      prerelease?: boolean;
+      assetsDir?: string;
+      ignorePattern?: RegExp;
+    }
   ): Promise<void> {
-    const { body, prerelease, assetsDir } = options || {};
+    const { body, prerelease, assetsDir, ignorePattern } = options || {};
     const release = await this.octokit.repos
       .createRelease({
         owner: this.owner,
@@ -156,6 +161,9 @@ export class Github {
 
     if (assetsDir)
       for (const file of fs.readdirSync(assetsDir)) {
+        // Used to ignore duplicated legacy .tar.xz image
+        if (ignorePattern && ignorePattern.test(file)) continue;
+
         const filepath = path.resolve(assetsDir, file);
         const contentType = mime.lookup(filepath) || "application/octet-stream";
         try {

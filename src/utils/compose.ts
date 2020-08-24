@@ -163,3 +163,30 @@ export function updateCompose({
   compose.services[name].image = name + ":" + version;
   writeCompose(dir, compose);
 }
+
+/**
+ * Update service image tag to current version
+ * @returns updated imageTags
+ */
+export function prepareComposeForBuild({
+  name,
+  version,
+  dir
+}: {
+  name: string;
+  version: string;
+  dir: string;
+}): string[] {
+  const compose = readCompose(dir);
+  const serviceCount = Object.keys(compose.services).length;
+  if (serviceCount === 0) throw Error(`Compose must have at lest 1 service`);
+
+  for (const serviceName of Object.keys(compose.services)) {
+    compose.services[serviceName].image =
+      serviceCount === 1
+        ? `${name}:${version}`
+        : `${serviceName}.${name}:${version}`;
+  }
+
+  return Object.values(compose.services).map(service => service.image);
+}

@@ -1,6 +1,7 @@
 import path from "path";
 import chalk from "chalk";
 import { BuilderCallback } from "yargs";
+import Listr from "listr";
 // Tasks
 import { buildAndUpload } from "../tasks/buildAndUpload";
 // Utils
@@ -57,18 +58,19 @@ export const handler = async ({
 
   await verifyIpfsConnection(ipfsProvider);
 
-  const buildAndUploadTasks = buildAndUpload({
-    dir,
-    buildDir,
-    ipfsProvider,
-    swarmProvider,
-    userTimeout,
-    uploadToSwarm,
-    verbose,
-    silent
-  });
+  const buildTasks = new Listr(
+    buildAndUpload({
+      dir,
+      buildDir,
+      ipfsProvider,
+      swarmProvider,
+      userTimeout,
+      uploadToSwarm
+    }),
+    { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+  );
 
-  const { releaseMultiHash } = await buildAndUploadTasks.run();
+  const { releaseMultiHash } = await buildTasks.run();
 
   console.log(`
   ${chalk.green("DNP (DAppNode Package) built and uploaded")} 

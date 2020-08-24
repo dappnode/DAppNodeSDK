@@ -17,6 +17,8 @@ export interface ListrContextBuildAndPublish {
 
 // Interal types
 
+export type Architecture = "amd64" | "arm64";
+
 export type ReleaseType = "major" | "minor" | "patch";
 
 export interface TxData {
@@ -60,6 +62,7 @@ export interface Manifest {
     gateway?: string;
     [linkName: string]: string | undefined;
   };
+  architectures?: Architecture[];
 }
 
 export interface ManifestImage {

@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import fs from "fs";
 import yaml from "js-yaml";
+import Listr from "listr";
 import { rmSafe, shellSafe } from "../shellSafe";
 import { buildAndUpload } from "../../src/tasks/buildAndUpload";
 
@@ -76,16 +77,20 @@ ENV test=1
       JSON.stringify(manifestWithoutImage, null, 2)
     );
 
-    const buildAndUploadTasks = buildAndUpload({
-      dir: "./",
-      buildDir,
-      ipfsProvider: ipfsProvider,
-      verbose: true,
-      swarmProvider: "",
-      userTimeout: "15min",
-      uploadToSwarm: false
-    });
-    const { releaseMultiHash } = await buildAndUploadTasks.run();
+    const buildTasks = new Listr(
+      buildAndUpload({
+        dir: "./",
+        buildDir,
+        ipfsProvider: ipfsProvider,
+        swarmProvider: "",
+        userTimeout: "15min",
+        uploadToSwarm: false
+      }),
+      { renderer: "verbose" }
+    );
+
+    const { releaseMultiHash } = await buildTasks.run();
+
     // Check returned hash is correct
     expect(releaseMultiHash).to.include("/ipfs/Qm");
   }).timeout(60 * 1000);

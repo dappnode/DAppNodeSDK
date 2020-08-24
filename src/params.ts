@@ -1,7 +1,11 @@
+import { Architecture } from "./types";
+
 export class CliError extends Error {}
 export class YargsError extends Error {}
 
 export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
+
+export const cachePath = ".dappnodesdk-build-cache";
 
 /**
  * Plain text file with should contain the IPFS hash of the release
@@ -15,7 +19,6 @@ export const contentHashFile = "content-hash";
 
 const releaseFilesRegex = {
   manifest: /dappnode_package.*\.json$/,
-  image: /\.tar\.xz$/,
   compose: /compose.*\.yml$/,
   avatar: /avatar.*\.png$/,
   setupWizard: /setup-wizard\..*(json|yaml|yml)$/,
@@ -26,18 +29,23 @@ const releaseFilesRegex = {
   gettingStarted: /getting.*started\.md$/i
 };
 
+// Single arch images
+export const getArchTag = (arch: Architecture): string =>
+  arch.replace(/\//g, "-");
+export const getImagePath = (
+  name: string,
+  version: string,
+  arch: Architecture
+): string => `${name}_${version}_${getArchTag(arch)}.txz`;
+export const getLegacyImagePath = (name: string, version: string): string =>
+  `${name}_${version}.tar.xz`;
+
 export const releaseFiles = {
   manifest: {
     required: true,
     regex: releaseFilesRegex.manifest,
     defaultName: "dappnode_package.json",
     id: "manifest"
-  },
-  image: {
-    required: true,
-    regex: releaseFilesRegex.image,
-    defaultName: "",
-    id: "image"
   },
   compose: {
     required: true,
