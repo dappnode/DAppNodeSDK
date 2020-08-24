@@ -20,6 +20,7 @@ import { parseTimeout } from "../utils/timeout";
 import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
+import { pruneCache } from "../utils/cache";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -202,6 +203,12 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
 
         // "return" result for next tasks
         ctx.releaseMultiHash = ctx.releaseHash;
+
+        try {
+          await pruneCache();
+        } catch (e) {
+          console.error("Error on pruneCache", e);
+        }
       }
     }
   ];
