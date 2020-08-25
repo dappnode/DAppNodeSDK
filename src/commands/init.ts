@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import chalk from "chalk";
-import { BuilderCallback } from "yargs";
+import { CommandModule } from "yargs";
 import semver from "semver";
 import inquirer from "inquirer";
 import { writeManifest } from "../utils/manifest";
@@ -43,153 +43,149 @@ const gitignoreData = `# DAppNodeSDK release directories
 build_*
 `;
 
-export const command = "init";
-
-export const describe = "Initialize a new DAppNodePackage (DNP) repository";
-
-interface CliCommandOptions {
+interface CliCommandOptions extends CliGlobalOptions {
   yes?: boolean;
   force?: boolean;
 }
 
-export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
-  yargs
-    .option("y", {
-      alias: "yes",
-      description:
-        "Answer yes or the default option to all initialization questions",
-      type: "boolean"
-    })
-    .option("f", {
-      alias: "force",
-      description: "Overwrite previous project if necessary",
-      type: "boolean"
-    });
+export const init: CommandModule<CliGlobalOptions, CliCommandOptions> = {
+  command: "init",
+  describe: "Initialize a new DAppNodePackage (DNP) repository",
 
-export const handler = async ({
-  yes: useDefaults,
-  force,
-  dir
-}: CliCommandOptions & CliGlobalOptions): Promise<void> => {
-  // shell outputs tend to include trailing spaces and new lines
-  const directoryName = await shell('echo "${PWD##*/}"');
-  const defaultAuthor = await shell("whoami");
-  const defaultName = getDnpName(directoryName);
+  builder: yargs =>
+    yargs
+      .option("yes", {
+        alias: "y",
+        description:
+          "Answer yes or the default option to all initialization questions",
+        type: "boolean"
+      })
+      .option("force", {
+        alias: "f",
+        description: "Overwrite previous project if necessary",
+        type: "boolean"
+      }),
 
-  const defaultAnswers = {
-    name: defaultName,
-    version: defaultVersion,
-    description: `${defaultName} description`,
-    avatar: "",
-    type: "service",
-    author: defaultAuthor,
-    license: "GLP-3.0"
-  };
+  handler: async ({ yes: useDefaults, force, dir }): Promise<void> => {
+    // shell outputs tend to include trailing spaces and new lines
+    const directoryName = await shell('echo "${PWD##*/}"');
+    const defaultAuthor = await shell("whoami");
+    const defaultName = getDnpName(directoryName);
 
-  if (!useDefaults) {
-    console.log(`This utility will walk you through creating a dappnode_package.json file.
+    const defaultAnswers = {
+      name: defaultName,
+      version: defaultVersion,
+      description: `${defaultName} description`,
+      avatar: "",
+      type: "service",
+      author: defaultAuthor,
+      license: "GLP-3.0"
+    };
+
+    if (!useDefaults) {
+      console.log(`This utility will walk you through creating a dappnode_package.json file.
 It only covers the most common items, and tries to guess sensible defaults.
 `);
-  }
-
-  if (fs.existsSync(path.join(dir, manifestPath)) && !force) {
-    const continueAnswer = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "continue",
-        message:
-          "This directory is already initialized. Are you sure you want to overwrite the existing manifest?"
-      }
-    ]);
-    if (!continueAnswer.continue) {
-      console.log("Stopping");
-      process.exit(1);
     }
-  }
 
-  const answers = useDefaults
-    ? defaultAnswers
-    : await inquirer.prompt([
+    if (fs.existsSync(path.join(dir, manifestPath)) && !force) {
+      const continueAnswer = await inquirer.prompt([
         {
-          type: "input",
-          name: "name",
-          default: defaultAnswers.name,
-          message: "DAppNodePackage name"
-        },
-        {
-          type: "input",
-          name: "version",
-          default: defaultAnswers.version,
-          message: "Version",
-          validate: val =>
-            !semver.valid(val) ||
-            !(
-              semver.eq(val, "1.0.0") ||
-              semver.eq(val, "0.1.0") ||
-              semver.eq(val, "0.0.1")
-            )
-              ? "the version needs to be valid semver. If this is the first release, the version must be 1.0.0, 0.1.0 or 0.0.1 "
-              : true
-        },
-        {
-          type: "input",
-          name: "description",
-          message: "Description",
-          default: defaultAnswers.description
-        },
-        {
-          type: "input",
-          message: "Author",
-          name: "author",
-          default: defaultAnswers.author
-        },
-        {
-          type: "input",
-          message: "License",
-          name: "license",
-          default: defaultAnswers.license
+          type: "confirm",
+          name: "continue",
+          message:
+            "This directory is already initialized. Are you sure you want to overwrite the existing manifest?"
         }
       ]);
+      if (!continueAnswer.continue) {
+        console.log("Stopping");
+        process.exit(1);
+      }
+    }
 
-  // Construct DNP
-  const manifest: Manifest = {
-    name: answers.name ? getDnpName(answers.name) : defaultName,
-    version: answers.version || defaultVersion,
-    description: answers.description,
-    type: "service",
-    author: answers.author,
-    categories: ["Developer tools"],
-    links: {
-      homepage: "https://your-project-homepage-or-docs.io"
-    },
-    license: answers.license
-  };
+    const answers = useDefaults
+      ? defaultAnswers
+      : await inquirer.prompt([
+          {
+            type: "input",
+            name: "name",
+            default: defaultAnswers.name,
+            message: "DAppNodePackage name"
+          },
+          {
+            type: "input",
+            name: "version",
+            default: defaultAnswers.version,
+            message: "Version",
+            validate: val =>
+              !semver.valid(val) ||
+              !(
+                semver.eq(val, "1.0.0") ||
+                semver.eq(val, "0.1.0") ||
+                semver.eq(val, "0.0.1")
+              )
+                ? "the version needs to be valid semver. If this is the first release, the version must be 1.0.0, 0.1.0 or 0.0.1 "
+                : true
+          },
+          {
+            type: "input",
+            name: "description",
+            message: "Description",
+            default: defaultAnswers.description
+          },
+          {
+            type: "input",
+            message: "Author",
+            name: "author",
+            default: defaultAnswers.author
+          },
+          {
+            type: "input",
+            message: "License",
+            name: "license",
+            default: defaultAnswers.license
+          }
+        ]);
 
-  // Create folders
-  await shell(`mkdir -p ${path.join(dir, "build")}`);
+    // Construct DNP
+    const manifest: Manifest = {
+      name: answers.name ? getDnpName(answers.name) : defaultName,
+      version: answers.version || defaultVersion,
+      description: answers.description,
+      type: "service",
+      author: answers.author,
+      categories: ["Developer tools"],
+      links: {
+        homepage: "https://your-project-homepage-or-docs.io"
+      },
+      license: answers.license
+    };
 
-  // Write manifest and compose
-  writeManifest(dir, manifest);
-  generateAndWriteCompose(dir, manifest);
+    // Create folders
+    await shell(`mkdir -p ${path.join(dir, "build")}`);
 
-  // Add default avatar so users can run the command right away
-  const files = fs.readdirSync(dir);
-  const avatarFile = files.find(file => releaseFiles.avatar.regex.test(file));
-  if (!avatarFile) {
-    fs.writeFileSync(
-      path.join(dir, avatarPath),
-      Buffer.from(avatarData, "base64")
-    );
-  }
+    // Write manifest and compose
+    writeManifest(dir, manifest);
+    generateAndWriteCompose(dir, manifest);
 
-  // Initialize Dockerfile
-  fs.writeFileSync(path.join(dir, dockerfilePath), dockerfileData);
+    // Add default avatar so users can run the command right away
+    const files = fs.readdirSync(dir);
+    const avatarFile = files.find(file => releaseFiles.avatar.regex.test(file));
+    if (!avatarFile) {
+      fs.writeFileSync(
+        path.join(dir, avatarPath),
+        Buffer.from(avatarData, "base64")
+      );
+    }
 
-  // Initialize .gitignore
-  writeGitIgnore(path.join(dir, gitignorePath));
+    // Initialize Dockerfile
+    fs.writeFileSync(path.join(dir, dockerfilePath), dockerfileData);
 
-  console.log(`
-${chalk.green("Your DAppNodePackage is ready")}: ${manifest.name}
+    // Initialize .gitignore
+    writeGitIgnore(path.join(dir, gitignorePath));
+
+    console.log(`
+      ${chalk.green("Your DAppNodePackage is ready")}: ${manifest.name}
 
 To start, you can:
 
@@ -201,6 +197,7 @@ Once ready, you can build, install, and test it by running
 
   dappnodesdk build 
 `);
+  }
 };
 
 /**

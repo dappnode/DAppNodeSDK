@@ -1,6 +1,6 @@
 import path from "path";
 import chalk from "chalk";
-import { BuilderCallback } from "yargs";
+import { CommandModule } from "yargs";
 import Listr from "listr";
 // Tasks
 import { buildAndUpload } from "../tasks/buildAndUpload";
@@ -10,71 +10,80 @@ import { verifyIpfsConnection } from "../utils/verifyIpfsConnection";
 import { getInstallDnpLink } from "../utils/getLinks";
 import { CliGlobalOptions } from "../types";
 
-export const command = "build";
-
-export const describe = "Build a new version (only generates the ipfs hash)";
-
-interface CliCommandOptions {
+interface CliCommandOptions extends CliGlobalOptions {
   provider: string;
   timeout: string;
   upload_to: "ipfs" | "swarm";
+  skip_upload?: boolean;
 }
 
-export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
-  yargs
-    .option("p", {
-      alias: "provider",
+export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
+  command: "build",
+  describe: "Build a new version (only generates the ipfs hash)",
+
+  builder: {
+    provider: {
+      alias: "p",
       description: `Specify an ipfs provider: "dappnode" (default), "infura", "localhost:5002"`,
       default: "dappnode"
-    })
-    .option("t", {
-      alias: "timeout",
+    },
+    timeout: {
+      alias: "t",
       description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
       default: "15min"
-    })
-    .option("u", {
+    },
+    upload_to: {
       alias: "upload_to",
       description: `Specify where to upload the release`,
       choices: ["ipfs", "swarm"],
       default: "ipfs"
-    });
+    },
+    skip_upload: {
+      description: `Do not upload image, only store locally to build_$version`,
+      type: "boolean"
+    }
+  },
 
-export const handler = async ({
-  provider,
-  timeout,
-  upload_to,
-  // Global options
-  dir,
-  silent,
-  verbose
-}: CliCommandOptions & CliGlobalOptions): Promise<void> => {
-  // Parse options
-  const ipfsProvider = provider;
-  const swarmProvider = provider;
-  const userTimeout = timeout;
-  const uploadToSwarm = upload_to === "swarm";
-  const nextVersion = getCurrentLocalVersion({ dir });
-  const buildDir = path.join(dir, `build_${nextVersion}`);
+  handler: async ({
+    provider,
+    timeout,
+    upload_to,
+    skip_upload,
+    // Global options
+    dir,
+    silent,
+    verbose
+  }): Promise<void> => {
+    // Parse options
+    const ipfsProvider = provider;
+    const swarmProvider = provider;
+    const userTimeout = timeout;
+    const uploadToSwarm = upload_to === "swarm";
+    const skipUpload = skip_upload;
+    const nextVersion = getCurrentLocalVersion({ dir });
+    const buildDir = path.join(dir, `build_${nextVersion}`);
 
-  await verifyIpfsConnection(ipfsProvider);
+    if (!skipUpload) await verifyIpfsConnection(ipfsProvider);
 
-  const buildTasks = new Listr(
-    buildAndUpload({
-      dir,
-      buildDir,
-      ipfsProvider,
-      swarmProvider,
-      userTimeout,
-      uploadToSwarm
-    }),
-    { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
-  );
+    const buildTasks = new Listr(
+      buildAndUpload({
+        dir,
+        buildDir,
+        ipfsProvider,
+        swarmProvider,
+        userTimeout,
+        uploadToSwarm,
+        skipUpload
+      }),
+      { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+    );
 
-  const { releaseMultiHash } = await buildTasks.run();
+    const { releaseMultiHash } = await buildTasks.run();
 
-  console.log(`
+    console.log(`
   ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
   Release hash : ${releaseMultiHash}
   ${getInstallDnpLink(releaseMultiHash)}
 `);
+  }
 };

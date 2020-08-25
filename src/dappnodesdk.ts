@@ -4,6 +4,15 @@ import yargs from "yargs";
 import chalk from "chalk";
 import figlet from "figlet";
 import dotenv from "dotenv";
+
+import { addAvatar } from "./commands/addAvatar";
+import { build } from "./commands/build";
+import { fromGithub } from "./commands/from_github";
+import { increase } from "./commands/increase";
+import { init } from "./commands/init";
+import { next } from "./commands/next";
+import { publish } from "./commands/publish";
+
 // "source-map-support" MUST be imported for stack traces to work properly after Typescript transpile
 import "source-map-support/register";
 import { CliError, YargsError } from "./params";
@@ -12,36 +21,41 @@ dotenv.config();
 // Set up commands
 const dappnodesdk = yargs
   .usage(`Usage: dappnodesdk <command> [options]`)
-  .commandDir("./commands");
+  .options({
+    // Set global options
+    dir: {
+      alias: "directory",
+      description: "Change the base directory",
+      default: "./",
+      type: "string"
+    },
+    silent: {
+      description: "Silence output to terminal",
+      type: "boolean"
+    },
+    verbose: {
+      description: "Show more output to terminal",
+      alias: "debug",
+      coerce: debug => {
+        if (debug || process.env.DEBUG) {
+          // @ts-ignore
+          global.DEBUG_MODE = true;
+          return true;
+        }
+      },
+      type: "boolean"
+    }
+  })
+  .command(addAvatar)
+  .command(build)
+  .command(fromGithub)
+  .command(increase)
+  .command(init)
+  .command(next)
+  .command(publish);
 
 dappnodesdk.alias("h", "help");
 dappnodesdk.alias("v", "version");
-
-// Set global options
-dappnodesdk.option("directory", {
-  alias: "dir",
-  description: "Change the base directory",
-  default: "./",
-  type: "string"
-});
-
-dappnodesdk.option("silent", {
-  description: "Silence output to terminal",
-  type: "boolean"
-});
-
-dappnodesdk.option("verbose", {
-  description: "Show more output to terminal",
-  alias: "debug",
-  coerce: debug => {
-    if (debug || process.env.DEBUG) {
-      // @ts-ignore
-      global.DEBUG_MODE = true;
-      return true;
-    }
-  },
-  type: "boolean"
-});
 
 // blank scriptName so that help text doesn't display the cli name before each command
 dappnodesdk.scriptName("");
