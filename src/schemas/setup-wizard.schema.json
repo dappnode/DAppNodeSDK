@@ -40,6 +40,12 @@
                     "title": "Environment variable name",
                     "description": "Name of the environment variable in the docker-compose",
                     "example": ["PAYOUT_ADDRESS"]
+                  },
+                  "serviceName": {
+                    "type": "string",
+                    "title": "Service to target",
+                    "description": "In multi-service package, which service should be targeted",
+                    "example": ["service1", "service2"]
                   }
                 },
                 "required": ["type", "name"]
@@ -58,6 +64,12 @@
                     "title": "Container port",
                     "description": "Exposed container port to map to",
                     "example": ["9554", "9554/TCP"]
+                  },
+                  "serviceName": {
+                    "type": "string",
+                    "title": "Service to target",
+                    "description": "In multi-service package, which service should be targeted",
+                    "example": ["service1", "service2"]
                   }
                 },
                 "required": ["type", "containerPort"]
@@ -106,6 +118,12 @@
                     "title": "Destination file path",
                     "description": "Path to upload the file to. Must be a valid absolute path in the container.",
                     "example": ["/usr/src/config.json", "/app/keystore"]
+                  },
+                  "serviceName": {
+                    "type": "string",
+                    "title": "Service to target",
+                    "description": "In multi-service package, which service should be targeted",
+                    "example": ["service1", "service2"]
                   }
                 },
                 "required": ["type", "path"]
