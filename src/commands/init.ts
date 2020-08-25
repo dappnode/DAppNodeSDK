@@ -84,8 +84,8 @@ export const init: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 
     if (!useDefaults) {
       console.log(`This utility will walk you through creating a dappnode_package.json file.
-      It only covers the most common items, and tries to guess sensible defaults.
-      `);
+It only covers the most common items, and tries to guess sensible defaults.
+`);
     }
 
     if (fs.existsSync(path.join(dir, manifestPath)) && !force) {
@@ -186,17 +186,17 @@ export const init: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 
     console.log(`
       ${chalk.green("Your DAppNodePackage is ready")}: ${manifest.name}
-      
-      To start, you can:
-      
-       - Develop your dockerized app in   ./build
-       - Add settings in the compose at   ./docker-compose.yml
-       - Add metadata in the manifest at  ./dappnode_package.json
-      
-      Once ready, you can build, install, and test it by running
-      
-        dappnodesdk build 
-      `);
+
+To start, you can:
+
+ - Develop your dockerized app in   ./build
+ - Add settings in the compose at   ./docker-compose.yml
+ - Add metadata in the manifest at  ./dappnode_package.json
+
+Once ready, you can build, install, and test it by running
+
+  dappnodesdk build 
+`);
   }
 };
 

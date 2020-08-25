@@ -73,9 +73,9 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     const { releaseMultiHash } = await buildTasks.run();
 
     console.log(`
-    ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
-    Release hash : ${releaseMultiHash}
-    ${getInstallDnpLink(releaseMultiHash)}
-  `);
+  ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
+  Release hash : ${releaseMultiHash}
+  ${getInstallDnpLink(releaseMultiHash)}
+`);
   }
 };

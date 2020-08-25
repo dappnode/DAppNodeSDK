@@ -64,7 +64,7 @@ export const addAvatar: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 
     console.log(`
     ${chalk.green("DNP (DAppNode Package) avatar uploaded")} 
-    Avatar hash  : ${avatarIpfsPath}
-  `);
+Avatar hash  : ${avatarIpfsPath}
+`);
   }
 };
