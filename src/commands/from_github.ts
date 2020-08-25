@@ -1,7 +1,7 @@
 import path from "path";
 import got from "got";
 import cliProgress from "cli-progress";
-import { BuilderCallback } from "yargs";
+import { CommandModule } from "yargs";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import moment from "moment";
@@ -12,124 +12,128 @@ import { getInstallDnpLink } from "../utils/getLinks";
 import { verifyIpfsConnection } from "../utils/verifyIpfsConnection";
 import { githubGetReleases, GithubRelease } from "../utils/githubGetReleases";
 
-export const command = "from_github [repoSlug]";
-
-export const describe =
-  "Gets an existing DNP Github release (assets) and upload it to IPFS";
-
-interface CliCommandOptions {
+interface CliCommandOptions extends CliGlobalOptions {
   repoSlug: string;
   provider: string;
   latest?: boolean;
   version?: string;
 }
 
-export const builder: BuilderCallback<CliCommandOptions, unknown> = yargs =>
-  yargs
-    .positional("repoSlug", {
-      description: `Github repo slug to fetch releases from: "dappnode/DNP_VPN", "vpn"`,
-      type: "string"
-    })
-    .option("p", {
-      alias: "provider",
-      description: `Specify an ipfs provider: "dappnode" (default), "infura", "localhost:5002"`,
-      default: "dappnode"
-    })
-    .option("latest", {
-      description: "Fetch the latest release only, even if it's a prerelease",
-      type: "boolean"
-    })
-    .option("version", {
-      description: `Fetch a given version: v0.2.5`,
-      type: "string"
-    })
-    .require("repoSlug");
+export const fromGithub: CommandModule<CliGlobalOptions, CliCommandOptions> = {
+  command: "from_github [repoSlug]",
+  describe:
+    "Gets an existing DNP Github release (assets) and upload it to IPFS",
 
-export const handler = async ({
-  repoSlug,
-  provider,
-  latest,
-  version
-}: CliCommandOptions & CliGlobalOptions): Promise<void> => {
-  // Parse options
-  const ipfsProvider = provider;
-  // Assume incomplete repo slugs refer to DAppNode core packages
-  if (!repoSlug.includes("/")) repoSlug = `dappnode/DNP_${repoSlug}`;
+  builder: yargs =>
+    yargs
+      .positional("repoSlug", {
+        description: `Github repo slug to fetch releases from: "dappnode/DNP_VPN", "vpn"`,
+        type: "string"
+      })
+      .option("provider", {
+        alias: "p",
+        description: `Specify an ipfs provider: "dappnode" (default), "infura", "localhost:5002"`,
+        default: "dappnode"
+      })
+      .option("latest", {
+        description: "Fetch the latest release only, even if it's a prerelease",
+        type: "boolean"
+      })
+      .option("version", {
+        description: `Fetch a given version: v0.2.5`,
+        type: "string"
+      })
+      .require("repoSlug"),
 
-  await verifyIpfsConnection(ipfsProvider);
+  handler: async ({ repoSlug, provider, latest, version }): Promise<void> => {
+    // Parse options
+    const ipfsProvider = provider;
+    // Assume incomplete repo slugs refer to DAppNode core packages
+    if (!repoSlug.includes("/")) repoSlug = `dappnode/DNP_${repoSlug}`;
 
-  // Pick version interactively
-  const release = await getSelectedGithubRelease({ repoSlug, latest, version });
+    await verifyIpfsConnection(ipfsProvider);
 
-  // Sanity check, make sure this release is an actual DAppNode Package
-  for (const file of Object.values(releaseFiles))
-    if (
-      file.required &&
-      !release.assets.some(asset => file.regex.test(asset.name))
-    )
-      throw Error(`Release assets do not contain required file ${file.id}`);
-
-  // Add extra file for legacy .tar.xz image
-  const imageAmdAsset = release.assets.find(asset =>
-    asset.name.endsWith("amd64.txz")
-  );
-  if (imageAmdAsset)
-    release.assets.push({
-      ...imageAmdAsset,
-      name: imageAmdAsset.name.replace("amd64.txz", ".tar.xz")
+    // Pick version interactively
+    const release = await getSelectedGithubRelease({
+      repoSlug,
+      latest,
+      version
     });
 
-  const files = release.assets
-    .filter(asset => asset.name !== contentHashFile)
-    .map(asset => ({
-      filepath: path.join("release", asset.name),
-      url: asset.browser_download_url,
-      name: asset.name,
-      size: asset.size
-    }));
+    // Sanity check, make sure this release is an actual DAppNode Package
+    for (const file of Object.values(releaseFiles))
+      if (
+        file.required &&
+        !release.assets.some(asset => file.regex.test(asset.name))
+      )
+        throw Error(`Release assets do not contain required file ${file.id}`);
 
-  // Multiline download > upload progress feedback
-  const multibarDnl = new cliProgress.MultiBar({
-    format: "[{bar}] {percentage}%\t| {name}"
-  });
-  const bars = new Map<string, cliProgress.SingleBar>();
-  for (const { filepath, size, name } of files) {
-    bars.set(filepath, multibarDnl.create(size, 0, { name }));
-  }
+    // Add extra file for legacy .tar.xz image
+    const imageAmdAsset = release.assets.find(asset =>
+      asset.name.endsWith("amd64.txz")
+    );
+    if (imageAmdAsset)
+      release.assets.push({
+        ...imageAmdAsset,
+        name: imageAmdAsset.name.replace("amd64.txz", ".tar.xz")
+      });
 
-  function onProgress(filepath: string, bytes: number) {
-    const bar = bars.get(filepath);
-    if (bar) bar.increment(bytes);
-  }
+    const files = release.assets
+      .filter(asset => asset.name !== contentHashFile)
+      .map(asset => ({
+        filepath: path.join("release", asset.name),
+        url: asset.browser_download_url,
+        name: asset.name,
+        size: asset.size
+      }));
 
-  const releaseMultiHash = await ipfsAddDirFromUrls(
-    files,
-    ipfsProvider,
-    onProgress
-  );
-
-  multibarDnl.stop();
-
-  console.log(
-    chalk.green(`\nGithub release ${repoSlug} ${release.name} uploaded to IPFS`)
-  );
-
-  // Verify that the resulting release hash matches the one in Github
-  const contentHashAsset = release.assets.find(
-    asset => asset.name === contentHashFile
-  );
-  if (contentHashAsset) {
-    const contentHash = await got(contentHashAsset.browser_download_url).text();
-    if (contentHash.trim() === releaseMultiHash) {
-      console.log(chalk.dim("✓ Release hash verified, matches Github's"));
-    } else {
-      console.log(`${chalk.red("WARNING!")} resulting hashes do not match`);
-      console.log(`Github release: ${contentHash}`);
+    // Multiline download > upload progress feedback
+    const multibarDnl = new cliProgress.MultiBar({
+      format: "[{bar}] {percentage}%\t| {name}"
+    });
+    const bars = new Map<string, cliProgress.SingleBar>();
+    for (const { filepath, size, name } of files) {
+      bars.set(filepath, multibarDnl.create(size, 0, { name }));
     }
-  }
 
-  console.log(`Release hash : ${releaseMultiHash}`);
-  console.log(getInstallDnpLink(releaseMultiHash));
+    function onProgress(filepath: string, bytes: number) {
+      const bar = bars.get(filepath);
+      if (bar) bar.increment(bytes);
+    }
+
+    const releaseMultiHash = await ipfsAddDirFromUrls(
+      files,
+      ipfsProvider,
+      onProgress
+    );
+
+    multibarDnl.stop();
+
+    console.log(
+      chalk.green(
+        `\nGithub release ${repoSlug} ${release.name} uploaded to IPFS`
+      )
+    );
+
+    // Verify that the resulting release hash matches the one in Github
+    const contentHashAsset = release.assets.find(
+      asset => asset.name === contentHashFile
+    );
+    if (contentHashAsset) {
+      const contentHash = await got(
+        contentHashAsset.browser_download_url
+      ).text();
+      if (contentHash.trim() === releaseMultiHash) {
+        console.log(chalk.dim("✓ Release hash verified, matches Github's"));
+      } else {
+        console.log(`${chalk.red("WARNING!")} resulting hashes do not match`);
+        console.log(`Github release: ${contentHash}`);
+      }
+    }
+
+    console.log(`Release hash : ${releaseMultiHash}`);
+    console.log(getInstallDnpLink(releaseMultiHash));
+  }
 };
 
 /**

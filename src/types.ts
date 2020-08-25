@@ -20,6 +20,7 @@ export interface ListrContextBuildAndPublish {
 export type Architecture = "amd64" | "arm64";
 
 export type ReleaseType = "major" | "minor" | "patch";
+export const releaseTypes: ReleaseType[] = ["major", "minor", "patch"];
 
 export interface TxData {
   to: string;
