@@ -32,6 +32,7 @@ export function buildAndUpload({
   swarmProvider,
   userTimeout,
   uploadToSwarm,
+  skipUpload,
   dir
 }: {
   buildDir: string;
@@ -39,6 +40,7 @@ export function buildAndUpload({
   swarmProvider: string;
   userTimeout: string;
   uploadToSwarm: boolean;
+  skipUpload?: boolean;
   dir: string;
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
@@ -169,6 +171,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
     uploadToSwarm
       ? {
           title: "Upload release to Swarm",
+          skip: () => skipUpload,
           task: async (ctx, task) => {
             ctx.releaseHash = await swarmAddDirFromFs(
               buildDir,
@@ -179,6 +182,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
         }
       : {
           title: "Upload release to IPFS",
+          skip: () => skipUpload,
           task: async (ctx, task) => {
             if (fs.existsSync(imagePathAmd))
               fs.copyFileSync(imagePathAmd, imagePathLegacy);

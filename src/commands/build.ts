@@ -14,6 +14,7 @@ interface CliCommandOptions extends CliGlobalOptions {
   provider: string;
   timeout: string;
   upload_to: "ipfs" | "swarm";
+  skip_upload?: boolean;
 }
 
 export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
@@ -36,6 +37,10 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       description: `Specify where to upload the release`,
       choices: ["ipfs", "swarm"],
       default: "ipfs"
+    },
+    skip_upload: {
+      description: `Do not upload image, only store locally to build_$version`,
+      type: "boolean"
     }
   },
 
@@ -43,6 +48,7 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     provider,
     timeout,
     upload_to,
+    skip_upload,
     // Global options
     dir,
     silent,
@@ -53,10 +59,11 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     const swarmProvider = provider;
     const userTimeout = timeout;
     const uploadToSwarm = upload_to === "swarm";
+    const skipUpload = skip_upload;
     const nextVersion = getCurrentLocalVersion({ dir });
     const buildDir = path.join(dir, `build_${nextVersion}`);
 
-    await verifyIpfsConnection(ipfsProvider);
+    if (!skipUpload) await verifyIpfsConnection(ipfsProvider);
 
     const buildTasks = new Listr(
       buildAndUpload({
@@ -65,7 +72,8 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
         ipfsProvider,
         swarmProvider,
         userTimeout,
-        uploadToSwarm
+        uploadToSwarm,
+        skipUpload
       }),
       { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
     );
