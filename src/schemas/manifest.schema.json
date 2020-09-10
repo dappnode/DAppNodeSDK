@@ -76,6 +76,11 @@
         "monero": "Must have a Monero API exposed internally at port 18081. Uses the NPM package `monero-rpc`"
       }
     },
+    "mainService": {
+      "type": "string",
+      "description": "For multi-service packages, indicate which service is the main one. The root ENS domain of this package will be mapped to this service IP.",
+      "examples": ["webserver", "backend", "service1"]
+    },
     "dependencies": {
       "type": "object",
       "description": "DAppNode Package dependencies. Must be an object where the keys are the DAppNode Package's ENS. The values must be a semantic range, i.e. `'0.2.0'`, `'^0.2.1'`, `'*'`, `'latest'`, `'/ipfs/QmWwMb3XhuCH6JnCF6m6EQzA4mW9pHHtg7rqAfhDr2ofi8'`.",

@@ -62,7 +62,7 @@ async function saveAndCompressImages({
   timeout?: number;
 }): Promise<string> {
   return new Promise((resolve, reject) => {
-    const dockerSave = spawn("docker", ["save", imageTags.join(" ")]);
+    const dockerSave = spawn("docker", ["save", ...imageTags]);
 
     // -e9T0: Compression settings (extreme and paralelized)
     // -vv: Very verbose log to provide progress
