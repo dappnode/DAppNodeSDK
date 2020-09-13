@@ -69,14 +69,16 @@ export const fromGithub: CommandModule<CliGlobalOptions, CliCommandOptions> = {
         throw Error(`Release assets do not contain required file ${file.id}`);
 
     // Add extra file for legacy .tar.xz image
+    const mainArchTag = "amd64.txz";
     const imageAmdAsset = release.assets.find(asset =>
-      asset.name.endsWith("amd64.txz")
+      asset.name.endsWith(mainArchTag)
     );
-    if (imageAmdAsset)
-      release.assets.push({
-        ...imageAmdAsset,
-        name: imageAmdAsset.name.replace("amd64.txz", ".tar.xz")
-      });
+    if (imageAmdAsset) {
+      const mainArchName =
+        imageAmdAsset.name.replace(mainArchTag, "").replace(/_$/, "") +
+        ".tar.xz";
+      release.assets.push({ ...imageAmdAsset, name: mainArchName });
+    }
 
     const files = release.assets
       .filter(asset => asset.name !== contentHashFile)
