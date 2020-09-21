@@ -18,13 +18,15 @@ export function buildWithBuildx({
   imageTags,
   composePath,
   destPath,
-  buildTimeout
+  buildTimeout,
+  skipSave
 }: {
   architecture: Architecture;
   imageTags: string[];
   composePath: string;
   destPath: string;
   buildTimeout: number;
+  skipSave?: boolean;
 }): ListrTask[] {
   return [
     {
@@ -94,7 +96,8 @@ export function buildWithBuildx({
     saveAndCompressImagesCached({
       imageTags,
       destPath,
-      buildTimeout
+      buildTimeout,
+      skipSave
     })
   ];
 }

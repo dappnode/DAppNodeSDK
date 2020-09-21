@@ -11,12 +11,14 @@ export function buildWithCompose({
   imageTags,
   composePath,
   destPath,
-  buildTimeout
+  buildTimeout,
+  skipSave
 }: {
   imageTags: string[];
   composePath: string;
   destPath: string;
   buildTimeout: number;
+  skipSave?: boolean;
 }): ListrTask[] {
   return [
     {
@@ -34,7 +36,8 @@ export function buildWithCompose({
     saveAndCompressImagesCached({
       imageTags,
       destPath,
-      buildTimeout
+      buildTimeout,
+      skipSave
     })
   ];
 }

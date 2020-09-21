@@ -14,14 +14,17 @@ import { ListrContextBuildAndPublish } from "../types";
 export function saveAndCompressImagesCached({
   imageTags,
   destPath,
-  buildTimeout
+  buildTimeout,
+  skipSave
 }: {
   imageTags: string[];
   destPath: string;
   buildTimeout: number;
+  skipSave?: boolean;
 }): ListrTask<ListrContextBuildAndPublish> {
   return {
     title: "Save and compress image",
+    skip: () => skipSave,
     task: async (_, task) => {
       // Get a deterministic cache key for this collection of images
       const cacheKey = await getCacheKey(imageTags);
@@ -68,9 +71,7 @@ async function saveAndCompressImages({
     // -vv: Very verbose log to provide progress
     // -c: Outputs the compressed result to stdout
     // -f: Overwrite the destination path if necessary
-    const xz = spawn("xz", ["-e9T0", "-vv", "-c", "-f"], {
-      timeout
-    });
+    const xz = spawn("xz", ["-e9T0", "-vv", "-c", "-f"], { timeout });
 
     dockerSave.stdout.pipe(xz.stdin);
 
