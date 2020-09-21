@@ -14,8 +14,8 @@ interface CliCommandOptions extends CliGlobalOptions {
   provider: string;
   timeout: string;
   upload_to: "ipfs" | "swarm";
-  skip_compress?: boolean;
   skip_save?: boolean;
+  skip_upload?: boolean;
 }
 
 export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
@@ -39,11 +39,11 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       choices: ["ipfs", "swarm"],
       default: "ipfs"
     },
-    skip_compress: {
+    skip_save: {
       description: `For testing only: do not save image to disk`,
       type: "boolean"
     },
-    skip_save: {
+    skip_upload: {
       description: `For testing only: do not upload image from disk`,
       type: "boolean"
     }
@@ -53,8 +53,8 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     provider,
     timeout,
     upload_to,
-    skip_compress,
     skip_save,
+    skip_upload,
     // Global options
     dir,
     silent,
@@ -65,8 +65,8 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     const swarmProvider = provider;
     const userTimeout = timeout;
     const uploadToSwarm = upload_to === "swarm";
-    const skipSave = skip_compress;
-    const skipUpload = skip_save || skip_compress;
+    const skipSave = skip_save;
+    const skipUpload = skip_save || skip_upload;
     const nextVersion = getCurrentLocalVersion({ dir });
     const buildDir = path.join(dir, `build_${nextVersion}`);
 
