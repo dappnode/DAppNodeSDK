@@ -68,11 +68,10 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       .option("timeout", {
         alias: "t",
         description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
-        default: "15min",
+        default: "60min",
         type: "string"
       })
       .option("upload_to", {
-        alias: "u",
         description: `Specify where to upload the release`,
         choices: ["ipfs", "swarm"],
         default: "ipfs"
