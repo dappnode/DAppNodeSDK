@@ -83,7 +83,7 @@ ENV test=1
         buildDir,
         ipfsProvider: ipfsProvider,
         swarmProvider: "",
-        userTimeout: "15min",
+        userTimeout: "5min",
         uploadToSwarm: false
       }),
       { renderer: "verbose" }

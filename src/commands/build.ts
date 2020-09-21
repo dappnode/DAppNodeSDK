@@ -31,7 +31,7 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     timeout: {
       alias: "t",
       description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
-      default: "15min"
+      default: "60min"
     },
     upload_to: {
       alias: "upload_to",
