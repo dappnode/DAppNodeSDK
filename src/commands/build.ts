@@ -89,7 +89,7 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     const { releaseMultiHash } = await buildTasks.run();
 
     if (skipUpload) {
-      return console.log(chalk.green("\nDNP (DAppNode Package) built"));
+      return console.log(chalk.green("\nDNP (DAppNode Package) built\n"));
     }
 
     console.log(`
