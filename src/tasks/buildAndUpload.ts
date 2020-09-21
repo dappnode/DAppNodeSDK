@@ -32,6 +32,7 @@ export function buildAndUpload({
   swarmProvider,
   userTimeout,
   uploadToSwarm,
+  skipSave,
   skipUpload,
   dir
 }: {
@@ -40,6 +41,7 @@ export function buildAndUpload({
   swarmProvider: string;
   userTimeout: string;
   uploadToSwarm: boolean;
+  skipSave?: boolean;
   skipUpload?: boolean;
   dir: string;
 }): ListrTask<ListrContextBuildAndPublish>[] {
@@ -153,6 +155,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
                   imageTags,
                   composePath,
                   buildTimeout,
+                  skipSave,
                   destPath: path.join(
                     buildDir,
                     getImagePath(name, version, architecture)
@@ -165,6 +168,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
           imageTags,
           composePath,
           buildTimeout,
+          skipSave,
           destPath: imagePathAmd
         })),
 
