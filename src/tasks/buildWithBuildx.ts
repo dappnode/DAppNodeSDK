@@ -41,7 +41,7 @@ export function buildWithBuildx({
           );
 
         switch (architecture) {
-          case "arm64":
+          case "linux/arm64":
             await shell(
               `docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64`
             );
@@ -76,9 +76,9 @@ export function buildWithBuildx({
           }
         );
 
-        // Make the built was done for the correct architecture
+        // Make sure the built was done for the correct architecture
         switch (architecture) {
-          case "arm64": {
+          case "linux/arm64": {
             const res = await shell(
               `docker run --rm --entrypoint="" ${imageTags[0]} uname -m`
             );

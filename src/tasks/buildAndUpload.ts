@@ -79,7 +79,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
     manifest.architectures && parseArchitectures(manifest.architectures);
   const imagePathAmd = path.join(
     buildDir,
-    getImagePath(name, version, "amd64")
+    getImagePath(name, version, "linux/amd64")
   );
   const imagePathLegacy = path.join(
     buildDir,

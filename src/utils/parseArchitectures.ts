@@ -1,22 +1,16 @@
-import { Architecture } from "../types";
+import { Architecture, architectures } from "../types";
 
-// const archs: { [key in Architecture]: string } = {
-//   amd64: "amd64",
-//   arm64: "arm64"
-// };
+const architecturesList = architectures.join(" ");
 
-export function parseArchitectures(
-  architectures: Architecture[]
-): Architecture[] {
-  for (const architecture of architectures) {
-    if (architecture.startsWith("linux/"))
-      throw Error(`architectures must be defined without a "linux/" prefixed`);
-    if (architecture.includes("/"))
-      throw Error(`architectures must not include the character "/"`);
-  }
+export function parseArchitectures(rawArchs: Architecture[]): Architecture[] {
+  for (const rawArch of rawArchs)
+    if (!architectures.includes(rawArch))
+      throw Error(
+        `Invalid architecture '${rawArch}', allowed values: ${architecturesList}`
+      );
 
-  if (!architectures.includes("amd64"))
-    throw Error(`architectures array must include arch "amd64"`);
+  if (!rawArchs.includes("linux/amd64"))
+    throw Error(`architectures array must include default arch 'linux/amd64'`);
 
-  return architectures;
+  return rawArchs;
 }

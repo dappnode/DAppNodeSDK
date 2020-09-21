@@ -117,14 +117,14 @@
     "architectures": {
       "type": "array",
       "description": "Build and distribute this package in multiple architectures using [Docker's buildx plugin](https://docs.docker.com/buildx/working-with-buildx/)",
-      "examples": [["amd64", "arm64"]],
+      "examples": [["linux/amd64", "linux/arm64"]],
       "items": {
         "type": "string",
-        "examples": ["amd64", "arm64"],
-        "enum": ["amd64", "arm64"],
+        "examples": ["linux/amd64", "linux/arm64"],
+        "enum": ["linux/amd64", "linux/arm64"],
         "enumDescriptions": {
-          "amd64": "Default architecture, x86-64",
-          "arm64": "ARM architecture"
+          "linux/amd64": "Default architecture, x86-64",
+          "linux/arm64": "ARM architecture"
         }
       }
     },
