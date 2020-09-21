@@ -5,8 +5,13 @@ import { CommandModule } from "yargs";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import moment from "moment";
-import { CliGlobalOptions } from "../types";
-import { contentHashFile, releaseFiles } from "../params";
+import { CliGlobalOptions, defaultArch, Manifest } from "../types";
+import {
+  contentHashFile,
+  getImagePath,
+  getLegacyImagePath,
+  releaseFiles
+} from "../params";
 import { ipfsAddDirFromUrls } from "../utils/ipfs/ipfsAddDirFromUrls";
 import { getInstallDnpLink } from "../utils/getLinks";
 import { verifyIpfsConnection } from "../utils/verifyIpfsConnection";
@@ -69,15 +74,22 @@ export const fromGithub: CommandModule<CliGlobalOptions, CliCommandOptions> = {
         throw Error(`Release assets do not contain required file ${file.id}`);
 
     // Add extra file for legacy .tar.xz image
-    const mainArchTag = "amd64.txz";
-    const imageAmdAsset = release.assets.find(asset =>
-      asset.name.endsWith(mainArchTag)
+    const manifestAsset = release.assets.find(
+      asset => asset.name === releaseFiles.manifest.defaultName
     );
-    if (imageAmdAsset) {
-      const mainArchName =
-        imageAmdAsset.name.replace(mainArchTag, "").replace(/_$/, "") +
-        ".tar.xz";
-      release.assets.push({ ...imageAmdAsset, name: mainArchName });
+
+    if (manifestAsset) {
+      const { name, version }: Manifest = await got(
+        manifestAsset.browser_download_url
+      ).json();
+      const legacyImagePath = getLegacyImagePath(name, version);
+      const legacyImageAsset = release.assets.find(
+        asset => asset.name === legacyImagePath
+      );
+      if (legacyImageAsset) {
+        const imageAmdPath = getImagePath(name, version, defaultArch);
+        release.assets.push({ ...legacyImageAsset, name: imageAmdPath });
+      }
     }
 
     const files = release.assets
