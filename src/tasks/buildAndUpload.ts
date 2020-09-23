@@ -100,7 +100,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
   const upstreamVersion =
     parseComposeUpstreamVersion(readCompose(dir)) ||
     process.env.UPSTREAM_VERSION;
-  if (upstreamVersion) manifest.upstreamVersion;
+  if (upstreamVersion) manifest.upstreamVersion = upstreamVersion;
 
   return [
     {
