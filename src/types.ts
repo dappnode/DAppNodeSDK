@@ -104,7 +104,13 @@ export interface ComposeVolumes {
 }
 
 export interface ComposeService {
-  build?: string;
+  build?:
+    | string
+    | {
+        context?: string; // ./dir
+        dockerfile?: string; // Dockerfile-alternate
+        args?: { [varName: string]: string }; // { buildno: 1}
+      };
   container_name?: string; // "DAppNodeCore-dappmanager.dnp.dappnode.eth";
   image: string; // "dappmanager.dnp.dappnode.eth:0.2.6";
   volumes?: string[]; // ["dappmanagerdnpdappnodeeth_data:/usr/src/app/dnp_repo/"];

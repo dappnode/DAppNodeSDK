@@ -5,6 +5,8 @@ export class YargsError extends Error {}
 
 export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
 
+export const UPSTREAM_VERSION_VARNAME = "UPSTREAM_VERSION";
+
 /**
  * Plain text file with should contain the IPFS hash of the release
  * Necessary for the installer script to fetch the latest content hash

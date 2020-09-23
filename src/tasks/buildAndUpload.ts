@@ -14,7 +14,12 @@ import {
 } from "../params";
 import { ipfsAddFromFs } from "../utils/ipfs/ipfsAddFromFs";
 import { swarmAddDirFromFs } from "../utils/swarmAddDirFromFs";
-import { prepareComposeForBuild, getComposePath } from "../utils/compose";
+import {
+  prepareComposeForBuild,
+  getComposePath,
+  readCompose,
+  parseComposeUpstreamVersion
+} from "../utils/compose";
 import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
 import { buildWithBuildx } from "./buildWithBuildx";
@@ -64,11 +69,6 @@ and not declared in the manifest. Please add your package avatar to this directo
 as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' property.
 `);
 
-  // Bump upstreamVersion if provided
-  if (process.env.UPSTREAM_VERSION) {
-    manifest.upstreamVersion = process.env.UPSTREAM_VERSION;
-  }
-
   // Define variables from manifest
   const { name, version } = manifest;
   if (/[A-Z]/.test(name))
@@ -95,6 +95,12 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
   const composeRootPath = getAssetPathRequired(releaseFiles.compose, dir);
   const avatarRootPath = getAssetPathRequired(releaseFiles.avatar, dir);
   if (avatarRootPath) verifyAvatar(avatarRootPath);
+
+  // Bump upstreamVersion if provided
+  const upstreamVersion =
+    parseComposeUpstreamVersion(readCompose(dir)) ||
+    process.env.UPSTREAM_VERSION;
+  if (upstreamVersion) manifest.upstreamVersion;
 
   return [
     {

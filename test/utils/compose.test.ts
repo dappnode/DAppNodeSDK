@@ -1,11 +1,11 @@
 import { expect } from "chai";
-import fs from "fs";
 import { Compose } from "../../src/types";
 import { testDir, cleanTestDir } from "../testUtils";
 import {
   readCompose,
   writeCompose,
-  prepareComposeForBuild
+  prepareComposeForBuild,
+  parseComposeUpstreamVersion
 } from "../../src/utils/compose";
 
 describe("util > compose", () => {
@@ -80,6 +80,31 @@ describe("util > compose", () => {
 
       expect(imageTags).to.deep.equal(expectedImageTags);
       expect(readCompose(testDir)).to.deep.equal(expectedCompose);
+    });
+  });
+
+  describe("parseComposeUpstreamVersion", () => {
+    it("Should parse multiple upstream versions", () => {
+      const compose: Compose = {
+        version: "3.4",
+        services: {
+          validator: {
+            image: "sample-image",
+            build: {
+              args: {
+                UPSTREAM_VERSION_PRYSM: "v1.0.0-alpha.25",
+                UPSTREAM_VERSION_LIGHTHOUSE: "v0.2.9"
+              }
+            }
+          }
+        }
+      };
+
+      const upstreamVersion = parseComposeUpstreamVersion(compose);
+
+      expect(upstreamVersion).to.equal(
+        "Prysm: v1.0.0-alpha.25, Lighthouse: v0.2.9"
+      );
     });
   });
 });
