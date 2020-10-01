@@ -110,10 +110,14 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
         fs.mkdirSync(buildDir, { recursive: true }); // Ok on existing dir
         const buildFiles = fs.readdirSync(buildDir);
 
-        // Clean all files except the images
-        for (const file of buildFiles)
-          if (!file.endsWith(".tar.xz") && !file.endsWith(".txz"))
-            fs.unlinkSync(path.join(buildDir, file));
+        const imagePaths = architectures
+          ? architectures.map(arch => getImagePath(name, version, arch))
+          : [imagePathAmd];
+
+        // Clean all files except the expected target images
+        for (const filepath of buildFiles)
+          if (!imagePaths.includes(filepath))
+            fs.unlinkSync(path.join(buildDir, filepath));
       }
     },
 
