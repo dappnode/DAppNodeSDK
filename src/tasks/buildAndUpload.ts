@@ -15,10 +15,13 @@ import {
 import { ipfsAddFromFs } from "../utils/ipfs/ipfsAddFromFs";
 import { swarmAddDirFromFs } from "../utils/swarmAddDirFromFs";
 import {
-  prepareComposeForBuild,
   getComposePath,
   readCompose,
-  parseComposeUpstreamVersion
+  parseComposeUpstreamVersion,
+  updateComposeImageTags,
+  getComposeImageTags,
+  writeCompose,
+  getExternalImageTags
 } from "../utils/compose";
 import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
@@ -26,6 +29,7 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
+import { shell } from "../utils/shell";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -75,8 +79,17 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
     throw new CliError("Package name in the manifest must be lowercase");
 
   // Update compose
-  const imageTags = prepareComposeForBuild({ name, version, dir });
   const composePath = getComposePath(dir);
+  const composeForDev = readCompose(dir);
+  const composeForBuild = updateComposeImageTags(composeForDev, manifest);
+  const composeForRelease = updateComposeImageTags(composeForDev, manifest, {
+    editExternalImages: true
+  });
+
+  // Get external image tags to pull and re-tag
+  const externalImageTags = getExternalImageTags(composeForDev, manifest);
+  const imageTags = getComposeImageTags(composeForRelease);
+
   const architectures =
     manifest.architectures && parseArchitectures(manifest.architectures);
   const imagePathAmd = path.join(
@@ -88,18 +101,14 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
     getLegacyImagePath(name, version)
   );
 
-  // Construct directories and names
-  const composeBuildPath = path.join(buildDir, `docker-compose.yml`);
+  // Construct directories and names. Root paths, this functions may throw
   const avatarBuildPath = path.join(buildDir, `avatar.png`);
-  // Root paths, this functions may throw
-  const composeRootPath = getAssetPathRequired(releaseFiles.compose, dir);
   const avatarRootPath = getAssetPathRequired(releaseFiles.avatar, dir);
   if (avatarRootPath) verifyAvatar(avatarRootPath);
 
   // Bump upstreamVersion if provided
   const upstreamVersion =
-    parseComposeUpstreamVersion(readCompose(dir)) ||
-    process.env.UPSTREAM_VERSION;
+    parseComposeUpstreamVersion(composeForDev) || process.env.UPSTREAM_VERSION;
   if (upstreamVersion) manifest.upstreamVersion = upstreamVersion;
 
   return [
@@ -126,8 +135,12 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
     {
       title: "Copy files and validate",
       task: async () => {
-        fs.copyFileSync(composeRootPath, composeBuildPath);
+        // Write compose with build props for builds
+        writeCompose(dir, composeForBuild);
+
+        // Copy files for release dir
         fs.copyFileSync(avatarRootPath, avatarBuildPath);
+        writeCompose(buildDir, composeForRelease);
         writeManifest(buildDir, manifest);
         validateManifest(manifest, { prerelease: true });
 
@@ -146,6 +159,21 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
               filePath,
               path.join(buildDir, releaseFile.defaultName)
             );
+        }
+      }
+    },
+
+    // Pull external image tags to be saved latter
+    {
+      title: "Pull and tag external images",
+      enabled: () => externalImageTags.length > 0,
+      task: async (_, task) => {
+        for (const { imageTag, newImageTag } of externalImageTags) {
+          await shell(`docker pull ${imageTag}`, {
+            onData: data => (task.output = data)
+          });
+          task.output = `Tagging ${imageTag} > ${newImageTag}`;
+          await shell(`docker tag ${imageTag} ${newImageTag}`);
         }
       }
     },

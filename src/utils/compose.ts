@@ -2,8 +2,9 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import { Manifest, Compose, ComposeService, ComposeVolumes } from "../types";
-import { UPSTREAM_VERSION_VARNAME } from "../params";
+import { upstreamImageLabel, UPSTREAM_VERSION_VARNAME } from "../params";
 import { toTitleCase } from "./format";
+import { mapValues } from "lodash";
 
 const composeFileName = "docker-compose.yml";
 
@@ -148,50 +149,83 @@ export function generateCompose(manifest: Manifest): Compose {
   return dockerCompose;
 }
 
-export function updateCompose({
+function getImageTag({
+  serviceName,
   name,
   version,
-  dir
+  serviceCount
 }: {
+  serviceName: string;
   name: string;
   version: string;
-  dir: string;
-}): void {
-  const compose = readCompose(dir);
-  // Only update the imageName field
-  //   services:
-  //     wamp.dnp.dappnode.eth:
-  //       image: 'wamp.dnp.dappnode.eth:0.1.1'
-  compose.services[name].image = name + ":" + version;
-  writeCompose(dir, compose);
+  serviceCount: number;
+}) {
+  return serviceCount > 1
+    ? `${serviceName}.${name}:${version}`
+    : `${name}:${version}`;
 }
+
+type ExternalImage = { imageTag: string; newImageTag: string };
 
 /**
  * Update service image tag to current version
  * @returns updated imageTags
  */
-export function prepareComposeForBuild({
-  name,
-  version,
-  dir
-}: {
-  name: string;
-  version: string;
-  dir: string;
-}): string[] {
-  const compose = readCompose(dir);
-  const serviceCount = Object.keys(compose.services).length;
-  if (serviceCount === 0) throw Error(`Compose must have at lest 1 service`);
+export function updateComposeImageTags(
+  compose: Compose,
+  { name, version }: { name: string; version: string },
+  options?: { editExternalImages?: boolean }
+): Compose {
+  return {
+    ...compose,
+    services: mapValues(compose.services, (service, serviceName) => {
+      const newImageTag = getImageTag({
+        serviceName,
+        name,
+        version,
+        serviceCount: Object.keys(compose.services).length
+      });
+      return service.build
+        ? {
+            ...service,
+            image: newImageTag
+          }
+        : options?.editExternalImages
+        ? {
+            ...service,
+            image: newImageTag,
+            labels: {
+              ...(service.labels || {}),
+              [upstreamImageLabel]: service.image
+            }
+          }
+        : service;
+    })
+  };
+}
 
-  for (const serviceName of Object.keys(compose.services)) {
-    compose.services[serviceName].image =
-      serviceCount === 1
-        ? `${name}:${version}`
-        : `${serviceName}.${name}:${version}`;
+export function getExternalImageTags(
+  compose: Compose,
+  { name, version }: { name: string; version: string }
+): ExternalImage[] {
+  const imageTagMap: ExternalImage[] = [];
+  for (const [serviceName, service] of Object.entries(compose.services)) {
+    if (!service.build) {
+      imageTagMap.push({
+        imageTag: service.image,
+        newImageTag: getImageTag({
+          serviceName,
+          name,
+          version,
+          serviceCount: Object.keys(compose.services).length
+        })
+      });
+    }
   }
+  return imageTagMap;
+}
 
-  writeCompose(dir, compose);
-
+export function getComposeImageTags(compose: Compose): string[] {
   return Object.values(compose.services).map(service => service.image);
 }
 

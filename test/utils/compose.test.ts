@@ -1,18 +1,14 @@
 import { expect } from "chai";
 import { Compose } from "../../src/types";
-import { testDir, cleanTestDir } from "../testUtils";
+import { upstreamImageLabel } from "../../src/params";
 import {
-  readCompose,
-  writeCompose,
-  prepareComposeForBuild,
-  parseComposeUpstreamVersion
+  updateComposeImageTags,
+  parseComposeUpstreamVersion,
+  getComposeImageTags
 } from "../../src/utils/compose";
 
 describe("util > compose", () => {
-  describe("prepareComposeForBuild", () => {
-    before("Clean test dir", cleanTestDir);
-    after("Clean test dir", cleanTestDir);
-
+  describe("updateComposeImageTags", () => {
     it("Should prepare compose with multiple services", () => {
       const name = "mypackage.public.dappnode.eth";
       const version = "0.1.0";
@@ -20,9 +16,11 @@ describe("util > compose", () => {
         version: "3.4",
         services: {
           backend: {
+            build: ".",
             image: ""
           },
           frontend: {
+            build: ".",
             image: ""
           }
         }
@@ -33,23 +31,28 @@ describe("util > compose", () => {
         "frontend.mypackage.public.dappnode.eth:0.1.0"
       ];
 
-      const expectedCompose: Compose = {
+      const expectedComposeForBuild: Compose = {
         version: "3.4",
         services: {
           backend: {
+            build: ".",
             image: expectedImageTags[0]
           },
           frontend: {
+            build: ".",
             image: expectedImageTags[1]
           }
         }
       };
 
-      writeCompose(testDir, compose);
-      const imageTags = prepareComposeForBuild({ name, version, dir: testDir });
+      const composeForBuild = updateComposeImageTags(compose, {
+        name,
+        version
+      });
+      const imageTags = getComposeImageTags(composeForBuild);
 
       expect(imageTags).to.deep.equal(expectedImageTags);
-      expect(readCompose(testDir)).to.deep.equal(expectedCompose);
+      expect(composeForBuild).to.deep.equal(expectedComposeForBuild);
     });
 
     it("Should prepare compose with single service", () => {
@@ -59,6 +62,7 @@ describe("util > compose", () => {
         version: "3.4",
         services: {
           mypackage: {
+            build: ".",
             image: ""
           }
         }
@@ -66,20 +70,24 @@ describe("util > compose", () => {
 
       const expectedImageTags = ["mypackage.public.dappnode.eth:0.1.0"];
 
-      const expectedCompose: Compose = {
+      const expectedComposeForBuild: Compose = {
         version: "3.4",
         services: {
           mypackage: {
+            build: ".",
             image: expectedImageTags[0]
           }
         }
       };
 
-      writeCompose(testDir, compose);
-      const imageTags = prepareComposeForBuild({ name, version, dir: testDir });
+      const composeForBuild = updateComposeImageTags(compose, {
+        name,
+        version
+      });
+      const imageTags = getComposeImageTags(composeForBuild);
 
       expect(imageTags).to.deep.equal(expectedImageTags);
-      expect(readCompose(testDir)).to.deep.equal(expectedCompose);
+      expect(composeForBuild).to.deep.equal(expectedComposeForBuild);
     });
   });
 
@@ -105,6 +113,68 @@ describe("util > compose", () => {
       expect(upstreamVersion).to.equal(
         "Prysm: v1.0.0-alpha.25, Lighthouse: v0.2.9"
       );
+    });
+  });
+
+  describe("external images", () => {
+    const name = "mypackage.public.dappnode.eth";
+    const version = "0.1.0";
+    const compose: Compose = {
+      version: "3.4",
+      services: {
+        backend: {
+          build: "./build",
+          image: "backend"
+        },
+        frontend: {
+          image: "nginx:alpine"
+        }
+      }
+    };
+
+    it("Should edit external image tags", () => {
+      const expectedCompose: Compose = {
+        version: "3.4",
+        services: {
+          backend: {
+            build: "./build",
+            image: "backend.mypackage.public.dappnode.eth:0.1.0"
+          },
+          frontend: {
+            image: "frontend.mypackage.public.dappnode.eth:0.1.0",
+            labels: {
+              [upstreamImageLabel]: "nginx:alpine"
+            }
+          }
+        }
+      };
+
+      const composeEdited = updateComposeImageTags(
+        compose,
+        { name, version },
+        { editExternalImages: true }
+      );
+
+      expect(composeEdited).to.deep.equal(expectedCompose);
+    });
+
+    it("Should not edit external image tags", () => {
+      const expectedCompose: Compose = {
+        version: "3.4",
+        services: {
+          backend: {
+            build: "./build",
+            image: "backend.mypackage.public.dappnode.eth:0.1.0"
+          },
+          frontend: {
+            image: "nginx:alpine"
+          }
+        }
+      };
+
+      const composeEdited = updateComposeImageTags(compose, { name, version });
+
+      expect(composeEdited).to.deep.equal(expectedCompose);
     });
   });
 });

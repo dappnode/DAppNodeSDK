@@ -7,6 +7,8 @@ export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
 
 export const UPSTREAM_VERSION_VARNAME = "UPSTREAM_VERSION";
 
+export const upstreamImageLabel = "dappnode.dnp.upstreamImage";
+
 /**
  * Plain text file with should contain the IPFS hash of the release
  * Necessary for the installer script to fetch the latest content hash
@@ -28,17 +30,6 @@ const releaseFilesRegex = {
   disclaimer: /disclaimer\.md$/i,
   gettingStarted: /getting.*started\.md$/i
 };
-
-// Single arch images
-export const getArchTag = (arch: Architecture): string =>
-  arch.replace(/\//g, "-");
-export const getImagePath = (
-  name: string,
-  version: string,
-  arch: Architecture
-): string => `${name}_${version}_${getArchTag(arch)}.txz`;
-export const getLegacyImagePath = (name: string, version: string): string =>
-  `${name}_${version}.tar.xz`;
 
 export const releaseFiles = {
   manifest: {
@@ -96,3 +87,43 @@ export const releaseFiles = {
     id: "gettingStarted"
   }
 };
+
+// Naming
+
+// Single arch images
+export const getArchTag = (arch: Architecture): string =>
+  arch.replace(/\//g, "-");
+export const getImagePath = (
+  name: string,
+  version: string,
+  arch: Architecture
+): string => `${name}_${version}_${getArchTag(arch)}.txz`;
+export const getLegacyImagePath = (name: string, version: string): string =>
+  `${name}_${version}.tar.xz`;
+
+/**
+ * Get a unique domain per container, considering multi-service packages
+ */
+export const getContainerDomain = ({
+  dnpName,
+  serviceName
+}: {
+  serviceName: string;
+  dnpName: string;
+}): string => {
+  if (!serviceName || serviceName === dnpName) {
+    return dnpName;
+  } else {
+    return [serviceName, dnpName].join(".");
+  }
+};
+
+export const getImageTag = ({
+  dnpName,
+  serviceName,
+  version
+}: {
+  dnpName: string;
+  serviceName: string;
+  version: string;
+}): string => [getContainerDomain({ dnpName, serviceName }), version].join(":");
