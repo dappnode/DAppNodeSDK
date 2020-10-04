@@ -21,7 +21,7 @@ import {
   updateComposeImageTags,
   getComposeImageTags,
   writeCompose,
-  removeBuildPropFromCompose
+  getExternalImageTags
 } from "../utils/compose";
 import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
@@ -29,6 +29,7 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
+import { shell } from "../utils/shell";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -79,8 +80,16 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
 
   // Update compose
   const composePath = getComposePath(dir);
-  const compose = updateComposeImageTags(readCompose(dir), { name, version });
-  const imageTags = getComposeImageTags(compose);
+  const composeForDev = readCompose(dir);
+  const composeForBuild = updateComposeImageTags(composeForDev, manifest);
+  const composeForRelease = updateComposeImageTags(composeForDev, manifest, {
+    editExternalImages: true
+  });
+
+  // Get external image tags to pull and re-tag
+  const externalImageTags = getExternalImageTags(composeForDev, manifest);
+  const imageTags = getComposeImageTags(composeForRelease);
+
   const architectures =
     manifest.architectures && parseArchitectures(manifest.architectures);
   const imagePathAmd = path.join(
@@ -99,7 +108,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
 
   // Bump upstreamVersion if provided
   const upstreamVersion =
-    parseComposeUpstreamVersion(compose) || process.env.UPSTREAM_VERSION;
+    parseComposeUpstreamVersion(composeForDev) || process.env.UPSTREAM_VERSION;
   if (upstreamVersion) manifest.upstreamVersion = upstreamVersion;
 
   return [
@@ -127,11 +136,11 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
       title: "Copy files and validate",
       task: async () => {
         // Write compose with build props for builds
-        writeCompose(dir, compose);
+        writeCompose(dir, composeForBuild);
 
         // Copy files for release dir
         fs.copyFileSync(avatarRootPath, avatarBuildPath);
-        writeCompose(buildDir, removeBuildPropFromCompose(compose));
+        writeCompose(buildDir, composeForRelease);
         writeManifest(buildDir, manifest);
         validateManifest(manifest, { prerelease: true });
 
@@ -150,6 +159,21 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
               filePath,
               path.join(buildDir, releaseFile.defaultName)
             );
+        }
+      }
+    },
+
+    // Pull external image tags to be saved latter
+    {
+      title: "Pull and tag external images",
+      enabled: () => externalImageTags.length > 0,
+      task: async (_, task) => {
+        for (const { imageTag, newImageTag } of externalImageTags) {
+          await shell(`docker pull ${imageTag}`, {
+            onData: data => (task.output = data)
+          });
+          task.output = `Tagging ${imageTag} > ${newImageTag}`;
+          await shell(`docker tag ${imageTag} ${newImageTag}`);
         }
       }
     },
