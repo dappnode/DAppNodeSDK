@@ -1,6 +1,6 @@
 import semver from "semver";
 import { readManifest, writeManifest } from "../manifest";
-import { updateCompose } from "../compose";
+import { readCompose, writeCompose, updateComposeImageTags } from "../compose";
 import { checkSemverType } from "../checkSemverType";
 import { ReleaseType } from "../../types";
 
@@ -36,7 +36,8 @@ export async function increaseFromLocalVersion({
   // Mofidy and write the manifest and docker-compose
   writeManifest(dir, manifest);
   const { name, version } = manifest;
-  updateCompose({ name, version, dir });
+  const compose = readCompose(dir);
+  writeCompose(dir, updateComposeImageTags(compose, { name, version }));
 
   return nextVersion;
 }

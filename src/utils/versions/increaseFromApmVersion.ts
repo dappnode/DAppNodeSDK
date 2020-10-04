@@ -1,5 +1,5 @@
 import { readManifest, writeManifest } from "../manifest";
-import { updateCompose } from "../compose";
+import { readCompose, writeCompose, updateComposeImageTags } from "../compose";
 import { getNextVersionFromApm } from "./getNextVersionFromApm";
 import { ReleaseType } from "../../types";
 
@@ -24,7 +24,8 @@ export async function increaseFromApmVersion({
   // Mofidy and write the manifest and docker-compose
   writeManifest(dir, manifest);
   const { name, version } = manifest;
-  updateCompose({ name, version, dir });
+  const compose = readCompose(dir);
+  writeCompose(dir, updateComposeImageTags(compose, { name, version }));
 
   return nextVersion;
 }

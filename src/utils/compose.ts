@@ -148,50 +148,36 @@ export function generateCompose(manifest: Manifest): Compose {
   return dockerCompose;
 }
 
-export function updateCompose({
-  name,
-  version,
-  dir
-}: {
-  name: string;
-  version: string;
-  dir: string;
-}): void {
-  const compose = readCompose(dir);
-  // Only update the imageName field
-  //   services:
-  //     wamp.dnp.dappnode.eth:
-  //       image: 'wamp.dnp.dappnode.eth:0.1.1'
-  compose.services[name].image = name + ":" + version;
-  writeCompose(dir, compose);
-}
-
 /**
  * Update service image tag to current version
  * @returns updated imageTags
  */
-export function prepareComposeForBuild({
-  name,
-  version,
-  dir
-}: {
-  name: string;
-  version: string;
-  dir: string;
-}): string[] {
-  const compose = readCompose(dir);
+export function updateComposeImageTags(
+  compose: Compose,
+  { name, version }: { name: string; version: string }
+): Compose {
   const serviceCount = Object.keys(compose.services).length;
   if (serviceCount === 0) throw Error(`Compose must have at lest 1 service`);
 
-  for (const serviceName of Object.keys(compose.services)) {
-    compose.services[serviceName].image =
-      serviceCount === 1
-        ? `${name}:${version}`
-        : `${serviceName}.${name}:${version}`;
+  for (const [serviceName, service] of Object.entries(compose.services)) {
+    if (service.build)
+      service.image =
+        serviceCount === 1
+          ? `${name}:${version}`
+          : `${serviceName}.${name}:${version}`;
   }
 
-  writeCompose(dir, compose);
+  return compose;
+}
 
+export function removeBuildPropFromCompose(compose: Compose): Compose {
+  for (const service of Object.values(compose.services)) {
+    delete service.build;
+  }
+  return compose;
+}
+
+export function getComposeImageTags(compose: Compose): string[] {
   return Object.values(compose.services).map(service => service.image);
 }
 
