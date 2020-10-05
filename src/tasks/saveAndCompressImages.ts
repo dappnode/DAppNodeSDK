@@ -10,7 +10,7 @@ import {
   PackageImage,
   PackageImageExternal
 } from "../types";
-import { shell } from "../utils/shell";
+import { getDocker } from "../utils/docker";
 
 /**
  * Save docker image
@@ -30,6 +30,8 @@ export function saveAndCompressImagesCached({
   buildTimeout: number;
   skipSave?: boolean;
 }): ListrTask<ListrContextBuildAndPublish>[] {
+  const docker = getDocker();
+
   const imageTags = images.map(image => image.imageTag);
   const externalImages = images.filter(
     (image): image is PackageImageExternal => image.type === "external"
@@ -41,17 +43,14 @@ export function saveAndCompressImagesCached({
       enabled: () => externalImages.length > 0,
       task: async (_, task) => {
         for (const { imageTag, originalImageTag } of externalImages) {
-          await shell(
-            `docker pull ${originalImageTag} --platform=${architecture}`,
-            { onData: data => (task.output = data) }
-          );
+          task.output = `Pulling ${originalImageTag}`;
+          await docker.pull(originalImageTag, { platform: architecture });
           task.output = `Tagging ${originalImageTag} > ${imageTag}`;
-          await shell(`docker tag ${originalImageTag} ${imageTag}`);
+          await docker.getImage(originalImageTag).tag({ tag: imageTag });
 
           // Validate the resulting image architecture
-          const imageDataRaw = await shell(`docker image inspect ${imageTag}`);
-          const imageData = JSON.parse(imageDataRaw);
-          const imageArch = `${imageData[0]["Os"]}/${imageData[0]["Architecture"]}`;
+          const newTagInfo = await docker.getImage(imageTag).inspect();
+          const imageArch = `${newTagInfo.Os}/${newTagInfo.Architecture}`;
           if (imageArch !== architecture)
             throw Error(
               `pulled image ${originalImageTag} does not have the expected architecture '${architecture}', but ${imageArch}`
