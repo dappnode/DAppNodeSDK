@@ -4,7 +4,13 @@ import { spawn } from "child_process";
 import { ListrTask } from "listr";
 import { getFileHash } from "../utils/getFileHash";
 import { loadCache, writeToCache, getCacheKey } from "../utils/cache";
-import { ListrContextBuildAndPublish } from "../types";
+import {
+  Architecture,
+  ListrContextBuildAndPublish,
+  PackageImage,
+  PackageImageExternal
+} from "../types";
+import { shell } from "../utils/shell";
 
 /**
  * Save docker image
@@ -12,45 +18,77 @@ import { ListrContextBuildAndPublish } from "../types";
  * A local cache file will prevent unnecessary compressions if the image hasn't changed
  */
 export function saveAndCompressImagesCached({
-  imageTags,
+  images,
+  architecture,
   destPath,
   buildTimeout,
   skipSave
 }: {
-  imageTags: string[];
+  images: PackageImage[];
+  architecture: Architecture;
   destPath: string;
   buildTimeout: number;
   skipSave?: boolean;
-}): ListrTask<ListrContextBuildAndPublish> {
-  return {
-    title: "Save and compress image",
-    skip: () => skipSave,
-    task: async (_, task) => {
-      // Get a deterministic cache key for this collection of images
-      const cacheKey = await getCacheKey(imageTags);
+}): ListrTask<ListrContextBuildAndPublish>[] {
+  const imageTags = images.map(image => image.imageTag);
+  const externalImages = images.filter(
+    (image): image is PackageImageExternal => image.type === "external"
+  );
 
-      // Load the cache object, and compute the target .tar.xz hash
-      const cacheTarHash = loadCache().get(cacheKey);
-      const tarHash = await getFileHash(destPath);
-      if (tarHash && tarHash === cacheTarHash) {
-        task.skip(`Using cached verified tarball ${destPath}`);
-      } else {
-        task.output = `Saving docker image to file...`;
-        fs.mkdirSync(path.dirname(destPath), { recursive: true });
+  return [
+    {
+      title: "Pull and tag external images",
+      enabled: () => externalImages.length > 0,
+      task: async (_, task) => {
+        for (const { imageTag, originalImageTag } of externalImages) {
+          await shell(
+            `docker pull ${originalImageTag} --platform=${architecture}`,
+            { onData: data => (task.output = data) }
+          );
+          task.output = `Tagging ${originalImageTag} > ${imageTag}`;
+          await shell(`docker tag ${originalImageTag} ${imageTag}`);
 
-        await saveAndCompressImages({
-          imageTags,
-          destPath,
-          timeout: buildTimeout,
-          onData: msg => (task.output = msg)
-        });
+          // Validate the resulting image architecture
+          const imageDataRaw = await shell(`docker image inspect ${imageTag}`);
+          const imageData = JSON.parse(imageDataRaw);
+          const imageArch = `${imageData[0]["Os"]}/${imageData[0]["Architecture"]}`;
+          if (imageArch !== architecture)
+            throw Error(
+              `pulled image ${originalImageTag} does not have the expected architecture '${architecture}', but ${imageArch}`
+            );
+        }
+      }
+    },
+    {
+      title: "Save and compress image",
+      skip: () => skipSave,
+      task: async (_, task) => {
+        // Get a deterministic cache key for this collection of images
+        const cacheKey = await getCacheKey(imageTags);
 
-        task.output = `Storing saved image to cache...`;
-        const newTarHash = await getFileHash(destPath);
-        if (newTarHash) writeToCache({ key: cacheKey, value: newTarHash });
+        // Load the cache object, and compute the target .tar.xz hash
+        const cacheTarHash = loadCache().get(cacheKey);
+        const tarHash = await getFileHash(destPath);
+        if (tarHash && tarHash === cacheTarHash) {
+          task.skip(`Using cached verified tarball ${destPath}`);
+        } else {
+          task.output = `Saving docker image to file...`;
+          fs.mkdirSync(path.dirname(destPath), { recursive: true });
+
+          await saveAndCompressImages({
+            imageTags,
+            destPath,
+            timeout: buildTimeout,
+            onData: msg => (task.output = msg)
+          });
+
+          task.output = `Storing saved image to cache...`;
+          const newTarHash = await getFileHash(destPath);
+          if (newTarHash) writeToCache({ key: cacheKey, value: newTarHash });
+        }
       }
     }
-  };
+  ];
 }
 
 async function saveAndCompressImages({
