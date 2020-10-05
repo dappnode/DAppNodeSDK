@@ -17,11 +17,10 @@ import { swarmAddDirFromFs } from "../utils/swarmAddDirFromFs";
 import {
   getComposePath,
   readCompose,
+  writeCompose,
   parseComposeUpstreamVersion,
   updateComposeImageTags,
-  getComposeImageTags,
-  writeCompose,
-  getExternalImageTags
+  getComposePackageImages
 } from "../utils/compose";
 import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
@@ -29,7 +28,6 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
-import { shell } from "../utils/shell";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -87,8 +85,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
   });
 
   // Get external image tags to pull and re-tag
-  const externalImageTags = getExternalImageTags(composeForDev, manifest);
-  const imageTags = getComposeImageTags(composeForRelease);
+  const images = getComposePackageImages(composeForDev, manifest);
 
   const architectures =
     manifest.architectures && parseArchitectures(manifest.architectures);
@@ -163,21 +160,6 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
       }
     },
 
-    // Pull external image tags to be saved latter
-    {
-      title: "Pull and tag external images",
-      enabled: () => externalImageTags.length > 0,
-      task: async (_, task) => {
-        for (const { imageTag, newImageTag } of externalImageTags) {
-          await shell(`docker pull ${imageTag}`, {
-            onData: data => (task.output = data)
-          });
-          task.output = `Tagging ${imageTag} > ${newImageTag}`;
-          await shell(`docker tag ${imageTag} ${newImageTag}`);
-        }
-      }
-    },
-
     // NOTE: The naming scheme for multiarch exported images must be
     // compatible with DAppNodes that expect a single ".tar.xz" file
     // which must be amd64, x86_64
@@ -190,7 +172,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
               new Listr(
                 buildWithBuildx({
                   architecture,
-                  imageTags,
+                  images,
                   composePath,
                   buildTimeout,
                   skipSave,
@@ -203,7 +185,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
           })
         )
       : buildWithCompose({
-          imageTags,
+          images,
           composePath,
           buildTimeout,
           skipSave,

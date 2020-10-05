@@ -1,7 +1,13 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import { Manifest, Compose, ComposeService, ComposeVolumes } from "../types";
+import {
+  Manifest,
+  Compose,
+  ComposeService,
+  ComposeVolumes,
+  PackageImage
+} from "../types";
 import { upstreamImageLabel, UPSTREAM_VERSION_VARNAME } from "../params";
 import { toTitleCase } from "./format";
 import { mapValues } from "lodash";
@@ -204,29 +210,23 @@ export function updateComposeImageTags(
   };
 }
 
-export function getExternalImageTags(
+export function getComposePackageImages(
   compose: Compose,
   { name, version }: { name: string; version: string }
-): ExternalImage[] {
-  const imageTagMap: ExternalImage[] = [];
-  for (const [serviceName, service] of Object.entries(compose.services)) {
-    if (!service.build) {
-      imageTagMap.push({
-        imageTag: service.image,
-        newImageTag: getImageTag({
-          serviceName,
-          name,
-          version,
-          serviceCount: Object.keys(compose.services).length
-        })
+): PackageImage[] {
+  return Object.entries(compose.services).map(
+    ([serviceName, service]): PackageImage => {
+      const imageTag = getImageTag({
+        serviceName,
+        name,
+        version,
+        serviceCount: Object.keys(compose.services).length
       });
+      return service.build
+        ? { type: "local", imageTag }
+        : { type: "external", imageTag, originalImageTag: service.image };
     }
-  }
-  return imageTagMap;
-}
-
-export function getComposeImageTags(compose: Compose): string[] {
-  return Object.values(compose.services).map(service => service.image);
+  );
 }
 
 export function parseComposeUpstreamVersion(

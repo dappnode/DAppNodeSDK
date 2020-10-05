@@ -24,6 +24,17 @@ export const defaultArch = "linux/amd64";
 export type ReleaseType = "major" | "minor" | "patch";
 export const releaseTypes: ReleaseType[] = ["major", "minor", "patch"];
 
+export type PackageImageLocal = {
+  type: "local";
+  imageTag: string;
+};
+export type PackageImageExternal = {
+  type: "external";
+  imageTag: string;
+  originalImageTag: string;
+};
+export type PackageImage = PackageImageLocal | PackageImageExternal;
+
 export interface TxData {
   to: string;
   value: number;

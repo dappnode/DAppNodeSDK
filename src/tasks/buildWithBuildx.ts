@@ -1,7 +1,7 @@
 import { ListrTask } from "listr";
 import semver from "semver";
 import { shell } from "../utils/shell";
-import { Architecture } from "../types";
+import { Architecture, PackageImage } from "../types";
 import { saveAndCompressImagesCached } from "./saveAndCompressImages";
 import { getDockerVersion } from "../utils/getDockerVersion";
 
@@ -15,14 +15,14 @@ const buildxInstanceName = "dappnode-multiarch-builder";
  */
 export function buildWithBuildx({
   architecture,
-  imageTags,
+  images,
   composePath,
   destPath,
   buildTimeout,
   skipSave
 }: {
   architecture: Architecture;
-  imageTags: string[];
+  images: PackageImage[];
   composePath: string;
   destPath: string;
   buildTimeout: number;
@@ -78,23 +78,28 @@ export function buildWithBuildx({
           }
         );
 
-        // Make sure the built was done for the correct architecture
-        switch (architecture) {
-          case "linux/arm64": {
-            const res = await shell(
-              `docker run --rm --entrypoint="" ${imageTags[0]} uname -m`
-            );
-            if (res !== "aarch64")
-              throw Error(`Unexpected resulting architecture: ${res}`);
-            else task.output = `Validated ${imageTags[0]} architecture`;
-            break;
+        const firstImage = images.find(image => image.type === "local");
+        if (firstImage) {
+          const firstImageTag = firstImage.imageTag;
+          // Make sure the built was done for the correct architecture
+          switch (architecture) {
+            case "linux/arm64": {
+              const res = await shell(
+                `docker run --rm --entrypoint="" ${firstImageTag} uname -m`
+              );
+              if (res !== "aarch64")
+                throw Error(`Unexpected resulting architecture: ${res}`);
+              else task.output = `Validated ${firstImageTag} architecture`;
+              break;
+            }
           }
         }
       }
     },
 
-    saveAndCompressImagesCached({
-      imageTags,
+    ...saveAndCompressImagesCached({
+      images,
+      architecture,
       destPath,
       buildTimeout,
       skipSave
