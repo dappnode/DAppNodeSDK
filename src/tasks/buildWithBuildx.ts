@@ -1,7 +1,7 @@
 import { ListrTask } from "listr";
 import semver from "semver";
 import { shell } from "../utils/shell";
-import { Architecture, PackageImage } from "../types";
+import { Architecture, PackageImage, PackageImageLocal } from "../types";
 import { saveAndCompressImagesCached } from "./saveAndCompressImages";
 import { getDockerVersion } from "../utils/getDockerVersion";
 
@@ -28,9 +28,14 @@ export function buildWithBuildx({
   buildTimeout: number;
   skipSave?: boolean;
 }): ListrTask[] {
+  const localImages = images.filter(
+    (image): image is PackageImageLocal => image.type === "local"
+  );
+
   return [
     {
       title: "Build docker image",
+      enabled: () => localImages.length > 0,
       task: async (_, task) => {
         // Must enable this flag for buildx to work on all environments
         process.env.DOCKER_CLI_EXPERIMENTAL = "enabled";
