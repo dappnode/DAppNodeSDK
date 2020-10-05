@@ -47,6 +47,15 @@ export function saveAndCompressImagesCached({
           );
           task.output = `Tagging ${originalImageTag} > ${imageTag}`;
           await shell(`docker tag ${originalImageTag} ${imageTag}`);
+
+          // Validate the resulting image architecture
+          const imageDataRaw = await shell(`docker image inspect ${imageTag}`);
+          const imageData = JSON.parse(imageDataRaw);
+          const imageArch = `${imageData[0]["Os"]}/${imageData[0]["Architecture"]}`;
+          if (imageArch !== architecture)
+            throw Error(
+              `pulled image ${originalImageTag} does not have the expected architecture '${architecture}', but ${imageArch}`
+            );
         }
       }
     },
