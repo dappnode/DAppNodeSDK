@@ -10,7 +10,8 @@ import {
   PackageImage,
   PackageImageExternal
 } from "../types";
-import { getDocker } from "../utils/docker";
+import { getDocker, getImageByTag } from "../utils/docker";
+import { shell } from "../utils/shell";
 
 /**
  * Save docker image
@@ -43,13 +44,18 @@ export function saveAndCompressImagesCached({
       enabled: () => externalImages.length > 0,
       task: async (_, task) => {
         for (const { imageTag, originalImageTag } of externalImages) {
-          task.output = `Pulling ${originalImageTag}`;
-          await docker.pull(originalImageTag, { platform: architecture });
+          await shell(
+            `docker pull ${originalImageTag} --platform=${architecture}`,
+            { onData: data => (task.output = data) }
+          );
           task.output = `Tagging ${originalImageTag} > ${imageTag}`;
-          await docker.getImage(originalImageTag).tag({ tag: imageTag });
+
+          const originalImage = await getImageByTag(docker, originalImageTag);
+          await originalImage.tag({ tag: imageTag });
 
           // Validate the resulting image architecture
-          const newTagInfo = await docker.getImage(imageTag).inspect();
+          const newImage = await getImageByTag(docker, imageTag);
+          const newTagInfo = await newImage.inspect();
           const imageArch = `${newTagInfo.Os}/${newTagInfo.Architecture}`;
           if (imageArch !== architecture)
             throw Error(

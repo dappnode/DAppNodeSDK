@@ -1,7 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { getDocker } from "./docker";
+import { getDocker, getImageByTag } from "./docker";
 
 // Local cache specs. Path = $cachePath
 type CacheMap = Map<string, string>;
@@ -74,7 +74,8 @@ export async function getCacheKey(imageTags: string[]): Promise<string> {
   return (
     await Promise.all(
       imageTags.sort().map(async imageTag => {
-        const info = await getDocker().getImage(imageTag).inspect();
+        const image = await getImageByTag(getDocker(), imageTag);
+        const info = await image.inspect();
         // info.Id = "sha256:2dbd79fff9541ba91c6ce5867840ecee8d5e335bc2465dadb39a3419e7039f96"
         return [imageTag, info.Id].join("/");
       })
