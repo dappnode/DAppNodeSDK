@@ -3,7 +3,7 @@ import semver from "semver";
 import { shell } from "../utils/shell";
 import { Architecture, PackageImage, PackageImageLocal } from "../types";
 import { saveAndCompressImagesCached } from "./saveAndCompressImages";
-import { getDockerVersion } from "../utils/getDockerVersion";
+import { getDocker } from "../utils/docker";
 
 const minimumDockerVersion = "19.03.0";
 const buildxInstanceName = "dappnode-multiarch-builder";
@@ -28,6 +28,8 @@ export function buildWithBuildx({
   buildTimeout: number;
   skipSave?: boolean;
 }): ListrTask[] {
+  const docker = getDocker();
+
   const localImages = images.filter(
     (image): image is PackageImageLocal => image.type === "local"
   );
@@ -41,10 +43,16 @@ export function buildWithBuildx({
         process.env.DOCKER_CLI_EXPERIMENTAL = "enabled";
 
         // Make sure `docker version` is >= 19.03
-        const dockerVersion = await getDockerVersion();
-        if (dockerVersion && semver.lt(dockerVersion, minimumDockerVersion))
+        const dockerInfo = await docker.version().catch(e => {
+          throw Error(`docker is not installed: ${e.message}`);
+        });
+        const dockerVersion = dockerInfo.Version;
+        if (
+          semver.valid(dockerVersion) &&
+          semver.lt(dockerVersion, minimumDockerVersion)
+        )
           throw Error(
-            `docker version must be at least ${minimumDockerVersion} to use buildx`
+            `docker version must be at least ${minimumDockerVersion} to use buildx, current version ${dockerVersion}`
           );
 
         switch (architecture) {

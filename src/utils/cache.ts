@@ -1,7 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { getImageId, getImageIds } from "./getImageId";
+import { getDocker, getImageByTag } from "./docker";
 
 // Local cache specs. Path = $cachePath
 type CacheMap = Map<string, string>;
@@ -73,9 +73,12 @@ export function writeCache(cache: CacheMap, cachePath?: string): void {
 export async function getCacheKey(imageTags: string[]): Promise<string> {
   return (
     await Promise.all(
-      imageTags
-        .sort()
-        .map(async imageTag => [imageTag, await getImageId(imageTag)].join("/"))
+      imageTags.sort().map(async imageTag => {
+        const image = await getImageByTag(getDocker(), imageTag);
+        const info = await image.inspect();
+        // info.Id = "sha256:2dbd79fff9541ba91c6ce5867840ecee8d5e335bc2465dadb39a3419e7039f96"
+        return [imageTag, info.Id].join("/");
+      })
     )
   ).join(";");
 }
@@ -88,7 +91,9 @@ export async function pruneCache(cachePath?: string): Promise<void> {
   if (!cachePath) cachePath = getCachePath();
   if (fs.existsSync(cachePath)) {
     const cache = loadCache(cachePath);
-    const imageIds = await getImageIds();
+    const images = await getDocker().listImages();
+    // imageIds = ["sha256:2dbd79fff9541ba91c6ce5867840ecee8d5e335bc2465dadb39a3419e7039f96"]
+    const imageIds = images.map(image => image.Id);
     const prunedCache = _pruneCache(cache, imageIds);
     writeCache(prunedCache, cachePath);
   }
