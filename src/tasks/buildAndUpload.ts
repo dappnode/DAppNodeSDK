@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import Listr, { ListrTask } from "listr";
+import rimraf from "rimraf";
 import { readManifest, writeManifest } from "../utils/manifest";
 import { validateManifest } from "../utils/validateManifest";
 import { verifyAvatar } from "../utils/verifyAvatar";
@@ -147,7 +148,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
         // Clean all files except the expected target images
         for (const filepath of buildFiles)
           if (!imagePaths.includes(filepath))
-            fs.unlinkSync(path.join(buildDir, filepath));
+            rimraf.sync(path.join(buildDir, filepath));
       }
     },
 
