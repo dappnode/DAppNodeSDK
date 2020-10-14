@@ -3,7 +3,7 @@ import path from "path";
 import Listr from "listr";
 import { getRepoSlugFromManifest } from "../utils/getRepoSlugFromManifest";
 import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
-import { getCurrentCommitSha } from "../utils/getCurrentCommitSha";
+import { getGitHead } from "../utils/getGitHead";
 import { contentHashFile } from "../params";
 import {
   TxData,
@@ -79,7 +79,7 @@ export function createGithubRelease({
           const currentCommitSha =
             process.env.GITHUB_SHA ||
             process.env.TRAVIS_COMMIT ||
-            (await getCurrentCommitSha());
+            (await getGitHead()).commit;
 
           // Tag the current commit with the release tag
           task.output = `Releasing commit ${currentCommitSha} at tag ${tag}`;

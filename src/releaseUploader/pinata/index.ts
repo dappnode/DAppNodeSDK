@@ -1,7 +1,6 @@
 import { IReleaseUploader } from "../interface";
 import { Pinata, PinataMetadata, pinataSDK } from "./PinataSDK";
 import { pinataAddFromFs } from "./addDirFromFs";
-import { Manifest } from "../../types";
 
 export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
   networkName = "IPFS Pinata";
@@ -25,26 +24,17 @@ export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
 
   async addFromFs({
     dirPath,
-    manifest,
+    metadata,
     onProgress
   }: {
     dirPath: string;
-    manifest: Manifest;
+    metadata: PinataMetadata;
     onProgress?: (percent: number) => void;
   }): Promise<string> {
-    const pinataMetadata: PinataMetadata = {
-      name: `${manifest.name} ${manifest.version}`,
-      keyvalues: {
-        name: manifest.name,
-        version: manifest.version,
-        upstreamVersion: manifest.upstreamVersion
-        // commit: "aafaafafafafafafaa"
-      }
-    };
     return await pinataAddFromFs({
       dirOrFilePath: dirPath,
       pinataUrl: this.pinataUrl,
-      pinataMetadata,
+      pinataMetadata: metadata,
       credentials: { apiKey: this.apiKey, secretApiKey: this.secretApiKey },
       onProgress
     });

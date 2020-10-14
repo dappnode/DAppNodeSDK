@@ -1,4 +1,4 @@
-import { Manifest } from "../types";
+import { PinataMetadata } from "./pinata/PinataSDK";
 
 export interface IReleaseUploader {
   /**
@@ -13,7 +13,7 @@ export interface IReleaseUploader {
    */
   addFromFs(kwargs: {
     dirPath: string;
-    manifest: Manifest;
+    metadata: PinataMetadata;
     onProgress?: (percent: number) => void;
   }): Promise<string>;
 

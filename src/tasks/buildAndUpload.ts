@@ -32,6 +32,8 @@ import {
   ReleaseUploaderConnectionError,
   cliArgsToReleaseUploaderProvider
 } from "../releaseUploader";
+import { getGitHead } from "../utils/getGitHead";
+import { PinataMetadata } from "../releaseUploader/pinata/PinataSDK";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -224,9 +226,22 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
         if (fs.existsSync(imagePathAmd))
           fs.copyFileSync(imagePathAmd, imagePathLegacy);
 
+        const gitHead = await getGitHead().catch(e => {
+          console.error("Error on getGitHead", e.stack);
+        });
+        const metadata: PinataMetadata = {
+          name: `${manifest.name} ${manifest.version}`,
+          keyvalues: {
+            name: manifest.name,
+            version: manifest.version,
+            upstreamVersion: manifest.upstreamVersion,
+            ...(gitHead || {})
+          }
+        };
+
         ctx.releaseHash = await releaseUploader.addFromFs({
           dirPath: buildDir,
-          manifest,
+          metadata,
           onProgress: percent => (task.output = percentToMessage(percent))
         });
       }
