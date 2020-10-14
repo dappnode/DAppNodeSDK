@@ -21,8 +21,8 @@ const typesList = releaseTypes.join(" | ");
 interface CliCommandOptions extends CliGlobalOptions {
   type?: string;
   provider?: string;
-  eth_provider?: string;
-  ipfs_provider?: string;
+  eth_provider: string;
+  content_provider: string;
   developer_address?: string;
   timeout: string;
   upload_to: string;
@@ -46,17 +46,19 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       })
       .option("provider", {
         alias: "p",
-        description: `Specify a provider (overwrittes ipfs_provider and eth_provider): "dappnode" (default), "infura", "http://localhost:8545"`,
+        description: `Specify a provider (overwrittes content_provider and eth_provider): "dappnode" (default), "infura", "http://localhost:8545"`,
         // Must NOT add a default here, so options can overwrite each other in the handler
         // default: "dappnode",
         type: "string"
       })
       .option("eth_provider", {
         description: `Specify an eth provider: "dappnode" (default), "infura", "localhost:5002"`,
+        default: "dappnode",
         type: "string"
       })
-      .option("ipfs_provider", {
+      .option("content_provider", {
         description: `Specify an ipfs provider: "dappnode" (default), "infura", "http://localhost:8545"`,
+        default: "dappnode",
         type: "string"
       })
       .option("developer_address", {
@@ -92,7 +94,7 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     type,
     provider,
     eth_provider,
-    ipfs_provider,
+    content_provider,
     developer_address,
     timeout,
     upload_to,
@@ -105,14 +107,13 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     verbose
   }): Promise<void> => {
     // Parse optionsalias: "release",
-    let ethProvider = provider || eth_provider || "dappnode";
-    let ipfsProvider = provider || ipfs_provider || "dappnode";
-    const swarmProvider = provider || "dappnode";
+    let ethProvider = provider || eth_provider;
+    let contentProvider = provider || content_provider;
+    let uploadTo = upload_to;
     let githubRelease = Boolean(github_release);
     let createNextGithubBranch = Boolean(create_next_branch);
     const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
     const userTimeout = timeout;
-    const uploadToSwarm = upload_to === "swarm";
 
     const isCi = process.env.CI;
     const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
@@ -125,7 +126,8 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     if (dappnode_team_preset) {
       if (isCi) {
         ethProvider = "infura";
-        ipfsProvider = "http://ipfs.dappnode.io";
+        contentProvider = "http://ipfs.dappnode.io";
+        uploadTo = "ipfs";
         // Activate verbose to see logs easier afterwards
         verbose = true;
       }
@@ -194,10 +196,9 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
               buildAndUpload({
                 dir,
                 buildDir: ctx.buildDir,
-                ipfsProvider,
-                swarmProvider,
-                userTimeout,
-                uploadToSwarm
+                contentProvider,
+                uploadTo,
+                userTimeout
               }),
               { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
             )

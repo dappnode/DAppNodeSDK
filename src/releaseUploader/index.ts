@@ -7,7 +7,7 @@ import { ReleaseUploaderSwarmNode } from "./swarmNode";
 export * from "./interface";
 export * from "./errors";
 
-type ReleaseUploaderProvider =
+export type ReleaseUploaderProvider =
   | {
       network: "ipfs";
       type: "node";
@@ -55,5 +55,49 @@ export function getReleaseUploader(
 class ErrorUnknownProvider extends CliError {
   constructor(provider: ReleaseUploaderProvider) {
     super(`Provider not supported: ${provider.network} ${provider.type}`);
+  }
+}
+
+/**
+ * Normalize common CLI args into a structured ReleaseUploaderProvider type
+ * @param param0
+ */
+export function cliArgsToReleaseUploaderProvider({
+  uploadTo,
+  contentProvider
+}: {
+  uploadTo: string;
+  contentProvider: string;
+}): ReleaseUploaderProvider {
+  switch (uploadTo) {
+    case "ipfs":
+      if (contentProvider === "pinata") {
+        const { PINATA_API_KEY, PINATA_SECRET_API_KEY } = process.env;
+        if (!PINATA_API_KEY) throw new CliError("Must provide PINATA_API_KEY");
+        if (!PINATA_SECRET_API_KEY)
+          throw new CliError("Must provide PINATA_SECRET_API_KEY");
+        return {
+          network: "ipfs",
+          type: "pinata",
+          apiKey: PINATA_API_KEY,
+          secretApiKey: PINATA_SECRET_API_KEY
+        };
+      } else {
+        return {
+          network: "ipfs",
+          type: "node",
+          ipfsProvider: contentProvider
+        };
+      }
+
+    case "swarm":
+      return {
+        network: "swarm",
+        type: "node",
+        swarmProvider: contentProvider
+      };
+
+    default:
+      throw new CliError(`Unknown upload_to value '${uploadTo}'`);
   }
 }

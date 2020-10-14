@@ -60,10 +60,9 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     verbose
   }): Promise<void> => {
     // Parse options
-    const ipfsProvider = provider;
-    const swarmProvider = provider;
+    const contentProvider = provider;
+    const uploadTo = upload_to;
     const userTimeout = timeout;
-    const uploadToSwarm = upload_to === "swarm";
     const skipSave = skip_save;
     const skipUpload = skip_save || skip_upload;
     const nextVersion = getCurrentLocalVersion({ dir });
@@ -73,10 +72,9 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       buildAndUpload({
         dir,
         buildDir,
-        ipfsProvider,
-        swarmProvider,
+        contentProvider,
+        uploadTo,
         userTimeout,
-        uploadToSwarm,
         skipSave,
         skipUpload
       }),

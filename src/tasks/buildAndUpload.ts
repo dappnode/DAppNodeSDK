@@ -26,8 +26,11 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
-import { getReleaseUploader } from "../releaseUploader";
-import { ReleaseUploaderConnectionError } from "../releaseUploader/errors";
+import {
+  getReleaseUploader,
+  ReleaseUploaderConnectionError,
+  cliArgsToReleaseUploaderProvider
+} from "../releaseUploader";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -35,19 +38,17 @@ const percentToMessage = (percent: number) =>
 
 export function buildAndUpload({
   buildDir,
-  ipfsProvider,
-  swarmProvider,
+  contentProvider,
+  uploadTo,
   userTimeout,
-  uploadToSwarm,
   skipSave,
   skipUpload,
   dir
 }: {
   buildDir: string;
-  ipfsProvider: string;
-  swarmProvider: string;
+  contentProvider: string;
+  uploadTo: string;
   userTimeout: string;
-  uploadToSwarm: boolean;
   skipSave?: boolean;
   skipUpload?: boolean;
   dir: string;
@@ -108,8 +109,10 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
     parseComposeUpstreamVersion(composeForDev) || process.env.UPSTREAM_VERSION;
   if (upstreamVersion) manifest.upstreamVersion = upstreamVersion;
 
-  // Release upload
-  const releaseUploader = getReleaseUploader({ ipfsProvider, uploadToSwarm });
+  // Release upload. Use function for return syntax
+  const releaseUploader = getReleaseUploader(
+    cliArgsToReleaseUploaderProvider({ uploadTo, contentProvider })
+  );
 
   return [
     {
@@ -235,7 +238,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
           dir,
           version,
           hash: ctx.releaseHash,
-          to: uploadToSwarm ? swarmProvider : ipfsProvider
+          to: contentProvider
         });
 
         // "return" result for next tasks
