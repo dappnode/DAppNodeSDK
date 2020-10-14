@@ -32,7 +32,7 @@ export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
     manifest: Manifest;
     onProgress?: (percent: number) => void;
   }): Promise<string> {
-    const metadata: PinataMetadata = {
+    const pinataMetadata: PinataMetadata = {
       name: `${manifest.name} ${manifest.version}`,
       keyvalues: {
         name: manifest.name,
@@ -41,13 +41,13 @@ export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
         // commit: "aafaafafafafafafaa"
       }
     };
-    return await pinataAddFromFs(
-      dirPath,
-      this.pinataUrl,
-      metadata,
-      { apiKey: this.apiKey, secretApiKey: this.secretApiKey },
+    return await pinataAddFromFs({
+      dirOrFilePath: dirPath,
+      pinataUrl: this.pinataUrl,
+      pinataMetadata,
+      credentials: { apiKey: this.apiKey, secretApiKey: this.secretApiKey },
       onProgress
-    );
+    });
   }
 
   async testConnection(): Promise<void> {

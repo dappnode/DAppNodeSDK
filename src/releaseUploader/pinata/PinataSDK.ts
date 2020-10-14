@@ -52,7 +52,7 @@ export interface PinPolicy {
   }[];
 }
 
-interface IpfsUploadResult {
+export interface IpfsUploadResult {
   /**
    * This is the IPFS multi-hash provided back for your content,
    * `"QmQhmhw7wh5cdSwCFoWf5txwAZ9f2y1RWfa4z6GFcuzSsG"`
