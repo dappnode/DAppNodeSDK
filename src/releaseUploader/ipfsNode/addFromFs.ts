@@ -1,9 +1,6 @@
-import fs from "fs";
-import path from "path";
 import got from "got";
-import FormData from "form-data";
-import { traverseDir } from "./traverseDir";
 import { normalizeIpfsProvider } from "./ipfsProvider";
+import { getFormDataFileUpload } from "../utils/formDataFileUpload";
 
 /**
  * Uploads a directory or file from the fs
@@ -13,27 +10,12 @@ import { normalizeIpfsProvider } from "./ipfsProvider";
  * @returns "/ipfs/Qm..."
  */
 export async function ipfsAddFromFs(
-  dirOrFile: string,
+  dirOrFilePath: string,
   ipfsProvider: string,
   onProgress?: (percent: number) => void
 ): Promise<string> {
   // Create form and append all files recursively
-
-  const form = new FormData();
-  // Automatically detect if recursive if needed if directory
-  if (fs.lstatSync(dirOrFile).isDirectory()) {
-    const dirDir = path.parse(dirOrFile).dir;
-    const filePaths = traverseDir(dirOrFile);
-    for (const filePath of filePaths) {
-      form.append(`file-${filePath}`, fs.createReadStream(filePath), {
-        // Compute filepaths from the provided dirOrFile and below only
-        filepath: path.relative(dirDir, filePath)
-      });
-    }
-  } else {
-    // Add single files without providing a filepath
-    form.append("file", fs.createReadStream(dirOrFile));
-  }
+  const form = getFormDataFileUpload(dirOrFilePath);
 
   // Parse the ipfsProvider the a full base apiUrl
   let lastPercent = -1;

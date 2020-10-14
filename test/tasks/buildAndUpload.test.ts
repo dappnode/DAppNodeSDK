@@ -5,7 +5,7 @@ import Listr from "listr";
 import { rmSafe, shellSafe } from "../shellSafe";
 import { buildAndUpload } from "../../src/tasks/buildAndUpload";
 
-const ipfsProvider = "http://ipfs.dappnode.io";
+const contentProvider = "http://ipfs.dappnode.io";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -81,10 +81,9 @@ ENV test=1
       buildAndUpload({
         dir: "./",
         buildDir,
-        ipfsProvider: ipfsProvider,
-        swarmProvider: "",
-        userTimeout: "5min",
-        uploadToSwarm: false
+        contentProvider,
+        uploadTo: "ipfs",
+        userTimeout: "5min"
       }),
       { renderer: "verbose" }
     );

@@ -12,10 +12,10 @@ import {
   getLegacyImagePath,
   releaseFiles
 } from "../params";
-import { ipfsAddDirFromUrls } from "../utils/ipfs/ipfsAddDirFromUrls";
 import { getInstallDnpLink } from "../utils/getLinks";
-import { verifyIpfsConnection } from "../utils/verifyIpfsConnection";
 import { githubGetReleases, GithubRelease } from "../utils/githubGetReleases";
+import { ipfsAddDirFromUrls } from "../releaseUploader/ipfsNode/addDirFromUrls";
+import { verifyIpfsConnection } from "../releaseUploader/ipfsNode/verifyConnection";
 
 interface CliCommandOptions extends CliGlobalOptions {
   repoSlug: string;

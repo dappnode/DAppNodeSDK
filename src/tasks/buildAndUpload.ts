@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import Listr, { ListrTask } from "listr";
+import rimraf from "rimraf";
 import { readManifest, writeManifest } from "../utils/manifest";
 import { validateManifest } from "../utils/validateManifest";
 import { verifyAvatar } from "../utils/verifyAvatar";
@@ -12,8 +13,6 @@ import {
   getImagePath,
   getLegacyImagePath
 } from "../params";
-import { ipfsAddFromFs } from "../utils/ipfs/ipfsAddFromFs";
-import { swarmAddDirFromFs } from "../utils/swarmAddDirFromFs";
 import {
   getComposePath,
   readCompose,
@@ -28,6 +27,13 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
+import {
+  getReleaseUploader,
+  ReleaseUploaderConnectionError,
+  cliArgsToReleaseUploaderProvider
+} from "../releaseUploader";
+import { getGitHead } from "../utils/getGitHead";
+import { PinataMetadata } from "../releaseUploader/pinata/PinataSDK";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -35,19 +41,17 @@ const percentToMessage = (percent: number) =>
 
 export function buildAndUpload({
   buildDir,
-  ipfsProvider,
-  swarmProvider,
+  contentProvider,
+  uploadTo,
   userTimeout,
-  uploadToSwarm,
   skipSave,
   skipUpload,
   dir
 }: {
   buildDir: string;
-  ipfsProvider: string;
-  swarmProvider: string;
+  contentProvider: string;
+  uploadTo: string;
   userTimeout: string;
-  uploadToSwarm: boolean;
   skipSave?: boolean;
   skipUpload?: boolean;
   dir: string;
@@ -108,7 +112,30 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
     parseComposeUpstreamVersion(composeForDev) || process.env.UPSTREAM_VERSION;
   if (upstreamVersion) manifest.upstreamVersion = upstreamVersion;
 
+  // Release upload. Use function for return syntax
+  const releaseUploader = getReleaseUploader(
+    cliArgsToReleaseUploaderProvider({ uploadTo, contentProvider })
+  );
+
   return [
+    {
+      title: "Verify connection",
+      skip: () => skipUpload,
+      task: async () => {
+        try {
+          await releaseUploader.testConnection();
+        } catch (e) {
+          if (e instanceof ReleaseUploaderConnectionError) {
+            throw new CliError(
+              `Can't connect to ${e.ipfsProvider}: ${e.reason}. ${e.help || ""}`
+            );
+          } else {
+            throw e;
+          }
+        }
+      }
+    },
+
     {
       title: "Create release dir",
       task: async () => {
@@ -123,7 +150,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
         // Clean all files except the expected target images
         for (const filepath of buildFiles)
           if (!imagePaths.includes(filepath))
-            fs.unlinkSync(path.join(buildDir, filepath));
+            rimraf.sync(path.join(buildDir, filepath));
       }
     },
 
@@ -192,32 +219,33 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
           destPath: imagePathAmd
         })),
 
-    uploadToSwarm
-      ? {
-          title: "Upload release to Swarm",
-          skip: () => skipUpload,
-          task: async (ctx, task) => {
-            ctx.releaseHash = await swarmAddDirFromFs(
-              buildDir,
-              swarmProvider,
-              percent => (task.output = percentToMessage(percent))
-            );
+    {
+      title: `Upload release to ${releaseUploader.networkName}`,
+      skip: () => skipUpload,
+      task: async (ctx, task) => {
+        if (fs.existsSync(imagePathAmd))
+          fs.copyFileSync(imagePathAmd, imagePathLegacy);
+
+        const gitHead = await getGitHead().catch(e => {
+          console.error("Error on getGitHead", e.stack);
+        });
+        const metadata: PinataMetadata = {
+          name: `${manifest.name} ${manifest.version}`,
+          keyvalues: {
+            name: manifest.name,
+            version: manifest.version,
+            upstreamVersion: manifest.upstreamVersion,
+            ...(gitHead || {})
           }
-        }
-      : {
-          title: "Upload release to IPFS",
-          skip: () => skipUpload,
-          task: async (ctx, task) => {
-            if (fs.existsSync(imagePathAmd))
-              fs.copyFileSync(imagePathAmd, imagePathLegacy);
-            // Starts with /ipfs/
-            ctx.releaseHash = await ipfsAddFromFs(
-              buildDir,
-              ipfsProvider,
-              percent => (task.output = percentToMessage(percent))
-            );
-          }
-        },
+        };
+
+        ctx.releaseHash = await releaseUploader.addFromFs({
+          dirPath: buildDir,
+          metadata,
+          onProgress: percent => (task.output = percentToMessage(percent))
+        });
+      }
+    },
 
     {
       title: "Save upload results",
@@ -226,7 +254,7 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
           dir,
           version,
           hash: ctx.releaseHash,
-          to: uploadToSwarm ? swarmProvider : ipfsProvider
+          to: contentProvider
         });
 
         // "return" result for next tasks

@@ -91,8 +91,10 @@ export function buildWithBuildx({
             case "linux/arm64": {
               const res = await shell(
                 `docker run --rm --entrypoint="" ${firstImageTag} uname -m`
-              );
-              if (res !== "aarch64")
+              ).catch(e => {
+                if (!e.message.includes("executable file not found")) throw e;
+              });
+              if (res && res !== "aarch64")
                 throw Error(`Unexpected resulting architecture: ${res}`);
               else task.output = `Validated ${firstImageTag} architecture`;
               break;

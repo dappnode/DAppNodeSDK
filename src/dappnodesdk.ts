@@ -5,7 +5,6 @@ import chalk from "chalk";
 import figlet from "figlet";
 import dotenv from "dotenv";
 
-import { addAvatar } from "./commands/addAvatar";
 import { build } from "./commands/build";
 import { fromGithub } from "./commands/from_github";
 import { increase } from "./commands/increase";
@@ -46,7 +45,6 @@ const dappnodesdk = yargs
       type: "boolean"
     }
   })
-  .command(addAvatar)
   .command(build)
   .command(fromGithub)
   .command(increase)
