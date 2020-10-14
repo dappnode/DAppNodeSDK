@@ -13,7 +13,7 @@ export function getFormDataFileUpload(dirOrFilePath: string): FormData {
     const dirDir = path.parse(dirOrFilePath).dir;
     const filePaths = traverseDir(dirOrFilePath);
     for (const filePath of filePaths) {
-      form.append(`file-${filePath}`, fs.createReadStream(filePath), {
+      form.append("file", fs.createReadStream(filePath), {
         // Compute filepaths from the provided dirOrFilePath and below only
         filepath: path.relative(dirDir, filePath)
       });

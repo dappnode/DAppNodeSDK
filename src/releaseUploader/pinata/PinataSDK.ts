@@ -55,14 +55,17 @@ export interface PinPolicy {
 interface IpfsUploadResult {
   /**
    * This is the IPFS multi-hash provided back for your content,
+   * `"QmQhmhw7wh5cdSwCFoWf5txwAZ9f2y1RWfa4z6GFcuzSsG"`
    */
   IpfsHash: string;
   /**
    *  This is how large (in bytes) the content you just pinned is,
+   * `10110`
    */
   PinSize: string;
   /**
    * This is the timestamp for your content pinning (represented in ISO 8601 format)
+   * `"2020-10-14T15:24:19.466Z"`
    */
   Timestamp: string;
 }
