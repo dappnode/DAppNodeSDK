@@ -6,7 +6,6 @@ import Listr from "listr";
 import { buildAndUpload } from "../tasks/buildAndUpload";
 // Utils
 import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
-import { verifyIpfsConnection } from "../utils/verifyIpfsConnection";
 import { getInstallDnpLink } from "../utils/getLinks";
 import { CliGlobalOptions } from "../types";
 
@@ -69,8 +68,6 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     const skipUpload = skip_save || skip_upload;
     const nextVersion = getCurrentLocalVersion({ dir });
     const buildDir = path.join(dir, `build_${nextVersion}`);
-
-    if (!skipUpload) await verifyIpfsConnection(ipfsProvider);
 
     const buildTasks = new Listr(
       buildAndUpload({

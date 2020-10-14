@@ -12,8 +12,6 @@ import {
   getImagePath,
   getLegacyImagePath
 } from "../params";
-import { ipfsAddFromFs } from "../utils/ipfs/ipfsAddFromFs";
-import { swarmAddDirFromFs } from "../utils/swarmAddDirFromFs";
 import {
   getComposePath,
   readCompose,
@@ -28,6 +26,8 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
+import { getReleaseUploader } from "../releaseUploader";
+import { ReleaseUploaderConnectionError } from "../releaseUploader/errors";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -108,7 +108,28 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
     parseComposeUpstreamVersion(composeForDev) || process.env.UPSTREAM_VERSION;
   if (upstreamVersion) manifest.upstreamVersion = upstreamVersion;
 
+  // Release upload
+  const releaseUploader = getReleaseUploader({ ipfsProvider, uploadToSwarm });
+
   return [
+    {
+      title: "Verify connection",
+      skip: () => skipUpload,
+      task: async () => {
+        try {
+          await releaseUploader.testConnection();
+        } catch (e) {
+          if (e instanceof ReleaseUploaderConnectionError) {
+            throw new CliError(
+              `Can't connect to ${e.ipfsProvider}: ${e.reason}. ${e.help || ""}`
+            );
+          } else {
+            throw e;
+          }
+        }
+      }
+    },
+
     {
       title: "Create release dir",
       task: async () => {
@@ -192,32 +213,20 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
           destPath: imagePathAmd
         })),
 
-    uploadToSwarm
-      ? {
-          title: "Upload release to Swarm",
-          skip: () => skipUpload,
-          task: async (ctx, task) => {
-            ctx.releaseHash = await swarmAddDirFromFs(
-              buildDir,
-              swarmProvider,
-              percent => (task.output = percentToMessage(percent))
-            );
-          }
-        }
-      : {
-          title: "Upload release to IPFS",
-          skip: () => skipUpload,
-          task: async (ctx, task) => {
-            if (fs.existsSync(imagePathAmd))
-              fs.copyFileSync(imagePathAmd, imagePathLegacy);
-            // Starts with /ipfs/
-            ctx.releaseHash = await ipfsAddFromFs(
-              buildDir,
-              ipfsProvider,
-              percent => (task.output = percentToMessage(percent))
-            );
-          }
-        },
+    {
+      title: `Upload release to ${releaseUploader.networkName}`,
+      skip: () => skipUpload,
+      task: async (ctx, task) => {
+        if (fs.existsSync(imagePathAmd))
+          fs.copyFileSync(imagePathAmd, imagePathLegacy);
+
+        ctx.releaseHash = await releaseUploader.addFromFs({
+          dirPath: buildDir,
+          manifest,
+          onProgress: percent => (task.output = percentToMessage(percent))
+        });
+      }
+    },
 
     {
       title: "Save upload results",

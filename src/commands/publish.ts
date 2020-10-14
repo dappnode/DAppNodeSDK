@@ -9,7 +9,6 @@ import { createGithubRelease } from "../tasks/createGithubRelease";
 // Utils
 import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
 import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion";
-import { verifyIpfsConnection } from "../utils/verifyIpfsConnection";
 import { verifyEthConnection } from "../utils/verifyEthConnection";
 import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
 import { YargsError } from "../params";
@@ -161,7 +160,6 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
         `Invalid release type "${type}", must be: ${typesList}`
       );
 
-    await verifyIpfsConnection(ipfsProvider);
     await verifyEthConnection(ethProvider);
 
     const publishTasks = new Listr(

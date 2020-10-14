@@ -1,48 +1,34 @@
-import fs from "fs";
-import path from "path";
 import got from "got";
-import FormData from "form-data";
-import { traverseDir } from "./traverseDir";
-import { normalizeIpfsProvider } from "./ipfsProvider";
+import { getFormDataFileUpload } from "../utils/formDataFileUpload";
+import { PinataMetadata } from "./PinataSDK";
 
 /**
  * Uploads a directory or file from the fs
- * @param dirOrFile "docs"
- * @param ipfsProvider "dappnode" | "http://localhost:5001"
- * @param onProgress Report upload progress, 0.4631
+ * @param dirOrFilePath "build_0.1.0/"
+ * @param pinataUrl "https://api.pinata.cloud"
+ * @param onProgress Reports upload progress, 0.4631
  * @returns "/ipfs/Qm..."
  */
-export async function ipfsAddFromFs(
-  dirOrFile: string,
-  ipfsProvider: string,
+export async function pinataAddFromFs(
+  dirOrFilePath: string,
+  pinataUrl: string,
+  metadata: PinataMetadata,
+  credentials: { apiKey: string; secretApiKey: string },
   onProgress?: (percent: number) => void
 ): Promise<string> {
   // Create form and append all files recursively
+  const form = getFormDataFileUpload(dirOrFilePath);
+  form.append("pinataMetadata", metadata);
 
-  const form = new FormData();
-  // Automatically detect if recursive if needed if directory
-  if (fs.lstatSync(dirOrFile).isDirectory()) {
-    const dirDir = path.parse(dirOrFile).dir;
-    const filePaths = traverseDir(dirOrFile);
-    for (const filePath of filePaths) {
-      form.append(`file-${filePath}`, fs.createReadStream(filePath), {
-        // Compute filepaths from the provided dirOrFile and below only
-        filepath: path.relative(dirDir, filePath)
-      });
-    }
-  } else {
-    // Add single files without providing a filepath
-    form.append("file", fs.createReadStream(dirOrFile));
-  }
-
-  // Parse the ipfsProvider the a full base apiUrl
   let lastPercent = -1;
-  const apiUrl = normalizeIpfsProvider(ipfsProvider);
   const res = await got({
-    prefixUrl: apiUrl,
-    url: "api/v0/add",
+    prefixUrl: pinataUrl, // https://api.pinata.cloud
+    url: "pinning/pinFileToIPFS",
     method: "POST",
-    headers: form.getHeaders(),
+    headers: form.getHeaders({
+      pinata_api_key: credentials.apiKey,
+      pinata_secret_api_key: credentials.secretApiKey
+    }),
     body: form
   }).on("uploadProgress", progress => {
     // Report upload progress, and throttle to one update per percent point
