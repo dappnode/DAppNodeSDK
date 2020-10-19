@@ -50,105 +50,115 @@ export const fromGithub: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       })
       .require("repoSlug"),
 
-  handler: async ({ repoSlug, provider, latest, version }): Promise<void> => {
-    // Parse options
-    const ipfsProvider = provider;
-    // Assume incomplete repo slugs refer to DAppNode core packages
-    if (!repoSlug.includes("/")) repoSlug = `dappnode/DNP_${repoSlug}`;
-
-    await verifyIpfsConnection(ipfsProvider);
-
-    // Pick version interactively
-    const release = await getSelectedGithubRelease({
-      repoSlug,
-      latest,
-      version
-    });
-
-    // Sanity check, make sure this release is an actual DAppNode Package
-    for (const file of Object.values(releaseFiles))
-      if (
-        file.required &&
-        !release.assets.some(asset => file.regex.test(asset.name))
-      )
-        throw Error(`Release assets do not contain required file ${file.id}`);
-
-    // Add extra file for legacy .tar.xz image
-    const manifestAsset = release.assets.find(
-      asset => asset.name === releaseFiles.manifest.defaultName
-    );
-
-    if (manifestAsset) {
-      const { name, version }: Manifest = await got(
-        manifestAsset.browser_download_url
-      ).json();
-      const legacyImagePath = getLegacyImagePath(name, version);
-      const legacyImageAsset = release.assets.find(
-        asset => asset.name === legacyImagePath
-      );
-      if (legacyImageAsset) {
-        const imageAmdPath = getImagePath(name, version, defaultArch);
-        release.assets.push({ ...legacyImageAsset, name: imageAmdPath });
-      }
-    }
-
-    const files = release.assets
-      .filter(asset => asset.name !== contentHashFile)
-      .map(asset => ({
-        filepath: path.join("release", asset.name),
-        url: asset.browser_download_url,
-        name: asset.name,
-        size: asset.size
-      }));
-
-    // Multiline download > upload progress feedback
-    const multibarDnl = new cliProgress.MultiBar({
-      format: "[{bar}] {percentage}%\t| {name}"
-    });
-    const bars = new Map<string, cliProgress.SingleBar>();
-    for (const { filepath, size, name } of files) {
-      bars.set(filepath, multibarDnl.create(size, 0, { name }));
-    }
-
-    function onProgress(filepath: string, bytes: number) {
-      const bar = bars.get(filepath);
-      if (bar) bar.increment(bytes);
-    }
-
-    const releaseMultiHash = await ipfsAddDirFromUrls(
-      files,
-      ipfsProvider,
-      onProgress
-    );
-
-    multibarDnl.stop();
-
-    console.log(
-      chalk.green(
-        `\nGithub release ${repoSlug} ${release.name} uploaded to IPFS`
-      )
-    );
-
-    // Verify that the resulting release hash matches the one in Github
-    const contentHashAsset = release.assets.find(
-      asset => asset.name === contentHashFile
-    );
-    if (contentHashAsset) {
-      const contentHash = await got(
-        contentHashAsset.browser_download_url
-      ).text();
-      if (contentHash.trim() === releaseMultiHash) {
-        console.log(chalk.dim("✓ Release hash verified, matches Github's"));
-      } else {
-        console.log(`${chalk.red("WARNING!")} resulting hashes do not match`);
-        console.log(`Github release: ${contentHash}`);
-      }
-    }
+  handler: async (args): Promise<void> => {
+    const { releaseMultiHash } = await fromGithubHandler(args);
 
     console.log(`Release hash : ${releaseMultiHash}`);
     console.log(getInstallDnpLink(releaseMultiHash));
   }
 };
+
+/**
+ * Common handler for CLI and programatic usage
+ */
+export async function fromGithubHandler({
+  repoSlug,
+  provider,
+  latest,
+  version
+}: CliCommandOptions): Promise<{ releaseMultiHash: string }> {
+  // Parse options
+  const ipfsProvider = provider;
+  // Assume incomplete repo slugs refer to DAppNode core packages
+  if (!repoSlug.includes("/")) repoSlug = `dappnode/DNP_${repoSlug}`;
+
+  await verifyIpfsConnection(ipfsProvider);
+
+  // Pick version interactively
+  const release = await getSelectedGithubRelease({
+    repoSlug,
+    latest,
+    version
+  });
+
+  // Sanity check, make sure this release is an actual DAppNode Package
+  for (const file of Object.values(releaseFiles))
+    if (
+      file.required &&
+      !release.assets.some(asset => file.regex.test(asset.name))
+    )
+      throw Error(`Release assets do not contain required file ${file.id}`);
+
+  // Add extra file for legacy .tar.xz image
+  const manifestAsset = release.assets.find(
+    asset => asset.name === releaseFiles.manifest.defaultName
+  );
+
+  if (manifestAsset) {
+    const { name, version }: Manifest = await got(
+      manifestAsset.browser_download_url
+    ).json();
+    const legacyImagePath = getLegacyImagePath(name, version);
+    const legacyImageAsset = release.assets.find(
+      asset => asset.name === legacyImagePath
+    );
+    if (legacyImageAsset) {
+      const imageAmdPath = getImagePath(name, version, defaultArch);
+      release.assets.push({ ...legacyImageAsset, name: imageAmdPath });
+    }
+  }
+
+  const files = release.assets
+    .filter(asset => asset.name !== contentHashFile)
+    .map(asset => ({
+      filepath: path.join("release", asset.name),
+      url: asset.browser_download_url,
+      name: asset.name,
+      size: asset.size
+    }));
+
+  // Multiline download > upload progress feedback
+  const multibarDnl = new cliProgress.MultiBar({
+    format: "[{bar}] {percentage}%\t| {name}"
+  });
+  const bars = new Map<string, cliProgress.SingleBar>();
+  for (const { filepath, size, name } of files) {
+    bars.set(filepath, multibarDnl.create(size, 0, { name }));
+  }
+
+  function onProgress(filepath: string, bytes: number) {
+    const bar = bars.get(filepath);
+    if (bar) bar.increment(bytes);
+  }
+
+  const releaseMultiHash = await ipfsAddDirFromUrls(
+    files,
+    ipfsProvider,
+    onProgress
+  );
+
+  multibarDnl.stop();
+
+  console.log(
+    chalk.green(`\nGithub release ${repoSlug} ${release.name} uploaded to IPFS`)
+  );
+
+  // Verify that the resulting release hash matches the one in Github
+  const contentHashAsset = release.assets.find(
+    asset => asset.name === contentHashFile
+  );
+  if (contentHashAsset) {
+    const contentHash = await got(contentHashAsset.browser_download_url).text();
+    if (contentHash.trim() === releaseMultiHash) {
+      console.log(chalk.dim("✓ Release hash verified, matches Github's"));
+    } else {
+      console.log(`${chalk.red("WARNING!")} resulting hashes do not match`);
+      console.log(`Github release: ${contentHash}`);
+    }
+  }
+
+  return { releaseMultiHash };
+}
 
 /**
  * Given user options, choose a Github Release to get

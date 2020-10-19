@@ -27,22 +27,29 @@ export const next: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       })
       .require("type"),
 
-  handler: async ({
-    type,
-    provider,
-    dir
-  }: CliCommandOptions & CliGlobalOptions): Promise<void> => {
-    const ethProvider = provider;
-
-    await verifyEthConnection(ethProvider);
-
-    // Execute command
-    const nextVersion = await getNextVersionFromApm({
-      type: type as ReleaseType,
-      ethProvider,
-      dir
-    });
+  handler: async (args): Promise<void> => {
+    const nextVersion = await nextHandler(args);
     // Output result: "0.1.8"
     console.log(nextVersion);
   }
 };
+
+/**
+ * Common handler for CLI and programatic usage
+ */
+export async function nextHandler({
+  type,
+  provider,
+  dir
+}: CliCommandOptions): Promise<string> {
+  const ethProvider = provider;
+
+  await verifyEthConnection(ethProvider);
+
+  // Execute command
+  return await getNextVersionFromApm({
+    type: type as ReleaseType,
+    ethProvider,
+    dir
+  });
+}

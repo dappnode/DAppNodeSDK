@@ -48,42 +48,10 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     }
   },
 
-  handler: async ({
-    provider,
-    timeout,
-    upload_to,
-    skip_save,
-    skip_upload,
-    // Global options
-    dir,
-    silent,
-    verbose
-  }): Promise<void> => {
-    // Parse options
-    const contentProvider = provider;
-    const uploadTo = upload_to;
-    const userTimeout = timeout;
-    const skipSave = skip_save;
-    const skipUpload = skip_save || skip_upload;
-    const nextVersion = getCurrentLocalVersion({ dir });
-    const buildDir = path.join(dir, `build_${nextVersion}`);
+  handler: async (args): Promise<void> => {
+    const { releaseMultiHash } = await buildHandler(args);
 
-    const buildTasks = new Listr(
-      buildAndUpload({
-        dir,
-        buildDir,
-        contentProvider,
-        uploadTo,
-        userTimeout,
-        skipSave,
-        skipUpload
-      }),
-      { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
-    );
-
-    const { releaseMultiHash } = await buildTasks.run();
-
-    if (skipUpload) {
+    if (args.skipUpload) {
       return console.log(chalk.green("\nDNP (DAppNode Package) built\n"));
     }
 
@@ -94,3 +62,43 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 `);
   }
 };
+
+/**
+ * Common handler for CLI and programatic usage
+ */
+export async function buildHandler({
+  provider,
+  timeout,
+  upload_to,
+  skip_save,
+  skip_upload,
+  // Global options
+  dir,
+  silent,
+  verbose
+}: CliCommandOptions): Promise<{ releaseMultiHash: string }> {
+  // Parse options
+  const contentProvider = provider;
+  const uploadTo = upload_to;
+  const userTimeout = timeout;
+  const skipSave = skip_save;
+  const skipUpload = skip_save || skip_upload;
+  const nextVersion = getCurrentLocalVersion({ dir });
+  const buildDir = path.join(dir, `build_${nextVersion}`);
+
+  const buildTasks = new Listr(
+    buildAndUpload({
+      dir,
+      buildDir,
+      contentProvider,
+      uploadTo,
+      userTimeout,
+      skipSave,
+      skipUpload
+    }),
+    { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+  );
+
+  const { releaseMultiHash } = await buildTasks.run();
+  return { releaseMultiHash };
+}
