@@ -1,6 +1,6 @@
 {
   "name": "@dappnode/dappnodesdk",
-  "version": "0.2.27",
+  "version": "0.2.28",
   "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
