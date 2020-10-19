@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
+import prettier from "prettier";
 import {
   Manifest,
   Compose,
@@ -83,14 +84,27 @@ export function readCompose(dir: string): Compose {
   }
 }
 
+export function stringifyCompose(compose: Compose): string {
+  return prettier.format(yaml.dump(compose, { indent: 2 }), {
+    // DAppNode prettier options, to match DAppNodeSDK + DAPPMANAGER
+    printWidth: 80,
+    tabWidth: 2,
+    useTabs: false,
+    semi: true,
+    singleQuote: false,
+    trailingComma: "none",
+    // Built-in parser for YAML
+    parser: "yaml"
+  });
+}
+
 /**
  * Writes the docker-compose.
  * Without arguments defaults to write the manifest at './docker-compose.yml'
  */
 export function writeCompose(dir: string, compose: Compose): void {
   const path = getComposePath(dir);
-  const composeString = yaml.dump(compose, { indent: 2 });
-  fs.writeFileSync(path, composeString);
+  fs.writeFileSync(path, stringifyCompose(compose));
 }
 
 export function generateCompose(manifest: Manifest): Compose {
