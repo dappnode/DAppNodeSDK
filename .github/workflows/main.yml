@@ -24,6 +24,8 @@ jobs:
       - run: yarn install
       - run: yarn lint
       - run: yarn test
+      - name: Test ncc build (for Github Actions)
+        run: yarn ncc
 
   release:
     runs-on: ubuntu-latest
