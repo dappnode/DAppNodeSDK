@@ -1,19 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-export const pinataSDK: PinataSDK = require("@pinata/sdk");
-
-export type PinataSDK = (apiKey: string, secretApiKey: string) => Pinata;
-
-export interface Pinata {
-  testAuthentication(): Promise<void>;
-  pinFromFS(
-    sourcePath: string,
-    options?: {
-      pinataMetadata?: PinataMetadata;
-      pinataOptions?: PinataOptions;
-    }
-  ): Promise<IpfsUploadResult[]>;
-}
-
 export interface PinataMetadata {
   /**
    * A custom string to use as the name for your content

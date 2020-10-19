@@ -37,7 +37,6 @@
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
     "@octokit/rest": "^16.27.3",
-    "@pinata/sdk": "^1.1.11",
     "ajv": "^6.12.2",
     "ajv-errors": "^1.0.1",
     "async-retry": "^1.2.3",

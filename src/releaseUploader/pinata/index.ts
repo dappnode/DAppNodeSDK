@@ -1,11 +1,11 @@
+import got from "got";
 import { IReleaseUploader } from "../interface";
-import { Pinata, PinataMetadata, pinataSDK } from "./PinataSDK";
+import { PinataMetadata } from "./PinataSDK";
 import { pinataAddFromFs } from "./addDirFromFs";
 
 export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
   networkName = "IPFS Pinata";
 
-  private pinata: Pinata;
   private apiKey: string;
   private secretApiKey: string;
   private pinataUrl = "https://api.pinata.cloud";
@@ -17,7 +17,6 @@ export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
     apiKey: string;
     secretApiKey: string;
   }) {
-    this.pinata = pinataSDK(apiKey, secretApiKey);
     this.apiKey = apiKey;
     this.secretApiKey = secretApiKey;
   }
@@ -41,6 +40,16 @@ export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
   }
 
   async testConnection(): Promise<void> {
-    return await this.pinata.testAuthentication();
+    const res = await got.get({
+      prefixUrl: this.pinataUrl,
+      url: "data/testAuthentication",
+      headers: {
+        pinata_api_key: this.apiKey,
+        pinata_secret_api_key: this.secretApiKey
+      }
+    });
+    if (res.statusCode !== 200) {
+      throw Error(`Error authenticating: ${res.statusCode}`);
+    }
   }
 }
