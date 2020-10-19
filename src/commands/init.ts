@@ -8,7 +8,7 @@ import { writeManifest } from "../utils/manifest";
 import { generateAndWriteCompose } from "../utils/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
-import { releaseFiles } from "../params";
+import { releaseFiles, YargsError } from "../params";
 import { CliGlobalOptions, Manifest } from "../types";
 
 const stringsToRemoveFromName = [
@@ -98,8 +98,7 @@ It only covers the most common items, and tries to guess sensible defaults.
         }
       ]);
       if (!continueAnswer.continue) {
-        console.log("Stopping");
-        process.exit(1);
+        throw new YargsError("Stopping");
       }
     }
 

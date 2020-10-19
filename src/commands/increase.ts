@@ -23,16 +23,19 @@ export const increase: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       })
       .require("type"),
 
-  handler: async ({
-    type,
-    dir
-  }: CliCommandOptions & CliGlobalOptions): Promise<void> => {
-    // Execute command
-    const nextVersion = await increaseFromLocalVersion({
-      type: type as ReleaseType,
-      dir
-    });
+  handler: async (args): Promise<void> => {
+    const nextVersion = await increaseHandler(args);
     // Output result: "0.1.8"
     console.log(nextVersion);
   }
 };
+
+/**
+ * Common handler for CLI and programatic usage
+ */
+export async function increaseHandler({
+  type,
+  dir
+}: CliCommandOptions): Promise<string> {
+  return await increaseFromLocalVersion({ type: type as ReleaseType, dir });
+}
