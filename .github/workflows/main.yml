@@ -9,11 +9,12 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-16.04
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false # don't cancel all jobs if some of them failed
       matrix:
-        node: ["10", "12"]
+        os: [macos-latest, windows-latest, ubuntu-16.04, ubuntu-18.04]
+        node: [10, 12, 14]
     name: Test
     steps:
       - uses: actions/checkout@v2
