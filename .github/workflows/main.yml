@@ -22,6 +22,11 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
+
+      - name: Install docker-compose
+        if: startsWith(matrix.os, 'macos')
+        run: brew install docker-compose
+
       - run: yarn install
       - run: yarn lint
       - run: yarn test
