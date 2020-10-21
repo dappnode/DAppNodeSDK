@@ -1,3 +1,5 @@
+import rimraf from "rimraf";
+import { promisify } from "util";
 import { shell } from "../src/utils/shell";
 
 /**
@@ -11,6 +13,6 @@ function printShellSafeError(e: Error) {
 export const shellSafe = (cmd: string): Promise<string | void> =>
   shell(cmd).catch(printShellSafeError);
 export const rmSafe = (path: string): Promise<string | void> =>
-  shellSafe(`rm -r ${path}`);
+  promisify(rimraf)(path);
 export const mkdirSafe = (path: string): Promise<string | void> =>
   shellSafe(`mkdir -p ${path}`);
