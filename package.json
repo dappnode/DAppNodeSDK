@@ -43,6 +43,7 @@
     "async-retry": "^1.2.3",
     "chalk": "^2.4.2",
     "cli-progress": "^3.8.2",
+    "dockerode": "^3.2.1",
     "dotenv": "^8.2.0",
     "ethers": "^5.0.3",
     "figlet": "^1.2.3",
