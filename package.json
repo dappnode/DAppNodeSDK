@@ -38,11 +38,13 @@
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
     "@octokit/rest": "^16.27.3",
+    "@types/dockerode": "^3.2.0",
     "ajv": "^6.12.2",
     "ajv-errors": "^1.0.1",
     "async-retry": "^1.2.3",
     "chalk": "^2.4.2",
     "cli-progress": "^3.8.2",
+    "dockerode": "^3.2.1",
     "dotenv": "^8.2.0",
     "ethers": "^5.0.3",
     "figlet": "^1.2.3",
