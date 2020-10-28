@@ -11,6 +11,7 @@ import {
   PackageImageExternal
 } from "../types";
 import { shell } from "../utils/shell";
+import { getOperatingSystem } from "../utils/os-type";
 
 /**
  * Save docker image
@@ -125,7 +126,11 @@ async function saveAndCompressImages({
     // In order for xz to output update logs to stderr,
     // a SIGALRM must be sent to the xz process every interval
     // https://stackoverflow.com/questions/48452726/how-to-redirect-xzs-normal-stdout-when-do-tar-xz
-    const interval = setInterval(() => xz.kill("SIGALRM"), 1000);
+    const interval = setInterval(() => {
+      if (getOperatingSystem() !== "win32") {
+        xz.kill("SIGALRM");
+      }
+    }, 1000);
 
     xz.on("error", err => {
       clearInterval(interval);
