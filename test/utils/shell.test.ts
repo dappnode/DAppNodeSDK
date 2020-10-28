@@ -1,32 +1,22 @@
 import { expect } from "chai";
-import fs from "fs";
 import { shell } from "../../src/utils/shell";
 
 describe("shell utility", () => {
-  const scriptPath = "test-script.sh";
-  const scriptData = `
-#!/bin/bash
-sleep .01
-echo "hello"
-`.trim();
 
-  before("Write test script", () => {
-    fs.writeFileSync(scriptPath, scriptData);
-    fs.chmodSync(scriptPath, "0755"); // +x
+  it("call docker-compose", async () => {
+    // Check that the output is correct
+    const output = await shell(`docker-compose --version`);
+    expect(output).to.be.ok
   });
 
   it("Execute a command without crashing", async () => {
     // Check that the output is correct
-    const output = await shell(`sh ${scriptPath}`);
+    const output = await shell(`echo hello`);
     expect(output).to.equal("hello");
     // Check that it errors on timeout
-    const errorMessage = await shell(`sh ${scriptPath}`, { timeout: 1 }).catch(
+    const errorMessage = await shell(`sleep 100`, { timeout: 1 }).catch(
       e => e.message
     );
     expect(errorMessage).to.include("timeout");
-  });
-
-  after(() => {
-    fs.unlinkSync(scriptPath);
   });
 });
