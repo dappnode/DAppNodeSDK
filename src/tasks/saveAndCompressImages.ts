@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { ListrTask } from "listr";
 import { getFileHash } from "../utils/getFileHash";
 import { loadCache, writeToCache, getCacheKey } from "../utils/cache";
@@ -75,6 +75,8 @@ export function saveAndCompressImagesCached({
         } else {
           task.output = `Saving docker image to file...`;
           fs.mkdirSync(path.dirname(destPath), { recursive: true });
+          console.log(imageTags,
+            destPath,buildTimeout,task.output)
 
           await saveAndCompressImages({
             imageTags,
@@ -110,8 +112,14 @@ async function saveAndCompressImages({
     // -vv: Very verbose log to provide progress
     // -c: Outputs the compressed result to stdout
     // -f: Overwrite the destination path if necessary
-    const xz = spawn("xz", ["-e9T0", "-vv", "-c", "-f"], { timeout });
 
+    let xz : ChildProcessWithoutNullStreams
+    if (getOperatingSystem() === 'win32'){
+      xz = spawn("compact /c", [">"], { timeout }) 
+    } else {
+      xz = spawn("xz", ["-e9T0", "-vv", "-c", "-f"], { timeout });
+    }
+    
     dockerSave.stdout.pipe(xz.stdin);
 
     let lastStderr = "";
