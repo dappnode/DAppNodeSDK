@@ -18,7 +18,7 @@ describe("getNextVersionFromApm", () => {
   const manifestPath = "./dappnode_package.json";
 
   before(async () => {
-    await rmSafe(manifestPath);
+    rmSafe(manifestPath);
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
   });
 
@@ -33,6 +33,6 @@ describe("getNextVersionFromApm", () => {
   }).timeout(60 * 1000);
 
   after(async () => {
-    await rmSafe(manifestPath);
+    rmSafe(manifestPath);
   });
 });

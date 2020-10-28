@@ -34,8 +34,8 @@ describe("increaseFromApmVersion", () => {
   const dir = "./";
 
   before(async () => {
-    await rmSafe(manifestPath);
-    await rmSafe(composePath);
+    rmSafe(manifestPath);
+    rmSafe(composePath);
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
     generateAndWriteCompose(dir, manifest);
   });
@@ -67,7 +67,7 @@ describe("increaseFromApmVersion", () => {
   }).timeout(60 * 1000);
 
   after(async () => {
-    await rmSafe(manifestPath);
-    await rmSafe(composePath);
+    rmSafe(manifestPath);
+    rmSafe(composePath);
   });
 });

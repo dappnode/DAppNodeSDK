@@ -15,8 +15,8 @@ describe("generatePublishTx", () => {
   const buildDir = "dnp_0.0.0";
 
   before(async () => {
-    await rmSafe(manifestPath);
-    await rmSafe(buildDir);
+    rmSafe(manifestPath);
+    rmSafe(buildDir);
     await mkdirSafe(buildDir);
   });
 
@@ -85,7 +85,7 @@ describe("generatePublishTx", () => {
   }).timeout(60 * 1000);
 
   after(async () => {
-    await rmSafe(manifestPath);
-    await rmSafe(buildDir);
+    rmSafe(manifestPath);
+    rmSafe(buildDir);
   });
 });

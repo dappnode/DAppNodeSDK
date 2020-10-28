@@ -1,4 +1,7 @@
 import { shell } from "../src/utils/shell";
+import fs from 'fs'
+import { Buffer } from "buffer";
+import rimraf from 'rimraf'
 
 /**
  * General purpose tool to make sure test files are gone without producing errors
@@ -10,7 +13,7 @@ function printShellSafeError(e: Error) {
 
 export const shellSafe = (cmd: string): Promise<string | void> =>
   shell(cmd).catch(printShellSafeError);
-export const rmSafe = (path: string): Promise<string | void> =>
-  shellSafe(`rm -r ${path}`);
+export const rmSafe = (path: string): void =>
+  rimraf.sync(path)
 export const mkdirSafe = (path: string): Promise<string | void> =>
-  shellSafe(`mkdir -p ${path}`);
+  fs.promises.mkdir(path, {recursive: true})

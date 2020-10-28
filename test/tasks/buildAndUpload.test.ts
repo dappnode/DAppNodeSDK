@@ -59,10 +59,10 @@ ENV test=1
   };
 
   before(async () => {
-    await rmSafe(manifestPath);
-    await rmSafe(composePath);
-    await rmSafe("./build");
-    await rmSafe(buildDir);
+    rmSafe(manifestPath);
+    rmSafe(composePath);
+    rmSafe("./build");
+    rmSafe(buildDir);
     fs.mkdirSync("./build");
     fs.writeFileSync(manifestPath, JSON.stringify(manifestWithImage, null, 2));
     fs.writeFileSync(composePath, yaml.dump(compose, { indent: 2 }));
@@ -95,10 +95,10 @@ ENV test=1
   }).timeout(60 * 1000);
 
   after(async () => {
-    await rmSafe(manifestPath);
-    await rmSafe(composePath);
-    await rmSafe("./build");
-    await rmSafe(buildDir);
+    rmSafe(manifestPath);
+    rmSafe(composePath);
+    rmSafe("./build");
+    rmSafe(buildDir);
     await shellSafe(`docker image rm -f ${imageTag}`);
   });
 });
