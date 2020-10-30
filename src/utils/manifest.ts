@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import prettier from "prettier";
 import { CliError } from "../params";
 import { Manifest, ManifestImage, Compose } from "../types";
 
@@ -16,21 +17,6 @@ const manifestFileName = "dappnode_package.json";
  */
 export function getManifestPath(dir = "./"): string {
   return path.join(dir, manifestFileName);
-}
-
-/**
- * Writes a manifest. Without arguments defaults to write the manifest at './dappnode_package.json'
- *
- * @param kwargs: {
- *   manifest: <manifest object>
- *   dir: './folder', [optional] directory to load the manifest from
- *   manifestFileName: 'manifest-admin.json', [optional] name of the manifest file
- * }
- */
-export function writeManifest(dir: string, manifest: Manifest): void {
-  const path = getManifestPath(dir);
-  const data = JSON.stringify(manifest, null, 2);
-  fs.writeFileSync(path, data);
 }
 
 /**
@@ -53,6 +39,34 @@ export function readManifestString(dir: string): string {
       throw e;
     }
   }
+}
+
+export function stringifyManifest(manifest: Manifest): string {
+  return prettier.format(JSON.stringify(manifest, null, 2), {
+    // DAppNode prettier options, to match DAppNodeSDK + DAPPMANAGER
+    printWidth: 80,
+    tabWidth: 2,
+    useTabs: false,
+    semi: true,
+    singleQuote: false,
+    trailingComma: "none",
+    // Built-in parser for YAML
+    parser: "json"
+  });
+}
+
+/**
+ * Writes a manifest. Without arguments defaults to write the manifest at './dappnode_package.json'
+ *
+ * @param kwargs: {
+ *   manifest: <manifest object>
+ *   dir: './folder', [optional] directory to load the manifest from
+ *   manifestFileName: 'manifest-admin.json', [optional] name of the manifest file
+ * }
+ */
+export function writeManifest(dir: string, manifest: Manifest): void {
+  const path = getManifestPath(dir);
+  fs.writeFileSync(path, stringifyManifest(manifest));
 }
 
 /**
