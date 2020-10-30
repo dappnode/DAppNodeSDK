@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import fs from "fs";
 import { generatePublishTx } from "../../src/tasks/generatePublishTx";
+import { stringifyManifest } from "../../src/utils/manifest";
 import { rmSafe, mkdirSafe } from "../shellSafe";
 
 // This test will create the following fake files
@@ -25,7 +26,7 @@ describe("generatePublishTx", () => {
       name: "admin.dnp.dappnode.eth",
       version: "0.1.0"
     };
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    fs.writeFileSync(manifestPath, stringifyManifest(manifest));
 
     const generatePublishTxTasks = generatePublishTx({
       dir: "./",
@@ -57,7 +58,7 @@ describe("generatePublishTx", () => {
       name: "new-repo.dnp.dappnode.eth",
       version: "0.1.0"
     };
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    fs.writeFileSync(manifestPath, stringifyManifest(manifest));
 
     const generatePublishTxTasks = generatePublishTx({
       dir: "./",

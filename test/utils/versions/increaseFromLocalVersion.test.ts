@@ -5,6 +5,7 @@ import { rmSafe } from "../../shellSafe";
 import { increaseFromLocalVersion } from "../../../src/utils/versions/increaseFromLocalVersion";
 import { generateAndWriteCompose } from "../../../src/utils/compose";
 import { Compose } from "../../../src/types";
+import { stringifyManifest } from "../../../src/utils/manifest";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -35,7 +36,7 @@ describe("increaseFromLocalVersion", () => {
   before(async () => {
     await rmSafe(manifestPath);
     await rmSafe(composePath);
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    fs.writeFileSync(manifestPath, stringifyManifest(manifest));
     generateAndWriteCompose(dir, manifest);
   });
 

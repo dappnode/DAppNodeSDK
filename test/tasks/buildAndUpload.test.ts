@@ -4,6 +4,7 @@ import yaml from "js-yaml";
 import Listr from "listr";
 import { rmSafe, shellSafe } from "../shellSafe";
 import { buildAndUpload } from "../../src/tasks/buildAndUpload";
+import { stringifyManifest } from "../../src/utils/manifest";
 
 const contentProvider = "http://ipfs.dappnode.io";
 
@@ -64,7 +65,7 @@ ENV test=1
     await rmSafe("./build");
     await rmSafe(buildDir);
     fs.mkdirSync("./build");
-    fs.writeFileSync(manifestPath, JSON.stringify(manifestWithImage, null, 2));
+    fs.writeFileSync(manifestPath, stringifyManifest(manifestWithImage));
     fs.writeFileSync(composePath, yaml.dump(compose, { indent: 2 }));
     fs.writeFileSync("./build/Dockerfile", Dockerfile);
     fs.copyFileSync(avatarSourcePath, avatarPath);
@@ -72,10 +73,7 @@ ENV test=1
 
   it("Should build and upload the current version", async () => {
     // Rewrite the manifest to not contain image
-    fs.writeFileSync(
-      manifestPath,
-      JSON.stringify(manifestWithoutImage, null, 2)
-    );
+    fs.writeFileSync(manifestPath, stringifyManifest(manifestWithoutImage));
 
     const buildTasks = new Listr(
       buildAndUpload({

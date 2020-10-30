@@ -2,7 +2,7 @@ import { expect } from "chai";
 import fs from "fs";
 import semver from "semver";
 import { rmSafe } from "../../shellSafe";
-
+import { stringifyManifest } from "../../../src/utils/manifest";
 import { getNextVersionFromApm } from "../../../src/utils/versions/getNextVersionFromApm";
 
 // This test will create the following fake files
@@ -19,7 +19,7 @@ describe("getNextVersionFromApm", () => {
 
   before(async () => {
     await rmSafe(manifestPath);
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    fs.writeFileSync(manifestPath, stringifyManifest(manifest));
   });
 
   it("Should get the last version from APM", async () => {
