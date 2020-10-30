@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { stringifyJson } from "./manifest";
 
 interface ReleaseRecord {
   hash: string;
@@ -41,10 +42,7 @@ function writeReleaseRecord(
       ...newReleaseRecord
     }
   };
-  fs.writeFileSync(
-    releaseRecordPath,
-    JSON.stringify(mergedReleaseRecord, null, 2)
-  );
+  fs.writeFileSync(releaseRecordPath, stringifyJson(mergedReleaseRecord));
 }
 
 export function addReleaseRecord({

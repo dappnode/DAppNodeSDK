@@ -6,6 +6,7 @@ import { rmSafe } from "../../shellSafe";
 import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion";
 import { generateAndWriteCompose } from "../../../src/utils/compose";
 import { Manifest, Compose } from "../../../src/types";
+import { stringifyManifest } from "../../../src/utils/manifest";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -36,7 +37,7 @@ describe("increaseFromApmVersion", () => {
   before(async () => {
     await rmSafe(manifestPath);
     await rmSafe(composePath);
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    fs.writeFileSync(manifestPath, stringifyManifest(manifest));
     generateAndWriteCompose(dir, manifest);
   });
 

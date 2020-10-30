@@ -42,7 +42,14 @@ export function readManifestString(dir: string): string {
 }
 
 export function stringifyManifest(manifest: Manifest): string {
-  return prettier.format(JSON.stringify(manifest, null, 2), {
+  return stringifyJson(manifest);
+}
+
+/**
+ * JSON.stringify + run prettier on the result
+ */
+export function stringifyJson<T>(json: T): string {
+  return prettier.format(JSON.stringify(json, null, 2), {
     // DAppNode prettier options, to match DAppNodeSDK + DAPPMANAGER
     printWidth: 80,
     tabWidth: 2,
@@ -50,7 +57,6 @@ export function stringifyManifest(manifest: Manifest): string {
     semi: true,
     singleQuote: false,
     trailingComma: "none",
-    // Built-in parser for YAML
     parser: "json"
   });
 }
