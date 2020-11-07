@@ -2,6 +2,9 @@ node_modules
 DAppNodePackage-*
 .vscode
 
+# Use yarn
+package-lock.json
+
 # Build artifacts
 dist
 dist-ncc
