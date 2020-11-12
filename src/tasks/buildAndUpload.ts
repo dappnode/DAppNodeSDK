@@ -5,7 +5,7 @@ import rimraf from "rimraf";
 import { readManifest, writeManifest } from "../utils/manifest";
 import { validateManifest } from "../utils/validateManifest";
 import { verifyAvatar } from "../utils/verifyAvatar";
-import { getAssetPath, getAssetPathRequired } from "../utils/getAssetPath";
+import { copyReleaseFile } from "../utils/copyReleaseFile";
 import { addReleaseRecord } from "../utils/releaseRecord";
 import {
   releaseFiles,
@@ -102,11 +102,6 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
     getLegacyImagePath(name, version)
   );
 
-  // Construct directories and names. Root paths, this functions may throw
-  const avatarBuildPath = path.join(buildDir, `avatar.png`);
-  const avatarRootPath = getAssetPathRequired(releaseFiles.avatar, dir);
-  if (avatarRootPath) verifyAvatar(avatarRootPath);
-
   // Bump upstreamVersion if provided
   const upstreamVersion =
     parseComposeUpstreamVersion(composeForDev) || process.env.UPSTREAM_VERSION;
@@ -163,27 +158,24 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
         writeCompose(dir, composeForBuild);
 
         // Copy files for release dir
-        fs.copyFileSync(avatarRootPath, avatarBuildPath);
         writeCompose(buildDir, composeForRelease);
         writeManifest(buildDir, manifest);
         validateManifest(manifest, { prerelease: true });
 
-        const additionalFiles = [
-          releaseFiles.setupWizard,
-          releaseFiles.setupSchema,
-          releaseFiles.setupTarget,
-          releaseFiles.setupUiJson,
-          releaseFiles.disclaimer,
-          releaseFiles.gettingStarted
-        ];
-        for (const releaseFile of additionalFiles) {
-          const filePath = getAssetPath(releaseFile, dir);
-          if (filePath)
-            fs.copyFileSync(
-              filePath,
-              path.join(buildDir, releaseFile.defaultName)
-            );
+        // Copy all other release files
+        for (const releaseFile of Object.values(releaseFiles)) {
+          switch (releaseFile.id) {
+            case "manifest":
+            case "compose":
+              continue; // Hanlded above
+            default:
+              copyReleaseFile(releaseFile, dir, buildDir);
+          }
         }
+
+        // Verify avatar (throws)
+        const avatarPath = path.join(buildDir, releaseFiles.avatar.defaultName);
+        verifyAvatar(avatarPath);
       }
     },
 
