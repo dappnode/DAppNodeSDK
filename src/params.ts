@@ -28,63 +28,81 @@ const releaseFilesRegex = {
   setupTarget: /setup-target\..*json$/,
   setupUiJson: /setup-ui\..*json$/,
   disclaimer: /disclaimer\.md$/i,
-  gettingStarted: /getting.*started\.md$/i
+  gettingStarted: /getting.*started\.md$/i,
+  grafanaDashboards: /.*grafana-dashboard.json$/,
+  prometheusTargets: /.*prometheus-targets.(json|yaml|yml)$/
 };
 
-export const releaseFiles = {
+export interface ReleaseFileConfig {
+  id: keyof typeof releaseFilesRegex;
+  regex: RegExp;
+  defaultName: string;
+  required?: boolean;
+  multiple?: boolean;
+}
+
+export const releaseFiles: {
+  [P in keyof typeof releaseFilesRegex]: ReleaseFileConfig;
+} = {
   manifest: {
-    required: true,
     regex: releaseFilesRegex.manifest,
     defaultName: "dappnode_package.json",
-    id: "manifest"
+    id: "manifest",
+    required: true
   },
   compose: {
-    required: true,
     regex: releaseFilesRegex.compose,
     defaultName: "docker-compose.yml",
-    id: "compose"
+    id: "compose",
+    required: true
   },
   avatar: {
-    required: true,
     regex: releaseFilesRegex.avatar,
     defaultName: "avatar.png",
-    id: "avatar"
+    id: "avatar",
+    required: true
   },
   setupWizard: {
-    required: false,
     regex: releaseFilesRegex.setupWizard,
     defaultName: "setup-wizard.json",
     id: "setupWizard"
   },
   setupSchema: {
-    required: false,
     regex: releaseFilesRegex.setupSchema,
     defaultName: "setup.schema.json",
     id: "setupSchema"
   },
   setupTarget: {
-    required: false,
     regex: releaseFilesRegex.setupTarget,
     defaultName: "setup-target.json",
     id: "setupTarget"
   },
   setupUiJson: {
-    required: false,
     regex: releaseFilesRegex.setupUiJson,
     defaultName: "setup-ui.json",
     id: "setupUiJson"
   },
   disclaimer: {
-    required: false,
     regex: releaseFilesRegex.disclaimer,
     defaultName: "disclaimer.md",
     id: "disclaimer"
   },
   gettingStarted: {
-    required: false,
     regex: releaseFilesRegex.gettingStarted,
     defaultName: "getting-started.md",
     id: "gettingStarted"
+  },
+  grafanaDashboards: {
+    regex: releaseFilesRegex.grafanaDashboards,
+    defaultName: "grafana-dashboard.json",
+    id: "grafanaDashboards",
+    multiple: true
+  },
+  prometheusTargets: {
+    regex: releaseFilesRegex.prometheusTargets,
+    defaultName: "prometheus-targets.json",
+    id: "prometheusTargets",
+    multiple: true
   }
 };
 
