@@ -11,7 +11,8 @@ import {
   releaseFiles,
   CliError,
   getImagePath,
-  getLegacyImagePath
+  getLegacyImagePath,
+  releaseFilesDefaultNames
 } from "../params";
 import {
   getComposePath,
@@ -72,7 +73,7 @@ to your package's docker-compose.yml and then delete the 'manifest.image' prop.
     throw new CliError(`
 DAppNode packages expect the avatar to be located at the root folder as a file
 and not declared in the manifest. Please add your package avatar to this directory
-as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' property.
+as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' property.
 `);
 
   // Define variables from manifest
@@ -163,18 +164,22 @@ as ${releaseFiles.avatar.defaultName} and then remove the 'manifest.avatar' prop
         validateManifest(manifest, { prerelease: true });
 
         // Copy all other release files
-        for (const releaseFile of Object.values(releaseFiles)) {
-          switch (releaseFile.id) {
+        for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
+          switch (fileId) {
             case "manifest":
             case "compose":
               continue; // Hanlded above
             default:
-              copyReleaseFile(releaseFile, dir, buildDir);
+              copyReleaseFile({
+                fileConfig: { ...fileConfig, id: fileId },
+                fromDir: dir,
+                toDir: buildDir
+              });
           }
         }
 
         // Verify avatar (throws)
-        const avatarPath = path.join(buildDir, releaseFiles.avatar.defaultName);
+        const avatarPath = path.join(buildDir, releaseFilesDefaultNames.avatar);
         verifyAvatar(avatarPath);
       }
     },

@@ -19,91 +19,109 @@ export const upstreamImageLabel = "dappnode.dnp.upstreamImage";
  */
 export const contentHashFile = "content-hash";
 
-const releaseFilesRegex = {
-  manifest: /dappnode_package.*\.json$/,
-  compose: /compose.*\.yml$/,
-  avatar: /avatar.*\.png$/,
-  setupWizard: /setup-wizard\..*(json|yaml|yml)$/,
-  setupSchema: /setup\..*\.json$/,
-  setupTarget: /setup-target\..*json$/,
-  setupUiJson: /setup-ui\..*json$/,
-  disclaimer: /disclaimer\.md$/i,
-  gettingStarted: /getting.*started\.md$/i,
-  grafanaDashboards: /.*grafana-dashboard.json$/,
-  prometheusTargets: /.*prometheus-targets.(json|yaml|yml)$/
+// Declare true as true for conditional static types to work
+const TRUE: true = true as const;
+const FALSE: false = false as const;
+const FORMAT = {
+  JSON: "JSON" as const,
+  YAML: "YAML" as const,
+  TEXT: "TEXT" as const
 };
 
-export interface ReleaseFileConfig {
-  id: keyof typeof releaseFilesRegex;
-  regex: RegExp;
-  defaultName: string;
-  required?: boolean;
-  multiple?: boolean;
-}
-
-export const releaseFiles: {
-  [P in keyof typeof releaseFilesRegex]: ReleaseFileConfig;
-} = {
+export const releaseFiles = {
   manifest: {
-    regex: releaseFilesRegex.manifest,
-    defaultName: "dappnode_package.json",
-    id: "manifest",
-    required: true
+    regex: /dappnode_package.*\.json$/,
+    format: FORMAT.JSON,
+    maxSize: 100e3, // Limit size to ~100KB
+    required: TRUE,
+    multiple: FALSE
   },
   compose: {
-    regex: releaseFilesRegex.compose,
-    defaultName: "docker-compose.yml",
-    id: "compose",
-    required: true
+    regex: /compose.*\.yml$/,
+    format: FORMAT.YAML,
+    maxSize: 10e3, // Limit size to ~10KB
+    required: TRUE,
+    multiple: FALSE
   },
   avatar: {
-    regex: releaseFilesRegex.avatar,
-    defaultName: "avatar.png",
-    id: "avatar",
-    required: true
+    regex: /avatar.*\.png$/,
+    format: null,
+    maxSize: 100e3,
+    required: TRUE,
+    multiple: FALSE
   },
   setupWizard: {
-    regex: releaseFilesRegex.setupWizard,
-    defaultName: "setup-wizard.json",
-    id: "setupWizard"
+    regex: /setup-wizard\..*(json|yaml|yml)$/,
+    format: FORMAT.YAML,
+    maxSize: 100e3,
+    required: FALSE,
+    multiple: FALSE
   },
   setupSchema: {
-    regex: releaseFilesRegex.setupSchema,
-    defaultName: "setup.schema.json",
-    id: "setupSchema"
+    regex: /setup\..*\.json$/,
+    format: FORMAT.JSON,
+    maxSize: 10e3,
+    required: FALSE,
+    multiple: FALSE
   },
   setupTarget: {
-    regex: releaseFilesRegex.setupTarget,
-    defaultName: "setup-target.json",
-    id: "setupTarget"
+    regex: /setup-target\..*json$/,
+    format: FORMAT.JSON,
+    maxSize: 10e3,
+    required: FALSE,
+    multiple: FALSE
   },
   setupUiJson: {
-    regex: releaseFilesRegex.setupUiJson,
-    defaultName: "setup-ui.json",
-    id: "setupUiJson"
+    regex: /setup-ui\..*json$/,
+    format: FORMAT.JSON,
+    maxSize: 10e3,
+    required: FALSE,
+    multiple: FALSE
   },
   disclaimer: {
-    regex: releaseFilesRegex.disclaimer,
-    defaultName: "disclaimer.md",
-    id: "disclaimer"
+    regex: /disclaimer\.md$/i,
+    format: FORMAT.TEXT,
+    maxSize: 100e3,
+    required: FALSE,
+    multiple: FALSE
   },
   gettingStarted: {
-    regex: releaseFilesRegex.gettingStarted,
-    defaultName: "getting-started.md",
-    id: "gettingStarted"
-  },
-  grafanaDashboards: {
-    regex: releaseFilesRegex.grafanaDashboards,
-    defaultName: "grafana-dashboard.json",
-    id: "grafanaDashboards",
-    multiple: true
+    regex: /getting.*started\.md$/i,
+    format: FORMAT.TEXT,
+    maxSize: 100e3,
+    required: FALSE,
+    multiple: FALSE
   },
   prometheusTargets: {
-    regex: releaseFilesRegex.prometheusTargets,
-    defaultName: "prometheus-targets.json",
-    id: "prometheusTargets",
-    multiple: true
+    regex: /.*prometheus-targets.(json|yaml|yml)$/,
+    format: FORMAT.YAML,
+    maxSize: 10e3,
+    required: FALSE,
+    multiple: FALSE
+  },
+  grafanaDashboards: {
+    regex: /.*grafana-dashboard.json$/,
+    format: FORMAT.JSON,
+    maxSize: 10e6, // ~ 10MB
+    required: FALSE,
+    multiple: TRUE
   }
+};
+
+export const releaseFilesDefaultNames: {
+  [P in keyof typeof releaseFiles]: string;
+} = {
+  manifest: "dappnode_package.json",
+  compose: "docker-compose.yml",
+  avatar: "avatar.png",
+  setupWizard: "setup-wizard.json",
+  setupSchema: "setup.schema.json",
+  setupTarget: "setup-target.json",
+  setupUiJson: "setup-ui.json",
+  disclaimer: "disclaimer.md",
+  gettingStarted: "getting-started.md",
+  grafanaDashboards: "grafana-dashboard.json",
+  prometheusTargets: "prometheus-targets.json"
 };
 
 // Naming
