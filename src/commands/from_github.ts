@@ -10,7 +10,8 @@ import {
   contentHashFile,
   getImagePath,
   getLegacyImagePath,
-  releaseFiles
+  releaseFiles,
+  releaseFilesDefaultNames
 } from "../params";
 import { getInstallDnpLink } from "../utils/getLinks";
 import { githubGetReleases, GithubRelease } from "../utils/githubGetReleases";
@@ -82,16 +83,16 @@ export async function fromGithubHandler({
   });
 
   // Sanity check, make sure this release is an actual DAppNode Package
-  for (const file of Object.values(releaseFiles))
+  for (const [fileId, fileConfig] of Object.entries(releaseFiles))
     if (
-      file.required &&
-      !release.assets.some(asset => file.regex.test(asset.name))
+      fileConfig.required &&
+      !release.assets.some(asset => fileConfig.regex.test(asset.name))
     )
-      throw Error(`Release assets do not contain required file ${file.id}`);
+      throw Error(`Release assets do not contain required file ${fileId}`);
 
   // Add extra file for legacy .tar.xz image
   const manifestAsset = release.assets.find(
-    asset => asset.name === releaseFiles.manifest.defaultName
+    asset => asset.name === releaseFilesDefaultNames.manifest
   );
 
   if (manifestAsset) {

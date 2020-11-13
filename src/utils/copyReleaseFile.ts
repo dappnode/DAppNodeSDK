@@ -1,12 +1,30 @@
 import fs from "fs";
 import path from "path";
-import { ReleaseFileConfig } from "../params";
+import { releaseFilesDefaultNames } from "../params";
 
-export function copyReleaseFile(
-  fileConfig: ReleaseFileConfig,
-  fromDir: string,
-  toDir: string
-): void {
+interface FileConfig {
+  regex: RegExp;
+  maxSize: number;
+  required: boolean;
+  multiple: boolean;
+  id: string;
+}
+
+function getDefaultName(fileId: string): string | undefined {
+  return releaseFilesDefaultNames[
+    fileId as keyof typeof releaseFilesDefaultNames
+  ];
+}
+
+export function copyReleaseFile({
+  fileConfig,
+  fromDir,
+  toDir
+}: {
+  fileConfig: FileConfig;
+  fromDir: string;
+  toDir: string;
+}): void {
   const files = fs.readdirSync(fromDir);
   const matchingFiles = files.filter(file => fileConfig.regex.test(file));
 
@@ -19,7 +37,7 @@ export function copyReleaseFile(
   } else if (matchingFiles.length === 1) {
     fs.copyFileSync(
       path.join(fromDir, matchingFiles[0]),
-      path.join(toDir, fileConfig.defaultName)
+      path.join(toDir, getDefaultName(fileConfig.id) || matchingFiles[0])
     );
   } else {
     if (fileConfig.multiple) {
@@ -36,18 +54,20 @@ export function copyReleaseFile(
 }
 
 class NoFileFoundError extends Error {
-  constructor(fileConfig: ReleaseFileConfig, fromDir: string) {
+  constructor(fileConfig: FileConfig, fromDir: string) {
     super(
       `No ${fileConfig.id} found in ${fromDir}.` +
         `${fileConfig.id} naming must match ${fileConfig.regex.toString()}.` +
-        `Please rename it to ${fileConfig.defaultName}`
+        `Please rename it to ${
+          getDefaultName(fileConfig.id) || fileConfig.regex.toString()
+        }`
     );
   }
 }
 
 class ToManyFilesError extends Error {
   constructor(
-    fileConfig: ReleaseFileConfig,
+    fileConfig: FileConfig,
     fromDir: string,
     matchingFiles: string[]
   ) {
@@ -55,7 +75,9 @@ class ToManyFilesError extends Error {
       `More than one ${fileConfig.id} found in ${fromDir}: ` +
         matchingFiles.join(", ") +
         `Only one file can match ${fileConfig.regex.toString()}` +
-        `Please rename it to ${fileConfig.defaultName}`
+        `Please rename it to ${
+          getDefaultName(fileConfig.id) || fileConfig.regex.toString()
+        }`
     );
   }
 }
