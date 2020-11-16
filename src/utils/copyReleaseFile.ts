@@ -48,7 +48,7 @@ export function copyReleaseFile({
         );
       }
     } else {
-      throw new ToManyFilesError(fileConfig, fromDir, matchingFiles);
+      throw new TooManyFilesError(fileConfig, fromDir, matchingFiles);
     }
   }
 }
@@ -65,7 +65,7 @@ class NoFileFoundError extends Error {
   }
 }
 
-class ToManyFilesError extends Error {
+class TooManyFilesError extends Error {
   constructor(
     fileConfig: FileConfig,
     fromDir: string,
