@@ -81,6 +81,11 @@
       "description": "For multi-service packages, indicate which service is the main one. The root ENS domain of this package will be mapped to this service IP.",
       "examples": ["webserver", "backend", "service1"]
     },
+    "dockerTimeout": {
+      "type": "string",
+      "description": "Modify the default Docker timeout of 10 seconds. It affects package updates, removals, container restarts, start and stop, updating config environments and port mappings. You can either pass a numerical value in seconds or a string representation parsed with [timestring](http://npmjs.com/package/timestring). Available from DAPPMANAGER v0.2.36",
+      "examples": ["5min", "60"]
+    },
     "dependencies": {
       "type": "object",
       "description": "DAppNode Package dependencies. Must be an object where the keys are the DAppNode Package's ENS. The values must be a semantic range, i.e. `'0.2.0'`, `'^0.2.1'`, `'*'`, `'latest'`, `'/ipfs/QmWwMb3XhuCH6JnCF6m6EQzA4mW9pHHtg7rqAfhDr2ofi8'`.",
