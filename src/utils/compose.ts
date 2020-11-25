@@ -11,7 +11,7 @@ import {
 } from "../types";
 import { upstreamImageLabel, UPSTREAM_VERSION_VARNAME } from "../params";
 import { toTitleCase } from "./format";
-import { mapValues } from "lodash";
+import { mapValues, uniqBy } from "lodash";
 
 const composeFileName = "docker-compose.yml";
 
@@ -246,7 +246,7 @@ export function getComposePackageImages(
 export function parseComposeUpstreamVersion(
   compose: Compose
 ): string | undefined {
-  const upstreamVersions: { name: string; version: string }[] = [];
+  let upstreamVersions: { name: string; version: string }[] = [];
   for (const service of Object.values(compose.services))
     if (
       typeof service.build === "object" &&
@@ -262,6 +262,9 @@ export function parseComposeUpstreamVersion(
         }
       }
     }
+
+  // Remove duplicated build ARGs (for multi-service)
+  upstreamVersions = uniqBy(upstreamVersions, item => item.name);
 
   return upstreamVersions.length === 0
     ? undefined
