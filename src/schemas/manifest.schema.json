@@ -156,6 +156,13 @@
             ],
             "minLength": 1,
             "errorMessage": "should be an non-empty string"
+          },
+          "service": {
+            "type": "string",
+            "description": "Service to which the path belongs to. Must be equal to the name used in the docker-compose services object",
+            "examples": ["validator", "service1"],
+            "minLength": 1,
+            "errorMessage": "should be an non-empty string"
           }
         }
       }
