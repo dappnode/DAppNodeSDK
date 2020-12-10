@@ -140,22 +140,20 @@ export function createGithubRelease({
 function getReleaseBody(txData: TxData) {
   const link = getPublishTxLink(txData);
   const changelog = "";
+  const installLink = getInstallDnpLink(txData.releaseMultiHash);
   return `
-# Changelog
+##### Changelog
 
 ${changelog}
 
 ---
 
-### Install package
+##### For package mantainer
 
-${getInstallDnpLink(txData.releaseMultiHash)}
+Authorized developer account may execute this transaction [from a pre-filled link](${link})[.](${installLink})
 
-\`\`\`
-${txData.releaseMultiHash}
-\`\`\`
-
-### Publish transaction
+<details><summary>Release details</summary>
+<p>
 
 \`\`\`
 To: ${txData.to}
@@ -164,6 +162,12 @@ Data: ${txData.data}
 Gas limit: ${txData.gasLimit}
 \`\`\`
 
-You can execute this transaction from the Admin UI with Metamask by following [this pre-filled link](${link})
+\`\`\`
+${txData.releaseMultiHash}
+\`\`\`
+
+</p>
+</details>
+
 `.trim();
 }
