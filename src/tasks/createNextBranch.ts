@@ -12,8 +12,10 @@ import { Github } from "../utils/Github";
 export function createNextBranch({
   dir,
   verbose,
-  silent
+  silent,
+  compose_file_name,
 }: CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
+  const composeFileName = compose_file_name;
   // Gather repo data, repoSlug = "dappnode/DNP_ADMIN"
   const github = new Github(dir);
 
@@ -38,10 +40,11 @@ export function createNextBranch({
             }
 
             const manifestPath = getManifestPath();
-            const composePath = getComposePath();
+            const composePath = getComposePath(composeFileName);
             const nextVersion = await increaseFromLocalVersion({
               type: "patch",
-              dir
+              dir,
+              compose_file_name
             });
             const branch = `v${nextVersion}`;
 

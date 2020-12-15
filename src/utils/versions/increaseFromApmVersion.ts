@@ -6,11 +6,13 @@ import { ReleaseType } from "../../types";
 export async function increaseFromApmVersion({
   type,
   ethProvider,
-  dir
+  dir,
+  composeFileName
 }: {
   type: ReleaseType;
   ethProvider: string;
   dir: string;
+  composeFileName: string;
 }): Promise<string> {
   // Check variables
   const nextVersion = await getNextVersionFromApm({ type, ethProvider, dir });
@@ -24,8 +26,8 @@ export async function increaseFromApmVersion({
   // Mofidy and write the manifest and docker-compose
   writeManifest(dir, manifest);
   const { name, version } = manifest;
-  const compose = readCompose(dir);
-  writeCompose(dir, updateComposeImageTags(compose, { name, version }));
+  const compose = readCompose(composeFileName, dir);
+  writeCompose(composeFileName, dir, updateComposeImageTags(compose, { name, version }));
 
   return nextVersion;
 }

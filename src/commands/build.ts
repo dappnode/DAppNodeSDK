@@ -74,6 +74,7 @@ export async function buildHandler({
   skip_upload,
   // Global options
   dir,
+  compose_file_name,
   silent,
   verbose
 }: CliCommandOptions): Promise<{ releaseMultiHash: string }> {
@@ -83,6 +84,7 @@ export async function buildHandler({
   const userTimeout = timeout;
   const skipSave = skip_save;
   const skipUpload = skip_save || skip_upload;
+  const composeFileName = compose_file_name;
   const nextVersion = getCurrentLocalVersion({ dir });
   const buildDir = path.join(dir, `build_${nextVersion}`);
 
@@ -94,7 +96,8 @@ export async function buildHandler({
       uploadTo,
       userTimeout,
       skipSave,
-      skipUpload
+      skipUpload,
+      composeFileName
     }),
     { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
   );

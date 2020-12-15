@@ -18,6 +18,7 @@ import { stringifyManifest } from "../../../src/utils/manifest";
 
 describe("increaseFromApmVersion", () => {
   const ensName = "admin.dnp.dappnode.eth";
+
   const manifest: Manifest = {
     name: ensName,
     version: "0.1.0",
@@ -31,20 +32,22 @@ describe("increaseFromApmVersion", () => {
     }
   };
   const manifestPath = "./dappnode_package.json";
-  const composePath = "./docker-compose.yml";
+  const composeFileName = 'docker-compose.yml';
+  const composePath = `./${composeFileName}`;
   const dir = "./";
 
   before(async () => {
     await rmSafe(manifestPath);
     await rmSafe(composePath);
     fs.writeFileSync(manifestPath, stringifyManifest(manifest));
-    generateAndWriteCompose(dir, manifest);
+    generateAndWriteCompose(composeFileName, dir, manifest);
   });
 
   it("Should get the last version from APM", async () => {
     const nextVersion = await increaseFromApmVersion({
       type: "patch",
       ethProvider: "infura",
+      composeFileName,
       dir
     });
 

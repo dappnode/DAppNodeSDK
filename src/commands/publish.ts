@@ -137,6 +137,7 @@ export async function publishHanlder({
   create_next_branch,
   dappnode_team_preset,
   // Global options
+  compose_file_name,
   dir,
   silent,
   verbose
@@ -153,6 +154,7 @@ export async function publishHanlder({
   let createNextGithubBranch = Boolean(create_next_branch);
   const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
   const userTimeout = timeout;
+  const composeFileName = compose_file_name;
 
   const isCi = process.env.CI;
   const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
@@ -214,7 +216,8 @@ export async function publishHanlder({
             nextVersion = await increaseFromApmVersion({
               type: type as ReleaseType,
               ethProvider,
-              dir
+              dir,
+              composeFileName
             });
           } catch (e) {
             if (e.message.includes("NOREPO"))
@@ -234,6 +237,7 @@ export async function publishHanlder({
           new Listr(
             buildAndUpload({
               dir,
+              composeFileName,
               buildDir: ctx.buildDir,
               contentProvider,
               uploadTo,
@@ -249,6 +253,7 @@ export async function publishHanlder({
         task: ctx =>
           generatePublishTx({
             dir,
+            compose_file_name,
             releaseMultiHash: ctx.releaseMultiHash,
             developerAddress,
             ethProvider,
@@ -265,6 +270,7 @@ export async function publishHanlder({
         task: ctx =>
           createGithubRelease({
             dir,
+            compose_file_name,
             buildDir: ctx.buildDir,
             releaseMultiHash: ctx.releaseMultiHash,
             verbose,
@@ -280,6 +286,7 @@ export async function publishHanlder({
         task: () =>
           createNextBranch({
             dir,
+            compose_file_name,
             verbose,
             silent
           })

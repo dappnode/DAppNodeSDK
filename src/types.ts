@@ -2,6 +2,7 @@
 
 export interface CliGlobalOptions {
   dir: string;
+  compose_file_name: string;
   silent?: boolean;
   verbose?: boolean;
 }

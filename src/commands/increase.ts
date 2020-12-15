@@ -35,7 +35,12 @@ export const increase: CommandModule<CliGlobalOptions, CliCommandOptions> = {
  */
 export async function increaseHandler({
   type,
-  dir
+  dir,
+  compose_file_name,
 }: CliCommandOptions): Promise<string> {
-  return await increaseFromLocalVersion({ type: type as ReleaseType, dir });
+  return await increaseFromLocalVersion({
+    type: type as ReleaseType,
+    dir,
+    compose_file_name
+  });
 }

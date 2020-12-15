@@ -36,7 +36,8 @@ describe("buildAndUpload", () => {
     }
   };
   const manifestPath = "./dappnode_package.json";
-  const composePath = "./docker-compose.yml";
+  const composeFileName = 'docker-compose.yml';
+  const composePath = `./${composeFileName}`;
   const avatarPath = "./test-avatar.png";
   const avatarSourcePath = "test/test-avatar-source.png";
   const buildDir = `./build_${version}`;
@@ -77,6 +78,7 @@ ENV test=1
 
     const buildTasks = new Listr(
       buildAndUpload({
+        composeFileName,
         dir: "./",
         buildDir,
         contentProvider,

@@ -91,8 +91,10 @@ dappnodesdk build
 export async function initHandler({
   yes: useDefaults,
   force,
-  dir
+  dir,
+  compose_file_name,
 }: CliCommandOptions): Promise<Manifest> {
+  const composeFileName = compose_file_name;
   // shell outputs tend to include trailing spaces and new lines
   const directoryName = await shell('echo "${PWD##*/}"');
   const defaultAuthor = await shell("whoami");
@@ -191,7 +193,7 @@ It only covers the most common items, and tries to guess sensible defaults.
 
   // Write manifest and compose
   writeManifest(dir, manifest);
-  generateAndWriteCompose(dir, manifest);
+  generateAndWriteCompose(composeFileName, dir, manifest);
 
   // Add default avatar so users can run the command right away
   const files = fs.readdirSync(dir);

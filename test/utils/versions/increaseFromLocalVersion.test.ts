@@ -30,19 +30,21 @@ describe("increaseFromLocalVersion", () => {
     }
   };
   const manifestPath = "./dappnode_package.json";
-  const composePath = "./docker-compose.yml";
+  const compose_file_name = 'docker-compose.yml';
+  const composePath = `./${compose_file_name}`;
   const dir = "./";
 
   before(async () => {
     await rmSafe(manifestPath);
     await rmSafe(composePath);
     fs.writeFileSync(manifestPath, stringifyManifest(manifest));
-    generateAndWriteCompose(dir, manifest);
+    generateAndWriteCompose(compose_file_name, dir, manifest);
   });
 
   it("Should get the last version from APM", async () => {
     const nextVersion = await increaseFromLocalVersion({
       type: "patch",
+      compose_file_name,
       dir
     });
 
