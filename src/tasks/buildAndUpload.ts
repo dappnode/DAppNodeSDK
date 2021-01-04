@@ -233,7 +233,8 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
             name: manifest.name,
             version: manifest.version,
             upstreamVersion: manifest.upstreamVersion,
-            ...(gitHead || {})
+            commit: gitHead ? gitHead.commit : undefined,
+            branch: gitHead ? gitHead.branch : undefined
           }
         };
 
