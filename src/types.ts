@@ -1,14 +1,3 @@
-/**
- * Pinata DAppNodePackage build pin metadata
- */
-export interface DnpPinMetadata {
-  name: string;
-  version: string;
-  upstreamVersion: string | undefined;
-  commit: string | undefined;
-  branch: string | undefined;
-}
-
 // CLI types
 
 export interface CliGlobalOptions {

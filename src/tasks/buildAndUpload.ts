@@ -22,15 +22,15 @@ import {
   updateComposeImageTags,
   getComposePackageImages
 } from "../utils/compose";
-import { ListrContextBuildAndPublish, DnpPinMetadata } from "../types";
+import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
 import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
-import { getGitHead, GitHead, gitIsAncestor } from "../utils/git";
+import { getGitHead, GitHead } from "../utils/git";
+import { fetchOldPinsWithBranch, getPinMetadata } from "../pinStrategy";
 import {
-  PinataMetadata,
   PinKeyvaluesDefault,
   PinataPinManager
 } from "../releaseUploader/pinata";
@@ -40,7 +40,6 @@ import {
   cliArgsToReleaseUploaderProvider,
   UploadTo
 } from "../releaseUploader";
-import { prettyPinataPinName } from "../utils/format";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -254,20 +253,10 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
           fs.copyFileSync(imagePathAmd, imagePathLegacy);
 
         const gitHead = await getGitHeadMaybe();
-        const metadata: PinataMetadata<DnpPinMetadata> = {
-          name: prettyPinataPinName(manifest, gitHead),
-          keyvalues: {
-            name: manifest.name,
-            version: manifest.version,
-            upstreamVersion: manifest.upstreamVersion,
-            commit: gitHead ? gitHead.commit : undefined,
-            branch: gitHead ? gitHead.branch : undefined
-          }
-        };
 
         ctx.releaseHash = await releaseUploader.addFromFs({
           dirPath: buildDir,
-          metadata: metadata as PinKeyvaluesDefault,
+          metadata: getPinMetadata(manifest, gitHead) as PinKeyvaluesDefault,
           onProgress: percent => (task.output = percentToMessage(percent))
         });
       }
@@ -284,24 +273,15 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
         // Unpin items on the same branch but previous (ancestor) commits
         const pinata = new PinataPinManager(releaseUploaderProvider);
-        const pinsWithSameBranch = await pinata.pinList<DnpPinMetadata>({
-          keyvalues: {
-            name: { value: manifest.name, op: "eq" },
-            branch: { value: gitHead.branch, op: "eq" }
-          }
-        });
-        task.output = `Found ${pinsWithSameBranch.length} pins with the same branch`;
+        const oldPinsToDelete = await fetchOldPinsWithBranch(
+          pinata,
+          manifest,
+          gitHead
+        );
 
-        for (const pin of pinsWithSameBranch) {
-          const pinCommit = pin.metadata.keyvalues?.commit;
-          if (
-            pinCommit &&
-            pinCommit !== gitHead.commit &&
-            (await gitIsAncestor(pinCommit, gitHead.commit))
-          ) {
-            task.output = `Unpin prev commit ${pinCommit} ${pin.ipfs_pin_hash}`;
-            await pinata.unpin(pin.ipfs_pin_hash);
-          }
+        for (const pin of oldPinsToDelete) {
+          task.output = `Unpinning previous commit ${pin.commit} ${pin.ipfsHash}`;
+          await pinata.unpin(pin.ipfsHash);
         }
       }
     },
