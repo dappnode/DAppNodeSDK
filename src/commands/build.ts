@@ -9,11 +9,12 @@ import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion
 import { getInstallDnpLink } from "../utils/getLinks";
 import { CliGlobalOptions } from "../types";
 import { UploadTo } from "../releaseUploader";
+import { defaultDir } from "../params";
 
 interface CliCommandOptions extends CliGlobalOptions {
   provider: string;
-  timeout: string;
   upload_to: UploadTo;
+  timeout?: string;
   skip_save?: boolean;
   skip_upload?: boolean;
   require_git_data?: boolean;
@@ -29,16 +30,16 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       description: `Specify an ipfs provider: "dappnode" (default), "infura", "localhost:5002"`,
       default: "dappnode"
     },
-    timeout: {
-      alias: "t",
-      description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
-      default: "60min"
-    },
     upload_to: {
       alias: "upload_to",
       description: `Specify where to upload the release`,
       choices: ["ipfs", "swarm"] as UploadTo[],
       default: "ipfs" as UploadTo
+    },
+    timeout: {
+      alias: "t",
+      description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
+      default: "60min"
     },
     skip_save: {
       description: `For testing only: do not save image to disk`,
@@ -76,7 +77,7 @@ export async function buildHandler({
   skip_upload,
   require_git_data,
   // Global options
-  dir,
+  dir = defaultDir,
   silent,
   verbose
 }: CliCommandOptions): Promise<{ releaseMultiHash: string }> {

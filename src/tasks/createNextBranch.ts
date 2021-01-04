@@ -5,12 +5,13 @@ import { getComposePath } from "../utils/compose";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
 import { shell } from "../utils/shell";
 import { Github } from "../utils/Github";
+import { defaultDir } from "../params";
 
 /**
  * Create (or edit) a Github release, then upload all assets
  */
 export function createNextBranch({
-  dir,
+  dir = defaultDir,
   verbose,
   silent
 }: CliGlobalOptions): Listr<ListrContextBuildAndPublish> {

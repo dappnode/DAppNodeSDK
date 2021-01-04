@@ -8,7 +8,7 @@ import {
 import { readManifest } from "../utils/manifest";
 import { getPublishTxLink } from "../utils/getLinks";
 import { addReleaseTx } from "../utils/releaseRecord";
-import { YargsError } from "../params";
+import { defaultDir, YargsError } from "../params";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
@@ -25,7 +25,7 @@ const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
  */
 
 export function generatePublishTx({
-  dir,
+  dir = defaultDir,
   releaseMultiHash,
   developerAddress,
   ethProvider,

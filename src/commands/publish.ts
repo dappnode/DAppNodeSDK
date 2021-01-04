@@ -11,7 +11,7 @@ import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion
 import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion";
 import { verifyEthConnection } from "../utils/verifyEthConnection";
 import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
-import { YargsError } from "../params";
+import { defaultDir, YargsError } from "../params";
 import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
 import { createNextBranch } from "../tasks/createNextBranch";
 import { printObject } from "../utils/print";
@@ -24,9 +24,9 @@ interface CliCommandOptions extends CliGlobalOptions {
   provider?: string;
   eth_provider: string;
   content_provider: string;
-  developer_address?: string;
-  timeout: string;
   upload_to: UploadTo;
+  developer_address?: string;
+  timeout?: string;
   github_release?: boolean;
   create_next_branch?: boolean;
   dappnode_team_preset?: boolean;
@@ -63,6 +63,11 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
         default: "dappnode",
         type: "string"
       })
+      .option("upload_to", {
+        description: `Specify where to upload the release`,
+        choices: ["ipfs", "swarm"],
+        default: "ipfs" as UploadTo
+      })
       .option("developer_address", {
         alias: "a",
         description: `If there is no existing repo for this DNP the publish command needs a developer address. If it is not provided as an option a prompt will request it`,
@@ -73,11 +78,6 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
         description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
         default: "60min",
         type: "string"
-      })
-      .option("upload_to", {
-        description: `Specify where to upload the release`,
-        choices: ["ipfs", "swarm"],
-        default: "ipfs" as UploadTo
       })
       .option("github_release", {
         description: `Publish the release on the Github repo specified in the manifest. Requires a GITHUB_TOKEN ENV to authenticate`,
@@ -140,7 +140,7 @@ export async function publishHanlder({
   dappnode_team_preset,
   require_git_data,
   // Global options
-  dir,
+  dir = defaultDir,
   silent,
   verbose
 }: CliCommandOptions): Promise<{

@@ -2,6 +2,7 @@ import { CommandModule } from "yargs";
 import { getNextVersionFromApm } from "../utils/versions/getNextVersionFromApm";
 import { verifyEthConnection } from "../utils/verifyEthConnection";
 import { CliGlobalOptions, ReleaseType } from "../types";
+import { defaultDir } from "../params";
 
 interface CliCommandOptions extends CliGlobalOptions {
   type: string;
@@ -40,7 +41,7 @@ export const next: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 export async function nextHandler({
   type,
   provider,
-  dir
+  dir = defaultDir
 }: CliCommandOptions): Promise<string> {
   const ethProvider = provider;
 

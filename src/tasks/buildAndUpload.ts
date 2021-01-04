@@ -55,7 +55,7 @@ export function buildAndUpload({
   buildDir: string;
   contentProvider: string;
   uploadTo: UploadTo;
-  userTimeout: string;
+  userTimeout?: string;
   skipSave?: boolean;
   skipUpload?: boolean;
   requireGitData?: boolean;
