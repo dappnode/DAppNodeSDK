@@ -8,11 +8,12 @@ import { buildAndUpload } from "../tasks/buildAndUpload";
 import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
 import { getInstallDnpLink } from "../utils/getLinks";
 import { CliGlobalOptions } from "../types";
+import { UploadTo } from "../releaseUploader";
 
 interface CliCommandOptions extends CliGlobalOptions {
   provider: string;
   timeout: string;
-  upload_to: "ipfs" | "swarm";
+  upload_to: UploadTo;
   skip_save?: boolean;
   skip_upload?: boolean;
 }
@@ -35,8 +36,8 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     upload_to: {
       alias: "upload_to",
       description: `Specify where to upload the release`,
-      choices: ["ipfs", "swarm"],
-      default: "ipfs"
+      choices: ["ipfs", "swarm"] as UploadTo[],
+      default: "ipfs" as UploadTo
     },
     skip_save: {
       description: `For testing only: do not save image to disk`,

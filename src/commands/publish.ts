@@ -15,6 +15,7 @@ import { YargsError } from "../params";
 import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
 import { createNextBranch } from "../tasks/createNextBranch";
 import { printObject } from "../utils/print";
+import { UploadTo } from "../releaseUploader";
 
 const typesList = releaseTypes.join(" | ");
 
@@ -25,7 +26,7 @@ interface CliCommandOptions extends CliGlobalOptions {
   content_provider: string;
   developer_address?: string;
   timeout: string;
-  upload_to: string;
+  upload_to: UploadTo;
   github_release?: boolean;
   create_next_branch?: boolean;
   dappnode_team_preset?: boolean;
@@ -75,7 +76,7 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       .option("upload_to", {
         description: `Specify where to upload the release`,
         choices: ["ipfs", "swarm"],
-        default: "ipfs"
+        default: "ipfs" as UploadTo
       })
       .option("github_release", {
         description: `Publish the release on the Github repo specified in the manifest. Requires a GITHUB_TOKEN ENV to authenticate`,

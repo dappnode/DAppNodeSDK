@@ -31,7 +31,8 @@ import { pruneCache } from "../utils/cache";
 import {
   getReleaseUploader,
   ReleaseUploaderConnectionError,
-  cliArgsToReleaseUploaderProvider
+  cliArgsToReleaseUploaderProvider,
+  UploadTo
 } from "../releaseUploader";
 import { getGitHead } from "../utils/getGitHead";
 import { PinataMetadata } from "../releaseUploader/pinata/PinataSDK";
@@ -51,7 +52,7 @@ export function buildAndUpload({
 }: {
   buildDir: string;
   contentProvider: string;
-  uploadTo: string;
+  uploadTo: UploadTo;
   userTimeout: string;
   skipSave?: boolean;
   skipUpload?: boolean;
