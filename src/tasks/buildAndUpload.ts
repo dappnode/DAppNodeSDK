@@ -329,6 +329,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         const shortCommit = process.env.GITHUB_SHA?.slice(0, 8);
         const installLink = getInstallDnpLink(ctx.releaseMultiHash);
         const body = `DAppNode bot has built commit ${shortCommit} and pinned the release to an IPFS node.
+
 This is a development version and should **only** be installed for testing purposes, [install link](${installLink})
 
 \`\`\`
