@@ -96,7 +96,8 @@ export class PinataPinManager {
     if (filters?.keyvalues)
       searchParams["metadata[keyvalues]"] = JSON.stringify(filters.keyvalues);
 
-    return await got
+    // Note: Results in rows will be limited to 1000, in case of needing more pagination should be implemented
+    const result: { count: number; rows: PinItem<PinKeyvalues>[] } = await got
       .get({
         prefixUrl: this.pinataUrl,
         url: "data/pinList",
@@ -107,6 +108,8 @@ export class PinataPinManager {
         searchParams
       })
       .json();
+
+    return result.rows;
   }
 
   /**
