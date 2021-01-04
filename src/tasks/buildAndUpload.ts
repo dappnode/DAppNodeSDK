@@ -36,6 +36,7 @@ import {
   cliArgsToReleaseUploaderProvider,
   UploadTo
 } from "../releaseUploader";
+import { prettyPinataPinName } from "../utils/format";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -246,7 +247,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
         const gitHead = await getGitHeadMaybe();
         const metadata: PinataMetadata = {
-          name: `${manifest.name} ${manifest.version}`,
+          name: prettyPinataPinName(manifest, gitHead),
           keyvalues: {
             name: manifest.name,
             version: manifest.version,
