@@ -42,16 +42,22 @@ export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
   }
 
   async testConnection(): Promise<void> {
-    const res = await got.get({
-      prefixUrl: this.pinataUrl,
-      url: "data/testAuthentication",
-      headers: {
-        pinata_api_key: this.apiKey,
-        pinata_secret_api_key: this.secretApiKey
+    try {
+      const res = await got.get({
+        prefixUrl: this.pinataUrl,
+        url: "data/testAuthentication",
+        headers: {
+          pinata_api_key: this.apiKey,
+          pinata_secret_api_key: this.secretApiKey
+        }
+      });
+
+      if (res.statusCode !== 200) {
+        throw Error(`Status code ${res.statusCode} ${res.statusMessage}`);
       }
-    });
-    if (res.statusCode !== 200) {
-      throw Error(`Error authenticating: ${res.statusCode}`);
+    } catch (e) {
+      e.message = `Error authenticating with Pinata: ${e.message}`;
+      throw e;
     }
   }
 }
@@ -97,19 +103,24 @@ export class PinataPinManager {
       searchParams["metadata[keyvalues]"] = JSON.stringify(filters.keyvalues);
 
     // Note: Results in rows will be limited to 1000, in case of needing more pagination should be implemented
-    const result: { count: number; rows: PinItem<PinKeyvalues>[] } = await got
-      .get({
-        prefixUrl: this.pinataUrl,
-        url: "data/pinList",
-        headers: {
-          pinata_api_key: this.apiKey,
-          pinata_secret_api_key: this.secretApiKey
-        },
-        searchParams
-      })
-      .json();
+    try {
+      const result: { count: number; rows: PinItem<PinKeyvalues>[] } = await got
+        .get({
+          prefixUrl: this.pinataUrl,
+          url: "data/pinList",
+          headers: {
+            pinata_api_key: this.apiKey,
+            pinata_secret_api_key: this.secretApiKey
+          },
+          searchParams
+        })
+        .json();
 
-    return result.rows;
+      return result.rows;
+    } catch (e) {
+      e.message = `Error on Pinata pinList: ${e.message}`;
+      throw e;
+    }
   }
 
   /**
@@ -118,16 +129,21 @@ export class PinataPinManager {
    * @param hashToUnpin QmaEqNCwRxdA6SLLxntT2xbsUgqxMfGVCwoHuyXjczoQwN
    */
   async unpin(hashToUnpin: string): Promise<void> {
-    const res = await got.delete({
-      prefixUrl: this.pinataUrl,
-      url: `pinning/unpin/${hashToUnpin}`,
-      headers: {
-        pinata_api_key: this.apiKey,
-        pinata_secret_api_key: this.secretApiKey
+    try {
+      const res = await got.delete({
+        prefixUrl: this.pinataUrl,
+        url: `pinning/unpin/${hashToUnpin}`,
+        headers: {
+          pinata_api_key: this.apiKey,
+          pinata_secret_api_key: this.secretApiKey
+        }
+      });
+      if (res.statusCode !== 200) {
+        throw Error(`Error on unpin: ${res.statusCode}`);
       }
-    });
-    if (res.statusCode !== 200) {
-      throw Error(`Error on unpin: ${res.statusCode}`);
+    } catch (e) {
+      e.message = `Error on Pinata unpin: ${e.message}`;
+      throw e;
     }
   }
 }
