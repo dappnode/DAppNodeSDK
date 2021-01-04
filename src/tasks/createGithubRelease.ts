@@ -3,8 +3,8 @@ import path from "path";
 import Listr from "listr";
 import { getRepoSlugFromManifest } from "../utils/getRepoSlugFromManifest";
 import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
-import { getGitHead } from "../utils/getGitHead";
-import { contentHashFile } from "../params";
+import { getGitHead } from "../utils/git";
+import { contentHashFile, defaultDir } from "../params";
 import {
   TxData,
   CliGlobalOptions,
@@ -16,7 +16,7 @@ import { Github } from "../utils/Github";
  * Create (or edit) a Github release, then upload all assets
  */
 export function createGithubRelease({
-  dir,
+  dir = defaultDir,
   buildDir,
   releaseMultiHash,
   verbose,

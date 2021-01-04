@@ -8,13 +8,17 @@ import { buildAndUpload } from "../tasks/buildAndUpload";
 import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
 import { getInstallDnpLink } from "../utils/getLinks";
 import { CliGlobalOptions } from "../types";
+import { UploadTo } from "../releaseUploader";
+import { defaultDir } from "../params";
 
 interface CliCommandOptions extends CliGlobalOptions {
   provider: string;
-  timeout: string;
-  upload_to: "ipfs" | "swarm";
+  upload_to: UploadTo;
+  timeout?: string;
   skip_save?: boolean;
   skip_upload?: boolean;
+  require_git_data?: boolean;
+  delete_old_pins?: boolean;
 }
 
 export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
@@ -27,16 +31,16 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       description: `Specify an ipfs provider: "dappnode" (default), "infura", "localhost:5002"`,
       default: "dappnode"
     },
+    upload_to: {
+      alias: "upload_to",
+      description: `Specify where to upload the release`,
+      choices: ["ipfs", "swarm"] as UploadTo[],
+      default: "ipfs" as UploadTo
+    },
     timeout: {
       alias: "t",
       description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
       default: "60min"
-    },
-    upload_to: {
-      alias: "upload_to",
-      description: `Specify where to upload the release`,
-      choices: ["ipfs", "swarm"],
-      default: "ipfs"
     },
     skip_save: {
       description: `For testing only: do not save image to disk`,
@@ -72,8 +76,10 @@ export async function buildHandler({
   upload_to,
   skip_save,
   skip_upload,
+  require_git_data,
+  delete_old_pins,
   // Global options
-  dir,
+  dir = defaultDir,
   silent,
   verbose
 }: CliCommandOptions): Promise<{ releaseMultiHash: string }> {
@@ -94,7 +100,9 @@ export async function buildHandler({
       uploadTo,
       userTimeout,
       skipSave,
-      skipUpload
+      skipUpload,
+      requireGitData: require_git_data,
+      deleteOldPins: delete_old_pins
     }),
     { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
   );

@@ -14,7 +14,7 @@ import { publish } from "./commands/publish";
 
 // "source-map-support" MUST be imported for stack traces to work properly after Typescript transpile
 import "source-map-support/register";
-import { CliError, YargsError } from "./params";
+import { CliError, defaultDir, YargsError } from "./params";
 dotenv.config();
 
 // Set up commands
@@ -25,7 +25,7 @@ const dappnodesdk = yargs
     dir: {
       alias: "directory",
       description: "Change the base directory",
-      default: "./",
+      default: defaultDir,
       type: "string"
     },
     silent: {

@@ -3,6 +3,8 @@ import { Architecture } from "./types";
 export class CliError extends Error {}
 export class YargsError extends Error {}
 
+export const defaultDir = "./";
+
 export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
 
 export const UPSTREAM_VERSION_VARNAME = "UPSTREAM_VERSION";

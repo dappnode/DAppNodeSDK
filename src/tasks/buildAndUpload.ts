@@ -28,13 +28,18 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
+import { getGitHead, GitHead } from "../utils/git";
+import { fetchOldPinsWithBranch, getPinMetadata } from "../pinStrategy";
+import {
+  PinKeyvaluesDefault,
+  PinataPinManager
+} from "../releaseUploader/pinata";
 import {
   getReleaseUploader,
   ReleaseUploaderConnectionError,
-  cliArgsToReleaseUploaderProvider
+  cliArgsToReleaseUploaderProvider,
+  UploadTo
 } from "../releaseUploader";
-import { getGitHead } from "../utils/getGitHead";
-import { PinataMetadata } from "../releaseUploader/pinata/PinataSDK";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -47,14 +52,18 @@ export function buildAndUpload({
   userTimeout,
   skipSave,
   skipUpload,
+  requireGitData,
+  deleteOldPins,
   dir
 }: {
   buildDir: string;
   contentProvider: string;
-  uploadTo: string;
-  userTimeout: string;
+  uploadTo: UploadTo;
+  userTimeout?: string;
   skipSave?: boolean;
   skipUpload?: boolean;
+  requireGitData?: boolean;
+  deleteOldPins?: boolean;
   dir: string;
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
@@ -109,9 +118,26 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
   if (upstreamVersion) manifest.upstreamVersion = upstreamVersion;
 
   // Release upload. Use function for return syntax
-  const releaseUploader = getReleaseUploader(
-    cliArgsToReleaseUploaderProvider({ uploadTo, contentProvider })
-  );
+  const releaseUploaderProvider = cliArgsToReleaseUploaderProvider({
+    uploadTo,
+    contentProvider
+  });
+  const releaseUploader = getReleaseUploader(releaseUploaderProvider);
+
+  // Get git data and throw conditionally
+  // In CI uploading to Pinata git data MUST always be present to keep track of builds
+  async function getGitHeadMaybe(): Promise<GitHead | undefined> {
+    try {
+      return getGitHead();
+    } catch (e) {
+      if (requireGitData) {
+        e.message = `Error on getGitHead: ${e.message}`;
+        throw e;
+      } else {
+        console.error("Error on getGitHead", e.stack);
+      }
+    }
+  }
 
   return [
     {
@@ -181,6 +207,9 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         // Verify avatar (throws)
         const avatarPath = path.join(buildDir, releaseFilesDefaultNames.avatar);
         verifyAvatar(avatarPath);
+
+        // Make sure git data is available before doing a long build
+        await getGitHeadMaybe();
       }
     },
 
@@ -223,24 +252,37 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         if (fs.existsSync(imagePathAmd))
           fs.copyFileSync(imagePathAmd, imagePathLegacy);
 
-        const gitHead = await getGitHead().catch(e => {
-          console.error("Error on getGitHead", e.stack);
-        });
-        const metadata: PinataMetadata = {
-          name: `${manifest.name} ${manifest.version}`,
-          keyvalues: {
-            name: manifest.name,
-            version: manifest.version,
-            upstreamVersion: manifest.upstreamVersion,
-            ...(gitHead || {})
-          }
-        };
+        const gitHead = await getGitHeadMaybe();
 
         ctx.releaseHash = await releaseUploader.addFromFs({
           dirPath: buildDir,
-          metadata,
+          metadata: getPinMetadata(manifest, gitHead) as PinKeyvaluesDefault,
           onProgress: percent => (task.output = percentToMessage(percent))
         });
+      }
+    },
+
+    {
+      title: "Delete old pins",
+      enabled: () => Boolean(deleteOldPins),
+      task: async (_, task) => {
+        const gitHead = await getGitHeadMaybe();
+        if (!gitHead) throw Error("No gitHead data");
+        if (releaseUploaderProvider.type !== "pinata")
+          throw Error("Must use pinata for deleteOldPins");
+
+        // Unpin items on the same branch but previous (ancestor) commits
+        const pinata = new PinataPinManager(releaseUploaderProvider);
+        const oldPinsToDelete = await fetchOldPinsWithBranch(
+          pinata,
+          manifest,
+          gitHead
+        );
+
+        for (const pin of oldPinsToDelete) {
+          task.output = `Unpinning previous commit ${pin.commit} ${pin.ipfsHash}`;
+          await pinata.unpin(pin.ipfsHash);
+        }
       }
     },
 
