@@ -28,14 +28,14 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
+import { getGitHead, GitHead } from "../utils/getGitHead";
+import { PinataMetadata } from "../releaseUploader/pinata/PinataSDK";
 import {
   getReleaseUploader,
   ReleaseUploaderConnectionError,
   cliArgsToReleaseUploaderProvider,
   UploadTo
 } from "../releaseUploader";
-import { getGitHead } from "../utils/getGitHead";
-import { PinataMetadata } from "../releaseUploader/pinata/PinataSDK";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -48,6 +48,7 @@ export function buildAndUpload({
   userTimeout,
   skipSave,
   skipUpload,
+  requireGitData,
   dir
 }: {
   buildDir: string;
@@ -56,6 +57,7 @@ export function buildAndUpload({
   userTimeout: string;
   skipSave?: boolean;
   skipUpload?: boolean;
+  requireGitData?: boolean;
   dir: string;
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
@@ -113,6 +115,21 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
   const releaseUploader = getReleaseUploader(
     cliArgsToReleaseUploaderProvider({ uploadTo, contentProvider })
   );
+
+  // Get git data and throw conditionally
+  // In CI uploading to Pinata git data MUST always be present to keep track of builds
+  async function getGitHeadMaybe(): Promise<GitHead | undefined> {
+    try {
+      return getGitHead();
+    } catch (e) {
+      if (requireGitData) {
+        e.message = `Error on getGitHead: ${e.message}`;
+        throw e;
+      } else {
+        console.error("Error on getGitHead", e.stack);
+      }
+    }
+  }
 
   return [
     {
@@ -182,6 +199,9 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         // Verify avatar (throws)
         const avatarPath = path.join(buildDir, releaseFilesDefaultNames.avatar);
         verifyAvatar(avatarPath);
+
+        // Make sure git data is available before doing a long build
+        await getGitHeadMaybe();
       }
     },
 
@@ -224,9 +244,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         if (fs.existsSync(imagePathAmd))
           fs.copyFileSync(imagePathAmd, imagePathLegacy);
 
-        const gitHead = await getGitHead().catch(e => {
-          console.error("Error on getGitHead", e.stack);
-        });
+        const gitHead = await getGitHeadMaybe();
         const metadata: PinataMetadata = {
           name: `${manifest.name} ${manifest.version}`,
           keyvalues: {

@@ -1,6 +1,6 @@
 import { shell } from "./shell";
 
-interface GitHead {
+export interface GitHead {
   /**
    * From `git rev-parse --verify HEAD`
    * Returns `"d51ad2ff51488eaf2bfd5d6906f8b20043ed3b42"`

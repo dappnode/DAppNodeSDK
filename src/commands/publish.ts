@@ -30,6 +30,7 @@ interface CliCommandOptions extends CliGlobalOptions {
   github_release?: boolean;
   create_next_branch?: boolean;
   dappnode_team_preset?: boolean;
+  require_git_data?: boolean;
 }
 
 export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
@@ -137,6 +138,7 @@ export async function publishHanlder({
   github_release,
   create_next_branch,
   dappnode_team_preset,
+  require_git_data,
   // Global options
   dir,
   silent,
@@ -154,6 +156,7 @@ export async function publishHanlder({
   let createNextGithubBranch = Boolean(create_next_branch);
   const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
   const userTimeout = timeout;
+  const requireGitData = require_git_data;
 
   const isCi = process.env.CI;
   const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
@@ -238,7 +241,8 @@ export async function publishHanlder({
               buildDir: ctx.buildDir,
               contentProvider,
               uploadTo,
-              userTimeout
+              userTimeout,
+              requireGitData
             }),
             { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
           )
