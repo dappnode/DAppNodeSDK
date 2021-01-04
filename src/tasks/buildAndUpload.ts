@@ -276,7 +276,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
     {
       title: "Delete old pins",
       enabled: () => Boolean(deleteOldPins),
-      task: async () => {
+      task: async (_, task) => {
         const gitHead = await getGitHeadMaybe();
         if (!gitHead) throw Error("No gitHead data");
         if (releaseUploaderProvider.type !== "pinata")
@@ -284,20 +284,22 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
         // Unpin items on the same branch but previous (ancestor) commits
         const pinata = new PinataPinManager(releaseUploaderProvider);
-        const pinsOnSameBranch = await pinata.pinList<DnpPinMetadata>({
+        const pinsWithSameBranch = await pinata.pinList<DnpPinMetadata>({
           keyvalues: {
             name: { value: manifest.name, op: "eq" },
             branch: { value: gitHead.branch, op: "eq" }
           }
         });
-        for (const pin of pinsOnSameBranch) {
+        task.output = `Found ${pinsWithSameBranch.length} pins with the same branch`;
+
+        for (const pin of pinsWithSameBranch) {
           const pinCommit = pin.metadata.keyvalues?.commit;
           if (
             pinCommit &&
             pinCommit !== gitHead.commit &&
             (await gitIsAncestor(pinCommit, gitHead.commit))
           ) {
-            console.log(`Unpin prev commit ${pinCommit} ${pin.ipfs_pin_hash}`);
+            task.output = `Unpin prev commit ${pinCommit} ${pin.ipfs_pin_hash}`;
             await pinata.unpin(pin.ipfs_pin_hash);
           }
         }
