@@ -4,7 +4,7 @@ import { getManifestPath } from "../utils/manifest";
 import { getComposePath } from "../utils/compose";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
 import { shell } from "../utils/shell";
-import { Github } from "../utils/Github";
+import { Github } from "../providers/github/Github";
 import { defaultDir } from "../params";
 
 /**

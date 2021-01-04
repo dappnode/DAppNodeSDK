@@ -3,7 +3,7 @@ import path from "path";
 import mime from "mime-types";
 import retry from "async-retry";
 import { Octokit } from "@octokit/rest";
-import { getRepoSlugFromManifest } from "./getRepoSlugFromManifest";
+import { getRepoSlugFromManifest } from "../../utils/getRepoSlugFromManifest";
 
 export class Github {
   octokit: Octokit;
@@ -171,8 +171,10 @@ export class Github {
           await retry(
             async () => {
               await this.octokit.repos.uploadReleaseAsset({
-                url: release.data.upload_url,
-                data: fs.createReadStream(filepath),
+                owner: this.owner,
+                repo: this.repo,
+                release_id: release.data.id,
+                data: fs.createReadStream(filepath) as any,
                 headers: {
                   "content-type": contentType,
                   "content-length": fs.statSync(filepath).size
@@ -209,4 +211,67 @@ export class Github {
       base: to
     });
   }
+
+  /**
+   * In a Github Actions context, get the pull request number of this run
+   */
+  getPullRequestNumber(): number {
+    if (!process.env.GITHUB_EVENT_PATH) {
+      throw Error("ENV GITHUB_EVENT_PATH is not defined");
+    }
+    const eventData = JSON.parse(
+      fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")
+    );
+    return eventData.pull_request.number;
+  }
+
+  /**
+   * Create or update a comment in a Github PR according to `isTargetComment()`
+   */
+  async commentToPr({
+    pullRequestNumber,
+    body,
+    isTargetComment
+  }: {
+    pullRequestNumber: number;
+    body: string;
+    isTargetComment: (commentBody: string) => boolean;
+  }): Promise<void> {
+    const comments = await this.octokit.issues.listComments({
+      owner: this.owner,
+      repo: this.repo,
+      issue_number: pullRequestNumber
+    });
+
+    const existingComment = comments.data.find(
+      comment => comment.body && isTargetComment(comment.body)
+    );
+
+    if (existingComment) {
+      await this.octokit.issues.updateComment({
+        owner: this.owner,
+        repo: this.repo,
+        issue_number: pullRequestNumber,
+        comment_id: existingComment.id,
+        body
+      });
+    } else {
+      await this.octokit.issues.createComment({
+        owner: this.owner,
+        repo: this.repo,
+        issue_number: pullRequestNumber,
+        body
+      });
+    }
+  }
+}
+
+export function getPullRequestNumberIfInAction(): number | null {
+  if (process.env.GITHUB_EVENT_PATH) {
+    const eventData = JSON.parse(
+      fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")
+    );
+    return eventData.pull_request.number;
+  }
+  return null;
 }

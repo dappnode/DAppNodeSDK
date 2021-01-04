@@ -10,7 +10,7 @@ import {
   CliGlobalOptions,
   ListrContextBuildAndPublish
 } from "../types";
-import { Github } from "../utils/Github";
+import { Github } from "../providers/github/Github";
 
 /**
  * Create (or edit) a Github release, then upload all assets
