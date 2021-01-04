@@ -37,9 +37,9 @@ jobs:
       - run: yarn build
       # Simulate Github Actions run
       - name: Setup a mock package to test locally
-        run: dist/dappnodesdk.js init --yes --force
+        run: node dist/dappnodesdk.js init --yes --force
       - name: Build and post comment
-        run: dist/dappnodesdk.js build --upload_to ipfs --provider pinata --require_git_data --delete_old_pins
+        run: node dist/dappnodesdk.js build --upload_to ipfs --provider pinata --require_git_data --delete_old_pins
 
   release:
     runs-on: ubuntu-latest
