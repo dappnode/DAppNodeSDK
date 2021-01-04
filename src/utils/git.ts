@@ -47,7 +47,12 @@ export async function gitIsAncestor(
     );
     return true;
   } catch (e) {
-    if (e instanceof ShellError && e.code === 1) return false;
-    throw e;
+    return false;
+    // throwing on exitCode !== 1 breaks a lot of builds
+    // Commits may not exist due to a rebase, then it throws with
+    //   Command failed: git merge-base --is-ancestor cd31553a839439ee65f10811de63ee3b44f5cdfb e4f04e69bc0137b5761e24a13883826b0c897ef5
+    //   fatal: Not a valid commit name cd31553a839439ee65f10811de63ee3b44f5cdfb
+    //
+    // All pins will be cleaned eventually when their branch is deleted
   }
 }
