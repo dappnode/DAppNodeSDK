@@ -1,5 +1,5 @@
 import { Manifest } from "../types";
-import { GitHead } from "./getGitHead";
+import { GitHead } from "./git";
 
 export function toTitleCase(str: string): string {
   return str.replace(/\w\S*/g, function (txt) {

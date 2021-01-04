@@ -31,6 +31,7 @@ interface CliCommandOptions extends CliGlobalOptions {
   create_next_branch?: boolean;
   dappnode_team_preset?: boolean;
   require_git_data?: boolean;
+  delete_old_pins?: boolean;
 }
 
 export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
@@ -139,6 +140,7 @@ export async function publishHanlder({
   create_next_branch,
   dappnode_team_preset,
   require_git_data,
+  delete_old_pins,
   // Global options
   dir = defaultDir,
   silent,
@@ -157,6 +159,7 @@ export async function publishHanlder({
   const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
   const userTimeout = timeout;
   const requireGitData = require_git_data;
+  const deleteOldPins = delete_old_pins;
 
   const isCi = process.env.CI;
   const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
@@ -242,7 +245,8 @@ export async function publishHanlder({
               contentProvider,
               uploadTo,
               userTimeout,
-              requireGitData
+              requireGitData,
+              deleteOldPins
             }),
             { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
           )

@@ -18,6 +18,7 @@ interface CliCommandOptions extends CliGlobalOptions {
   skip_save?: boolean;
   skip_upload?: boolean;
   require_git_data?: boolean;
+  delete_old_pins?: boolean;
 }
 
 export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
@@ -76,6 +77,7 @@ export async function buildHandler({
   skip_save,
   skip_upload,
   require_git_data,
+  delete_old_pins,
   // Global options
   dir = defaultDir,
   silent,
@@ -87,7 +89,6 @@ export async function buildHandler({
   const userTimeout = timeout;
   const skipSave = skip_save;
   const skipUpload = skip_save || skip_upload;
-  const requireGitData = require_git_data;
   const nextVersion = getCurrentLocalVersion({ dir });
   const buildDir = path.join(dir, `build_${nextVersion}`);
 
@@ -100,7 +101,8 @@ export async function buildHandler({
       userTimeout,
       skipSave,
       skipUpload,
-      requireGitData
+      requireGitData: require_git_data,
+      deleteOldPins: delete_old_pins
     }),
     { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
   );

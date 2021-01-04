@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { Manifest } from "../../src/types";
-import { GitHead } from "../../src/utils/getGitHead";
+import { GitHead } from "../../src/utils/git";
 import { prettyPinataPinName } from "../../src/utils/format";
 
 describe("utils / format", () => {
