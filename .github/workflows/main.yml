@@ -40,6 +40,10 @@ jobs:
         run: node dist/dappnodesdk.js init --yes --force
       - name: Build and post comment
         run: node dist/dappnodesdk.js build --upload_to ipfs --provider pinata --require_git_data --delete_old_pins
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
+          PINATA_SECRET_API_KEY: ${{ secrets.PINATA_SECRET_API_KEY }}
 
   release:
     runs-on: ubuntu-latest
