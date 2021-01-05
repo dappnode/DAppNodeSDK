@@ -3,7 +3,6 @@ on: delete
 
 jobs:
   unpin:
-    name: Unpin
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
