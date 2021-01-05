@@ -55,7 +55,7 @@ interface PinDataSummary {
 export async function fetchPinsWithBranch(
   pinata: PinataPinManager,
   manifest: Manifest,
-  gitHead: GitHead
+  gitHead: Pick<GitHead, "branch">
 ): Promise<PinDataSummary[]> {
   const pinsWithSameBranch = await pinata.pinList<DnpPinMetadata>({
     keyvalues: {
