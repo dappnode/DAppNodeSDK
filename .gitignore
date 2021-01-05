@@ -11,8 +11,8 @@ dist-ncc
 
 # When testing commands with this package this files will be generated
 # Test build files
-build
-build_*
+/build
+/build_*
 dappnode_package*.json
 docker-compose.yml
 test-avatar.png
