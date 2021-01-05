@@ -45,7 +45,7 @@ export async function buildOnPrHandler({
   // Connect to Github Octokit REST API and post or edit a comment on PR
   const github = new Github(dir);
 
-  const shortCommit = process.env.GITHUB_SHA?.slice(0, 8);
+  const shortCommit = eventData.pull_request?.head?.sha?.slice(0, 8);
   const installLink = getInstallDnpLink(releaseMultiHash);
   const body = `DAppNode bot has built commit ${shortCommit} and pinned the release to an IPFS node.
 

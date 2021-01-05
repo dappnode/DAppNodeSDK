@@ -38,7 +38,7 @@ export interface GithubActionsEventData {
   pull_request: {
     action: string; // The action that was performed
     number: number; // The pull request number
-    // pull_request: PullRequestObject;
+    pull_request: GithubActionsPullRequestObject;
     repository: GithubActionsRepository;
     organization: GithubActionsOrganization;
     sender: GithubActionsSender;
@@ -58,12 +58,10 @@ interface GithubActionsSender {
   login: string; // "dapplion";
 }
 
-export function getPullRequestNumberIfInAction(): number | null {
-  if (process.env.GITHUB_EVENT_PATH) {
-    const eventData = JSON.parse(
-      fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")
-    );
-    return eventData.pull_request.number;
-  }
-  return null;
+interface GithubActionsPullRequestObject {
+  head: {
+    label: string; // "octocat:new-topic";
+    ref: string; // "new-topic";
+    sha: string; // "6dcb09b5b57875f334f61aebed695e2e4193db5e";
+  };
 }
