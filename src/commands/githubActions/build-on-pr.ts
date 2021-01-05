@@ -60,6 +60,7 @@ ${releaseMultiHash}
 ${botCommentTag}
 `;
 
+  console.log(`GITHUB SHA: ${process.env.GITHUB_SHA}`);
   console.log(`Commenting to PR #${pullRequestNumber}: \n\n${body}`);
 
   await github.commentToPr({
