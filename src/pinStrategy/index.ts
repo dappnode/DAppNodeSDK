@@ -1,6 +1,6 @@
 import { PinataMetadata, PinataPinManager } from "../releaseUploader/pinata";
 import { Manifest } from "../types";
-import { GitHead, gitIsAncestor } from "../utils/git";
+import { GitHead } from "../utils/git";
 import { prettyPinataPinName } from "../utils/format";
 
 /**
@@ -83,11 +83,7 @@ export async function fetchOldPinsWithBranch(
 
   const oldPinsToDelete: PinDataSummary[] = [];
   for (const pin of pins) {
-    if (
-      pin.commit &&
-      pin.commit !== gitHead.commit &&
-      (await gitIsAncestor(pin.commit, gitHead.commit))
-    ) {
+    if (pin.commit && pin.commit !== gitHead.commit) {
       oldPinsToDelete.push(pin);
     }
   }
