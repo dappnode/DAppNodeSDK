@@ -1,6 +1,6 @@
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../types";
-import { buildOnPr } from "./build-on-pr";
+import { gaBuild } from "./build";
 import { unpinOnRefDelete } from "./unpin-on-ref-delete";
 
 export const githubActions: CommandModule<
@@ -8,9 +8,10 @@ export const githubActions: CommandModule<
   CliGlobalOptions
 > = {
   command: "github-action",
-  describe: "Github action tooling, should be run only in CI",
+  describe:
+    "Github actions tooling to be run in CI. Uses a specific set of options for internal DAppNode use. Caution: options may change without notice.",
   builder: yargs =>
-    yargs.command(buildOnPr).command(unpinOnRefDelete).demandCommand(1),
+    yargs.command(gaBuild).command(unpinOnRefDelete).demandCommand(1),
   handler: async (): Promise<void> => {
     throw Error("Requires 1 command");
   }

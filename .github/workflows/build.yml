@@ -1,10 +1,10 @@
-name: Build on PR
+name: Build test
 on:
+  push:
   pull_request:
 
 jobs:
   build:
-    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -15,7 +15,7 @@ jobs:
       - name: Setup a mock package to test locally
         run: node dist/dappnodesdk.js init --yes --force
 
-      - run: node dist/dappnodesdk.js github-action build-on-pr
+      - run: node dist/dappnodesdk.js github-action build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}

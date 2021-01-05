@@ -10,6 +10,12 @@ import {
   GithubActionsEventData
 } from "../../providers/github/githubActions";
 
+// This action should be run on 'delete' events
+//
+// Queries Pinata for all existing Pins with the deleted branch
+// and unpins all the items. Necessary to clean up Pinata space with development
+// versions that won't be used again
+
 export const unpinOnRefDelete: CommandModule<
   CliGlobalOptions,
   CliGlobalOptions
