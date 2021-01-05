@@ -11,4 +11,5 @@ jobs:
           echo "GITHUB_SHA is ${{ github.sha }}"
           echo "GITHUB_REF is ${{ github.ref }}"
           echo "${{ github.event.ref }} - ${{ github.event.ref_type }}"
-          echo "${{ toJson(github) }}"
+          echo "$GITHUB_EVENT_PATH"
+          cat $GITHUB_EVENT_PATH
