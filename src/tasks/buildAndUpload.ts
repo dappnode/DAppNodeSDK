@@ -29,7 +29,7 @@ import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
 import { getGitHead, GitHead } from "../utils/git";
-import { fetchOldPinsWithBranch, getPinMetadata } from "../pinStrategy";
+import { fetchPinsWithBranchToDelete, getPinMetadata } from "../pinStrategy";
 import {
   PinKeyvaluesDefault,
   PinataPinManager
@@ -273,13 +273,13 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
         // Unpin items on the same branch but previous (ancestor) commits
         const pinata = new PinataPinManager(releaseUploaderProvider);
-        const oldPinsToDelete = await fetchOldPinsWithBranch(
+        const pinsToDelete = await fetchPinsWithBranchToDelete(
           pinata,
           manifest,
           gitHead
         );
 
-        for (const pin of oldPinsToDelete) {
+        for (const pin of pinsToDelete) {
           task.output = `Unpinning previous commit ${pin.commit} ${pin.ipfsHash}`;
           await pinata.unpin(pin.ipfsHash);
         }

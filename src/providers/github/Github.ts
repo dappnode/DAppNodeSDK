@@ -281,4 +281,22 @@ export class Github {
     });
     return res.data;
   }
+
+  /**
+   * Returns list of branches, limited to 100. For more implement pagination
+   * @returns branch = {
+   *   name: "octocat-patch-1"
+   *   commit: {
+   *     sha: "b1b3f9723831141a31a1a7252a213e216ea76e56"
+   *   }
+   * }
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async listBranches() {
+    const res = await this.octokit.repos.listBranches({
+      owner: this.owner,
+      repo: this.repo
+    });
+    return res.data;
+  }
 }

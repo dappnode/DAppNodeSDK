@@ -1,11 +1,12 @@
 import { CommandModule } from "yargs";
-import { CliGlobalOptions } from "../../types";
-import { defaultDir } from "../../params";
-import { getGithubContext } from "../../providers/github/githubActions";
-import { buildHandler } from "../build";
-import { Github } from "../../providers/github/Github";
-import { getInstallDnpLink } from "../../utils/getLinks";
-import { parseRef } from "../../providers/github/utils";
+import { CliGlobalOptions } from "../../../types";
+import { defaultDir } from "../../../params";
+import { getGithubContext } from "../../../providers/github/githubActions";
+import { buildHandler } from "../../build";
+import { Github } from "../../../providers/github/Github";
+import { parseRef } from "../../../providers/github/utils";
+import { getBuildBotComment, isTargetComment } from "./botComment";
+import { cleanPinsFromDeletedBranches } from "./cleanPinsFromDeletedBranches";
 
 // This action should be run on 'push' and 'pull_request' events
 //
@@ -22,8 +23,6 @@ import { parseRef } from "../../providers/github/utils";
 //
 // For 'pull_request' events:
 //   Does a build test but doesn't upload the result anywhere
-
-const botCommentTag = "(by dappnodebot/build-action)";
 
 export const gaBuild: CommandModule<CliGlobalOptions, CliGlobalOptions> = {
   command: "build",
@@ -44,6 +43,15 @@ export async function gaBuildHandler({
 
   // Connect to Github Octokit REST API and post or edit a comment on PR
   const github = new Github(dir);
+
+  // Clean pins that were added from past runs.
+  // Doing it here prevents having to add two workflows per repo.
+  // Also, ensures that pins are deleted eventually, even if this fails sometimes
+  try {
+    await cleanPinsFromDeletedBranches({ dir });
+  } catch (e) {
+    console.error("Error on cleanPinsFromDeletedBranches", e);
+  }
 
   if (
     eventName === "push" &&
@@ -94,37 +102,4 @@ export async function gaBuildHandler({
   } else {
     throw Error(`Unsupported event ${eventName}`);
   }
-}
-
-/**
- * Returns formated comment with build result info
- * Comment includes `botCommentTag` which is then used by `isTargetComment()`
- * to locate any existing comment
- */
-function getBuildBotComment({
-  commitSha,
-  releaseMultiHash
-}: {
-  commitSha: string;
-  releaseMultiHash: string;
-}) {
-  const installLink = getInstallDnpLink(releaseMultiHash);
-
-  return `DAppNode bot has built and pinned the release to an IPFS node, for commit: ${commitSha}
-
-This is a development version and should **only** be installed for testing purposes, [install link](${installLink})
-
-\`\`\`
-${releaseMultiHash}
-\`\`\`
-
-${botCommentTag}
-`;
-}
-
-/**
- * Locates any existing comment by a persistent tag used in all build bot comments
- */
-function isTargetComment(commentBody: string): boolean {
-  return commentBody.includes(botCommentTag);
 }
