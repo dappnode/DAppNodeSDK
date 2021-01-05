@@ -11,8 +11,6 @@ export const UPSTREAM_VERSION_VARNAME = "UPSTREAM_VERSION";
 
 export const upstreamImageLabel = "dappnode.dnp.upstreamImage";
 
-export const botCommentTag = "(by dappnodebot/build-action)";
-
 /**
  * Plain text file with should contain the IPFS hash of the release
  * Necessary for the installer script to fetch the latest content hash

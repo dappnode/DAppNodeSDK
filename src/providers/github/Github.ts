@@ -227,20 +227,21 @@ export class Github {
 
   /**
    * Create or update a comment in a Github PR according to `isTargetComment()`
+   * @param number Pull Request number #45
    */
   async commentToPr({
-    pullRequestNumber,
+    number,
     body,
     isTargetComment
   }: {
-    pullRequestNumber: number;
+    number: number;
     body: string;
     isTargetComment: (commentBody: string) => boolean;
   }): Promise<void> {
     const comments = await this.octokit.issues.listComments({
       owner: this.owner,
       repo: this.repo,
-      issue_number: pullRequestNumber
+      issue_number: number
     });
 
     const existingComment = comments.data.find(
@@ -251,7 +252,7 @@ export class Github {
       await this.octokit.issues.updateComment({
         owner: this.owner,
         repo: this.repo,
-        issue_number: pullRequestNumber,
+        issue_number: number,
         comment_id: existingComment.id,
         body
       });
@@ -259,9 +260,25 @@ export class Github {
       await this.octokit.issues.createComment({
         owner: this.owner,
         repo: this.repo,
-        issue_number: pullRequestNumber,
+        issue_number: number,
         body
       });
     }
+  }
+
+  /**
+   * Returns open PRs where head branch equals `branch`
+   * Only branches and PRs originating from the same repo
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async getOpenPrsFromBranch({ branch }: { branch: string }) {
+    const res = await this.octokit.pulls.list({
+      owner: this.owner,
+      repo: this.repo,
+      state: "open",
+      // example: "dappnode:dapplion/test-builds"
+      head: `${this.owner}:${branch}`
+    });
+    return res.data;
   }
 }
