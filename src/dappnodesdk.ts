@@ -13,7 +13,7 @@ import { next } from "./commands/next";
 import { publish } from "./commands/publish";
 import { githubActions } from "./commands/githubActions";
 
-// "source-map-support" MUST be imported for stack traces to work properly after Typescript transpile
+// "source-map-support" MUST be imported for stack traces to work properly after Typescript transpile -
 import "source-map-support/register";
 import { CliError, defaultDir, YargsError } from "./params";
 dotenv.config();
