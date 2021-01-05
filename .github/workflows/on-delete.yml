@@ -1,0 +1,14 @@
+name: On delete
+on: delete
+
+jobs:
+  unpin:
+    name: Unpin
+    runs-on: ubuntu-16.04
+    steps:
+      - name: run build
+        run: |
+          echo "GITHUB_SHA is ${{ github.sha }}"
+          echo "GITHUB_REF is ${{ github.ref }}"
+          echo "${{ github.event.ref }} - ${{ github.event.ref_type }}"
+          echo "${{ toJson(github) }}"
