@@ -25,18 +25,18 @@ import { parseRef } from "../../providers/github/utils";
 
 const botCommentTag = "(by dappnodebot/build-action)";
 
-export const buildOnPr: CommandModule<CliGlobalOptions, CliGlobalOptions> = {
-  command: "build-on-pr",
+export const gaBuild: CommandModule<CliGlobalOptions, CliGlobalOptions> = {
+  command: "build",
   describe:
     "Build and upload test release and post a comment with install link to the triggering PR",
   builder: {},
-  handler: async (args): Promise<void> => await buildOnPrHandler(args)
+  handler: async (args): Promise<void> => await gaBuildHandler(args)
 };
 
 /**
  * Common handler for CLI and programatic usage
  */
-export async function buildOnPrHandler({
+export async function gaBuildHandler({
   dir = defaultDir
 }: CliGlobalOptions): Promise<void> {
   const { eventName, sha: commitSha, ref: refString } = getGithubContext();
