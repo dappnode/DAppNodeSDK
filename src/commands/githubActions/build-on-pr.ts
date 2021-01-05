@@ -42,6 +42,8 @@ export async function buildOnPrHandler({
     verbose: true
   });
 
+  console.log(`Built release: ${releaseMultiHash}`);
+
   // Connect to Github Octokit REST API and post or edit a comment on PR
   const github = new Github(dir);
 
@@ -57,6 +59,8 @@ ${releaseMultiHash}
 
 ${botCommentTag}
 `;
+
+  console.log(`Commenting to PR #${pullRequestNumber}: \n\n${body}`);
 
   await github.commentToPr({
     pullRequestNumber,
