@@ -108,10 +108,9 @@ function getBuildBotComment({
   commitSha: string;
   releaseMultiHash: string;
 }) {
-  const shortCommit = commitSha.slice(0, 8);
   const installLink = getInstallDnpLink(releaseMultiHash);
 
-  return `DAppNode bot has built commit ${shortCommit} and pinned the release to an IPFS node.
+  return `DAppNode bot has built and pinned the release to an IPFS node, for commit: ${commitSha}
 
 This is a development version and should **only** be installed for testing purposes, [install link](${installLink})
 
