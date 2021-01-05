@@ -1,0 +1,15 @@
+name: On delete
+on: delete
+
+jobs:
+  unpin:
+    name: Unpin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: yarn install
+      - run: yarn build
+      - run: node dist/dappnodesdk.js github-action unpin-on-ref-delete
+        env:
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
+          PINATA_SECRET_API_KEY: ${{ secrets.PINATA_SECRET_API_KEY }}

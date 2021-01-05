@@ -265,13 +265,3 @@ export class Github {
     }
   }
 }
-
-export function getPullRequestNumberIfInAction(): number | null {
-  if (process.env.GITHUB_EVENT_PATH) {
-    const eventData = JSON.parse(
-      fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")
-    );
-    return eventData.pull_request.number;
-  }
-  return null;
-}

@@ -12,8 +12,7 @@ import {
   CliError,
   getImagePath,
   getLegacyImagePath,
-  releaseFilesDefaultNames,
-  botCommentTag
+  releaseFilesDefaultNames
 } from "../params";
 import {
   getComposePath,
@@ -41,11 +40,6 @@ import {
   cliArgsToReleaseUploaderProvider,
   UploadTo
 } from "../releaseUploader";
-import {
-  getPullRequestNumberIfInAction,
-  Github
-} from "../providers/github/Github";
-import { getInstallDnpLink } from "../utils/getLinks";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -144,8 +138,6 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
       }
     }
   }
-
-  const pullRequestNumber = getPullRequestNumberIfInAction();
 
   return [
     {
@@ -312,38 +304,6 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         } catch (e) {
           console.error("Error on pruneCache", e);
         }
-      }
-    },
-
-    {
-      title: "Post comment to PR with install hash",
-      enabled: () => typeof pullRequestNumber === "number",
-      task: async (ctx, task) => {
-        if (pullRequestNumber === null) {
-          task.skip("No pullRequestNumber");
-          return;
-        }
-
-        const github = new Github(dir);
-
-        const shortCommit = process.env.GITHUB_SHA?.slice(0, 8);
-        const installLink = getInstallDnpLink(ctx.releaseMultiHash);
-        const body = `DAppNode bot has built commit ${shortCommit} and pinned the release to an IPFS node.
-
-This is a development version and should **only** be installed for testing purposes, [install link](${installLink})
-
-\`\`\`
-${ctx.releaseMultiHash}
-\`\`\`
-
-${botCommentTag}
-`;
-
-        await github.commentToPr({
-          pullRequestNumber,
-          body,
-          isTargetComment: commentBody => commentBody.includes(botCommentTag)
-        });
       }
     }
   ];

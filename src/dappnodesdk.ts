@@ -11,6 +11,7 @@ import { increase } from "./commands/increase";
 import { init } from "./commands/init";
 import { next } from "./commands/next";
 import { publish } from "./commands/publish";
+import { githubActions } from "./commands/githubActions";
 
 // "source-map-support" MUST be imported for stack traces to work properly after Typescript transpile
 import "source-map-support/register";
@@ -50,7 +51,8 @@ const dappnodesdk = yargs
   .command(increase)
   .command(init)
   .command(next)
-  .command(publish);
+  .command(publish)
+  .command(githubActions);
 
 dappnodesdk.alias("h", "help");
 dappnodesdk.alias("v", "version");
