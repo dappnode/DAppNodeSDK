@@ -302,4 +302,29 @@ export class Github {
     });
     return res.data;
   }
+
+  /**
+   * trigger a webhook event called repository_dispatch in a repository
+   * The consumer must add in workflow.yml
+   * ```yaml
+   * on:
+   *   repository_dispatch:
+   *     types: [backend_automation]
+   * ```
+   * Example payload on the receiver https://docs.github.com/en/free-pro-team@latest/developers/webhooks-and-events/webhook-events-and-payloads#repository_dispatch
+   * @param eventType "backend_automation"
+   * @param clientPayload Arbitrary JSON payload: `{ "extraData": 1234 }`
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async dispatchEvent(
+    eventType: string,
+    clientPayload?: { [key: string]: string | number }
+  ) {
+    await this.octokit.repos.createDispatchEvent({
+      owner: this.owner,
+      repo: this.repo,
+      event_type: eventType,
+      client_payload: clientPayload
+    });
+  }
 }
