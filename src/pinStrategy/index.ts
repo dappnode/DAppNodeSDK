@@ -1,4 +1,5 @@
-import { PinataMetadata, PinataPinManager } from "../releaseUploader/pinata";
+import { PinataMetadata } from "../releaseUploader/pinata";
+import { PinataPinManager } from "../providers/pinata/pinManager";
 import { Manifest } from "../types";
 import { GitHead } from "../utils/git";
 import { prettyPinataPinName } from "../utils/format";

@@ -30,10 +30,8 @@ import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
 import { getGitHead, GitHead } from "../utils/git";
 import { fetchPinsWithBranchToDelete, getPinMetadata } from "../pinStrategy";
-import {
-  PinKeyvaluesDefault,
-  PinataPinManager
-} from "../releaseUploader/pinata";
+import { PinataPinManager } from "../providers/pinata/pinManager";
+import { PinKeyvaluesDefault } from "../releaseUploader/pinata";
 import {
   getReleaseUploader,
   ReleaseUploaderConnectionError,
@@ -281,7 +279,9 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
         for (const pin of pinsToDelete) {
           task.output = `Unpinning previous commit ${pin.commit} ${pin.ipfsHash}`;
-          await pinata.unpin(pin.ipfsHash);
+          await pinata.unpin(pin.ipfsHash).catch(e => {
+            console.error(`Error deleting old pin ${pin.ipfsHash}`, e);
+          });
         }
       }
     },
