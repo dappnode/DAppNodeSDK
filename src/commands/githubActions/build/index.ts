@@ -7,6 +7,7 @@ import { Github } from "../../../providers/github/Github";
 import { parseRef } from "../../../providers/github/utils";
 import { getBuildBotComment, isTargetComment } from "./botComment";
 import { cleanPinsFromDeletedBranches } from "./cleanPinsFromDeletedBranches";
+import { triggerCoreDnpWorkflowMaybe } from "./triggerCoreDnp";
 
 // This action should be run on 'push' and 'pull_request' events
 //
@@ -80,10 +81,15 @@ export async function gaBuildHandler({
         github.commentToPr({ number: pr.number, body, isTargetComment })
       )
     );
-    return; // done
-  }
 
-  if (eventName === "push" || eventName === "pull_request") {
+    // Trigger CORE package for a possible release
+    await triggerCoreDnpWorkflowMaybe({
+      dir,
+      releaseMultiHash,
+      branch: ref.branch,
+      commitSha
+    });
+  } else if (eventName === "push" || eventName === "pull_request") {
     // Consider that for 'pull_request' commitSha does not represent a known commit
     // The incoming branch is merged into the target branch and the resulting
     // new commit is tested. gitHead() will return 'HEAD' for branch and a foreign commit
