@@ -29,7 +29,7 @@ export function createGithubRelease({
   if (!process.env.GITHUB_TOKEN)
     throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
 
-  const github = new Github(dir);
+  const github = Github.fromDir(dir);
 
   // Gather repo data, repoSlug = "dappnode/DNP_ADMIN"
   const repoSlug =
