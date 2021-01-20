@@ -119,6 +119,17 @@
         }
       }
     },
+    "globalEnvs": {
+      "type": "object",
+      "description": "Request the DAPPMANAGER to inject global ENVs to this package's containers",
+      "properties": {
+        "all": {
+          "type": "boolean",
+          "description": "Request the DAPPMANAGER to inject all available global ENVs",
+          "examples": ["true"]
+        }
+      }
+    },
     "architectures": {
       "type": "array",
       "description": "Build and distribute this package in multiple architectures using [Docker's buildx plugin](https://docs.docker.com/buildx/working-with-buildx/)",
