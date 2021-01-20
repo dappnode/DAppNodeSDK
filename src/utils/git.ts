@@ -40,7 +40,7 @@ export async function getGitHeadIfAvailable(options?: {
       e.message = `Error on getGitHead: ${e.message}`;
       throw e;
     } else {
-      console.error("Error on getGitHead", e.stack);
+      return undefined;
     }
   }
 }
