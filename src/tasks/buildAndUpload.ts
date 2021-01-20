@@ -28,7 +28,7 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
-import { getGitHead, GitHead } from "../utils/git";
+import { getGitHead, getGitHeadIfAvailable, GitHead } from "../utils/git";
 import { fetchPinsWithBranchToDelete, getPinMetadata } from "../pinStrategy";
 import { PinataPinManager } from "../providers/pinata/pinManager";
 import { PinKeyvaluesDefault } from "../releaseUploader/pinata";
@@ -122,21 +122,6 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
   });
   const releaseUploader = getReleaseUploader(releaseUploaderProvider);
 
-  // Get git data and throw conditionally
-  // In CI uploading to Pinata git data MUST always be present to keep track of builds
-  async function getGitHeadMaybe(): Promise<GitHead | undefined> {
-    try {
-      return getGitHead();
-    } catch (e) {
-      if (requireGitData) {
-        e.message = `Error on getGitHead: ${e.message}`;
-        throw e;
-      } else {
-        console.error("Error on getGitHead", e.stack);
-      }
-    }
-  }
-
   return [
     {
       title: "Verify connection",
@@ -207,7 +192,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         verifyAvatar(avatarPath);
 
         // Make sure git data is available before doing a long build
-        await getGitHeadMaybe();
+        await getGitHeadIfAvailable({ requireGitData });
       }
     },
 
@@ -250,7 +235,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         if (fs.existsSync(imagePathAmd))
           fs.copyFileSync(imagePathAmd, imagePathLegacy);
 
-        const gitHead = await getGitHeadMaybe();
+        const gitHead = await getGitHeadIfAvailable({ requireGitData });
 
         ctx.releaseHash = await releaseUploader.addFromFs({
           dirPath: buildDir,
@@ -264,8 +249,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
       title: "Delete old pins",
       enabled: () => Boolean(deleteOldPins),
       task: async (_, task) => {
-        const gitHead = await getGitHeadMaybe();
-        if (!gitHead) throw Error("No gitHead data");
+        const gitHead = await getGitHead();
         if (releaseUploaderProvider.type !== "pinata")
           throw Error("Must use pinata for deleteOldPins");
 
