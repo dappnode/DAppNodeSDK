@@ -34,7 +34,8 @@ export const fromGithub: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     yargs
       .positional("repoSlug", {
         description: `Github repo slug to fetch releases from: "dappnode/DNP_VPN", "vpn"`,
-        type: "string"
+        type: "string",
+        demandOption: true
       })
       .option("provider", {
         alias: "p",
@@ -48,8 +49,7 @@ export const fromGithub: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       .option("version", {
         description: `Fetch a given version: v0.2.5`,
         type: "string"
-      })
-      .require("repoSlug"),
+      }),
 
   handler: async (args): Promise<void> => {
     const { releaseMultiHash } = await fromGithubHandler(args);

@@ -3,7 +3,7 @@ import path from "path";
 import mime from "mime-types";
 import retry from "async-retry";
 import { Octokit } from "@octokit/rest";
-import { getRepoSlugFromManifest } from "./getRepoSlugFromManifest";
+import { getRepoSlugFromManifest } from "../../utils/getRepoSlugFromManifest";
 
 export class Github {
   octokit: Octokit;
@@ -171,8 +171,10 @@ export class Github {
           await retry(
             async () => {
               await this.octokit.repos.uploadReleaseAsset({
-                url: release.data.upload_url,
-                data: fs.createReadStream(filepath),
+                owner: this.owner,
+                repo: this.repo,
+                release_id: release.data.id,
+                data: fs.createReadStream(filepath) as any,
                 headers: {
                   "content-type": contentType,
                   "content-length": fs.statSync(filepath).size
@@ -208,5 +210,93 @@ export class Github {
       head: from,
       base: to
     });
+  }
+
+  /**
+   * In a Github Actions context, get the pull request number of this run
+   */
+  getPullRequestNumber(): number {
+    if (!process.env.GITHUB_EVENT_PATH) {
+      throw Error("ENV GITHUB_EVENT_PATH is not defined");
+    }
+    const eventData = JSON.parse(
+      fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")
+    );
+    return eventData.pull_request.number;
+  }
+
+  /**
+   * Create or update a comment in a Github PR according to `isTargetComment()`
+   * @param number Pull Request number #45
+   */
+  async commentToPr({
+    number,
+    body,
+    isTargetComment
+  }: {
+    number: number;
+    body: string;
+    isTargetComment: (commentBody: string) => boolean;
+  }): Promise<void> {
+    const comments = await this.octokit.issues.listComments({
+      owner: this.owner,
+      repo: this.repo,
+      issue_number: number
+    });
+
+    const existingComment = comments.data.find(
+      comment => comment.body && isTargetComment(comment.body)
+    );
+
+    if (existingComment) {
+      await this.octokit.issues.updateComment({
+        owner: this.owner,
+        repo: this.repo,
+        issue_number: number,
+        comment_id: existingComment.id,
+        body
+      });
+    } else {
+      await this.octokit.issues.createComment({
+        owner: this.owner,
+        repo: this.repo,
+        issue_number: number,
+        body
+      });
+    }
+  }
+
+  /**
+   * Returns open PRs where head branch equals `branch`
+   * Only branches and PRs originating from the same repo
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async getOpenPrsFromBranch({ branch }: { branch: string }) {
+    const res = await this.octokit.pulls.list({
+      owner: this.owner,
+      repo: this.repo,
+      state: "open",
+      // example: "dappnode:dapplion/test-builds"
+      head: `${this.owner}:${branch}`
+    });
+    return res.data;
+  }
+
+  /**
+   * Returns list of branches, limited to 100. For more implement pagination
+   * @returns branch = {
+   *   name: "octocat-patch-1"
+   *   commit: {
+   *     sha: "b1b3f9723831141a31a1a7252a213e216ea76e56"
+   *   }
+   * }
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async listBranches() {
+    const res = await this.octokit.repos.listBranches({
+      owner: this.owner,
+      repo: this.repo
+    });
+    return res.data;
   }
 }

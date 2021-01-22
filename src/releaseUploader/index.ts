@@ -7,6 +7,8 @@ import { ReleaseUploaderSwarmNode } from "./swarmNode";
 export * from "./interface";
 export * from "./errors";
 
+export type UploadTo = "ipfs" | "swarm";
+
 export type ReleaseUploaderProvider =
   | {
       network: "ipfs";
@@ -66,7 +68,7 @@ export function cliArgsToReleaseUploaderProvider({
   uploadTo,
   contentProvider
 }: {
-  uploadTo: string;
+  uploadTo: UploadTo;
   contentProvider: string;
 }): ReleaseUploaderProvider {
   switch (uploadTo) {

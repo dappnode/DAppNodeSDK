@@ -1,4 +1,8 @@
-export interface PinataMetadata {
+export type PinKeyvaluesDefault = {
+  [key: string]: string | number | undefined;
+};
+
+export interface PinataMetadata<PinKeyvalues = PinKeyvaluesDefault> {
   /**
    * A custom string to use as the name for your content
    */
@@ -7,7 +11,7 @@ export interface PinataMetadata {
    * An object containing up to 10 custom key / value pairs.
    * The values can be: strings, numbers, dates
    */
-  keyvalues?: { [key: string]: string | number | undefined };
+  keyvalues?: PinKeyvalues;
 }
 
 export interface PinataOptions {
@@ -52,4 +56,33 @@ export interface IpfsUploadResult {
    * `"2020-10-14T15:24:19.466Z"`
    */
   Timestamp: string;
+}
+
+export interface PinItem<PinKeyvalues> {
+  /**
+   * the id of your pin instance record
+   */
+  id: string;
+  /**
+   * the IPFS multi-hash for the content you pinned
+   */
+  ipfs_pin_hash: string;
+  /**
+   * this is how large (in bytes) the content pinned is
+   */
+  size: string;
+  /**
+   * this is your user id for Pinata
+   */
+  user_id: string;
+  /**
+   * This is the timestamp for when this content was pinned - represented in ISO 8601 format
+   */
+  date_pinned: string;
+  /**
+   * This is the timestamp for when this content was unpinned (if null, then you still have the content pinned on Pinata)
+   */
+  date_unpinned: string;
+  metadata: PinataMetadata<PinKeyvalues>;
+  regions: PinPolicy["regions"];
 }

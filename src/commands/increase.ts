@@ -1,6 +1,7 @@
 import { CommandModule } from "yargs";
 import { increaseFromLocalVersion } from "../utils/versions/increaseFromLocalVersion";
 import { CliGlobalOptions, ReleaseType } from "../types";
+import { defaultDir } from "../params";
 
 export const command = "increase [type]";
 
@@ -15,13 +16,12 @@ export const increase: CommandModule<CliGlobalOptions, CliCommandOptions> = {
   describe: "Increases the version defined in the manifest",
 
   builder: yargs =>
-    yargs
-      .positional("type", {
-        description: "Semver update type: [ major | minor | patch ]",
-        choices: ["major", "minor", "patch"],
-        type: "string"
-      })
-      .require("type"),
+    yargs.positional("type", {
+      description: "Semver update type: [ major | minor | patch ]",
+      choices: ["major", "minor", "patch"],
+      type: "string",
+      demandOption: true
+    }),
 
   handler: async (args): Promise<void> => {
     const nextVersion = await increaseHandler(args);
@@ -35,7 +35,7 @@ export const increase: CommandModule<CliGlobalOptions, CliCommandOptions> = {
  */
 export async function increaseHandler({
   type,
-  dir,
+  dir = defaultDir,
   compose_file_name,
 }: CliCommandOptions): Promise<string> {
   return await increaseFromLocalVersion({

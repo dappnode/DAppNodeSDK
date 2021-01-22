@@ -1,0 +1,22 @@
+name: Build test
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: yarn install
+      - run: yarn build
+
+      # Simulate Github Actions run on an actual DAppNode package
+      - name: Setup a mock package to test locally
+        run: node dist/dappnodesdk.js init --yes --force
+
+      - run: node dist/dappnodesdk.js github-action build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
+          PINATA_SECRET_API_KEY: ${{ secrets.PINATA_SECRET_API_KEY }}

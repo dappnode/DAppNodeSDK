@@ -8,7 +8,7 @@ import { writeManifest } from "../utils/manifest";
 import { generateAndWriteCompose } from "../utils/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
-import { releaseFiles, YargsError } from "../params";
+import { defaultDir, releaseFiles, YargsError } from "../params";
 import { CliGlobalOptions, Manifest } from "../types";
 
 const stringsToRemoveFromName = [
@@ -91,7 +91,7 @@ dappnodesdk build
 export async function initHandler({
   yes: useDefaults,
   force,
-  dir,
+  dir = defaultDir
   compose_file_name,
 }: CliCommandOptions): Promise<Manifest> {
   const composeFileName = compose_file_name;

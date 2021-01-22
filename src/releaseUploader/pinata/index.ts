@@ -2,21 +2,22 @@ import got from "got";
 import { IReleaseUploader } from "../interface";
 import { PinataMetadata } from "./PinataSDK";
 import { pinataAddFromFs } from "./addDirFromFs";
+import { PINATA_URL } from "../../params";
+export * from "./PinataSDK";
+
+interface PinataCredentials {
+  apiKey: string;
+  secretApiKey: string;
+}
 
 export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
   networkName = "IPFS Pinata";
 
   private apiKey: string;
   private secretApiKey: string;
-  private pinataUrl = "https://api.pinata.cloud";
+  private pinataUrl = PINATA_URL;
 
-  constructor({
-    apiKey,
-    secretApiKey
-  }: {
-    apiKey: string;
-    secretApiKey: string;
-  }) {
+  constructor({ apiKey, secretApiKey }: PinataCredentials) {
     this.apiKey = apiKey;
     this.secretApiKey = secretApiKey;
   }
@@ -40,16 +41,22 @@ export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
   }
 
   async testConnection(): Promise<void> {
-    const res = await got.get({
-      prefixUrl: this.pinataUrl,
-      url: "data/testAuthentication",
-      headers: {
-        pinata_api_key: this.apiKey,
-        pinata_secret_api_key: this.secretApiKey
+    try {
+      const res = await got.get({
+        prefixUrl: this.pinataUrl,
+        url: "data/testAuthentication",
+        headers: {
+          pinata_api_key: this.apiKey,
+          pinata_secret_api_key: this.secretApiKey
+        }
+      });
+
+      if (res.statusCode !== 200) {
+        throw Error(`Status code ${res.statusCode} ${res.statusMessage}`);
       }
-    });
-    if (res.statusCode !== 200) {
-      throw Error(`Error authenticating: ${res.statusCode}`);
+    } catch (e) {
+      e.message = `Error authenticating with Pinata: ${e.message}`;
+      throw e;
     }
   }
 }

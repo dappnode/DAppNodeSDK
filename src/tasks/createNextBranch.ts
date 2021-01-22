@@ -4,13 +4,15 @@ import { getManifestPath } from "../utils/manifest";
 import { getComposePath } from "../utils/compose";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
 import { shell } from "../utils/shell";
-import { Github } from "../utils/Github";
+import { Github } from "../providers/github/Github";
+import { defaultDir } from "../params";
+import { getGitHead } from "../utils/git";
 
 /**
  * Create (or edit) a Github release, then upload all assets
  */
 export function createNextBranch({
-  dir,
+  dir = defaultDir,
   verbose,
   silent,
   compose_file_name,
@@ -33,7 +35,8 @@ export function createNextBranch({
           try {
             // Openning next version branches in dev branches is confusing and never usefull
             // Actual releases are always done in master.
-            const currenBranch = await shell(`git rev-parse --abbrev-ref HEAD`);
+            const gitData = await getGitHead();
+            const currenBranch = gitData.branch;
             if (currenBranch !== "master") {
               task.skip(`Next version branches are only created from master`);
               return;

@@ -3,11 +3,11 @@ import { Architecture } from "./types";
 export class CliError extends Error {}
 export class YargsError extends Error {}
 
+export const defaultDir = "./";
 export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
-
 export const UPSTREAM_VERSION_VARNAME = "UPSTREAM_VERSION";
-
 export const upstreamImageLabel = "dappnode.dnp.upstreamImage";
+export const PINATA_URL = "https://api.pinata.cloud";
 
 /**
  * Plain text file with should contain the IPFS hash of the release

@@ -1,6 +1,6 @@
 {
   "name": "@dappnode/dappnodesdk",
-  "version": "0.2.35",
+  "version": "0.2.41",
   "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
-    "@octokit/rest": "^16.27.3",
+    "@octokit/rest": "^18.0.12",
     "ajv": "^6.12.2",
     "ajv-errors": "^1.0.1",
     "async-retry": "^1.2.3",
