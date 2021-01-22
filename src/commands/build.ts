@@ -9,7 +9,7 @@ import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion
 import { getInstallDnpLink } from "../utils/getLinks";
 import { CliGlobalOptions } from "../types";
 import { UploadTo } from "../releaseUploader";
-import { defaultDir } from "../params";
+import { defaultComposeFileName, defaultDir } from "../params";
 
 interface CliCommandOptions extends CliGlobalOptions {
   provider: string;
@@ -80,7 +80,7 @@ export async function buildHandler({
   delete_old_pins,
   // Global options
   dir = defaultDir,
-  compose_file_name,
+  compose_file_name = defaultComposeFileName,
   silent,
   verbose
 }: CliCommandOptions): Promise<{ releaseMultiHash: string }> {
@@ -103,7 +103,7 @@ export async function buildHandler({
       userTimeout,
       skipSave,
       skipUpload,
-      composeFileName
+      composeFileName,
       requireGitData: require_git_data,
       deleteOldPins: delete_old_pins
     }),

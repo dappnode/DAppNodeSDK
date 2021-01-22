@@ -11,7 +11,7 @@ import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion
 import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion";
 import { verifyEthConnection } from "../utils/verifyEthConnection";
 import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
-import { defaultDir, YargsError } from "../params";
+import { defaultComposeFileName, defaultDir, YargsError } from "../params";
 import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
 import { createNextBranch } from "../tasks/createNextBranch";
 import { printObject } from "../utils/print";
@@ -142,8 +142,8 @@ export async function publishHanlder({
   require_git_data,
   delete_old_pins,
   // Global options
-  compose_file_name,
   dir = defaultDir,
+  compose_file_name = defaultComposeFileName,
   silent,
   verbose
 }: CliCommandOptions): Promise<{

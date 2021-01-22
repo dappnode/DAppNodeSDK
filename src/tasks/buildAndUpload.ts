@@ -28,7 +28,7 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
-import { getGitHead, getGitHeadIfAvailable, GitHead } from "../utils/git";
+import { getGitHead, getGitHeadIfAvailable } from "../utils/git";
 import { fetchPinsWithBranchToDelete, getPinMetadata } from "../pinStrategy";
 import { PinataPinManager } from "../providers/pinata/pinManager";
 import { PinKeyvaluesDefault } from "../releaseUploader/pinata";
@@ -50,9 +50,9 @@ export function buildAndUpload({
   userTimeout,
   skipSave,
   skipUpload,
-  composeFileName,
   requireGitData,
   deleteOldPins,
+  composeFileName,
   dir
 }: {
   buildDir: string;
@@ -61,9 +61,9 @@ export function buildAndUpload({
   userTimeout?: string;
   skipSave?: boolean;
   skipUpload?: boolean;
-  composeFileName: string;
   requireGitData?: boolean;
   deleteOldPins?: boolean;
+  composeFileName: string;
   dir: string;
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);

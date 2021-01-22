@@ -9,11 +9,14 @@ import {
   ComposeVolumes,
   PackageImage
 } from "../types";
-import { upstreamImageLabel, UPSTREAM_VERSION_VARNAME } from "../params";
+import {
+  defaultComposeFileName,
+  defaultDir,
+  upstreamImageLabel,
+  UPSTREAM_VERSION_VARNAME
+} from "../params";
 import { toTitleCase } from "./format";
 import { mapValues, uniqBy } from "lodash";
-
-// const defaultComposeFileName = "docker-compose.yml";
 
 /**
  * Get compose path. Without arguments defaults to './docker-compose.yml'
@@ -22,7 +25,10 @@ import { mapValues, uniqBy } from "lodash";
  * @param dir: './folder', [optional] directory to load the manifest from
  * @return path = './dappnode_package.json'
  */
-export function getComposePath(composeFileName: string, dir = "./"): string {
+export function getComposePath(
+  composeFileName = defaultComposeFileName,
+  dir = defaultDir
+): string {
   return path.join(dir, composeFileName);
 }
 
@@ -33,7 +39,11 @@ export function getComposePath(composeFileName: string, dir = "./"): string {
  * @param composeFileName: Name of compose file
  * @param dir: './folder', [optional] directory to load the manifest from
  */
-export function generateAndWriteCompose(composeFileName: string, dir: string, manifest: Manifest): void {
+export function generateAndWriteCompose(
+  composeFileName: string,
+  dir: string,
+  manifest: Manifest
+): void {
   const composeYaml = generateCompose(manifest);
   writeCompose(composeFileName, dir, composeYaml);
 }
@@ -46,7 +56,10 @@ export function generateAndWriteCompose(composeFileName: string, dir: string, ma
  * @param dir: './folder', [optional] directory to load the manifest from
  * @return compose object
  */
-export function readComposeString(composeFileName: string, dir: string): string {
+export function readComposeString(
+  composeFileName: string,
+  dir: string
+): string {
   const path = getComposePath(composeFileName, dir);
 
   // Recommended way of checking a file existance https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
@@ -105,7 +118,11 @@ export function stringifyCompose(compose: Compose): string {
 /**
  * Writes the docker-compose.
  */
-export function writeCompose(composeFileName: string, dir: string, compose: Compose): void {
+export function writeCompose(
+  composeFileName: string,
+  dir: string,
+  compose: Compose
+): void {
   const path = getComposePath(composeFileName, dir);
   fs.writeFileSync(path, stringifyCompose(compose));
 }

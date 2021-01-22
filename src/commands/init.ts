@@ -8,7 +8,12 @@ import { writeManifest } from "../utils/manifest";
 import { generateAndWriteCompose } from "../utils/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
-import { defaultDir, releaseFiles, YargsError } from "../params";
+import {
+  defaultComposeFileName,
+  defaultDir,
+  releaseFiles,
+  YargsError
+} from "../params";
 import { CliGlobalOptions, Manifest } from "../types";
 
 const stringsToRemoveFromName = [
@@ -89,10 +94,10 @@ dappnodesdk build
  * Common handler for CLI and programatic usage
  */
 export async function initHandler({
+  dir = defaultDir,
+  compose_file_name = defaultComposeFileName,
   yes: useDefaults,
-  force,
-  dir = defaultDir
-  compose_file_name,
+  force
 }: CliCommandOptions): Promise<Manifest> {
   const composeFileName = compose_file_name;
   // shell outputs tend to include trailing spaces and new lines
