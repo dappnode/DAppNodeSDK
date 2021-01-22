@@ -9,19 +9,26 @@ import {
   ComposeVolumes,
   PackageImage
 } from "../types";
-import { upstreamImageLabel, UPSTREAM_VERSION_VARNAME } from "../params";
+import {
+  defaultComposeFileName,
+  defaultDir,
+  upstreamImageLabel,
+  UPSTREAM_VERSION_VARNAME
+} from "../params";
 import { toTitleCase } from "./format";
 import { mapValues, uniqBy } from "lodash";
-
-const composeFileName = "docker-compose.yml";
 
 /**
  * Get compose path. Without arguments defaults to './docker-compose.yml'
  *
+ * @param composeFileName: Name of compose file
  * @param dir: './folder', [optional] directory to load the manifest from
  * @return path = './dappnode_package.json'
  */
-export function getComposePath(dir = "./"): string {
+export function getComposePath(
+  composeFileName = defaultComposeFileName,
+  dir = defaultDir
+): string {
   return path.join(dir, composeFileName);
 }
 
@@ -29,22 +36,31 @@ export function getComposePath(dir = "./"): string {
  * Read the docker-compose.
  * Without arguments defaults to write the manifest at './docker-compose.yml'
  *
+ * @param composeFileName: Name of compose file
  * @param dir: './folder', [optional] directory to load the manifest from
  */
-export function generateAndWriteCompose(dir: string, manifest: Manifest): void {
+export function generateAndWriteCompose(
+  composeFileName: string,
+  dir: string,
+  manifest: Manifest
+): void {
   const composeYaml = generateCompose(manifest);
-  writeCompose(dir, composeYaml);
+  writeCompose(composeFileName, dir, composeYaml);
 }
 
 /**
  * Read a compose data (string, without parsing)
  * Without arguments defaults to write the manifest at './docker-compose.yml'
  *
+ * @param composeFileName: Name of compose file
  * @param dir: './folder', [optional] directory to load the manifest from
  * @return compose object
  */
-export function readComposeString(dir: string): string {
-  const path = getComposePath(dir);
+export function readComposeString(
+  composeFileName: string,
+  dir: string
+): string {
+  const path = getComposePath(composeFileName, dir);
 
   // Recommended way of checking a file existance https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
   let data;
@@ -53,7 +69,7 @@ export function readComposeString(dir: string): string {
   } catch (e) {
     if (e.code === "ENOENT") {
       throw Error(
-        `No docker-compose found at ${path}. Make sure you are in a directory with an initialized DNP.`
+        `${path} not found. Make sure you are in a directory with an initialized DNP.`
       );
     } else {
       throw e;
@@ -67,11 +83,12 @@ export function readComposeString(dir: string): string {
  * Read a compose parsed data
  * Without arguments defaults to write the manifest at './docker-compose.yml'
  *
+ * @param composeFileName: Name of compose file
  * @param dir: './folder', [optional] directory to load the manifest from
  * @return compose object
  */
-export function readCompose(dir: string): Compose {
-  const data = readComposeString(dir);
+export function readCompose(composeFileName: string, dir: string): Compose {
+  const data = readComposeString(composeFileName, dir);
 
   // Parse compose in try catch block to show a comprehensive error message
   try {
@@ -100,10 +117,13 @@ export function stringifyCompose(compose: Compose): string {
 
 /**
  * Writes the docker-compose.
- * Without arguments defaults to write the manifest at './docker-compose.yml'
  */
-export function writeCompose(dir: string, compose: Compose): void {
-  const path = getComposePath(dir);
+export function writeCompose(
+  composeFileName: string,
+  dir: string,
+  compose: Compose
+): void {
+  const path = getComposePath(composeFileName, dir);
   fs.writeFileSync(path, stringifyCompose(compose));
 }
 

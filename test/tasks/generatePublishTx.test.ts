@@ -14,6 +14,7 @@ import { rmSafe, mkdirSafe } from "../shellSafe";
 describe("generatePublishTx", () => {
   const manifestPath = "./dappnode_package.json";
   const buildDir = "dnp_0.0.0";
+  const compose_file_name = 'docker-compose.yml';
 
   before(async () => {
     await rmSafe(manifestPath);
@@ -29,6 +30,7 @@ describe("generatePublishTx", () => {
     fs.writeFileSync(manifestPath, stringifyManifest(manifest));
 
     const generatePublishTxTasks = generatePublishTx({
+      compose_file_name,
       dir: "./",
       releaseMultiHash: "/ipfs/Qm",
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
@@ -61,6 +63,7 @@ describe("generatePublishTx", () => {
     fs.writeFileSync(manifestPath, stringifyManifest(manifest));
 
     const generatePublishTxTasks = generatePublishTx({
+      compose_file_name,
       dir: "./",
       releaseMultiHash: "/ipfs/Qm",
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",

@@ -11,7 +11,7 @@ import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion
 import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion";
 import { verifyEthConnection } from "../utils/verifyEthConnection";
 import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
-import { defaultDir, YargsError } from "../params";
+import { defaultComposeFileName, defaultDir, YargsError } from "../params";
 import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
 import { createNextBranch } from "../tasks/createNextBranch";
 import { printObject } from "../utils/print";
@@ -143,6 +143,7 @@ export async function publishHanlder({
   delete_old_pins,
   // Global options
   dir = defaultDir,
+  compose_file_name = defaultComposeFileName,
   silent,
   verbose
 }: CliCommandOptions): Promise<{
@@ -158,6 +159,7 @@ export async function publishHanlder({
   let createNextGithubBranch = Boolean(create_next_branch);
   const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
   const userTimeout = timeout;
+  const composeFileName = compose_file_name;
   const requireGitData = require_git_data;
   const deleteOldPins = delete_old_pins;
 
@@ -221,7 +223,8 @@ export async function publishHanlder({
             nextVersion = await increaseFromApmVersion({
               type: type as ReleaseType,
               ethProvider,
-              dir
+              dir,
+              composeFileName
             });
           } catch (e) {
             if (e.message.includes("NOREPO"))
@@ -241,6 +244,7 @@ export async function publishHanlder({
           new Listr(
             buildAndUpload({
               dir,
+              composeFileName,
               buildDir: ctx.buildDir,
               contentProvider,
               uploadTo,
@@ -258,6 +262,7 @@ export async function publishHanlder({
         task: ctx =>
           generatePublishTx({
             dir,
+            compose_file_name,
             releaseMultiHash: ctx.releaseMultiHash,
             developerAddress,
             ethProvider,
@@ -274,6 +279,7 @@ export async function publishHanlder({
         task: ctx =>
           createGithubRelease({
             dir,
+            compose_file_name,
             buildDir: ctx.buildDir,
             releaseMultiHash: ctx.releaseMultiHash,
             verbose,
@@ -289,6 +295,7 @@ export async function publishHanlder({
         task: () =>
           createNextBranch({
             dir,
+            compose_file_name,
             verbose,
             silent
           })

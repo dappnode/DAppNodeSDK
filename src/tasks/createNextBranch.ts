@@ -5,7 +5,7 @@ import { getComposePath } from "../utils/compose";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
 import { shell } from "../utils/shell";
 import { Github } from "../providers/github/Github";
-import { defaultDir } from "../params";
+import { defaultComposeFileName, defaultDir } from "../params";
 import { getGitHead } from "../utils/git";
 
 /**
@@ -13,9 +13,11 @@ import { getGitHead } from "../utils/git";
  */
 export function createNextBranch({
   dir = defaultDir,
+  compose_file_name = defaultComposeFileName,
   verbose,
   silent
 }: CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
+  const composeFileName = compose_file_name;
   // Gather repo data, repoSlug = "dappnode/DNP_ADMIN"
   const github = new Github(dir);
 
@@ -41,10 +43,11 @@ export function createNextBranch({
             }
 
             const manifestPath = getManifestPath();
-            const composePath = getComposePath();
+            const composePath = getComposePath(composeFileName);
             const nextVersion = await increaseFromLocalVersion({
               type: "patch",
-              dir
+              dir,
+              compose_file_name
             });
             const branch = `v${nextVersion}`;
 

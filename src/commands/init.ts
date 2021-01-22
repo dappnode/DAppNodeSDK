@@ -8,7 +8,12 @@ import { writeManifest } from "../utils/manifest";
 import { generateAndWriteCompose } from "../utils/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
-import { defaultDir, releaseFiles, YargsError } from "../params";
+import {
+  defaultComposeFileName,
+  defaultDir,
+  releaseFiles,
+  YargsError
+} from "../params";
 import { CliGlobalOptions, Manifest } from "../types";
 
 const stringsToRemoveFromName = [
@@ -89,10 +94,12 @@ dappnodesdk build
  * Common handler for CLI and programatic usage
  */
 export async function initHandler({
+  dir = defaultDir,
+  compose_file_name = defaultComposeFileName,
   yes: useDefaults,
-  force,
-  dir = defaultDir
+  force
 }: CliCommandOptions): Promise<Manifest> {
+  const composeFileName = compose_file_name;
   // shell outputs tend to include trailing spaces and new lines
   const directoryName = await shell('echo "${PWD##*/}"');
   const defaultAuthor = await shell("whoami");
@@ -191,7 +198,7 @@ It only covers the most common items, and tries to guess sensible defaults.
 
   // Write manifest and compose
   writeManifest(dir, manifest);
-  generateAndWriteCompose(dir, manifest);
+  generateAndWriteCompose(composeFileName, dir, manifest);
 
   // Add default avatar so users can run the command right away
   const files = fs.readdirSync(dir);

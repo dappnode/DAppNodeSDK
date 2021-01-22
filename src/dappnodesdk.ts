@@ -29,6 +29,11 @@ const dappnodesdk = yargs
       default: defaultDir,
       type: "string"
     },
+    compose_file_name: {
+      description: `Compose file for docker-compose`,
+      default: "docker-compose.yml",
+      type: "string"
+    },
     silent: {
       description: "Silence output to terminal",
       type: "boolean"

@@ -1,7 +1,7 @@
 import { CommandModule } from "yargs";
 import { increaseFromLocalVersion } from "../utils/versions/increaseFromLocalVersion";
 import { CliGlobalOptions, ReleaseType } from "../types";
-import { defaultDir } from "../params";
+import { defaultComposeFileName, defaultDir } from "../params";
 
 export const command = "increase [type]";
 
@@ -35,7 +35,12 @@ export const increase: CommandModule<CliGlobalOptions, CliCommandOptions> = {
  */
 export async function increaseHandler({
   type,
-  dir = defaultDir
+  dir = defaultDir,
+  compose_file_name = defaultComposeFileName
 }: CliCommandOptions): Promise<string> {
-  return await increaseFromLocalVersion({ type: type as ReleaseType, dir });
+  return await increaseFromLocalVersion({
+    type: type as ReleaseType,
+    dir,
+    compose_file_name
+  });
 }

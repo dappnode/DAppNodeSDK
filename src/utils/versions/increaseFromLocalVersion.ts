@@ -6,11 +6,14 @@ import { ReleaseType } from "../../types";
 
 export async function increaseFromLocalVersion({
   type,
-  dir
+  dir,
+  compose_file_name
 }: {
   type: ReleaseType;
   dir: string;
+  compose_file_name: string;
 }): Promise<string> {
+  const composeFileName = compose_file_name;
   // Check variables
   checkSemverType(type);
 
@@ -36,8 +39,8 @@ export async function increaseFromLocalVersion({
   // Mofidy and write the manifest and docker-compose
   writeManifest(dir, manifest);
   const { name, version } = manifest;
-  const compose = readCompose(dir);
-  writeCompose(dir, updateComposeImageTags(compose, { name, version }));
+  const compose = readCompose(composeFileName, dir);
+  writeCompose(composeFileName, dir, updateComposeImageTags(compose, { name, version }));
 
   return nextVersion;
 }

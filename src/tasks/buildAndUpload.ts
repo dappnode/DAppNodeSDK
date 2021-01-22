@@ -28,7 +28,7 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
-import { getGitHead, getGitHeadIfAvailable, GitHead } from "../utils/git";
+import { getGitHead, getGitHeadIfAvailable } from "../utils/git";
 import { fetchPinsWithBranchToDelete, getPinMetadata } from "../pinStrategy";
 import { PinataPinManager } from "../providers/pinata/pinManager";
 import { PinKeyvaluesDefault } from "../releaseUploader/pinata";
@@ -52,6 +52,7 @@ export function buildAndUpload({
   skipUpload,
   requireGitData,
   deleteOldPins,
+  composeFileName,
   dir
 }: {
   buildDir: string;
@@ -62,6 +63,7 @@ export function buildAndUpload({
   skipUpload?: boolean;
   requireGitData?: boolean;
   deleteOldPins?: boolean;
+  composeFileName: string;
   dir: string;
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
@@ -89,8 +91,8 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
     throw new CliError("Package name in the manifest must be lowercase");
 
   // Update compose
-  const composePath = getComposePath(dir);
-  const composeForDev = readCompose(dir);
+  const composePath = getComposePath(composeFileName, dir);
+  const composeForDev = readCompose(composeFileName, dir);
   const composeForBuild = updateComposeImageTags(composeForDev, manifest);
   const composeForRelease = updateComposeImageTags(composeForDev, manifest, {
     editExternalImages: true
@@ -165,10 +167,10 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
       title: "Copy files and validate",
       task: async () => {
         // Write compose with build props for builds
-        writeCompose(dir, composeForBuild);
+        writeCompose(composeFileName, dir, composeForBuild);
 
         // Copy files for release dir
-        writeCompose(buildDir, composeForRelease);
+        writeCompose(composeFileName, buildDir, composeForRelease);
         writeManifest(buildDir, manifest);
         validateManifest(manifest, { prerelease: true });
 
