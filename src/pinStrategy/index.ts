@@ -40,7 +40,7 @@ export async function fetchPinsWithBranch(
 ): Promise<PinDataSummary[]> {
   const pinsWithSameBranch = await pinata.pinList<DnpPinMetadata>({
     keyvalues: {
-      name: { value: manifest.name, op: "eq" },
+      dnpName: { value: manifest.name, op: "eq" },
       branch: { value: gitHead.branch, op: "eq" }
     }
   });

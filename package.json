@@ -8,8 +8,7 @@
     "dappnodesdk": "dist/dappnodesdk.js"
   },
   "scripts": {
-    "test": "npm run test:file \"./{,!(node_modules)/**}/*.test.ts\"",
-    "test:file": "mocha -r ts-node/register --exit",
+    "test": "mocha \"./{,!(node_modules)/**}/*.test.ts\"",
     "lint": "eslint . --ext .ts --fix",
     "build": "tsc",
     "ncc": "npx @vercel/ncc build --out dist-ncc && node test/ncc",

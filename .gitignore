@@ -23,3 +23,6 @@ setup-ui.json
 disclaimer.md
 .cache
 .dappnodesdk-build-cache
+
+# Pinata envs for testing
+.env
