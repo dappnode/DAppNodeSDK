@@ -28,6 +28,7 @@ export class PinataPinManager {
    */
   async pinList<PinKeyvalues>(filters?: {
     name?: string;
+    status?: "all" | "pinned" | "unpinned";
     keyvalues?: {
       // Each query on custom values takes the form of an object with a "value" key, and an "op" key.
       // The "value" is fairly straightforward. This is simply the value that you wish your query operation to be applied to
@@ -46,6 +47,9 @@ export class PinataPinManager {
 
     if (filters?.keyvalues)
       searchParams["metadata[keyvalues]"] = JSON.stringify(filters.keyvalues);
+
+    // Fetch only "pinned" items by default
+    searchParams["status"] = filters?.status || "pinned";
 
     // Note: Results in rows will be limited to 1000, in case of needing more pagination should be implemented
     try {
