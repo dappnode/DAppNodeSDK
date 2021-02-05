@@ -9,9 +9,20 @@ export class Github {
   octokit: Octokit;
   owner: string;
   repo: string;
-  repoSlug: string;
 
-  constructor(dir: string) {
+  constructor({ owner, repo }: { owner: string; repo: string }) {
+    this.owner = owner;
+    this.repo = repo;
+
+    // OAuth2 token from Github
+    if (!process.env.GITHUB_TOKEN)
+      throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
+    this.octokit = new Octokit({
+      auth: `token ${process.env.GITHUB_TOKEN}`
+    });
+  }
+
+  static fromDir(dir: string): Github {
     const repoSlug =
       getRepoSlugFromManifest(dir) ||
       process.env.TRAVIS_REPO_SLUG ||
@@ -27,27 +38,19 @@ export class Github {
     if (!owner) throw Error(`repoSlug "${repoSlug}" hasn't an owner`);
     if (!repo) throw Error(`repoSlug "${repoSlug}" hasn't a repo`);
 
-    this.owner = owner;
-    this.repo = repo;
-    this.repoSlug = repoSlug;
-
-    // OAuth2 token from Github
-    if (!process.env.GITHUB_TOKEN)
-      throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
-    this.octokit = new Octokit({
-      auth: `token ${process.env.GITHUB_TOKEN}`
-    });
+    return new Github({ owner, repo });
   }
 
   async assertRepoExists(): Promise<void> {
     try {
       await this.octokit.repos.get({ owner: this.owner, repo: this.repo });
     } catch (e) {
+      const repoSlug = `${this.owner}/${this.repo}`;
       if (e.status === 404)
         throw Error(
-          `Repo does not exist: ${this.repoSlug}. Check the manifest.repository object and correct the repo URL`
+          `Repo does not exist: ${repoSlug}. Check the manifest.repository object and correct the repo URL`
         );
-      e.message = `Error verifying repo ${this.repoSlug}: ${e.message}`;
+      e.message = `Error verifying repo ${repoSlug}: ${e.message}`;
       throw e;
     }
   }
@@ -298,5 +301,30 @@ export class Github {
       repo: this.repo
     });
     return res.data;
+  }
+
+  /**
+   * trigger a webhook event called repository_dispatch in a repository
+   * The consumer must add in workflow.yml
+   * ```yaml
+   * on:
+   *   repository_dispatch:
+   *     types: [backend_automation]
+   * ```
+   * Example payload on the receiver https://docs.github.com/en/free-pro-team@latest/developers/webhooks-and-events/webhook-events-and-payloads#repository_dispatch
+   * @param eventType "backend_automation"
+   * @param clientPayload Arbitrary JSON payload: `{ "extraData": 1234 }`
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async dispatchEvent(
+    eventType: string,
+    clientPayload?: { [key: string]: string | number }
+  ) {
+    await this.octokit.repos.createDispatchEvent({
+      owner: this.owner,
+      repo: this.repo,
+      event_type: eventType,
+      client_payload: clientPayload
+    });
   }
 }

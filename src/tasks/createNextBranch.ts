@@ -19,7 +19,7 @@ export function createNextBranch({
 }: CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
   const composeFileName = compose_file_name;
   // Gather repo data, repoSlug = "dappnode/DNP_ADMIN"
-  const github = new Github(dir);
+  const github = Github.fromDir(dir);
 
   return new Listr<ListrContextBuildAndPublish>(
     [

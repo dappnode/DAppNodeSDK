@@ -10,6 +10,17 @@ export const UPSTREAM_VERSION_VARNAME = "UPSTREAM_VERSION";
 export const upstreamImageLabel = "dappnode.dnp.upstreamImage";
 export const PINATA_URL = "https://api.pinata.cloud";
 
+export const DNP_CORE_GITHUB_EVENT_TYPE = "dappnodesdk_build";
+export const DNP_CORE_GITHUB_USER = "dappnode";
+export const DNP_CORE_GITHUB_REPO = "DNP_CORE";
+export const DNP_CORE_DEPENDENCIES = [
+  "bind.dnp.dappnode.eth",
+  "ipfs.dnp.dappnode.eth",
+  "vpn.dnp.dappnode.eth",
+  "dappmanager.dnp.dappnode.eth",
+  "wifi.dnp.dappnode.eth"
+];
+
 /**
  * Plain text file with should contain the IPFS hash of the release
  * Necessary for the installer script to fetch the latest content hash
