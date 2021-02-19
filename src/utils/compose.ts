@@ -12,6 +12,7 @@ import {
 import {
   defaultComposeFileName,
   defaultDir,
+  getImageTag,
   upstreamImageLabel,
   UPSTREAM_VERSION_VARNAME
 } from "../params";
@@ -189,42 +190,19 @@ export function generateCompose(manifest: Manifest): Compose {
   return dockerCompose;
 }
 
-function getImageTag({
-  serviceName,
-  name,
-  version,
-  serviceCount
-}: {
-  serviceName: string;
-  name: string;
-  version: string;
-  serviceCount: number;
-}) {
-  return serviceCount > 1
-    ? `${serviceName}.${name}:${version}`
-    : `${name}:${version}`;
-}
-
-type ExternalImage = { imageTag: string; newImageTag: string };
-
 /**
  * Update service image tag to current version
  * @returns updated imageTags
  */
 export function updateComposeImageTags(
   compose: Compose,
-  { name, version }: { name: string; version: string },
+  { name: dnpName, version }: { name: string; version: string },
   options?: { editExternalImages?: boolean }
 ): Compose {
   return {
     ...compose,
     services: mapValues(compose.services, (service, serviceName) => {
-      const newImageTag = getImageTag({
-        serviceName,
-        name,
-        version,
-        serviceCount: Object.keys(compose.services).length
-      });
+      const newImageTag = getImageTag({ dnpName, serviceName, version });
       return service.build
         ? {
             ...service,
@@ -246,16 +224,11 @@ export function updateComposeImageTags(
 
 export function getComposePackageImages(
   compose: Compose,
-  { name, version }: { name: string; version: string }
+  { name: dnpName, version }: { name: string; version: string }
 ): PackageImage[] {
   return Object.entries(compose.services).map(
     ([serviceName, service]): PackageImage => {
-      const imageTag = getImageTag({
-        serviceName,
-        name,
-        version,
-        serviceCount: Object.keys(compose.services).length
-      });
+      const imageTag = getImageTag({ dnpName, serviceName, version });
       return service.build
         ? { type: "local", imageTag }
         : { type: "external", imageTag, originalImageTag: service.image };

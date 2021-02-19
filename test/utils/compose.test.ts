@@ -47,11 +47,43 @@ describe("util > compose", () => {
         expect(composeForBuild).to.deep.equal(expectedComposeForBuild);
       });
 
-      it("Should prepare compose with single service", () => {
+      it("Should prepare compose with single service - custom serviceName", () => {
         const compose: Compose = {
           version: "3.4",
           services: {
             mypackage: { build: ".", image: "" }
+          }
+        };
+
+        const expectedImages: PackageImage[] = [
+          {
+            type: "local",
+            imageTag: "mypackage.mypackage.public.dappnode.eth:0.1.0"
+          }
+        ];
+
+        const expectedComposeForBuild: Compose = {
+          version: "3.4",
+          services: {
+            mypackage: {
+              build: ".",
+              image: expectedImages[0].imageTag
+            }
+          }
+        };
+
+        const composeForBuild = updateComposeImageTags(compose, manifest);
+        const images = getComposePackageImages(composeForBuild, manifest);
+
+        expect(images).to.deep.equal(expectedImages);
+        expect(composeForBuild).to.deep.equal(expectedComposeForBuild);
+      });
+
+      it("Should prepare compose with single service", () => {
+        const compose: Compose = {
+          version: "3.4",
+          services: {
+            "mypackage.public.dappnode.eth": { build: ".", image: "" }
           }
         };
 
@@ -62,7 +94,7 @@ describe("util > compose", () => {
         const expectedComposeForBuild: Compose = {
           version: "3.4",
           services: {
-            mypackage: {
+            "mypackage.public.dappnode.eth": {
               build: ".",
               image: expectedImages[0].imageTag
             }
