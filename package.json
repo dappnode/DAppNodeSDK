@@ -11,7 +11,6 @@
     "test": "mocha \"./{,!(node_modules)/**}/*.test.ts\"",
     "lint": "eslint . --ext .ts --fix",
     "build": "tsc",
-    "ncc": "npx @vercel/ncc build --out dist-ncc && node test/ncc",
     "prepublish": "npm run build",
     "tag-and-publish": "npm version patch && git push origin master && git push --tags",
     "pre-commit": "npm run lint && npm run test"
