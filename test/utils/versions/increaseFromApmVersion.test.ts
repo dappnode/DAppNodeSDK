@@ -2,13 +2,9 @@ import { expect } from "chai";
 import semver from "semver";
 import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion";
 import { Manifest } from "../../../src/types";
-import { cleanTestDir, testDir } from "../../testUtils";
+import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
 import { readManifest, writeManifest } from "../../../src/utils/manifest";
-import {
-  generateCompose,
-  readCompose,
-  writeCompose
-} from "../../../src/utils/compose";
+import { readCompose, writeCompose } from "../../../src/utils/compose";
 import { defaultComposeFileName } from "../../../src/params";
 
 // This test will create the following fake files
@@ -26,14 +22,7 @@ describe("increaseFromApmVersion", function () {
   const manifest: Manifest = {
     name: dnpName,
     version: "0.1.0",
-    avatar: "/ipfs/QmUG9Y13BvmKC4RzFu85F7Ai63emnEYrci4pqbbLxt3mt1",
-    type: "dncore",
-    image: {
-      path: "dnpinner.public.dappnode.eth_0.0.1.tar.xz",
-      hash: "/ipfs/QmcgHQ17z1UK4poEXDr4bzhiPPtLKxPEZTgiktXgcy1JJU",
-      size: 22019270,
-      restart: "always"
-    }
+    type: "dncore"
   };
 
   before("Clean testDir", () => cleanTestDir());

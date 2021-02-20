@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import prettier from "prettier";
 import { defaultDir, defaultManifestFileName } from "../params";
-import { Manifest, ManifestImage, Compose } from "../types";
+import { Manifest } from "../types";
 import { readFile } from "./file";
 
 export interface ManifestPaths {
@@ -64,32 +64,6 @@ export function stringifyJson<T>(json: T): string {
     trailingComma: "none",
     parser: "json"
   });
-}
-
-export function manifestFromCompose(compose: Compose): Manifest {
-  const name = Object.keys(compose.services)[0];
-  const version = compose.services[name].image.split(":")[1];
-  const service = compose.services[name];
-
-  const manifest = {
-    name: name,
-    version: version,
-    description: "",
-    avatar: "",
-    type: "",
-    image: {
-      path: "",
-      hash: "",
-      size: 0
-    } as ManifestImage,
-    author: "",
-    license: ""
-  };
-
-  if (service.ports) manifest.image.ports = service.ports;
-  if (service.volumes) manifest.image.volumes = service.volumes;
-  if (service.restart) manifest.image.restart = service.restart;
-  return manifest;
 }
 
 /**

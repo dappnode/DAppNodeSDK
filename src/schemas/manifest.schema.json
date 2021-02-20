@@ -5,15 +5,7 @@
   "$id": "https://github.com/dappnode/DAppNode/raw/schema/manifest.schema.json",
   "type": "object",
   "title": "DAppNode Package (DNP) manifest",
-  "required": [
-    "name",
-    "version",
-    "description",
-    "avatar",
-    "type",
-    "image",
-    "license"
-  ],
+  "required": ["name", "version", "description", "type", "license"],
   "description": "The DAppNode Package manifest defines all the necessary information for a DAppNode to understand this package:\n - IPFS of BZZ hashes to download its docker image \n - Docker related data to configure and run its container \n - Metadata to control how the package is shown in the admin UI.",
   "properties": {
     "name": {
@@ -44,14 +36,6 @@
       "examples": [
         "Welcome! IPFS is a distributed system for storing and accessing files, websites, applications, and data. If you’re new to IPFS, check our [introductory page](https://ipfs.io/#why) for an easy overview. \n\nWith this node you can upload and download files from IPFS using it own fancy web console at [http://ipfs.dappnode:5001/webui](http://ipfs.dappnode:5001/webui). Other DAppNode Packages and external applications can use its API at the endpoint `http://ipfs.dappnode:5001/api`. Go to the [IPFS HTTP API full reference](https://docs.ipfs.io/reference/api/http/) to check all the features of the API."
       ]
-    },
-    "avatar": {
-      "type": "string",
-      "description": "IPFS / BZZ hash of the Avatar of this DAppNode Package. Must be a 300 x 300px transparent PNG. It is strongly encouraged that you optimize the .png before uploading it to minimize its size.",
-      "examples": ["/ipfs/QmWwMb3XhuCH6JnCF6m6EQzA4mW9pHHtg7rqAfhDr2ofi8"],
-      "pattern": "^/(ipfs|bzz)/\\w+$",
-      "minLength": 46,
-      "errorMessage": "should be /ipfs/<hash> or /bzz/<hash>"
     },
     "type": {
       "type": "string",

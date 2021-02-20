@@ -2,13 +2,7 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import prettier from "prettier";
-import {
-  Manifest,
-  Compose,
-  ComposeService,
-  ComposeVolumes,
-  PackageImage
-} from "../types";
+import { Compose, PackageImage } from "../types";
 import {
   defaultComposeFileName,
   defaultDir,
@@ -78,68 +72,6 @@ function stringifyCompose(compose: Compose): string {
     // Built-in parser for YAML
     parser: "yaml"
   });
-}
-
-export function generateCompose(manifest: Manifest): Compose {
-  const ensName = manifest.name.replace("/", "_").replace("@", "");
-
-  const service: ComposeService = {
-    build: ".",
-    image: manifest.name + ":" + manifest.version
-  };
-
-  // Image name
-  service.image = manifest.name + ":" + manifest.version;
-  service.restart = manifest.image?.restart || "always";
-
-  // Volumes
-  if (manifest.image?.volumes) {
-    service.volumes = [
-      ...(manifest.image.volumes || []),
-      ...(manifest.image.external_vol || [])
-    ];
-  }
-
-  // Ports
-  if (manifest.image?.ports) {
-    service.ports = manifest.image.ports;
-  }
-
-  // Volumes
-  const volumes: ComposeVolumes = {};
-  // Regular volumes
-  if (manifest.image?.volumes) {
-    manifest.image.volumes.map(vol => {
-      // Make sure it's a named volume
-      if (!vol.startsWith("/") && !vol.startsWith("~")) {
-        const volName = vol.split(":")[0];
-        volumes[volName] = {};
-      }
-    });
-  }
-
-  // External volumes
-  if (manifest.image?.external_vol) {
-    manifest.image.external_vol.map(vol => {
-      const volName = vol.split(":")[0];
-      volumes[volName] = {
-        external: {
-          name: volName
-        }
-      };
-    });
-  }
-
-  const dockerCompose: Compose = {
-    version: "3.4",
-    services: {
-      [ensName]: service
-    }
-  };
-  if (Object.getOwnPropertyNames(volumes).length)
-    dockerCompose.volumes = volumes;
-
-  return dockerCompose;
 }
 
 /**
