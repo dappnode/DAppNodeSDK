@@ -73,7 +73,11 @@ export async function gaBuildHandler({
     console.log(`Build bot comment: \n\n${body}`);
 
     const prs = await github.getOpenPrsFromBranch({ branch: ref.branch });
-    console.log(`PRs: ${prs.map(pr => pr.number).join(", ")}`);
+    console.log(
+      `Repo: ${github.repoSlug}`,
+      `Branch ${ref.branch}`,
+      `PRs: ${prs.map(pr => pr.number).join(", ")}`
+    );
 
     await Promise.all(
       prs.map(pr =>
