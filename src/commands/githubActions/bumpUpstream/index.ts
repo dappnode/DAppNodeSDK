@@ -17,7 +17,10 @@ const branchNameRoot = "dappnodebot/bump-upstream/";
 
 // This action should be run periodically
 
-export const gaBuild: CommandModule<CliGlobalOptions, CliGlobalOptions> = {
+export const gaBumpUpstream: CommandModule<
+  CliGlobalOptions,
+  CliGlobalOptions
+> = {
   command: "bump-upstream",
   describe:
     "Check if upstream repo has released a new version and open a PR with version bump",
