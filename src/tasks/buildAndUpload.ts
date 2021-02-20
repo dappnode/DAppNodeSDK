@@ -72,7 +72,7 @@ export function buildAndUpload({
   const manifest = readManifest({ dir });
 
   // Make sure the release is of correct type
-  if (manifest.image)
+  if ((manifest as any).image)
     throw new CliError(`
 DAppNode packages expect all docker related data to be contained only
 in the docker-compose.yml. Please translate the settings in 'manifest.image'
@@ -172,7 +172,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         // Copy files for release dir
         writeCompose(composeForRelease, { dir: buildDir, composeFileName });
         writeManifest(manifest, { dir: buildDir });
-        validateManifest(manifest, { prerelease: true });
+        validateManifest(manifest);
 
         // Copy all other release files
         for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {

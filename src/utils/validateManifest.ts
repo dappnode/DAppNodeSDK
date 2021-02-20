@@ -2,22 +2,7 @@ import { CliError } from "../params";
 import { Manifest } from "../types";
 import { validateManifestSchema } from "./validateManifestSchema";
 
-const fakeHash = "/ipfs/QmDAppNodeDAppNodeDAppNodeDAppNodeDAppNodeDApp";
-
-export function validateManifest(
-  manifest: Manifest,
-  options?: { prerelease?: boolean }
-): void {
-  if (options && options.prerelease) {
-    manifest.avatar = manifest.avatar || fakeHash;
-    manifest.image = {
-      ...manifest.image,
-      path: "dappnode.dnp.dappnode.eth_0.0.0.tar.xz",
-      hash: fakeHash,
-      size: 100
-    };
-  }
-
+export function validateManifest(manifest: Manifest): void {
   const { valid, errors } = validateManifestSchema(manifest);
   if (valid) return;
 

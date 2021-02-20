@@ -27,15 +27,6 @@ export async function increaseFromLocalVersion({
   if (!nextVersion) throw Error(`Invalid increase: ${currentVersion} ${type}`);
   manifest.version = nextVersion;
 
-  if (manifest.image) {
-    // Only on manifest type release
-    // Reset the image path, hash, and size fields.
-    // They no longer represent the increased version
-    manifest.image.path = "";
-    manifest.image.hash = "";
-    manifest.image.size = 0;
-  }
-
   // Mofidy and write the manifest and docker-compose
   writeManifest(manifest, { dir });
   const { name, version } = manifest;

@@ -65,7 +65,6 @@ export interface Manifest {
   author?: string;
   license?: string;
   avatar?: string;
-  image?: ManifestImage;
   repository?: {
     type?: string;
     url?: string;
@@ -80,26 +79,6 @@ export interface Manifest {
     [linkName: string]: string | undefined;
   };
   architectures?: Architecture[];
-}
-
-export interface ManifestImage {
-  hash: string;
-  size: number;
-  path: string;
-  volumes?: string[];
-  external_vol?: string[];
-  ports?: string[];
-  environment?: string[];
-  restart?: string;
-  privileged?: boolean;
-  cap_add?: string[];
-  cap_drop?: string[];
-  devices?: string[];
-  subnet?: string;
-  ipv4_address?: string;
-  network_mode?: string;
-  command?: string;
-  labels?: string[];
 }
 
 export interface ComposeVolumes {

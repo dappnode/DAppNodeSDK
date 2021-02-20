@@ -1,12 +1,8 @@
 import { expect } from "chai";
 import { increaseFromLocalVersion } from "../../../src/utils/versions/increaseFromLocalVersion";
-import {
-  generateCompose,
-  readCompose,
-  writeCompose
-} from "../../../src/utils/compose";
+import { readCompose, writeCompose } from "../../../src/utils/compose";
 import { readManifest, writeManifest } from "../../../src/utils/manifest";
-import { cleanTestDir, testDir } from "../../testUtils";
+import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
 import { defaultComposeFileName } from "../../../src/params";
 
 // This test will create the following fake files

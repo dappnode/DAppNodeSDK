@@ -5,21 +5,18 @@ import { CommandModule } from "yargs";
 import semver from "semver";
 import inquirer from "inquirer";
 import { writeManifest, getManifestPath } from "../utils/manifest";
-import {
-  generateCompose,
-  writeCompose,
-  getComposePath
-} from "../utils/compose";
+import { writeCompose, getComposePath } from "../utils/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
 import {
   defaultComposeFileName,
   defaultDir,
   defaultManifestFileName,
+  getImageTag,
   releaseFiles,
   YargsError
 } from "../params";
-import { CliGlobalOptions, Manifest } from "../types";
+import { CliGlobalOptions, Compose, Manifest } from "../types";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",
@@ -171,9 +168,12 @@ It only covers the most common items, and tries to guess sensible defaults.
       ]);
 
   // Construct DNP
+  const dnpName = answers.name ? getDnpName(answers.name) : defaultName;
+  const serviceName = dnpName;
+  const version = answers.version || defaultVersion;
   const manifest: Manifest = {
-    name: answers.name ? getDnpName(answers.name) : defaultName,
-    version: answers.version || defaultVersion,
+    name: dnpName,
+    version: version,
     description: answers.description,
     type: "service",
     author: answers.author,
@@ -182,6 +182,17 @@ It only covers the most common items, and tries to guess sensible defaults.
       homepage: "https://your-project-homepage-or-docs.io"
     },
     license: answers.license
+  };
+
+  const compose: Compose = {
+    version: "3.4",
+    services: {
+      [serviceName]: {
+        build: ".", // Dockerfile is in root dir
+        image: getImageTag({ dnpName, serviceName, version }),
+        restart: "unless-stopped"
+      }
+    }
   };
 
   // Create package root dir
@@ -209,7 +220,6 @@ It only covers the most common items, and tries to guess sensible defaults.
 
   // Only write a compose if it doesn't exist
   if (!composeExists) {
-    const compose = generateCompose(manifest);
     writeCompose(compose, { dir, composeFileName });
   }
 
