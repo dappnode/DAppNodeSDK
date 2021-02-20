@@ -11,6 +11,7 @@ import { shell } from "../utils/shell";
 import {
   defaultComposeFileName,
   defaultDir,
+  defaultManifestFileName,
   releaseFiles,
   YargsError
 } from "../params";
@@ -33,7 +34,7 @@ const avatarPath = "avatar-default.png";
 const avatarData = defaultAvatar;
 
 // Dockerfile
-const dockerfilePath = path.join("build", "Dockerfile");
+const dockerfilePath = "Dockerfile";
 const dockerfileData = `FROM busybox
 
 WORKDIR /usr/src/app
@@ -74,14 +75,15 @@ export const init: CommandModule<CliGlobalOptions, CliCommandOptions> = {
   handler: async args => {
     const manifest = await initHandler(args);
 
+    const dir = args.dir || defaultDir;
     console.log(`
     ${chalk.green("Your DAppNodePackage is ready")}: ${manifest.name}
 
 To start, you can:
 
-- Develop your dockerized app in   ./build
-- Add settings in the compose at   ./docker-compose.yml
-- Add metadata in the manifest at  ./dappnode_package.json
+- Develop your dockerized app in   ${path.join(dir, dockerfilePath)}
+- Add settings in the compose at   ${path.join(dir, defaultComposeFileName)}
+- Add metadata in the manifest at  ${path.join(dir, defaultManifestFileName)}
 
 Once ready, you can build, install, and test it by running
 
@@ -193,8 +195,8 @@ It only covers the most common items, and tries to guess sensible defaults.
     license: answers.license
   };
 
-  // Create folders
-  await shell(`mkdir -p ${path.join(dir, "build")}`);
+  // Create package root dir
+  fs.mkdirSync(dir, { recursive: true });
 
   // Write manifest and compose
   writeManifest(manifest, { dir });
