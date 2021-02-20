@@ -4,8 +4,12 @@ import chalk from "chalk";
 import { CommandModule } from "yargs";
 import semver from "semver";
 import inquirer from "inquirer";
-import { writeManifest } from "../utils/manifest";
-import { generateCompose, writeCompose } from "../utils/compose";
+import { writeManifest, getManifestPath } from "../utils/manifest";
+import {
+  generateCompose,
+  writeCompose,
+  getComposePath
+} from "../utils/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
 import {
@@ -24,7 +28,6 @@ const stringsToRemoveFromName = [
 ];
 
 // Manifest
-const manifestPath = "dappnode_package.json";
 const publicRepoDomain = ".public.dappnode.eth";
 const defaultVersion = "0.1.0";
 
@@ -121,20 +124,6 @@ It only covers the most common items, and tries to guess sensible defaults.
 `);
   }
 
-  if (fs.existsSync(path.join(dir, manifestPath)) && !force) {
-    const continueAnswer = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "continue",
-        message:
-          "This directory is already initialized. Are you sure you want to overwrite the existing manifest?"
-      }
-    ]);
-    if (!continueAnswer.continue) {
-      throw new YargsError("Stopping");
-    }
-  }
-
   const answers = useDefaults
     ? defaultAnswers
     : await inquirer.prompt([
@@ -196,10 +185,31 @@ It only covers the most common items, and tries to guess sensible defaults.
   // Create folders
   await shell(`mkdir -p ${path.join(dir, "build")}`);
 
+  const manifestExists = fs.existsSync(getManifestPath({ dir }));
+  const composeExists = fs.existsSync(getComposePath({ dir }));
+
+  if (manifestExists && !force) {
+    const continueAnswer = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "continue",
+        message:
+          "This directory is already initialized. Are you sure you want to overwrite the existing manifest?"
+      }
+    ]);
+    if (!continueAnswer.continue) {
+      throw new YargsError("Stopping");
+    }
+  }
+
   // Write manifest and compose
   writeManifest(manifest, { dir });
-  const compose = generateCompose(manifest);
-  writeCompose(compose, { dir, composeFileName });
+
+  // Only write a compose if it doesn't exist
+  if (!composeExists) {
+    const compose = generateCompose(manifest);
+    writeCompose(compose, { dir, composeFileName });
+  }
 
   // Add default avatar so users can run the command right away
   const files = fs.readdirSync(dir);
