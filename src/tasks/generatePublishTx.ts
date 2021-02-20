@@ -40,7 +40,7 @@ export function generatePublishTx({
   const apm = new Apm(ethProvider);
 
   // Load manifest ##### Verify manifest object
-  const { name, version } = readManifest(dir);
+  const { name, version } = readManifest({ dir });
 
   // Compute tx data
   const contentURI =

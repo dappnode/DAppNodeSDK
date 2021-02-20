@@ -3,17 +3,28 @@ import path from "path";
 import mime from "mime-types";
 import retry from "async-retry";
 import { Octokit } from "@octokit/rest";
-import { getRepoSlugFromManifest } from "../../utils/getRepoSlugFromManifest";
+import { getRepoSlugFromManifest } from "../../utils/manifest";
 
 export class Github {
   octokit: Octokit;
   owner: string;
   repo: string;
-  repoSlug: string;
 
-  constructor(dir: string) {
+  constructor({ owner, repo }: { owner: string; repo: string }) {
+    this.owner = owner;
+    this.repo = repo;
+
+    // OAuth2 token from Github
+    if (!process.env.GITHUB_TOKEN)
+      throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
+    this.octokit = new Octokit({
+      auth: `token ${process.env.GITHUB_TOKEN}`
+    });
+  }
+
+  static fromLocal(dir: string): Github {
     const repoSlug =
-      getRepoSlugFromManifest(dir) ||
+      getRepoSlugFromManifest({ dir }) ||
       process.env.TRAVIS_REPO_SLUG ||
       process.env.GITHUB_REPOSITORY;
 
@@ -27,29 +38,26 @@ export class Github {
     if (!owner) throw Error(`repoSlug "${repoSlug}" hasn't an owner`);
     if (!repo) throw Error(`repoSlug "${repoSlug}" hasn't a repo`);
 
-    this.owner = owner;
-    this.repo = repo;
-    this.repoSlug = repoSlug;
+    return new Github({ owner, repo });
+  }
 
-    // OAuth2 token from Github
-    if (!process.env.GITHUB_TOKEN)
-      throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
-    this.octokit = new Octokit({
-      auth: `token ${process.env.GITHUB_TOKEN}`
-    });
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async getRepo() {
+    try {
+      return await this.octokit.repos.get({
+        owner: this.owner,
+        repo: this.repo
+      });
+    } catch (e) {
+      const repoSlug = `${this.owner}/${this.repo}`;
+      if (e.status === 404) throw Error(`Repo does not exist: ${repoSlug}`);
+      e.message = `Error verifying repo ${repoSlug}: ${e.message}`;
+      throw e;
+    }
   }
 
   async assertRepoExists(): Promise<void> {
-    try {
-      await this.octokit.repos.get({ owner: this.owner, repo: this.repo });
-    } catch (e) {
-      if (e.status === 404)
-        throw Error(
-          `Repo does not exist: ${this.repoSlug}. Check the manifest.repository object and correct the repo URL`
-        );
-      e.message = `Error verifying repo ${this.repoSlug}: ${e.message}`;
-      throw e;
-    }
+    await this.getRepo();
   }
 
   /**
@@ -91,14 +99,19 @@ export class Github {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async listReleases() {
+    return await this.octokit.repos
+      .listReleases({ owner: this.owner, repo: this.repo })
+      .then(res => res.data);
+  }
+
   /**
    * Removes all Github releases that match a tag, and it's assets
    * @param tag "v0.2.0"
    */
   async deteleReleaseAndAssets(tag: string): Promise<void> {
-    const releases = await this.octokit.repos
-      .listReleases({ owner: this.owner, repo: this.repo })
-      .then(res => res.data);
+    const releases = await this.listReleases();
     const matchingReleases = releases.filter(
       ({ tag_name, name }) => tag_name === tag || name === tag
     );
@@ -197,16 +210,19 @@ export class Github {
   async openPR({
     from,
     to,
-    title
+    title,
+    body
   }: {
     from: string;
     to: string;
     title: string;
+    body?: string;
   }): Promise<void> {
     await this.octokit.pulls.create({
       owner: this.owner,
       repo: this.repo,
       title,
+      body,
       head: from,
       base: to
     });
@@ -298,5 +314,32 @@ export class Github {
       repo: this.repo
     });
     return res.data;
+  }
+
+  /**
+   * @param branch "octocat-patch-1"
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async getBranch(branch: string) {
+    const res = await this.octokit.repos.getBranch({
+      owner: this.owner,
+      repo: this.repo,
+      branch
+    });
+    return res.data;
+  }
+
+  /**
+   * Returns true if the branch exists, false if it does not, error otherwise
+   * @param branch "octocat-patch-1"
+   */
+  async branchExists(branch: string): Promise<boolean> {
+    try {
+      const data = await this.getBranch(branch);
+      return Boolean(data);
+    } catch (e) {
+      if (e.status === 404) return false;
+      else throw e;
+    }
   }
 }

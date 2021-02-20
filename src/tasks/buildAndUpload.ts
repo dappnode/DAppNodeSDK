@@ -15,12 +15,12 @@ import {
   releaseFilesDefaultNames
 } from "../params";
 import {
-  getComposePath,
   readCompose,
   writeCompose,
   parseComposeUpstreamVersion,
   updateComposeImageTags,
-  getComposePackageImages
+  getComposePackageImages,
+  getComposePath
 } from "../utils/compose";
 import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
@@ -69,7 +69,7 @@ export function buildAndUpload({
   const buildTimeout = parseTimeout(userTimeout);
 
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
-  const manifest = readManifest(dir);
+  const manifest = readManifest({ dir });
 
   // Make sure the release is of correct type
   if (manifest.image)
@@ -91,8 +91,8 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
     throw new CliError("Package name in the manifest must be lowercase");
 
   // Update compose
-  const composePath = getComposePath(composeFileName, dir);
-  const composeForDev = readCompose(composeFileName, dir);
+  const composePath = getComposePath({ dir, composeFileName });
+  const composeForDev = readCompose({ dir, composeFileName });
   const composeForBuild = updateComposeImageTags(composeForDev, manifest);
   const composeForRelease = updateComposeImageTags(composeForDev, manifest, {
     editExternalImages: true
@@ -167,11 +167,11 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
       title: "Copy files and validate",
       task: async () => {
         // Write compose with build props for builds
-        writeCompose(composeFileName, dir, composeForBuild);
+        writeCompose(composeForBuild, { dir, composeFileName });
 
         // Copy files for release dir
-        writeCompose(composeFileName, buildDir, composeForRelease);
-        writeManifest(buildDir, manifest);
+        writeCompose(composeForRelease, { dir: buildDir, composeFileName });
+        writeManifest(manifest, { dir: buildDir });
         validateManifest(manifest, { prerelease: true });
 
         // Copy all other release files

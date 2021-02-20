@@ -18,78 +18,23 @@ import {
 } from "../params";
 import { toTitleCase } from "./format";
 import { mapValues, uniqBy } from "lodash";
+import { readFile } from "./file";
 
-/**
- * Get compose path. Without arguments defaults to './docker-compose.yml'
- *
- * @param composeFileName: Name of compose file
- * @param dir: './folder', [optional] directory to load the manifest from
- * @return path = './dappnode_package.json'
- */
-export function getComposePath(
-  composeFileName = defaultComposeFileName,
-  dir = defaultDir
-): string {
-  return path.join(dir, composeFileName);
-}
-
-/**
- * Read the docker-compose.
- * Without arguments defaults to write the manifest at './docker-compose.yml'
- *
- * @param composeFileName: Name of compose file
- * @param dir: './folder', [optional] directory to load the manifest from
- */
-export function generateAndWriteCompose(
-  composeFileName: string,
-  dir: string,
-  manifest: Manifest
-): void {
-  const composeYaml = generateCompose(manifest);
-  writeCompose(composeFileName, dir, composeYaml);
-}
-
-/**
- * Read a compose data (string, without parsing)
- * Without arguments defaults to write the manifest at './docker-compose.yml'
- *
- * @param composeFileName: Name of compose file
- * @param dir: './folder', [optional] directory to load the manifest from
- * @return compose object
- */
-export function readComposeString(
-  composeFileName: string,
-  dir: string
-): string {
-  const path = getComposePath(composeFileName, dir);
-
-  // Recommended way of checking a file existance https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
-  let data;
-  try {
-    data = fs.readFileSync(path, "utf8");
-  } catch (e) {
-    if (e.code === "ENOENT") {
-      throw Error(
-        `${path} not found. Make sure you are in a directory with an initialized DNP.`
-      );
-    } else {
-      throw e;
-    }
-  }
-
-  return data;
+interface ComposePaths {
+  /** './folder', [optional] directory to load the compose from */
+  dir?: string;
+  /** 'manifest-admin.json', [optional] name of the compose file */
+  composeFileName?: string;
 }
 
 /**
  * Read a compose parsed data
  * Without arguments defaults to write the manifest at './docker-compose.yml'
- *
- * @param composeFileName: Name of compose file
- * @param dir: './folder', [optional] directory to load the manifest from
  * @return compose object
  */
-export function readCompose(composeFileName: string, dir: string): Compose {
-  const data = readComposeString(composeFileName, dir);
+export function readCompose(paths?: ComposePaths): Compose {
+  const composePath = getComposePath(paths);
+  const data = readFile(composePath);
 
   // Parse compose in try catch block to show a comprehensive error message
   try {
@@ -102,7 +47,26 @@ export function readCompose(composeFileName: string, dir: string): Compose {
   }
 }
 
-export function stringifyCompose(compose: Compose): string {
+/**
+ * Writes the docker-compose.
+ */
+export function writeCompose(compose: Compose, paths?: ComposePaths): void {
+  const composePath = getComposePath(paths);
+  fs.writeFileSync(composePath, stringifyCompose(compose));
+}
+
+/**
+ * Get compose path. Without arguments defaults to './docker-compose.yml'
+ * @return path = './dappnode_package.json'
+ */
+export function getComposePath(paths?: ComposePaths): string {
+  return path.join(
+    paths?.dir || defaultDir,
+    paths?.composeFileName || defaultComposeFileName
+  );
+}
+
+function stringifyCompose(compose: Compose): string {
   return prettier.format(yaml.dump(compose, { indent: 2 }), {
     // DAppNode prettier options, to match DAppNodeSDK + DAPPMANAGER
     printWidth: 80,
@@ -114,18 +78,6 @@ export function stringifyCompose(compose: Compose): string {
     // Built-in parser for YAML
     parser: "yaml"
   });
-}
-
-/**
- * Writes the docker-compose.
- */
-export function writeCompose(
-  composeFileName: string,
-  dir: string,
-  compose: Compose
-): void {
-  const path = getComposePath(composeFileName, dir);
-  fs.writeFileSync(path, stringifyCompose(compose));
 }
 
 export function generateCompose(manifest: Manifest): Compose {
@@ -266,4 +218,26 @@ export function parseComposeUpstreamVersion(
     : upstreamVersions
         .map(({ name, version }) => (name ? `${name}: ${version}` : version))
         .join(", ");
+}
+
+interface LocalUpstreamVersion {
+  serviceName: string;
+  currentVersion: string;
+}
+
+export function findLocalUpstreamVersion(
+  upstreamVariableName: string,
+  compose: Compose
+): LocalUpstreamVersion {
+  const matches: LocalUpstreamVersion[] = [];
+  for (const [serviceName, service] of Object.entries(compose.services))
+    if (typeof service.build === "object" && service.build.args)
+      for (const [argName, argValue] of Object.entries(service.build.args))
+        if (argName === upstreamVariableName)
+          matches.push({ serviceName, currentVersion: argValue });
+
+  // Tolerate more than one match, it will converge to the same value
+  if (matches.length === 0)
+    throw Error(`No compose build arg found for name ${upstreamVariableName}`);
+  else return matches[0];
 }

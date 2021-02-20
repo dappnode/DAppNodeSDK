@@ -44,3 +44,17 @@ export async function getGitHeadIfAvailable(options?: {
     }
   }
 }
+
+/**
+ * @param branch dappnodebot/bump-upstream/go-ipfs@v0.7.0
+ */
+export async function getLocalBranchExists(branch: string): Promise<boolean> {
+  try {
+    const branchSha = await shell(
+      `git show-ref --verify -s refs/heads/${branch}`
+    );
+    return Boolean(branchSha);
+  } catch (e) {
+    return false;
+  }
+}

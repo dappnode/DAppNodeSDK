@@ -1,38 +1,34 @@
 import { expect } from "chai";
-import fs from "fs";
 import semver from "semver";
-import { rmSafe } from "../../shellSafe";
-import { stringifyManifest } from "../../../src/utils/manifest";
 import { getNextVersionFromApm } from "../../../src/utils/versions/getNextVersionFromApm";
+import { writeManifest } from "../../../src/utils/manifest";
+import { cleanTestDir, testDir } from "../../testUtils";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
 //
 // Then it will expect the function to fetch the latest version from APM and log it
 
-describe("getNextVersionFromApm", () => {
+describe("getNextVersionFromApm", function () {
+  this.timeout(60 * 1000);
+
   const manifest = {
     name: "admin.dnp.dappnode.eth",
     version: "0.1.0"
   };
-  const manifestPath = "./dappnode_package.json";
 
-  before(async () => {
-    await rmSafe(manifestPath);
-    fs.writeFileSync(manifestPath, stringifyManifest(manifest));
-  });
+  before("Clean testDir", () => cleanTestDir());
+  after("Clean testDir", () => cleanTestDir());
 
   it("Should get the last version from APM", async () => {
+    writeManifest(manifest, { dir: testDir });
+
     const nextVersion = await getNextVersionFromApm({
       type: "patch",
       ethProvider: "infura",
-      dir: "./"
+      dir: testDir
     });
     // Check that the console output contains a valid semver version
     expect(semver.valid(nextVersion)).to.be.ok;
-  }).timeout(60 * 1000);
-
-  after(async () => {
-    await rmSafe(manifestPath);
   });
 });

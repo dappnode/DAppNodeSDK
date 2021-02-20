@@ -7,8 +7,8 @@ describe("util > cache", () => {
   const cacheEntry = ["image:version", "0x00000000"];
   const cachePath = path.join(testDir, "docker-build-cache.json");
 
-  before("Clean testDir", cleanTestDir);
-  after("Clean testDir", cleanTestDir);
+  before("Clean testDir", () => cleanTestDir());
+  after("Clean testDir", () => cleanTestDir());
 
   it("Should write to cache and load it", () => {
     writeToCache({ key: cacheEntry[0], value: cacheEntry[1] }, cachePath);

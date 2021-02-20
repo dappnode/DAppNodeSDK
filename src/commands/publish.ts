@@ -13,7 +13,6 @@ import { verifyEthConnection } from "../utils/verifyEthConnection";
 import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
 import { defaultComposeFileName, defaultDir, YargsError } from "../params";
 import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
-import { createNextBranch } from "../tasks/createNextBranch";
 import { printObject } from "../utils/print";
 import { UploadTo } from "../releaseUploader";
 
@@ -28,7 +27,6 @@ interface CliCommandOptions extends CliGlobalOptions {
   developer_address?: string;
   timeout?: string;
   github_release?: boolean;
-  create_next_branch?: boolean;
   dappnode_team_preset?: boolean;
   require_git_data?: boolean;
   delete_old_pins?: boolean;
@@ -84,10 +82,6 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
         description: `Publish the release on the Github repo specified in the manifest. Requires a GITHUB_TOKEN ENV to authenticate`,
         type: "boolean"
       })
-      .option("create_next_branch", {
-        description: `Create the next release branch on the DNP's Github repo. Requires a GITHUB_TOKEN ENV to authenticate`,
-        type: "boolean"
-      })
       .option("dappnode_team_preset", {
         description: `Specific set of options used for internal DAppNode releases. Caution: options may change without notice.`,
         type: "boolean"
@@ -137,7 +131,6 @@ export async function publishHanlder({
   timeout,
   upload_to,
   github_release,
-  create_next_branch,
   dappnode_team_preset,
   require_git_data,
   delete_old_pins,
@@ -156,7 +149,6 @@ export async function publishHanlder({
   let contentProvider = provider || content_provider;
   let uploadTo = upload_to;
   let githubRelease = Boolean(github_release);
-  let createNextGithubBranch = Boolean(create_next_branch);
   const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
   const userTimeout = timeout;
   const composeFileName = compose_file_name;
@@ -181,13 +173,6 @@ export async function publishHanlder({
     }
 
     githubRelease = true;
-
-    if (
-      !process.env.GITHUB_REF ||
-      process.env.GITHUB_REF == "refs/heads/master"
-    ) {
-      createNextGithubBranch = true;
-    }
   }
 
   /**
@@ -282,20 +267,6 @@ export async function publishHanlder({
             compose_file_name,
             buildDir: ctx.buildDir,
             releaseMultiHash: ctx.releaseMultiHash,
-            verbose,
-            silent
-          })
-      },
-
-      // 5. Create create next release branch and open PR
-      // [ONLY] if requested
-      {
-        title: "Start next release cycle",
-        enabled: () => createNextGithubBranch,
-        task: () =>
-          createNextBranch({
-            dir,
-            compose_file_name,
             verbose,
             silent
           })

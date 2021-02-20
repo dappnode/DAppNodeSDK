@@ -13,10 +13,10 @@ export async function cleanPinsFromDeletedBranches({
   dir: string;
 }): Promise<void> {
   // Read manifest from disk to get package name
-  const manifest = readManifest(dir);
+  const manifest = readManifest({ dir });
 
   // Connect to Github Octokit REST API to know existing branches
-  const github = new Github(dir);
+  const github = Github.fromLocal(dir);
   const branches = await github.listBranches();
 
   // Fetch Pinata credentials from ENVs
