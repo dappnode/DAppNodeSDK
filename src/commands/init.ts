@@ -5,7 +5,7 @@ import { CommandModule } from "yargs";
 import semver from "semver";
 import inquirer from "inquirer";
 import { writeManifest } from "../utils/manifest";
-import { generateAndWriteCompose } from "../utils/compose";
+import { generateCompose, writeCompose } from "../utils/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
 import {
@@ -197,8 +197,9 @@ It only covers the most common items, and tries to guess sensible defaults.
   await shell(`mkdir -p ${path.join(dir, "build")}`);
 
   // Write manifest and compose
-  writeManifest(dir, manifest);
-  generateAndWriteCompose(composeFileName, dir, manifest);
+  writeManifest(manifest, { dir });
+  const compose = generateCompose(manifest);
+  writeCompose(compose, { dir, composeFileName });
 
   // Add default avatar so users can run the command right away
   const files = fs.readdirSync(dir);

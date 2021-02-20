@@ -1,48 +1,53 @@
 import fs from "fs";
 import path from "path";
 import prettier from "prettier";
-import { CliError } from "../params";
+import { defaultDir, defaultManifestFileName } from "../params";
 import { Manifest, ManifestImage, Compose } from "../types";
+import { readFile } from "./file";
 
-const manifestFileName = "dappnode_package.json";
+export interface ManifestPaths {
+  /** './folder', [optional] directory to load the manifest from */
+  dir?: string;
+  /** 'manifest-admin.json', [optional] name of the manifest file */
+  manifestFileName?: string;
+}
+
+/**
+ * Reads a manifest. Without arguments defaults to read the manifest at './dappnode_package.json'
+ */
+export function readManifest(paths?: ManifestPaths): Manifest {
+  const manifestPath = getManifestPath(paths);
+  const data = readFile(manifestPath);
+
+  // Parse manifest in try catch block to show a comprehensive error message
+  let manifest;
+  try {
+    manifest = JSON.parse(data);
+  } catch (e) {
+    throw Error(`Error parsing manifest: ${e.message}`);
+  }
+
+  // Return manifest object
+  return manifest;
+}
+
+/**
+ * Writes a manifest. Without arguments defaults to write the manifest at './dappnode_package.json'
+ */
+export function writeManifest(manifest: Manifest, paths?: ManifestPaths): void {
+  const manifestPath = getManifestPath(paths);
+  fs.writeFileSync(manifestPath, stringifyJson(manifest));
+}
 
 /**
  * Get manifest path. Without arguments defaults to './dappnode_package.json'
- *
- * @param kwargs: {
- *   dir: './folder', [optional] directory to load the manifest from
- *   manifestFileName: 'manifest-admin.json', [optional] name of the manifest file
- * }
  * @return path = './dappnode_package.json'
  */
-export function getManifestPath(dir = "./"): string {
-  return path.join(dir, manifestFileName);
-}
-
-/**
- * Reads a manifest raw data. Without arguments defaults to read the manifest at './dappnode_package.json'
- *
- * @param dir: './folder', [optional] directory to load the manifest from
- */
-export function readManifestString(dir: string): string {
-  const path = getManifestPath(dir);
-
-  // Recommended way of checking a file existance https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
-  try {
-    return fs.readFileSync(path, "utf8");
-  } catch (e) {
-    if (e.code === "ENOENT") {
-      throw new CliError(
-        `No manifest found at ${path}. Make sure you are in a directory with an initialized DNP.`
-      );
-    } else {
-      throw e;
-    }
-  }
-}
-
-export function stringifyManifest(manifest: Manifest): string {
-  return stringifyJson(manifest);
+function getManifestPath(paths?: ManifestPaths): string {
+  return path.join(
+    paths?.dir || defaultDir,
+    paths?.manifestFileName || defaultManifestFileName
+  );
 }
 
 /**
@@ -59,40 +64,6 @@ export function stringifyJson<T>(json: T): string {
     trailingComma: "none",
     parser: "json"
   });
-}
-
-/**
- * Writes a manifest. Without arguments defaults to write the manifest at './dappnode_package.json'
- *
- * @param kwargs: {
- *   manifest: <manifest object>
- *   dir: './folder', [optional] directory to load the manifest from
- *   manifestFileName: 'manifest-admin.json', [optional] name of the manifest file
- * }
- */
-export function writeManifest(dir: string, manifest: Manifest): void {
-  const path = getManifestPath(dir);
-  fs.writeFileSync(path, stringifyManifest(manifest));
-}
-
-/**
- * Reads a manifest. Without arguments defaults to read the manifest at './dappnode_package.json'
- *
- * @param dir: './folder', [optional] directory to load the manifest from
- */
-export function readManifest(dir: string): Manifest {
-  const data = readManifestString(dir);
-
-  // Parse manifest in try catch block to show a comprehensive error message
-  let manifest;
-  try {
-    manifest = JSON.parse(data);
-  } catch (e) {
-    throw Error(`Error parsing manifest: ${e.message}`);
-  }
-
-  // Return manifest object
-  return manifest;
 }
 
 export function manifestFromCompose(compose: Compose): Manifest {
@@ -119,4 +90,21 @@ export function manifestFromCompose(compose: Compose): Manifest {
   if (service.volumes) manifest.image.volumes = service.volumes;
   if (service.restart) manifest.image.restart = service.restart;
   return manifest;
+}
+
+/**
+ * Gets the repo slug from a manifest, using the repository property
+ *
+ * @returns repoSlug = "dappnode/DNP_ADMIN"
+ */
+export function getRepoSlugFromManifest(paths: ManifestPaths): string {
+  const githubBaseUrl = "https://github.com/";
+
+  const manifest = readManifest(paths);
+  const { type, url } = manifest.repository || {};
+  // Ignore faulty manifests
+  if (type !== "git" || !url || !url.includes(githubBaseUrl)) return "";
+  // Get repo slug from the repoUrl, i.e. "https://github.com/dappnode/DNP_VPN"
+  const repoSlug = url.split(githubBaseUrl)[1] || "";
+  return repoSlug.replace(/\/+$/, "").replace(".git", "");
 }

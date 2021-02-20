@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
 import Listr from "listr";
-import { getRepoSlugFromManifest } from "../utils/getRepoSlugFromManifest";
 import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
 import { getGitHead } from "../utils/git";
+import { getRepoSlugFromManifest } from "../utils/manifest";
 import { contentHashFile, defaultDir } from "../params";
 import {
   TxData,

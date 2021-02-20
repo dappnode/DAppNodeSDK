@@ -18,16 +18,17 @@ export async function increaseFromApmVersion({
   const nextVersion = await getNextVersionFromApm({ type, ethProvider, dir });
 
   // Load manifest
-  const manifest = readManifest(dir);
+  const manifest = readManifest({ dir });
 
   // Increase the version
   manifest.version = nextVersion;
 
   // Mofidy and write the manifest and docker-compose
-  writeManifest(dir, manifest);
+  writeManifest(manifest, { dir });
   const { name, version } = manifest;
-  const compose = readCompose(composeFileName, dir);
-  writeCompose(composeFileName, dir, updateComposeImageTags(compose, { name, version }));
+  const compose = readCompose({ dir, composeFileName });
+  const newCompose = updateComposeImageTags(compose, { name, version });
+  writeCompose(newCompose, { dir, composeFileName });
 
   return nextVersion;
 }

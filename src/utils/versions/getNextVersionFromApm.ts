@@ -20,7 +20,7 @@ export async function getNextVersionFromApm({
   const apm = new Apm(ethProvider);
 
   // Load manifest
-  const manifest = readManifest(dir);
+  const manifest = readManifest({ dir });
   const ensName = manifest.name.toLowerCase();
 
   // Fetch the latest version from APM
