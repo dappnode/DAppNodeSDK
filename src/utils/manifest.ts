@@ -43,7 +43,7 @@ export function writeManifest(manifest: Manifest, paths?: ManifestPaths): void {
  * Get manifest path. Without arguments defaults to './dappnode_package.json'
  * @return path = './dappnode_package.json'
  */
-function getManifestPath(paths?: ManifestPaths): string {
+export function getManifestPath(paths?: ManifestPaths): string {
   return path.join(
     paths?.dir || defaultDir,
     paths?.manifestFileName || defaultManifestFileName
