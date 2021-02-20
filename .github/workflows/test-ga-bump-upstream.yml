@@ -1,0 +1,50 @@
+name: Test GA bump-upstream
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: yarn install
+      - run: yarn build
+
+      # Simulate Github Actions run on an actual DAppNode package
+      - name: Setup a mock package to test locally
+        run: node dist/dappnodesdk.js init --yes --force
+
+      - name: Echo manifest with upstream
+        run: |
+          cat > dappnode_package.json <<EOL
+          {
+            "name": "dappnodesdk.public.dappnode.eth",
+            "version": "0.1.0",
+            "upstreamRepo": "ipfs/go-ipfs",
+            "upstreamArg": "UPSTREAM_VERSION",
+            "type": "service",
+            "description": "test",
+            "license": "test"
+          } 
+          EOL
+
+      - name: Echo compose with upstream
+        run: |
+          cat > docker-compose.yml <<EOL
+          version: "3.4"
+          services:
+            dappnodesdk.public.dappnode.eth:
+              build:
+                context: .
+                args:
+                  UPSTREAM_VERSION: v0.4.0
+              image: "dappnodesdk.public.dappnode.eth:0.1.0"
+          EOL
+
+      - run: node dist/dappnodesdk.js github-action bump-upstream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
+          PINATA_SECRET_API_KEY: ${{ secrets.PINATA_SECRET_API_KEY }}
