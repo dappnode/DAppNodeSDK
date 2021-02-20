@@ -74,7 +74,6 @@ export class ShellError extends Error {
   ) {
     const msg = [
       e.signal === "SIGTERM" ? `TIMEOUT: ${e.message}` : e.message,
-      `cmd: ${cmd}`,
       `stdout: ${stdout}`,
       `stderr: ${stderr}`
     ].join("\n");
