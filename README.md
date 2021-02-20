@@ -69,8 +69,6 @@ Github Action to open upstream version bumps on DAppNode Packages
 
 #### Sample usage
 
-It's recommended to use an OAuth token (`PERSONAL_TOKEN` in the example) instead of the default `GITHUB_TOKEN` so the created PR triggers CI/CD.
-
 `.github/workflows/auto_check.yml`
 
 ```yaml
@@ -87,12 +85,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: dappnode/dnp-bump-upstream-action@v1
+      - uses: npx @dappnode/dappnodesdk github-action bump-upstream
         with:
           github_token: ${{ secrets.PERSONAL_TOKEN }}
 ```
 
-You may specify in the package manifest what upstream Github repo the package is tracking. Also indicate what build variable in the docker-compose should be updated
+You must specify in the package manifest what upstream Github repo the package is tracking. Also indicate what build variable in the docker-compose should be updated
 
 `dappnode_package.json`
 
