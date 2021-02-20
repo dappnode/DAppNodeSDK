@@ -315,4 +315,31 @@ export class Github {
     });
     return res.data;
   }
+
+  /**
+   * @param branch "octocat-patch-1"
+   */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async getBranch(branch: string) {
+    const res = await this.octokit.repos.getBranch({
+      owner: this.owner,
+      repo: this.repo,
+      branch
+    });
+    return res.data;
+  }
+
+  /**
+   * Returns true if the branch exists, false if it does not, error otherwise
+   * @param branch "octocat-patch-1"
+   */
+  async branchExists(branch: string): Promise<boolean> {
+    try {
+      const data = await this.getBranch(branch);
+      return Boolean(data);
+    } catch (e) {
+      if (e.status === 404) return false;
+      else throw e;
+    }
+  }
 }

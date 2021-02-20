@@ -58,6 +58,8 @@ export interface Manifest {
   name: string;
   version: string;
   upstreamVersion?: string;
+  upstreamRepo?: string;
+  upstreamArg?: string;
   description?: string;
   type?: string;
   author?: string;
@@ -115,14 +117,14 @@ export interface ComposeVolumes {
   };
 }
 
+export interface ComposeServiceBuild {
+  context?: string; // ./dir
+  dockerfile?: string; // Dockerfile-alternate
+  args?: { [varName: string]: string }; // { buildno: 1}
+}
+
 export interface ComposeService {
-  build?:
-    | string
-    | {
-        context?: string; // ./dir
-        dockerfile?: string; // Dockerfile-alternate
-        args?: { [varName: string]: string }; // { buildno: 1}
-      };
+  build?: string | ComposeServiceBuild;
   container_name?: string; // "DAppNodeCore-dappmanager.dnp.dappnode.eth";
   image: string; // "dappmanager.dnp.dappnode.eth:0.2.6";
   volumes?: string[]; // ["dappmanagerdnpdappnodeeth_data:/usr/src/app/dnp_repo/"];
