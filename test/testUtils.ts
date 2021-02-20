@@ -1,7 +1,8 @@
-import { rmSafe, mkdirSafe } from "./shellSafe";
+import fs from "fs";
+import rimraf from "rimraf";
 
 export const testDir = "test_files";
-export async function cleanTestDir(): Promise<void> {
-  await rmSafe(testDir);
-  await mkdirSafe(testDir);
+export function cleanTestDir(): void {
+  rimraf.sync(testDir);
+  fs.mkdirSync(testDir, { recursive: true });
 }

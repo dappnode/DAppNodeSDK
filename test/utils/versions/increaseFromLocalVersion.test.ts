@@ -1,11 +1,13 @@
 import { expect } from "chai";
-import fs from "fs";
-import yaml from "js-yaml";
-import { rmSafe } from "../../shellSafe";
 import { increaseFromLocalVersion } from "../../../src/utils/versions/increaseFromLocalVersion";
-import { generateAndWriteCompose } from "../../../src/utils/compose";
-import { Compose } from "../../../src/types";
-import { stringifyManifest } from "../../../src/utils/manifest";
+import {
+  generateCompose,
+  readCompose,
+  writeCompose
+} from "../../../src/utils/compose";
+import { readManifest, writeManifest } from "../../../src/utils/manifest";
+import { cleanTestDir, testDir } from "../../testUtils";
+import { defaultComposeFileName } from "../../../src/params";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -15,10 +17,12 @@ import { stringifyManifest } from "../../../src/utils/manifest";
 // - modify the existing manifest and increase its version
 // - generate a docker compose with the next version
 
-describe("increaseFromLocalVersion", () => {
-  const ensName = "admin.dnp.dappnode.eth";
+describe("increaseFromLocalVersion", function () {
+  this.timeout(60 * 1000);
+
+  const dnpName = "admin.dnp.dappnode.eth";
   const manifest = {
-    name: ensName,
+    name: dnpName,
     version: "0.1.0",
     avatar: "/ipfs/QmUG9Y13BvmKC4RzFu85F7Ai63emnEYrci4pqbbLxt3mt1",
     type: "dncore",
@@ -29,23 +33,18 @@ describe("increaseFromLocalVersion", () => {
       restart: "always"
     }
   };
-  const manifestPath = "./dappnode_package.json";
-  const compose_file_name = 'docker-compose.yml';
-  const composePath = `./${compose_file_name}`;
-  const dir = "./";
 
-  before(async () => {
-    await rmSafe(manifestPath);
-    await rmSafe(composePath);
-    fs.writeFileSync(manifestPath, stringifyManifest(manifest));
-    generateAndWriteCompose(compose_file_name, dir, manifest);
-  });
+  before("Clean testDir", () => cleanTestDir());
+  after("Clean testDir", () => cleanTestDir());
 
   it("Should get the last version from APM", async () => {
+    writeManifest(manifest, { dir: testDir });
+    writeCompose(generateCompose(manifest), { dir: testDir });
+
     const nextVersion = await increaseFromLocalVersion({
       type: "patch",
-      compose_file_name,
-      dir
+      compose_file_name: defaultComposeFileName,
+      dir: testDir
     });
 
     // Check that the console output contains a valid semver version
@@ -55,23 +54,16 @@ describe("increaseFromLocalVersion", () => {
     );
 
     // Check that the compose was edited correctly to the next version
-    const composeString = fs.readFileSync(composePath, "utf8");
-    const compose = yaml.safeLoad(composeString) as Compose;
-    expect(compose.services[ensName].image).to.equal(
+    const compose = readCompose({ dir: testDir });
+    expect(compose.services[dnpName].image).to.equal(
       "admin.dnp.dappnode.eth:0.1.1",
       "compose should be edited to the next version"
     );
     // Check that the manifest was edited correctly to the next version
-    const newManifestString = fs.readFileSync(manifestPath, "utf8");
-    const newManifest = JSON.parse(newManifestString);
+    const newManifest = readManifest({ dir: testDir });
     expect(newManifest.version).to.equal(
       "0.1.1",
       "manifest should be edited to the next version"
     );
-  }).timeout(60 * 1000);
-
-  after(async () => {
-    await rmSafe(manifestPath);
-    await rmSafe(composePath);
   });
 });

@@ -1,8 +1,7 @@
 import { expect } from "chai";
-import fs from "fs";
 import { generatePublishTx } from "../../src/tasks/generatePublishTx";
-import { stringifyManifest } from "../../src/utils/manifest";
-import { rmSafe, mkdirSafe } from "../shellSafe";
+import { writeManifest } from "../../src/utils/manifest";
+import { testDir, cleanTestDir } from "../testUtils";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -11,27 +10,21 @@ import { rmSafe, mkdirSafe } from "../shellSafe";
 // Then it will expect the function to generate transaction data
 // and output it to the console and to ./dnp_0.0.0/deploy.txt
 
-describe("generatePublishTx", () => {
-  const manifestPath = "./dappnode_package.json";
-  const buildDir = "dnp_0.0.0";
-  const compose_file_name = 'docker-compose.yml';
+describe("generatePublishTx", function () {
+  this.timeout(60 * 1000);
 
-  before(async () => {
-    await rmSafe(manifestPath);
-    await rmSafe(buildDir);
-    await mkdirSafe(buildDir);
-  });
+  before("Clean testDir", () => cleanTestDir());
+  after("Clean testDir", () => cleanTestDir());
 
-  it("Should generate a publish TX", async () => {
+  it("Should generate a publish TX", async function () {
     const manifest = {
       name: "admin.dnp.dappnode.eth",
       version: "0.1.0"
     };
-    fs.writeFileSync(manifestPath, stringifyManifest(manifest));
+    writeManifest(manifest, { dir: testDir });
 
     const generatePublishTxTasks = generatePublishTx({
-      compose_file_name,
-      dir: "./",
+      dir: testDir,
       releaseMultiHash: "/ipfs/Qm",
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
@@ -53,18 +46,17 @@ describe("generatePublishTx", () => {
     });
     // I am not sure if the Data property will be the same
     expect(txData.data).to.be.a("string");
-  }).timeout(60 * 1000);
+  });
 
-  it("Should generate a publish TX", async () => {
+  it("Should generate a publish TX", async function () {
     const manifest = {
       name: "new-repo.dnp.dappnode.eth",
       version: "0.1.0"
     };
-    fs.writeFileSync(manifestPath, stringifyManifest(manifest));
+    writeManifest(manifest, { dir: testDir });
 
     const generatePublishTxTasks = generatePublishTx({
-      compose_file_name,
-      dir: "./",
+      dir: testDir,
       releaseMultiHash: "/ipfs/Qm",
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
@@ -86,10 +78,5 @@ describe("generatePublishTx", () => {
     });
     // I am not sure if the Data property will be the same
     expect(txData.data).to.be.a("string");
-  }).timeout(60 * 1000);
-
-  after(async () => {
-    await rmSafe(manifestPath);
-    await rmSafe(buildDir);
   });
 });
