@@ -84,7 +84,7 @@ export function generateCompose(manifest: Manifest): Compose {
   const ensName = manifest.name.replace("/", "_").replace("@", "");
 
   const service: ComposeService = {
-    build: "./build",
+    build: ".",
     image: manifest.name + ":" + manifest.version
   };
 
