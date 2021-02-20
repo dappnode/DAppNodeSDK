@@ -3,7 +3,6 @@ import path from "path";
 import Listr from "listr";
 import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
 import { getGitHead } from "../utils/git";
-import { getRepoSlugFromManifest } from "../utils/manifest";
 import { contentHashFile, defaultDir } from "../params";
 import {
   TxData,

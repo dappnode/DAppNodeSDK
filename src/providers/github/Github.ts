@@ -6,9 +6,9 @@ import { Octokit } from "@octokit/rest";
 import { getRepoSlugFromManifest } from "../../utils/manifest";
 
 export class Github {
-  octokit: Octokit;
-  owner: string;
-  repo: string;
+  private octokit: Octokit;
+  private owner: string;
+  private repo: string;
 
   constructor({ owner, repo }: { owner: string; repo: string }) {
     this.owner = owner;
@@ -24,9 +24,9 @@ export class Github {
 
   static fromLocal(dir: string): Github {
     const repoSlug =
-      getRepoSlugFromManifest({ dir }) ||
+      process.env.GITHUB_REPOSITORY ||
       process.env.TRAVIS_REPO_SLUG ||
-      process.env.GITHUB_REPOSITORY;
+      getRepoSlugFromManifest({ dir });
 
     if (!repoSlug)
       throw Error(
@@ -39,6 +39,10 @@ export class Github {
     if (!repo) throw Error(`repoSlug "${repoSlug}" hasn't a repo`);
 
     return new Github({ owner, repo });
+  }
+
+  get repoSlug(): string {
+    return `${this.owner}/${this.repo}`;
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
