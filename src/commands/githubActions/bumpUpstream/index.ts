@@ -142,21 +142,28 @@ Compose - ${JSON.stringify(compose, null, 2)}
       writeManifest(manifest, { dir });
       writeCompose(compose, { dir });
 
-      const commitMessage = `bump ${versionsToUpdate
+      const commitMsg = `bump ${versionsToUpdate
         .map(({ repoSlug, newVersion }) => `${repoSlug} to ${newVersion}`)
-        .join(", and ")}`;
-      console.log(`commitMessage: ${commitMessage}`);
+        .join(", ")}`;
+      console.log(`commitMsg: ${commitMsg}`);
+
+      console.log(await shell(`cat dappnode_package.json`));
+      console.log(await shell(`cat docker-compose.yml`));
 
       if (!process.env.SKIP_COMMIT) {
-        await shell(["git", "config", "user.name", userName]);
-        await shell(["git", "config", "user.email", userEmail]);
-        await shell(["git", "checkout", "-b", branch]);
-        await shell(["git", "commit", "-a", "-m", commitMessage]);
-        await shell(["git", "push", "-u", "origin", branchRef]);
+        await shell(`git config user.name ${userName}`);
+        await shell(`git config user.email ${userEmail}`);
+        await shell(`git checkout -b ${branch}`);
+
+        // Check if there are changes
+        console.log(await shell(`git status`));
+
+        await shell(`git commit -a -m "${commitMsg}"`, { pipeToMain: true });
+        await shell(`git push -u origin ${branchRef}`, { pipeToMain: true });
         await thisRepo.openPR({
           from: branch,
           to: repoData.data.default_branch,
-          title: commitMessage,
+          title: commitMsg,
           body: getPrBody(versionsToUpdate)
         });
       }
