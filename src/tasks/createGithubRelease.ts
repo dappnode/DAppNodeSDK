@@ -29,21 +29,7 @@ export function createGithubRelease({
   if (!process.env.GITHUB_TOKEN)
     throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
 
-  const github = new Github(dir);
-
-  // Gather repo data, repoSlug = "dappnode/DNP_ADMIN"
-  const repoSlug =
-    getRepoSlugFromManifest(dir) ||
-    process.env.TRAVIS_REPO_SLUG ||
-    process.env.GITHUB_REPOSITORY ||
-    "";
-  const [owner, repo] = repoSlug.split("/");
-  if (!repoSlug)
-    throw Error(
-      "manifest.repository must be properly defined to create a Github release"
-    );
-  if (!owner) throw Error(`repoSlug "${repoSlug}" hasn't an owner`);
-  if (!repo) throw Error(`repoSlug "${repoSlug}" hasn't a repo`);
+  const github = Github.fromLocal(dir);
 
   const isCi = process.env.CI;
   const triggerTag = process.env.GITHUB_REF || process.env.TRAVIS_TAG;

@@ -42,7 +42,7 @@ export async function gaBuildHandler({
   const ref = parseRef(refString);
 
   // Connect to Github Octokit REST API and post or edit a comment on PR
-  const github = new Github(dir);
+  const github = Github.fromLocal(dir);
 
   // Clean pins that were added from past runs.
   // Doing it here prevents having to add two workflows per repo.

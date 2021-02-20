@@ -16,7 +16,7 @@ export async function cleanPinsFromDeletedBranches({
   const manifest = readManifest({ dir });
 
   // Connect to Github Octokit REST API to know existing branches
-  const github = new Github(dir);
+  const github = Github.fromLocal(dir);
   const branches = await github.listBranches();
 
   // Fetch Pinata credentials from ENVs
