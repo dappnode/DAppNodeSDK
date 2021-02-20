@@ -39,9 +39,7 @@ export async function shell(
     const proc = exec(cmdStr, { timeout, maxBuffer }, (err, stdout, stderr) => {
       if (err) {
         // Rethrow a typed error, and ignore the internal NodeJS stack trace
-        if (err.signal === "SIGTERM")
-          reject(new ShellError(err, `cmd timeout ${timeout}: ${cmd}`));
-        else reject(new ShellError(err));
+        reject(new ShellError(err, { stdout, stderr, cmd: cmdStr }));
       } else {
         resolve(stdout.trim() || stderr);
       }
@@ -63,23 +61,29 @@ export async function shell(
  * Typed error implementing the native node child exception error
  * Can be rethrow to ignore the internal NodeJS stack trace
  */
-export class ShellError extends Error implements ExecException {
+export class ShellError extends Error {
   cmd?: string;
   killed?: boolean;
   code?: number;
   signal?: NodeJS.Signals;
-  stdout?: string;
-  stderr?: string;
+  stdout: string;
+  stderr: string;
   constructor(
-    e: ExecException & { stdout?: string; stderr?: string },
-    message?: string
+    e: ExecException,
+    { cmd, stdout, stderr }: { cmd: string; stdout: string; stderr: string }
   ) {
-    super(message || e.message);
-    this.cmd = e.cmd;
+    const msg = [
+      e.signal === "SIGTERM" ? `TIMEOUT: ${e.message}` : e.message,
+      `stdout: ${stdout}`,
+      `stderr: ${stderr}`
+    ].join("\n");
+    super(msg);
+
+    this.cmd = cmd;
     this.killed = e.killed;
     this.code = e.code;
     this.signal = e.signal;
-    this.stdout = e.stdout;
-    this.stderr = e.stderr;
+    this.stdout = stdout;
+    this.stderr = stderr;
   }
 }
