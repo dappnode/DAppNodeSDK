@@ -15,6 +15,7 @@ dist-ncc
 /build_*
 dappnode_package*.json
 docker-compose.yml
+Dockerfile
 test-avatar.png
 avatar.png
 releases.json
