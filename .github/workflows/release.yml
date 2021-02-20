@@ -72,7 +72,7 @@ jobs:
           release_name: Release ${{ needs.tag.outputs.tag }}
 
       - name: Publish to npm registry
-        run: yarn run publish
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
