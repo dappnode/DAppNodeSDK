@@ -19,7 +19,7 @@ const defaultMaxBuffer = 1e7; // bytes
  * - Flags may not be passed properly
  */
 export async function shell(
-  cmd: string,
+  cmd: string | string[],
   options?: {
     timeout?: number;
     maxBuffer?: number;
@@ -35,7 +35,8 @@ export async function shell(
   } = options || {};
 
   return new Promise((resolve, reject): void => {
-    const proc = exec(cmd, { timeout, maxBuffer }, (err, stdout, stderr) => {
+    const cmdStr = Array.isArray(cmd) ? cmd.join(" ") : cmd;
+    const proc = exec(cmdStr, { timeout, maxBuffer }, (err, stdout, stderr) => {
       if (err) {
         // Rethrow a typed error, and ignore the internal NodeJS stack trace
         if (err.signal === "SIGTERM")
