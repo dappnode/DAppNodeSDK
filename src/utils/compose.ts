@@ -151,25 +151,3 @@ export function parseComposeUpstreamVersion(
         .map(({ name, version }) => (name ? `${name}: ${version}` : version))
         .join(", ");
 }
-
-interface LocalUpstreamVersion {
-  serviceName: string;
-  currentVersion: string;
-}
-
-export function findLocalUpstreamVersion(
-  upstreamVariableName: string,
-  compose: Compose
-): LocalUpstreamVersion {
-  const matches: LocalUpstreamVersion[] = [];
-  for (const [serviceName, service] of Object.entries(compose.services))
-    if (typeof service.build === "object" && service.build.args)
-      for (const [argName, argValue] of Object.entries(service.build.args))
-        if (argName === upstreamVariableName)
-          matches.push({ serviceName, currentVersion: argValue });
-
-  // Tolerate more than one match, it will converge to the same value
-  if (matches.length === 0)
-    throw Error(`No compose build arg found for name ${upstreamVariableName}`);
-  else return matches[0];
-}

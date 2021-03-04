@@ -1,17 +1,14 @@
 import { CommandModule } from "yargs";
-import { CliGlobalOptions, ComposeServiceBuild } from "../../../types";
+import { CliGlobalOptions } from "../../../types";
 import { defaultDir } from "../../../params";
 import { Github } from "../../../providers/github/Github";
 import { getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format";
 import { shell } from "../../../utils/shell";
 import { readManifest, writeManifest } from "../../../utils/manifest";
-import {
-  findLocalUpstreamVersion,
-  readCompose,
-  writeCompose
-} from "../../../utils/compose";
+import { readCompose, writeCompose } from "../../../utils/compose";
 import { parseCsv } from "../../../utils/csv";
 import { getLocalBranchExists } from "../../../utils/git";
+import { arrIsUnique } from "../../../utils/array";
 
 const branchNameRoot = "dappnodebot/bump-upstream/";
 
@@ -66,35 +63,32 @@ Compose - ${JSON.stringify(compose, null, 2)}
     );
   }
 
-  const upstreamRepoVersions: {
-    repo: string;
-    repoSlug: string;
-    newVersion: string;
-    argName: string;
-  }[] = [];
-  for (let i = 0; i < upstreamRepos.length; i++) {
+  if (!arrIsUnique(upstreamRepos)) throw Error("upstreamRepos not unique");
+  if (!arrIsUnique(upstreamArgs)) throw Error("upstreamArgs not unique");
+
+  type UpstreamRepo = { repo: string; repoSlug: string; newVersion: string };
+  // index by argName, must be unique
+  const upstreamRepoVersions = new Map<string, UpstreamRepo>();
+
+  for (const [i, repoSlug] of upstreamRepos.entries()) {
     // Fetch latest version
-    const repoSlug = upstreamRepos[i];
     const [owner, repo] = repoSlug.split("/");
     const upstreamRepo = new Github({ owner, repo });
     const releases = await upstreamRepo.listReleases();
     const latestRelease = releases[0];
     if (!latestRelease) throw Error(`No release found for ${repoSlug}`);
-    upstreamRepoVersions.push({
-      repo,
-      repoSlug,
-      newVersion: latestRelease.tag_name,
-      argName: upstreamArgs[i]
-    });
-    console.log(
-      `Fetch latest version(s) - ${repoSlug}: ${latestRelease.tag_name}`
-    );
+
+    const argName = upstreamArgs[i];
+    const newVersion = latestRelease.tag_name;
+    upstreamRepoVersions.set(argName, { repo, repoSlug, newVersion });
+
+    console.log(`Fetch latest version(s) - ${repoSlug}: ${newVersion}`);
   }
 
   // Compute branch name
   const branch =
     branchNameRoot +
-    upstreamRepoVersions
+    Array.from(upstreamRepoVersions.values())
       .map(({ repo, newVersion }) => `${repo}@${newVersion}`)
       .join(",");
   const branchRef = `refs/heads/${branch}`;
@@ -108,67 +102,75 @@ Compose - ${JSON.stringify(compose, null, 2)}
 
   if (branchExists) {
     console.log(`Branch ${branch} already exists`);
+    return;
     // TODO, do some checking
-  } else {
-    const versionsToUpdate: VersionToUpdate[] = [];
-    for (const { argName, repoSlug, newVersion } of upstreamRepoVersions) {
-      const { serviceName, currentVersion } = findLocalUpstreamVersion(
-        argName,
-        compose
-      );
-      console.log(
-        `Commit and push changes if any - ${serviceName}.${argName}: ${currentVersion} (${repoSlug})`
-      );
-      if (currentVersion !== newVersion) {
-        const build =
-          typeof compose.services[serviceName].build === "object"
-            ? (compose.services[serviceName].build as ComposeServiceBuild)
-            : {};
+  }
+
+  // index by repoSlug, must be unique
+  const versionsToUpdateMap = new Map<string, VersionToUpdate>();
+
+  for (const [serviceName, service] of Object.entries(compose.services))
+    if (typeof service.build === "object" && service.build.args)
+      for (const [argName, argValue] of Object.entries(service.build.args)) {
+        const upstreamRepoVersion = upstreamRepoVersions.get(argName);
+        if (!upstreamRepoVersion) continue;
+
+        const currentVersion = argValue;
+        const { repoSlug, newVersion } = upstreamRepoVersion;
+        if (currentVersion === newVersion) continue;
 
         // Update current version
         compose.services[serviceName].build = {
-          ...build,
+          ...service.build,
           args: {
-            ...build.args,
+            ...service.build.args,
             [argName]: newVersion
           }
         };
-        versionsToUpdate.push({ repoSlug, newVersion, currentVersion });
-      }
-    }
-
-    if (versionsToUpdate.length > 0) {
-      manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
-      writeManifest(manifest, { dir });
-      writeCompose(compose, { dir });
-
-      const commitMsg = `bump ${versionsToUpdate
-        .map(({ repoSlug, newVersion }) => `${repoSlug} to ${newVersion}`)
-        .join(", ")}`;
-      console.log(`commitMsg: ${commitMsg}`);
-
-      console.log(await shell(`cat dappnode_package.json`));
-      console.log(await shell(`cat docker-compose.yml`));
-
-      if (!process.env.SKIP_COMMIT) {
-        await shell(`git config user.name ${userName}`);
-        await shell(`git config user.email ${userEmail}`);
-        await shell(`git checkout -b ${branch}`);
-
-        // Check if there are changes
-        console.log(await shell(`git status`));
-
-        await shell(`git commit -a -m "${commitMsg}"`, { pipeToMain: true });
-        await shell(`git push -u origin ${branchRef}`, { pipeToMain: true });
-        await thisRepo.openPR({
-          from: branch,
-          to: repoData.data.default_branch,
-          title: commitMsg,
-          body: getPrBody(versionsToUpdate)
+        // Use a Map since there may be multiple matches for the same argName
+        versionsToUpdateMap.set(repoSlug, {
+          repoSlug,
+          newVersion,
+          currentVersion
         });
       }
-    } else {
-      console.log("All versions are up-to-date");
-    }
+
+  if (versionsToUpdateMap.size == 0) {
+    console.log("All versions are up-to-date");
+    return;
   }
+
+  const versionsToUpdate = Array.from(versionsToUpdateMap.values());
+  manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
+  writeManifest(manifest, { dir });
+  writeCompose(compose, { dir });
+
+  const commitMsg = `bump ${versionsToUpdate
+    .map(({ repoSlug, newVersion }) => `${repoSlug} to ${newVersion}`)
+    .join(", ")}`;
+  console.log(`commitMsg: ${commitMsg}`);
+
+  console.log(await shell(`cat dappnode_package.json`));
+  console.log(await shell(`cat docker-compose.yml`));
+
+  if (process.env.SKIP_COMMIT) {
+    console.log("SKIP_COMMIT=true");
+    return;
+  }
+
+  await shell(`git config user.name ${userName}`);
+  await shell(`git config user.email ${userEmail}`);
+  await shell(`git checkout -b ${branch}`);
+
+  // Check if there are changes
+  console.log(await shell(`git status`));
+
+  await shell(`git commit -a -m "${commitMsg}"`, { pipeToMain: true });
+  await shell(`git push -u origin ${branchRef}`, { pipeToMain: true });
+  await thisRepo.openPR({
+    from: branch,
+    to: repoData.data.default_branch,
+    title: commitMsg,
+    body: getPrBody(versionsToUpdate)
+  });
 }
