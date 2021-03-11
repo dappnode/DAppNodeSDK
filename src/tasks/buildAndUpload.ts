@@ -176,7 +176,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
         // Copy all other release files
         for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
-          switch (fileId) {
+          switch (fileId as keyof typeof releaseFiles) {
             case "manifest":
             case "compose":
               continue; // Hanlded above

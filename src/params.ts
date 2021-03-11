@@ -1,4 +1,4 @@
-import { Architecture } from "./types";
+import { Architecture, FileFormat } from "./types";
 
 export class CliError extends Error {}
 export class YargsError extends Error {}
@@ -21,92 +21,83 @@ export const PINATA_URL = "https://api.pinata.cloud";
  */
 export const contentHashFile = "content-hash";
 
-// Declare true as true for conditional static types to work
-const TRUE: true = true as const;
-const FALSE: false = false as const;
-const FORMAT = {
-  JSON: "JSON" as const,
-  YAML: "YAML" as const,
-  TEXT: "TEXT" as const
-};
-
 export const releaseFiles = {
   manifest: {
     regex: /dappnode_package.*\.json$/,
-    format: FORMAT.JSON,
+    format: FileFormat.YAML,
     maxSize: 100e3, // Limit size to ~100KB
-    required: TRUE,
-    multiple: FALSE
+    required: true as const,
+    multiple: false as const
   },
   compose: {
     regex: /compose.*\.yml$/,
-    format: FORMAT.YAML,
+    format: FileFormat.YAML,
     maxSize: 10e3, // Limit size to ~10KB
-    required: TRUE,
-    multiple: FALSE
+    required: true as const,
+    multiple: false as const
   },
   avatar: {
     regex: /avatar.*\.png$/,
     format: null,
     maxSize: 100e3,
-    required: TRUE,
-    multiple: FALSE
+    required: true as const,
+    multiple: false as const
   },
   setupWizard: {
     regex: /setup-wizard\..*(json|yaml|yml)$/,
-    format: FORMAT.YAML,
+    format: FileFormat.YAML,
     maxSize: 100e3,
-    required: FALSE,
-    multiple: FALSE
+    required: false as const,
+    multiple: false as const
   },
   setupSchema: {
     regex: /setup\..*\.json$/,
-    format: FORMAT.JSON,
+    format: FileFormat.JSON,
     maxSize: 10e3,
-    required: FALSE,
-    multiple: FALSE
+    required: false as const,
+    multiple: false as const
   },
   setupTarget: {
     regex: /setup-target\..*json$/,
-    format: FORMAT.JSON,
+    format: FileFormat.JSON,
     maxSize: 10e3,
-    required: FALSE,
-    multiple: FALSE
+    required: false as const,
+    multiple: false as const
   },
   setupUiJson: {
     regex: /setup-ui\..*json$/,
-    format: FORMAT.JSON,
+    format: FileFormat.JSON,
     maxSize: 10e3,
-    required: FALSE,
-    multiple: FALSE
+    required: false as const,
+    multiple: false as const
   },
   disclaimer: {
     regex: /disclaimer\.md$/i,
-    format: FORMAT.TEXT,
+    format: FileFormat.TEXT,
     maxSize: 100e3,
-    required: FALSE,
-    multiple: FALSE
+    required: false as const,
+    multiple: false as const
   },
   gettingStarted: {
     regex: /getting.*started\.md$/i,
-    format: FORMAT.TEXT,
+    format: FileFormat.TEXT,
     maxSize: 100e3,
-    required: FALSE,
-    multiple: FALSE
+    required: false as const,
+    multiple: false as const
   },
   prometheusTargets: {
     regex: /.*prometheus-targets.(json|yaml|yml)$/,
-    format: FORMAT.YAML,
+    format: FileFormat.YAML,
     maxSize: 10e3,
-    required: FALSE,
-    multiple: FALSE
+    required: false as const,
+    multiple: false as const
   },
   grafanaDashboards: {
     regex: /.*grafana-dashboard.json$/,
-    format: FORMAT.JSON,
+    format: FileFormat.JSON,
     maxSize: 10e6, // ~ 10MB
-    required: FALSE,
-    multiple: TRUE
+    required: false as const,
+    multiple: true as const
   }
 };
 
