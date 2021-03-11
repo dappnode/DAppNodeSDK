@@ -18,6 +18,12 @@ export interface ListrContextBuildAndPublish {
 
 // Interal types
 
+export enum FileFormat {
+  JSON = "JSON",
+  YAML = "YAML",
+  TEXT = "TEXT"
+}
+
 export type Architecture = "linux/amd64" | "linux/arm64";
 export const architectures: Architecture[] = ["linux/amd64", "linux/arm64"];
 export const defaultArch = "linux/amd64";
@@ -79,6 +85,8 @@ export interface Manifest {
     [linkName: string]: string | undefined;
   };
   architectures?: Architecture[];
+  // Extra injected props
+  setupWizard?: Record<string, string>;
 }
 
 export interface ComposeVolumes {

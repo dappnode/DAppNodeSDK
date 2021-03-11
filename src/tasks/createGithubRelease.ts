@@ -3,6 +3,7 @@ import path from "path";
 import Listr from "listr";
 import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
 import { getGitHead } from "../utils/git";
+import { compactManifestIfCore } from "../utils/compactManifest";
 import { contentHashFile, defaultDir } from "../params";
 import {
   TxData,
@@ -95,6 +96,11 @@ export function createGithubRelease({
           // to install an eth client when the user does not want to use a remote node
           const contentHashPath = path.join(buildDir, contentHashFile);
           fs.writeFileSync(contentHashPath, releaseMultiHash);
+
+          // Add setup-wizard file to the manifest since packages distributed on install
+          // only include their manifest and compose.
+          // TODO: Track issue for a better solution https://github.com/dappnode/DNP_DAPPMANAGER/issues/570
+          compactManifestIfCore(buildDir);
 
           task.output = `Creating release for tag ${tag}...`;
           await github.createReleaseAndUploadAssets(tag, {
