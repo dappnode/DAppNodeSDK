@@ -273,6 +273,41 @@
         }
       }
     },
+    "exposable": {
+      "type": "array",
+      "description": "Exposable services safe to be in the public internet",
+      "items": {
+        "type": "object",
+        "description": "Single exposable service item",
+        "required": ["name", "port"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Short human readable name of this exposable service",
+            "examples": ["Geth JSON RPC"],
+            "minLength": 1,
+            "errorMessage": "should be an non-empty string"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of this exposable service",
+            "examples": ["JSON RPC endpoint for Geth mainnet"]
+          },
+          "serviceName": {
+            "type": "string",
+            "description": "Docker compose service this exposable service belongs to. Defaults to the first service.",
+            "examples": ["beacon_chain"],
+            "minLength": 1,
+            "errorMessage": "should be an non-empty string"
+          },
+          "port": {
+            "type": "number",
+            "description": "Port this exposable service listens to",
+            "examples": [80, 5001, 8545]
+          }
+        }
+      }
+    },
     "author": {
       "type": "string",
       "description": "Main author of this DAppNode Package. Must follow the structure `${name} <${email}> (${githubUserLink})`.",
