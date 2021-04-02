@@ -41,9 +41,6 @@ export async function gaBuildHandler({
   const { eventName, sha: commitSha, ref: refString } = getGithubContext();
   const ref = parseRef(refString);
 
-  // Connect to Github Octokit REST API and post or edit a comment on PR
-  const github = Github.fromLocal(dir);
-
   // Clean pins that were added from past runs.
   // Doing it here prevents having to add two workflows per repo.
   // Also, ensures that pins are deleted eventually, even if this fails sometimes
@@ -61,33 +58,12 @@ export async function gaBuildHandler({
     ref.branch !== "master" &&
     ref.branch !== "main"
   ) {
-    const { releaseMultiHash } = await buildHandler({
-      provider: "pinata",
-      upload_to: "ipfs",
-      require_git_data: true,
-      delete_old_pins: true,
-      verbose: true
+    await buildAndComment({
+      dir,
+      commitSha,
+      branch: ref.branch
     });
-
-    const body = getBuildBotComment({ commitSha, releaseMultiHash });
-    console.log(`Build bot comment: \n\n${body}`);
-
-    const prs = await github.getOpenPrsFromBranch({ branch: ref.branch });
-    console.log(
-      `Repo: ${github.repoSlug}`,
-      `Branch ${ref.branch}`,
-      `PRs: ${prs.map(pr => pr.number).join(", ")}`
-    );
-
-    await Promise.all(
-      prs.map(pr =>
-        github.commentToPr({ number: pr.number, body, isTargetComment })
-      )
-    );
-    return; // done
-  }
-
-  if (eventName === "push" || eventName === "pull_request") {
+  } else if (eventName === "push" || eventName === "pull_request") {
     // Consider that for 'pull_request' commitSha does not represent a known commit
     // The incoming branch is merged into the target branch and the resulting
     // new commit is tested. gitHead() will return 'HEAD' for branch and a foreign commit
@@ -106,4 +82,41 @@ export async function gaBuildHandler({
   } else {
     throw Error(`Unsupported event ${eventName}`);
   }
+}
+
+export async function buildAndComment({
+  dir,
+  commitSha,
+  branch
+}: {
+  dir: string;
+  commitSha: string;
+  branch: string;
+}): Promise<void> {
+  // Connect to Github Octokit REST API and post or edit a comment on PR
+  const github = Github.fromLocal(dir);
+
+  const { releaseMultiHash } = await buildHandler({
+    provider: "pinata",
+    upload_to: "ipfs",
+    require_git_data: true,
+    delete_old_pins: true,
+    verbose: true
+  });
+
+  const body = getBuildBotComment({ commitSha, releaseMultiHash });
+  console.log(`Build bot comment: \n\n${body}`);
+
+  const prs = await github.getOpenPrsFromBranch({ branch });
+  console.log(`
+    Repo: ${github.repoSlug}
+    Branch ${branch}
+    PRs: ${prs.map(pr => pr.number).join(", ")}
+  `);
+
+  await Promise.all(
+    prs.map(pr =>
+      github.commentToPr({ number: pr.number, body, isTargetComment })
+    )
+  );
 }
