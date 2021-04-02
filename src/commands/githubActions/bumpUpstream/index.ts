@@ -7,8 +7,9 @@ import { shell } from "../../../utils/shell";
 import { readManifest, writeManifest } from "../../../utils/manifest";
 import { readCompose, writeCompose } from "../../../utils/compose";
 import { parseCsv } from "../../../utils/csv";
-import { getLocalBranchExists } from "../../../utils/git";
+import { getLocalBranchExists, getGitHead } from "../../../utils/git";
 import { arrIsUnique } from "../../../utils/array";
+import { buildAndComment } from "../build";
 
 const branchNameRoot = "dappnodebot/bump-upstream/";
 
@@ -173,4 +174,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
     title: commitMsg,
     body: getPrBody(versionsToUpdate)
   });
+
+  const gitHead = await getGitHead();
+  await buildAndComment({ dir, commitSha: gitHead.commit, branch });
 }
