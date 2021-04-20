@@ -215,8 +215,13 @@ Compose - ${JSON.stringify(compose, null, 2)}
             throw e;
           }
         }
-
-        console.log(await shell(`git checkout -b ${branchToDelete.name}`));
+        // Remove the old branch
+        try {
+          console.log(await shell(`git checkout -b ${branchToDelete.name}`));
+        } catch (e) {
+          e.message = `Error Removing the branch: ${e.message}`;
+          throw e;
+        }
       }
     } catch (e) {
       e.message = `Error deleting the branch: ${e.message}`;
