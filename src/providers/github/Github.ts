@@ -364,4 +364,22 @@ export class Github {
       else throw e;
     }
   }
+
+  /**
+   * Close a PR
+   */
+
+  async closePR(pull_number: number): Promise<void> {
+    try {
+      this.octokit.pulls.update({
+        owner: this.owner,
+        repo: this.repo,
+        pull_number,
+        state: "closed"
+      });
+    } catch (e) {
+      e.message = `Error closing PR: ${e.message}`;
+      throw e;
+    }
+  }
 }
