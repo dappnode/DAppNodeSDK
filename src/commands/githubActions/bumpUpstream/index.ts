@@ -175,6 +175,55 @@ Compose - ${JSON.stringify(compose, null, 2)}
     body: getPrBody(versionsToUpdate)
   });
 
+  // get the list of branches of the repo
+  const allBranches = await thisRepo.listBranches();
+
+  // to obtain the url and other info of the new PR
+  const newPr = await thisRepo.getOpenPrsFromBranch({ branch });
+  const newPrUrl = newPr[0].html_url; // get the link of the new PR
+
+  const bodyComment = `Closing for newer version for ${newPrUrl}`;
+
+  // iterate the branches
+
+  for (const branchToDelete of allBranches) {
+    //check if there is any branch different to the new one and we collect the PR asociated too.
+    try {
+      if (
+        // we filter the names: begin with prefix and the name of the last branch, the rest are old
+        branchToDelete.name.startsWith(branchNameRoot) &&
+        branchToDelete.name != branch
+      ) {
+        // obtain the pr's from the branch name
+        const allPullRequests = await thisRepo.getOpenPrsFromBranch({
+          branch: branchToDelete.name
+        });
+
+        // Iterate the PR's, comment them and close them
+
+        for (const pr of allPullRequests) {
+          try {
+            // Comment the PR and close it
+            const number = pr.number;
+            await thisRepo.commentPullRequest({
+              number: number,
+              body: bodyComment
+            });
+            await thisRepo.closePR(number);
+          } catch (e) {
+            e.message = `Error Commenting and closing the PR: ${e.message}`;
+            throw e;
+          }
+        }
+
+        console.log(await shell(`git checkout -b ${branchToDelete.name}`));
+      }
+    } catch (e) {
+      e.message = `Error deleting the branch: ${e.message}`;
+      throw e;
+    }
+  }
+
   const gitHead = await getGitHead();
   await buildAndComment({ dir, commitSha: gitHead.commit, branch });
 }
