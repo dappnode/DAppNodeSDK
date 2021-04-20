@@ -212,16 +212,11 @@ Compose - ${JSON.stringify(compose, null, 2)}
             await thisRepo.closePR(number);
           } catch (e) {
             e.message = `Error Commenting and closing the PR: ${e.message}`;
-            throw e;
           }
         }
+
         // Remove the old branch
-        try {
-          console.log(await shell(`git checkout -b ${branchToDelete.name}`));
-        } catch (e) {
-          e.message = `Error Removing the branch: ${e.message}`;
-          throw e;
-        }
+        console.log(await shell(`git checkout -b ${branchToDelete.name}`));
       }
     } catch (e) {
       e.message = `Error deleting the branch: ${e.message}`;
