@@ -15,6 +15,7 @@ import { defaultComposeFileName, defaultDir, YargsError } from "../params";
 import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
 import { printObject } from "../utils/print";
 import { UploadTo } from "../releaseUploader";
+import { getArchitecture } from "../utils/getArchitecture";
 
 const typesList = releaseTypes.join(" | ");
 
@@ -197,6 +198,9 @@ export async function publishHanlder({
 
   await verifyEthConnection(ethProvider);
 
+  // get the architecture of the machine where is executed the dappnodesdk
+  const hardwareArchitecture = await getArchitecture();
+
   const publishTasks = new Listr(
     [
       // 1. Fetch current version from APM
@@ -235,7 +239,8 @@ export async function publishHanlder({
               uploadTo,
               userTimeout,
               requireGitData,
-              deleteOldPins
+              deleteOldPins,
+              hardwareArchitecture
             }),
             { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
           )
