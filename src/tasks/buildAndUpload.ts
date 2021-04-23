@@ -22,7 +22,7 @@ import {
   getComposePackageImages,
   getComposePath
 } from "../utils/compose";
-import { ListrContextBuildAndPublish } from "../types";
+import { Architecture, ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
 import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
@@ -53,7 +53,8 @@ export function buildAndUpload({
   requireGitData,
   deleteOldPins,
   composeFileName,
-  dir
+  dir,
+  hardwareArchitecture
 }: {
   buildDir: string;
   contentProvider: string;
@@ -65,6 +66,7 @@ export function buildAndUpload({
   deleteOldPins?: boolean;
   composeFileName: string;
   dir: string;
+  hardwareArchitecture: Architecture;
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
@@ -103,10 +105,12 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
   const architectures =
     manifest.architectures && parseArchitectures(manifest.architectures);
+
   const imagePathAmd = path.join(
     buildDir,
-    getImagePath(name, version, "linux/amd64")
+    getImagePath(name, version, hardwareArchitecture)
   );
+
   const imagePathLegacy = path.join(
     buildDir,
     getLegacyImagePath(name, version)
