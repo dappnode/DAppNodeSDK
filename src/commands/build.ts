@@ -5,6 +5,7 @@ import Listr from "listr";
 // Tasks
 import { buildAndUpload } from "../tasks/buildAndUpload";
 // Utils
+import { getArchitecture } from "../utils/getArchitecture";
 import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
 import { getInstallDnpLink } from "../utils/getLinks";
 import { CliGlobalOptions } from "../types";
@@ -94,6 +95,9 @@ export async function buildHandler({
   const nextVersion = getCurrentLocalVersion({ dir });
   const buildDir = path.join(dir, `build_${nextVersion}`);
 
+  // get the architecture of the machine where is executed the dappnodesdk
+  const hardwareArchitecture = await getArchitecture();
+
   const buildTasks = new Listr(
     buildAndUpload({
       dir,
@@ -105,7 +109,8 @@ export async function buildHandler({
       skipUpload,
       composeFileName,
       requireGitData: require_git_data,
-      deleteOldPins: delete_old_pins
+      deleteOldPins: delete_old_pins,
+      hardwareArchitecture
     }),
     { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
   );
