@@ -1,5 +1,4 @@
 import { Architecture } from "../types";
-import { shell } from "./shell";
 import os from "os";
 
 /**
