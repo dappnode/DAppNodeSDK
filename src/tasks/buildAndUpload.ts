@@ -28,6 +28,7 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
+import { getArchitecture } from "../utils/getArchitecture";
 import { getGitHead, getGitHeadIfAvailable } from "../utils/git";
 import { fetchPinsWithBranchToDelete, getPinMetadata } from "../pinStrategy";
 import { PinataPinManager } from "../providers/pinata/pinManager";
@@ -53,8 +54,7 @@ export function buildAndUpload({
   requireGitData,
   deleteOldPins,
   composeFileName,
-  dir,
-  hardwareArchitecture
+  dir
 }: {
   buildDir: string;
   contentProvider: string;
@@ -66,7 +66,6 @@ export function buildAndUpload({
   deleteOldPins?: boolean;
   composeFileName: string;
   dir: string;
-  hardwareArchitecture: Architecture;
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
@@ -105,6 +104,9 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
   const architectures =
     manifest.architectures && parseArchitectures(manifest.architectures);
+
+  // get the architecture of the machine where is executed the dappnodesdk
+  const hardwareArchitecture = getArchitecture();
 
   const imagePathAmd = path.join(
     buildDir,

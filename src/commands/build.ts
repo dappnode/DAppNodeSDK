@@ -95,9 +95,6 @@ export async function buildHandler({
   const nextVersion = getCurrentLocalVersion({ dir });
   const buildDir = path.join(dir, `build_${nextVersion}`);
 
-  // get the architecture of the machine where is executed the dappnodesdk
-  const hardwareArchitecture = await getArchitecture();
-
   const buildTasks = new Listr(
     buildAndUpload({
       dir,
@@ -109,8 +106,7 @@ export async function buildHandler({
       skipUpload,
       composeFileName,
       requireGitData: require_git_data,
-      deleteOldPins: delete_old_pins,
-      hardwareArchitecture
+      deleteOldPins: delete_old_pins
     }),
     { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
   );

@@ -198,9 +198,6 @@ export async function publishHanlder({
 
   await verifyEthConnection(ethProvider);
 
-  // get the architecture of the machine where is executed the dappnodesdk
-  const hardwareArchitecture = await getArchitecture();
-
   const publishTasks = new Listr(
     [
       // 1. Fetch current version from APM
@@ -239,8 +236,7 @@ export async function publishHanlder({
               uploadTo,
               userTimeout,
               requireGitData,
-              deleteOldPins,
-              hardwareArchitecture
+              deleteOldPins
             }),
             { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
           )
