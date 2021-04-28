@@ -28,6 +28,7 @@ import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
 import { parseArchitectures } from "../utils/parseArchitectures";
 import { pruneCache } from "../utils/cache";
+import { getArchitecture } from "../utils/getArchitecture";
 import { getGitHead, getGitHeadIfAvailable } from "../utils/git";
 import { fetchPinsWithBranchToDelete, getPinMetadata } from "../pinStrategy";
 import { PinataPinManager } from "../providers/pinata/pinManager";
@@ -103,10 +104,15 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
   const architectures =
     manifest.architectures && parseArchitectures(manifest.architectures);
+
+  // get the architecture of the machine where is executed the dappnodesdk
+  const hardwareArchitecture = getArchitecture();
+
   const imagePathAmd = path.join(
     buildDir,
-    getImagePath(name, version, "linux/amd64")
+    getImagePath(name, version, hardwareArchitecture)
   );
+
   const imagePathLegacy = path.join(
     buildDir,
     getLegacyImagePath(name, version)
