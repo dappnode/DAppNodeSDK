@@ -5,7 +5,6 @@ import Listr from "listr";
 // Tasks
 import { buildAndUpload } from "../tasks/buildAndUpload";
 // Utils
-import { getArchitecture } from "../utils/getArchitecture";
 import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
 import { getInstallDnpLink } from "../utils/getLinks";
 import { CliGlobalOptions } from "../types";

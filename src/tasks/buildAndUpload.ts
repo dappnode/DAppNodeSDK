@@ -22,7 +22,7 @@ import {
   getComposePackageImages,
   getComposePath
 } from "../utils/compose";
-import { Architecture, ListrContextBuildAndPublish } from "../types";
+import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
 import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";

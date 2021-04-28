@@ -15,7 +15,6 @@ import { defaultComposeFileName, defaultDir, YargsError } from "../params";
 import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
 import { printObject } from "../utils/print";
 import { UploadTo } from "../releaseUploader";
-import { getArchitecture } from "../utils/getArchitecture";
 
 const typesList = releaseTypes.join(" | ");
 
