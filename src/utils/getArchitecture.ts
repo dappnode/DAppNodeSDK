@@ -2,18 +2,16 @@ import { Architecture } from "../types";
 import os from "os";
 
 /**
- * Return what kind of architecture is using the machine where the build is done
+ * Returns the architecture of the host machine doing the build
  */
 export function getArchitecture(): Architecture {
-  const arch = os.arch(); // Returns the operating system CPU architecture for which the Node.js binary was compiled.
+  // Returns the operating system CPU architecture for which the Node.js binary was compiled.
+  const arch = os.arch();
 
-  //check if the machine uses arm64
-  let res: Architecture;
-
+  // TODO: DAppNode Packages are run in Linux-based systems. This solves the edge case when building in ARM
   if (arch === "arm64") {
-    res = `linux/arm64`;
+    return "linux/arm64";
   } else {
-    res = `linux/amd64`;
+    return "linux/amd64";
   }
-  return res;
 }
