@@ -180,6 +180,9 @@ Compose - ${JSON.stringify(compose, null, 2)}
 
   // to obtain the url and other info of the new PR
   const newPr = await thisRepo.getOpenPrsFromBranch({ branch });
+
+  if (!newPr) throw Error(`No PR found for branch ${branch}`);
+
   const newPrUrl = newPr[0].html_url; // get the link of the new PR
 
   const bodyComment = `Closing for newer version for ${newPrUrl}`;
@@ -211,7 +214,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
             });
             await thisRepo.closePR(number);
           } catch (e) {
-            e.message = `Error Commenting and closing the PR: ${e.message}`;
+            console.error(`Error Commenting and closing the PR: ${e.message}`);
           }
         }
 
@@ -221,8 +224,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
         );
       }
     } catch (e) {
-      e.message = `Error deleting the branch: ${e.message}`;
-      throw e;
+      console.error(`Error deleting the branch: ${e.message}`);
     }
   }
 
