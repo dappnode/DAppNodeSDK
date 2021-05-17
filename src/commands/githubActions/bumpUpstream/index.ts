@@ -216,7 +216,9 @@ Compose - ${JSON.stringify(compose, null, 2)}
         }
 
         // Remove the old branch
-        console.log(await shell(`git checkout -b ${branchToDelete.name}`));
+        console.log(
+          await shell(`git push origin --delete ${branchToDelete.name}`)
+        );
       }
     } catch (e) {
       e.message = `Error deleting the branch: ${e.message}`;
