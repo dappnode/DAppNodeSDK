@@ -181,7 +181,10 @@ Compose - ${JSON.stringify(compose, null, 2)}
   // to obtain the url and other info of the new PR
   const newPr = await thisRepo.getOpenPrsFromBranch({ branch });
 
-  if (!newPr) throw Error(`No PR found for branch ${branch}`);
+  //check if it exist this "PR"
+  if (typeof newPr[0] === "undefined") {
+    throw Error(`No PR found for branch ${branch}`);
+  }
 
   const newPrUrl = newPr[0].html_url; // get the link of the new PR
 
