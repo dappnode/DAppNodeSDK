@@ -1,6 +1,6 @@
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types";
-import { defaultDir } from "../../../params";
+import { branchNameRoot, defaultDir } from "../../../params";
 import { Github } from "../../../providers/github/Github";
 import { getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format";
 import { shell } from "../../../utils/shell";
@@ -10,8 +10,7 @@ import { parseCsv } from "../../../utils/csv";
 import { getLocalBranchExists, getGitHead } from "../../../utils/git";
 import { arrIsUnique } from "../../../utils/array";
 import { buildAndComment } from "../build";
-
-const branchNameRoot = "dappnodebot/bump-upstream/";
+import { closeOldPrs } from "./closeOldPrs";
 
 // This action should be run periodically
 
@@ -174,6 +173,12 @@ Compose - ${JSON.stringify(compose, null, 2)}
     title: commitMsg,
     body: getPrBody(versionsToUpdate)
   });
+
+  try {
+    await closeOldPrs(thisRepo, branch);
+  } catch (e) {
+    console.error("Error on closeOldPrs", e);
+  }
 
   const gitHead = await getGitHead();
   await buildAndComment({ dir, commitSha: gitHead.commit, branch });

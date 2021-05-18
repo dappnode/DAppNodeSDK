@@ -287,6 +287,24 @@ export class Github {
   }
 
   /**
+   * Comment a Pull Request
+   */
+  async commentPullRequest({
+    number,
+    body
+  }: {
+    number: number;
+    body: string;
+  }): Promise<void> {
+    await this.octokit.issues.createComment({
+      owner: this.owner,
+      repo: this.repo,
+      issue_number: number,
+      body
+    });
+  }
+
+  /**
    * Returns open PRs where head branch equals `branch`
    * Only branches and PRs originating from the same repo
    */
@@ -344,6 +362,24 @@ export class Github {
     } catch (e) {
       if (e.status === 404) return false;
       else throw e;
+    }
+  }
+
+  /**
+   * Close a PR
+   */
+
+  async closePR(pull_number: number): Promise<void> {
+    try {
+      this.octokit.pulls.update({
+        owner: this.owner,
+        repo: this.repo,
+        pull_number,
+        state: "closed"
+      });
+    } catch (e) {
+      e.message = `Error closing PR: ${e.message}`;
+      throw e;
     }
   }
 }
