@@ -13,7 +13,7 @@ export async function closeOldPrs(
 ): Promise<void> {
   // Get the url of the just opened PR for this branch
   const [newPr] = await thisRepo.getOpenPrsFromBranch({ branch: newBranch });
-  if (typeof newPr === "undefined") {
+  if (newPr === undefined) {
     throw Error(`No PR found for branch ${newBranch}`);
   }
 
