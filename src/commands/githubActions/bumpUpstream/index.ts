@@ -177,7 +177,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
   try {
     await closeOldPrs(thisRepo, branch);
   } catch (e) {
-    console.log("Error on closeOldPrs", e);
+    console.error("Error on closeOldPrs", e);
   }
 
   const gitHead = await getGitHead();
