@@ -3,6 +3,12 @@ import { Architecture, FileFormat } from "./types";
 export class CliError extends Error {}
 export class YargsError extends Error {}
 
+// Github Actions params
+
+export const branchNameRoot = "dappnodebot/bump-upstream/";
+
+// DAppNode params
+
 export const defaultDir = "./";
 export const defaultManifestFileName = "dappnode_package.json";
 export const defaultComposeFileName = "docker-compose.yml";

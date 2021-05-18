@@ -1,6 +1,6 @@
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types";
-import { defaultDir } from "../../../params";
+import { branchNameRoot, defaultDir } from "../../../params";
 import { Github } from "../../../providers/github/Github";
 import { getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format";
 import { shell } from "../../../utils/shell";
@@ -10,8 +10,7 @@ import { parseCsv } from "../../../utils/csv";
 import { getLocalBranchExists, getGitHead } from "../../../utils/git";
 import { arrIsUnique } from "../../../utils/array";
 import { buildAndComment } from "../build";
-
-const branchNameRoot = "dappnodebot/bump-upstream/";
+import { closeOldPrs } from "./closeOldPrs";
 
 // This action should be run periodically
 
@@ -175,60 +174,10 @@ Compose - ${JSON.stringify(compose, null, 2)}
     body: getPrBody(versionsToUpdate)
   });
 
-  // get the list of branches of the repo
-  const allBranches = await thisRepo.listBranches();
-
-  // to obtain the url and other info of the new PR
-  const newPr = await thisRepo.getOpenPrsFromBranch({ branch });
-
-  //check if it exist this "PR"
-  if (typeof newPr[0] === "undefined") {
-    throw Error(`No PR found for branch ${branch}`);
-  }
-
-  const newPrUrl = newPr[0].html_url; // get the link of the new PR
-
-  const bodyComment = `Closing for newer version for ${newPrUrl}`;
-
-  // iterate the branches
-
-  for (const branchToDelete of allBranches) {
-    //check if there is any branch different to the new one and we collect the PR asociated too.
-    try {
-      if (
-        // we filter the names: begin with prefix and the name of the last branch, the rest are old
-        branchToDelete.name.startsWith(branchNameRoot) &&
-        branchToDelete.name != branch
-      ) {
-        // obtain the pr's from the branch name
-        const allPullRequests = await thisRepo.getOpenPrsFromBranch({
-          branch: branchToDelete.name
-        });
-
-        // Iterate the PR's, comment them and close them
-
-        for (const pr of allPullRequests) {
-          try {
-            // Comment the PR and close it
-            const number = pr.number;
-            await thisRepo.commentPullRequest({
-              number: number,
-              body: bodyComment
-            });
-            await thisRepo.closePR(number);
-          } catch (e) {
-            console.error(`Error Commenting and closing the PR: ${e.message}`);
-          }
-        }
-
-        // Remove the old branch
-        console.log(
-          await shell(`git push origin --delete ${branchToDelete.name}`)
-        );
-      }
-    } catch (e) {
-      console.error(`Error deleting the branch: ${e.message}`);
-    }
+  try {
+    await closeOldPrs(thisRepo, branch);
+  } catch (e) {
+    console.log("Error on closeOldPrs", e);
   }
 
   const gitHead = await getGitHead();
