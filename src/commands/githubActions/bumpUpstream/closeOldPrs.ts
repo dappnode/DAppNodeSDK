@@ -35,7 +35,7 @@ export async function closeOldPrs(
             // Comment the PR and close it
             await thisRepo.commentPullRequest({
               number: pr.number,
-              body: `Closing for newer version for ${newPr.html_url}`
+              body: `Newer version available, closing for ${newPr.html_url}`
             });
             await thisRepo.closePR(pr.number);
           } catch (e) {
