@@ -47,7 +47,7 @@ export async function closeOldPrs(
         await shell(`git push origin --delete ${oldBranch}`);
       }
     } catch (e) {
-      console.error(`Error deleting the branch: ${e.message}`);
+      console.error(`Error deleting branch ${oldBranch}`, e);
     }
   }
 }
