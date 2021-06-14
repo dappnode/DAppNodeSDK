@@ -20,7 +20,8 @@ import {
   parseComposeUpstreamVersion,
   updateComposeImageTags,
   getComposePackageImages,
-  getComposePath
+  getComposePath,
+  composeDeleteBuildProperties
 } from "../utils/compose";
 import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
@@ -244,6 +245,10 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
           fs.copyFileSync(imagePathAmd, imagePathLegacy);
 
         const gitHead = await getGitHeadIfAvailable({ requireGitData });
+
+        // Remove `build` property AFTER building. Otherwise it may break ISO installations
+        // https://github.com/dappnode/DAppNode_Installer/issues/161
+        composeDeleteBuildProperties({ dir: buildDir, composeFileName });
 
         ctx.releaseHash = await releaseUploader.addFromFs({
           dirPath: buildDir,
