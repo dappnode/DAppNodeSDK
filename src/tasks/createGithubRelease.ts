@@ -11,12 +11,14 @@ import {
   ListrContextBuildAndPublish
 } from "../types";
 import { Github } from "../providers/github/Github";
+import { composeDeleteBuildProperties } from "../utils/compose";
 
 /**
  * Create (or edit) a Github release, then upload all assets
  */
 export function createGithubRelease({
   dir = defaultDir,
+  compose_file_name: composeFileName,
   buildDir,
   releaseMultiHash,
   verbose,
@@ -101,6 +103,10 @@ export function createGithubRelease({
           // only include their manifest and compose.
           // TODO: Track issue for a better solution https://github.com/dappnode/DNP_DAPPMANAGER/issues/570
           compactManifestIfCore(buildDir);
+
+          // Remove `build` property AFTER building. Otherwise it may break ISO installations
+          // https://github.com/dappnode/DAppNode_Installer/issues/161
+          composeDeleteBuildProperties({ dir: buildDir, composeFileName });
 
           task.output = `Creating release for tag ${tag}...`;
           await github.createReleaseAndUploadAssets(tag, {

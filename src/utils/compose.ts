@@ -151,3 +151,14 @@ export function parseComposeUpstreamVersion(
         .map(({ name, version }) => (name ? `${name}: ${version}` : version))
         .join(", ");
 }
+
+/**
+ * Delete all `build` properties from all services in a disk persisted compose
+ */
+export function composeDeleteBuildProperties(paths?: ComposePaths): void {
+  const compose = readCompose(paths);
+  for (const service of Object.values(compose.services)) {
+    delete service.build;
+  }
+  writeCompose(compose, paths);
+}
