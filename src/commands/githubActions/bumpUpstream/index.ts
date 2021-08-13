@@ -11,6 +11,8 @@ import { getLocalBranchExists, getGitHead } from "../../../utils/git";
 import { arrIsUnique } from "../../../utils/array";
 import { buildAndComment } from "../build";
 import { closeOldPrs } from "./closeOldPrs";
+import { isGitUserSet } from "../../../utils/isGitUserSet";
+import { isGitEmailSet } from "../../../utils/isGitEmailSet";
 
 // This action should be run periodically
 
@@ -158,8 +160,11 @@ Compose - ${JSON.stringify(compose, null, 2)}
     return;
   }
 
-  await shell(`git config user.name ${userName}`);
-  await shell(`git config user.email ${userEmail}`);
+  //Check if there is a github account set up, in other case it uses the default account
+  if (!(isGitUserSet() && isGitEmailSet())) {
+    await shell(`git config user.name ${userName}`);
+    await shell(`git config user.email ${userEmail}`);
+  }
   await shell(`git checkout -b ${branch}`);
 
   // Check if there are changes
