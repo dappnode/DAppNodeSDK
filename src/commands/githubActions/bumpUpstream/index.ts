@@ -161,8 +161,11 @@ Compose - ${JSON.stringify(compose, null, 2)}
   }
 
   //Check if there is a github account set up, in other case it uses the default account
-  if (!(isGitUserSet() && isGitEmailSet())) {
+
+  if (!isGitUserSet()) {
     await shell(`git config user.name ${userName}`);
+  }
+  if (!isGitEmailSet()) {
     await shell(`git config user.email ${userEmail}`);
   }
   await shell(`git checkout -b ${branch}`);
