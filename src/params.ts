@@ -1,4 +1,4 @@
-import { Architecture, FileFormat } from "./types";
+import { Architecture, FileFormat, ManifestFormat } from "./types";
 
 export class CliError extends Error {}
 export class YargsError extends Error {}
@@ -11,6 +11,7 @@ export const branchNameRoot = "dappnodebot/bump-upstream/";
 
 export const defaultDir = "./";
 export const defaultManifestFileName = "dappnode_package.json";
+export const defaultManifestFormat = ManifestFormat.json;
 export const defaultComposeFileName = "docker-compose.yml";
 export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
 export const UPSTREAM_VERSION_VARNAME = "UPSTREAM_VERSION";
@@ -29,7 +30,7 @@ export const contentHashFile = "content-hash";
 
 export const releaseFiles = {
   manifest: {
-    regex: /dappnode_package.*\.json$/,
+    regex: /dappnode_package.*\.(json|yaml|yml)$/,
     format: FileFormat.YAML,
     maxSize: 100e3, // Limit size to ~100KB
     required: true as const,

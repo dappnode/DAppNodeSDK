@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { defaultManifestFormat } from "../../src/params";
 import { generatePublishTx } from "../../src/tasks/generatePublishTx";
 import { writeManifest } from "../../src/utils/manifest";
 import { testDir, cleanTestDir } from "../testUtils";
@@ -21,7 +22,7 @@ describe("generatePublishTx", function () {
       name: "admin.dnp.dappnode.eth",
       version: "0.1.0"
     };
-    writeManifest(manifest, { dir: testDir });
+    writeManifest(manifest, defaultManifestFormat, { dir: testDir });
 
     const generatePublishTxTasks = generatePublishTx({
       dir: testDir,
@@ -53,7 +54,7 @@ describe("generatePublishTx", function () {
       name: "new-repo.dnp.dappnode.eth",
       version: "0.1.0"
     };
-    writeManifest(manifest, { dir: testDir });
+    writeManifest(manifest, defaultManifestFormat, { dir: testDir });
 
     const generatePublishTxTasks = generatePublishTx({
       dir: testDir,

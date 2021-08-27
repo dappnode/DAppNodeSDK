@@ -28,7 +28,7 @@ export const gaBumpUpstream: CommandModule<
 export async function gaBumpUpstreamHandler({
   dir = defaultDir
 }: CliGlobalOptions): Promise<void> {
-  const manifest = readManifest({ dir });
+  const { manifest, format } = readManifest({ dir });
   const compose = readCompose({ dir });
 
   const upstreamRepos = parseCsv(manifest.upstreamRepo);
@@ -142,7 +142,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
 
   const versionsToUpdate = Array.from(versionsToUpdateMap.values());
   manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
-  writeManifest(manifest, { dir });
+  writeManifest(manifest, format, { dir });
   writeCompose(compose, { dir });
 
   const commitMsg = `bump ${versionsToUpdate

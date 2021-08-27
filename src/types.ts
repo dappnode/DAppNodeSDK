@@ -24,6 +24,12 @@ export enum FileFormat {
   TEXT = "TEXT"
 }
 
+export enum ManifestFormat {
+  json = "json",
+  yml = "yml",
+  yaml = "yaml"
+}
+
 export type Architecture = "linux/amd64" | "linux/arm64";
 export const architectures: Architecture[] = ["linux/amd64", "linux/arm64"];
 export const defaultArch = "linux/amd64";

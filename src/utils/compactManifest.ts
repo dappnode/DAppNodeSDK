@@ -10,7 +10,7 @@ import { readManifest, writeManifest } from "./manifest";
  * @param buildDir `build_0.1.0`
  */
 export function compactManifestIfCore(buildDir: string): void {
-  const manifest = readManifest({ dir: buildDir });
+  const { manifest, format } = readManifest({ dir: buildDir });
 
   if (manifest.type !== "dncore") return;
 
@@ -19,7 +19,7 @@ export function compactManifestIfCore(buildDir: string): void {
     manifest.setupWizard = setupWizard;
   }
 
-  writeManifest(manifest, { dir: buildDir });
+  writeManifest(manifest, format, { dir: buildDir });
 }
 
 function readSetupWizardIfExists(

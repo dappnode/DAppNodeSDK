@@ -3,6 +3,7 @@ import semver from "semver";
 import { getNextVersionFromApm } from "../../../src/utils/versions/getNextVersionFromApm";
 import { writeManifest } from "../../../src/utils/manifest";
 import { cleanTestDir, testDir } from "../../testUtils";
+import { defaultManifestFormat } from "../../../src/params";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -21,7 +22,7 @@ describe("getNextVersionFromApm", function () {
   after("Clean testDir", () => cleanTestDir());
 
   it("Should get the last version from APM", async () => {
-    writeManifest(manifest, { dir: testDir });
+    writeManifest(manifest, defaultManifestFormat, { dir: testDir });
 
     const nextVersion = await getNextVersionFromApm({
       type: "patch",
