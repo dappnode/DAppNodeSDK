@@ -13,7 +13,7 @@ export async function cleanPinsFromDeletedBranches({
   dir: string;
 }): Promise<void> {
   // Read manifest from disk to get package name
-  const manifest = readManifest({ dir });
+  const { manifest } = readManifest({ dir });
 
   // Connect to Github Octokit REST API to know existing branches
   const github = Github.fromLocal(dir);

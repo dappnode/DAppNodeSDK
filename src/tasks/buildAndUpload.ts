@@ -71,7 +71,7 @@ export function buildAndUpload({
   const buildTimeout = parseTimeout(userTimeout);
 
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
-  const manifest = readManifest({ dir });
+  const { manifest, format } = readManifest({ dir });
 
   // Make sure the release is of correct type
   if ((manifest as any).image)
@@ -178,7 +178,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
         // Copy files for release dir
         writeCompose(composeForRelease, { dir: buildDir, composeFileName });
-        writeManifest(manifest, { dir: buildDir });
+        writeManifest(manifest, format, { dir: buildDir });
         validateManifest(manifest);
 
         // Copy all other release files

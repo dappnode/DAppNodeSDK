@@ -12,7 +12,7 @@ dist
 # Test build files
 /build
 /build_*
-dappnode_package*.json
+dappnode_package*.*
 docker-compose.yml
 Dockerfile
 test-avatar.png
@@ -23,6 +23,8 @@ setup-ui.json
 disclaimer.md
 .cache
 .dappnodesdk-build-cache
+
+test_files/
 
 # Pinata envs for testing
 .env

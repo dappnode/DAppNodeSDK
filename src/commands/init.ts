@@ -12,6 +12,7 @@ import {
   defaultComposeFileName,
   defaultDir,
   defaultManifestFileName,
+  defaultManifestFormat,
   getImageTag,
   releaseFiles,
   YargsError
@@ -198,10 +199,8 @@ It only covers the most common items, and tries to guess sensible defaults.
   // Create package root dir
   fs.mkdirSync(dir, { recursive: true });
 
-  const manifestExists = fs.existsSync(getManifestPath({ dir }));
-  const composeExists = fs.existsSync(getComposePath({ dir }));
-
-  if (manifestExists && !force) {
+  const manifestPath = getManifestPath(defaultManifestFormat, { dir });
+  if (fs.existsSync(manifestPath) && !force) {
     const continueAnswer = await inquirer.prompt([
       {
         type: "confirm",
@@ -216,10 +215,10 @@ It only covers the most common items, and tries to guess sensible defaults.
   }
 
   // Write manifest and compose
-  writeManifest(manifest, { dir });
+  writeManifest(manifest, defaultManifestFormat, { dir });
 
   // Only write a compose if it doesn't exist
-  if (!composeExists) {
+  if (!fs.existsSync(getComposePath({ dir }))) {
     writeCompose(compose, { dir, composeFileName });
   }
 

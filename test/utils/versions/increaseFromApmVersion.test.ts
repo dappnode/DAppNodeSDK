@@ -5,7 +5,10 @@ import { Manifest } from "../../../src/types";
 import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
 import { readManifest, writeManifest } from "../../../src/utils/manifest";
 import { readCompose, writeCompose } from "../../../src/utils/compose";
-import { defaultComposeFileName } from "../../../src/params";
+import {
+  defaultComposeFileName,
+  defaultManifestFormat
+} from "../../../src/params";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -29,7 +32,7 @@ describe("increaseFromApmVersion", function () {
   after("Clean testDir", () => cleanTestDir());
 
   it("Should get the last version from APM", async () => {
-    writeManifest(manifest, { dir: testDir });
+    writeManifest(manifest, defaultManifestFormat, { dir: testDir });
     writeCompose(generateCompose(manifest), { dir: testDir });
 
     const nextVersion = await increaseFromApmVersion({
@@ -49,7 +52,7 @@ describe("increaseFromApmVersion", function () {
       "compose should be edited to the next version"
     );
     // Check that the manifest was edited correctly to the next version
-    const newManifest = readManifest({ dir: testDir });
+    const { manifest: newManifest } = readManifest({ dir: testDir });
     expect(newManifest.version).to.equal(
       nextVersion,
       "manifest should be edited to the next version"

@@ -40,15 +40,15 @@ export function generatePublishTx({
   const apm = new Apm(ethProvider);
 
   // Load manifest ##### Verify manifest object
-  const { name, version } = readManifest({ dir });
+  const { manifest } = readManifest({ dir });
 
   // Compute tx data
   const contentURI =
     "0x" + Buffer.from(releaseMultiHash, "utf8").toString("hex");
   const contractAddress = "0x0000000000000000000000000000000000000000";
-  const currentVersion = version;
-  const ensName = name;
-  const shortName = name.split(".")[0];
+  const currentVersion = manifest.version;
+  const ensName = manifest.name;
+  const shortName = manifest.name.split(".")[0];
 
   return new Listr<ListrContextBuildAndPublish>(
     [
@@ -122,7 +122,7 @@ with command option:
            */
           addReleaseTx({
             dir,
-            version,
+            version: manifest.version,
             link: getPublishTxLink(ctx.txData)
           });
         }
