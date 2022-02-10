@@ -115,7 +115,7 @@ export async function initHandler({
     avatar: "",
     type: "service",
     author: defaultAuthor,
-    license: "GLP-3.0"
+    license: "GPL-3.0"
   };
 
   if (!useDefaults) {
