@@ -309,6 +309,11 @@
             "type": "number",
             "description": "Port this exposable service listens to",
             "examples": [80, 5001, 8545]
+          },
+          "exposeByDefault" : {
+            "type": "boolean",
+            "description": "Whether this HTTPS port should be exposed by default on installation",
+            "examples": [true, false]
           }
         }
       }
