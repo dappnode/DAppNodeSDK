@@ -50,13 +50,35 @@
       }
     },
     "chain": {
-      "type": "string",
+      "type": ["string", "object"],
       "description": "Indicate that this DAppNode Package is a blockchain node so the admin UI shows its syncing status",
+      "properties": {
+        "driver": {
+          "type": "string",
+          "enum": [ "bitcoin","ethereum","ethereum-beacon-chain","ethereum2-beacon-chain-prysm","monero"],
+          "description": "The blockchain driver used by this DAppNode Package",
+          "examples": ["ethereum", "bitcoin"]
+        },
+        "serviceName": {
+          "type": "string",
+          "description": "The name of the blockchain service used by this DAppNode Package"
+        },
+        "portNumber": {
+          "type": "integer",
+          "description": "The port number of the blockchain service used by this DAppNode Package"
+        }
+      },
+      "required": ["driver"],
       "examples": [
         "ethereum",
         "ethereum2-beacon-chain-prysm",
         "bitcoin",
-        "monero"
+        "monero",
+        {
+          "driver": "ethereum",
+          "serviceName": "beacon-chain",
+          "portNumber": 3500
+        }
       ],
       "enum": ["ethereum", "ethereum2-beacon-chain-prysm", "bitcoin", "monero"],
       "enumDescriptions": {
