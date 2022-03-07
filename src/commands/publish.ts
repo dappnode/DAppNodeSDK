@@ -166,7 +166,7 @@ export async function publishHanlder({
   if (dappnode_team_preset) {
     if (isCi) {
       ethProvider = "infura";
-      contentProvider = "http://ipfs.dappnode.io";
+      contentProvider = "https://api.ipfs.dappnode.io:443";
       uploadTo = "ipfs";
       // Activate verbose to see logs easier afterwards
       verbose = true;
