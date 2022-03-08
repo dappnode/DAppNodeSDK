@@ -4,7 +4,7 @@ function getIpfsProviderUrl(provider = "dappnode"): string {
   if (provider === "dappnode") {
     return "http://ipfs.dappnode";
   } else if (provider === "remote") {
-    return "http://ipfs.dappnode.io";
+    return "https://api.ipfs.dappnode.io:443";
   } else if (provider === "infura") {
     return "https://ipfs.infura.io";
   } else {
