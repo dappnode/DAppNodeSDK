@@ -185,11 +185,25 @@
             "You must set the PASSWORD ENV before installing the DAppNode Package in order for the setup to work correctly."
           ]
         },
-        "onUpdate": {
+        "onPatchUpdate": {
           "type": "string",
-          "description": "Will be shown before updating the DAppNode Package, not in the first installation.",
+          "description": "Will be shown before performing a patch in the DAppNode Package, not in the first installation.",
           "examples": [
             "Your VPN connection will be lost when the VPN finalizes updating. Leave 1-2 minutes after executing the update and then reconnect and refresh this site."
+          ]
+        },
+        "onMinorUpdate": {
+          "type": "string",
+          "description": "Will be shown before performing a minor in the DAppNode Package, not in the first installation.",
+          "examples": [
+            "This is a minor update in wireguard, your credentials will be lost and you will need to recreate them."
+          ]
+        },
+        "onMajorUpdate": {
+          "type": "string",
+          "description": "Will be shown before performing a major update in the DAppNode Package, not in the first installation.",
+          "examples": [
+            "This is a major update of Prysm, it will start validating using the web3signer."
           ]
         },
         "onReset": {
@@ -310,7 +324,7 @@
             "description": "Port this exposable service listens to",
             "examples": [80, 5001, 8545]
           },
-          "exposeByDefault" : {
+          "exposeByDefault": {
             "type": "boolean",
             "description": "Whether this HTTPS port should be exposed by default on installation",
             "examples": [true, false]
