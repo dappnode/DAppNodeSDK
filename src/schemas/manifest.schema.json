@@ -50,15 +50,56 @@
       }
     },
     "chain": {
-      "type": "string",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ethereum",
+            "ethereum-beacon-chain",
+            "ethereum2-beacon-chain-prysm",
+            "bitcoin",
+            "monero"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "driver": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "ethereum",
+                "ethereum-beacon-chain",
+                "ethereum2-beacon-chain-prysm",
+                "monero"
+              ],
+              "description": "The blockchain driver used by this DAppNode Package",
+              "examples": ["ethereum", "bitcoin"]
+            },
+            "serviceName": {
+              "type": "string",
+              "description": "The name of the blockchain service used by this DAppNode Package"
+            },
+            "portNumber": {
+              "type": "integer",
+              "description": "The port number of the blockchain service used by this DAppNode Package"
+            }
+          },
+          "required": ["driver"]
+        }
+      ],
       "description": "Indicate that this DAppNode Package is a blockchain node so the admin UI shows its syncing status",
       "examples": [
         "ethereum",
         "ethereum2-beacon-chain-prysm",
         "bitcoin",
-        "monero"
+        "monero",
+        {
+          "driver": "ethereum-beacon-chain",
+          "serviceName": "beacon-chain",
+          "portNumber": 3500
+        }
       ],
-      "enum": ["ethereum", "ethereum2-beacon-chain-prysm", "bitcoin", "monero"],
       "enumDescriptions": {
         "ethereum": "Must have an Ethereum JSON RPC exposed internally at port 8545",
         "bitcoin": "Must have a standard Bitcoin JSON API exposed at the default port (8332). Uses the NPM package `bitcoin-core`",
@@ -310,7 +351,7 @@
             "description": "Port this exposable service listens to",
             "examples": [80, 5001, 8545]
           },
-          "exposeByDefault" : {
+          "exposeByDefault": {
             "type": "boolean",
             "description": "Whether this HTTPS port should be exposed by default on installation",
             "examples": [true, false]
