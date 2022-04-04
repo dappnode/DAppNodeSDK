@@ -66,9 +66,10 @@ export class Apm {
   async getLatestVersion(ensName: string): Promise<string> {
     if (!ensName)
       throw Error("getLatestVersion first argument ensName must be defined");
+
     const repository = await this.getRepoContract(ensName);
     if (!repository) {
-      const registry = this.getRegistryContract(ensName);
+      const registry = await this.getRegistryContract(ensName);
       if (registry)
         throw Error(
           `Error NOREPO: you must first deploy the repo of ${ensName} using the command publish`

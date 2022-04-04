@@ -2,7 +2,9 @@ import semver from "semver";
 import { expect } from "chai";
 import { Apm } from "../../src/utils/Apm";
 
-describe("Apm constructor", () => {
+describe("Apm constructor", function () {
+  this.timeout(60_000);
+
   const dnpName = "admin.dnp.dappnode.eth";
 
   it("Should get the contract the registry contract of a DNP name", async () => {
@@ -15,7 +17,7 @@ describe("Apm constructor", () => {
         "0x266BFdb2124A68beB6769dC887BD655f78778923".toLowerCase()
       );
     }
-  }).timeout(60 * 1000);
+  });
 
   it("Should get the contract the repo contract of a DNP name", async () => {
     const apm = new Apm("infura");
@@ -27,7 +29,7 @@ describe("Apm constructor", () => {
         "0xEe66C4765696C922078e8670aA9E6d4F6fFcc455".toLowerCase()
       );
     }
-  }).timeout(60 * 1000);
+  });
 
   it("Should get the latest of a DNP name", async () => {
     const apm = new Apm("infura");
@@ -37,5 +39,5 @@ describe("Apm constructor", () => {
       true,
       `Resulting version is not a valid semver: ${semver}`
     );
-  }).timeout(60 * 1000);
+  });
 });
