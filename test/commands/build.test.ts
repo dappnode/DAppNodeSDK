@@ -3,7 +3,7 @@ import { cleanTestDir, testDir } from "../testUtils";
 import { initHandler } from "../../src/commands/init";
 import { buildHandler } from "../../src/commands/build";
 
-const contentProvider = "https://api.ipfs.dappnode.io:443";
+const contentProvider = "http://ipfs.dappnode.io:5001";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
