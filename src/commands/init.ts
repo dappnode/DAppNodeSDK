@@ -4,7 +4,10 @@ import chalk from "chalk";
 import { CommandModule } from "yargs";
 import semver from "semver";
 import inquirer from "inquirer";
-import { writeManifest, getManifestPath } from "../utils/manifest";
+import {
+  writeManifest,
+  getManifestPath
+} from "../validation/manifest/manifest";
 import { writeCompose, getComposePath } from "../utils/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";

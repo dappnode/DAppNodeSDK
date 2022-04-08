@@ -5,7 +5,7 @@ import {
   encodeNewVersionCall,
   encodeNewRepoWithVersionCall
 } from "../utils/Apm";
-import { readManifest } from "../utils/manifest";
+import { readManifest } from "../validation/manifest/manifest";
 import { getPublishTxLink } from "../utils/getLinks";
 import { addReleaseTx } from "../utils/releaseRecord";
 import { defaultDir, YargsError } from "../params";

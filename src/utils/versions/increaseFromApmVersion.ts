@@ -1,4 +1,7 @@
-import { readManifest, writeManifest } from "../manifest";
+import {
+  readManifest,
+  writeManifest
+} from "../../validation/manifest/manifest";
 import { readCompose, writeCompose, updateComposeImageTags } from "../compose";
 import { getNextVersionFromApm } from "./getNextVersionFromApm";
 import { ReleaseType } from "../../types";
@@ -18,7 +21,7 @@ export async function increaseFromApmVersion({
   const nextVersion = await getNextVersionFromApm({ type, ethProvider, dir });
 
   // Load manifest
-  const { manifest, format } = readManifest({ dir });
+  const { manifest, manifestFormat: format } = readManifest({ dir });
 
   // Increase the version
   manifest.version = nextVersion;

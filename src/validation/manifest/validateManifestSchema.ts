@@ -1,7 +1,7 @@
 import Ajv from "ajv";
 import ajvErrors from "ajv-errors";
-import manifestSchema from "../schemas/manifest.schema.json";
-import { Manifest } from "../types";
+import { Manifest } from "../../types";
+import manifestSchema from "./manifest.schema.json";
 
 const ajv = new Ajv({ allErrors: true, jsonPointers: true });
 ajvErrors(ajv);

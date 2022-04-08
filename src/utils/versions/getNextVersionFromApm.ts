@@ -1,5 +1,5 @@
 import semver from "semver";
-import { readManifest } from "../manifest";
+import { readManifest } from "../../validation/manifest/manifest";
 import { Apm } from "../Apm";
 import { checkSemverType } from "../checkSemverType";
 import { ReleaseType } from "../../types";
