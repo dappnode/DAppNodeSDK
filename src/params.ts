@@ -57,27 +57,6 @@ export const releaseFiles = {
     required: false as const,
     multiple: false as const
   },
-  setupSchema: {
-    regex: /setup\..*\.json$/,
-    format: FileFormat.JSON,
-    maxSize: 10e3,
-    required: false as const,
-    multiple: false as const
-  },
-  setupTarget: {
-    regex: /setup-target\..*json$/,
-    format: FileFormat.JSON,
-    maxSize: 10e3,
-    required: false as const,
-    multiple: false as const
-  },
-  setupUiJson: {
-    regex: /setup-ui\..*json$/,
-    format: FileFormat.JSON,
-    maxSize: 10e3,
-    required: false as const,
-    multiple: false as const
-  },
   disclaimer: {
     regex: /disclaimer\.md$/i,
     format: FileFormat.TEXT,
@@ -115,9 +94,6 @@ export const releaseFilesDefaultNames: {
   compose: "docker-compose.yml",
   avatar: "avatar.png",
   setupWizard: "setup-wizard.json",
-  setupSchema: "setup.schema.json",
-  setupTarget: "setup-target.json",
-  setupUiJson: "setup-ui.json",
   disclaimer: "disclaimer.md",
   gettingStarted: "getting-started.md",
   grafanaDashboards: "grafana-dashboard.json",
