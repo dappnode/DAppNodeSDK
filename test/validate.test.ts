@@ -1,9 +1,11 @@
 import { expect } from "chai";
+import { Manifest } from "../src/types";
 import { validateManifestSchema } from "../src/utils/validateManifestSchema";
+import { validateWizardSchema } from "../src/utils/validateWizardSchema";
 
-describe("utils / format", () => {
+describe("utils / validateManifestSchema", () => {
   it("validateManifest chainDriver as string", () => {
-    const manifest = {
+    const manifest: Manifest = {
       name: "",
       version: "1.0.0",
       description: "",
@@ -47,5 +49,40 @@ describe("utils / format", () => {
     const validManifest = validateManifestSchema(manifest);
     expect(validManifest.valid).to.be.false;
     expect(validManifest.errors).to.not.be.empty;
+  });
+});
+
+describe("utils / validateWizardSchema", () => {
+  it("Should validate setup-wizard", () => {
+    const setupWizard: Manifest["setupWizard"] = {
+      version: "2",
+      fields: [
+        {
+          id: "payoutAddress,",
+          target: {
+            type: "environment",
+            name: "PAYOUT_ADDRESS",
+            service: "service1"
+          },
+          title: "Payout address",
+          description:
+            "Address to send **payouts** too. [More info](https://more.info) Supports markdown and multiline",
+          secret: true,
+          pattern: "^0x[a-fA-F0-9]{40}$",
+          patternErrorMessage: "Must be a valid address (0x1fd16a...)",
+          enum: ["normal", "archive", "advanced"],
+          required: true,
+          if: {
+            mode: {
+              enum: ["advanced"]
+            }
+          }
+        }
+      ]
+    };
+
+    const validateSetupWizard = validateWizardSchema(setupWizard);
+    expect(validateSetupWizard.valid).to.be.true;
+    expect(validateSetupWizard.errors).to.be.empty;
   });
 });
