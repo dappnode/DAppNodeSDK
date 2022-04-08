@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import { releaseFiles } from "../params";
-import { readManifest, writeManifest } from "./manifest";
+import { readManifest, writeManifest } from "../validation/manifest/manifest";
 
 /**
  * Reads manifest and extra files in `buildDir` compacts them in the manifest
@@ -10,7 +10,7 @@ import { readManifest, writeManifest } from "./manifest";
  * @param buildDir `build_0.1.0`
  */
 export function compactManifestIfCore(buildDir: string): void {
-  const { manifest, format } = readManifest({ dir: buildDir });
+  const { manifest, manifestFormat: format } = readManifest({ dir: buildDir });
 
   if (manifest.type !== "dncore") return;
 

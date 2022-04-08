@@ -2,9 +2,9 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import prettier from "prettier";
-import { defaultDir, releaseFiles } from "../params";
-import { Manifest, ManifestFormat } from "../types";
-import { readFile } from "./file";
+import { defaultDir, releaseFiles } from "../../params";
+import { Manifest, ManifestFormat } from "../../types";
+import { readFile } from "../../utils/file";
 
 export interface ManifestPaths {
   /** './folder', [optional] directory to load the manifest from */
@@ -25,16 +25,16 @@ function parseFormat(filepath: string): ManifestFormat {
  */
 export function readManifest(
   paths?: ManifestPaths
-): { manifest: Manifest; format: ManifestFormat } {
+): { manifest: Manifest; manifestFormat: ManifestFormat } {
   // Figure out the path and format
   const manifestPath = findManifestPath(paths);
-  const format = parseFormat(manifestPath);
+  const manifestFormat = parseFormat(manifestPath);
   const data = readFile(manifestPath);
 
   // Parse manifest in try catch block to show a comprehensive error message
   try {
     return {
-      format,
+      manifestFormat,
       manifest: yaml.load(data)
     };
   } catch (e) {
