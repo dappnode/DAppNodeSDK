@@ -3,7 +3,7 @@ import path from "path";
 import mime from "mime-types";
 import retry from "async-retry";
 import { Octokit } from "@octokit/rest";
-import { getRepoSlugFromManifest } from "../../utils/manifest";
+import { getRepoSlugFromManifest } from "../../validation/manifest/manifest";
 
 export class Github {
   private octokit: Octokit;
@@ -191,6 +191,7 @@ export class Github {
                 owner: this.owner,
                 repo: this.repo,
                 release_id: release.data.id,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: fs.createReadStream(filepath) as any,
                 headers: {
                   "content-type": contentType,

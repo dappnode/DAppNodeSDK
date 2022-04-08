@@ -4,7 +4,10 @@ import { branchNameRoot, defaultDir } from "../../../params";
 import { Github } from "../../../providers/github/Github";
 import { getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format";
 import { shell } from "../../../utils/shell";
-import { readManifest, writeManifest } from "../../../utils/manifest";
+import {
+  readManifest,
+  writeManifest
+} from "../../../validation/manifest/manifest";
 import { readCompose, writeCompose } from "../../../utils/compose";
 import { parseCsv } from "../../../utils/csv";
 import { getLocalBranchExists, getGitHead } from "../../../utils/git";
@@ -28,7 +31,7 @@ export const gaBumpUpstream: CommandModule<
 export async function gaBumpUpstreamHandler({
   dir = defaultDir
 }: CliGlobalOptions): Promise<void> {
-  const { manifest, format } = readManifest({ dir });
+  const { manifest, manifestFormat: format } = readManifest({ dir });
   const compose = readCompose({ dir });
 
   const upstreamRepos = parseCsv(manifest.upstreamRepo);
