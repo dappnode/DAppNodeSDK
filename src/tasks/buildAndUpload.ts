@@ -21,7 +21,7 @@ import {
   getComposePackageImages,
   getComposePath,
   composeDeleteBuildProperties
-} from "../utils/compose";
+} from "../validation/compose/compose";
 import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
 import { buildWithBuildx } from "./buildWithBuildx";
@@ -39,9 +39,10 @@ import {
   cliArgsToReleaseUploaderProvider,
   UploadTo
 } from "../releaseUploader";
-import { readSetupWizardIfExists } from "../utils/wizard";
+import { readSetupWizardIfExists } from "../validation/setupWizard/setupWizard";
 import { validateManifest } from "../validation/manifest/validateManifest";
 import { validateSetupWizard } from "../validation/setupWizard/validateSetupWizard";
+import { validateCompose } from "../validation/compose/validateCompose";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -127,7 +128,7 @@ export function buildAndUpload({
               validateManifest(manifest);
               continue;
             case "compose":
-              //validateCompose(composeForDev);
+              validateCompose(composeForRelease);
               continue;
 
             case "setupWizard":
