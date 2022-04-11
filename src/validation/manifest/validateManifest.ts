@@ -47,8 +47,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 function validateManifestSchema(
   manifest: Manifest
 ): { valid: boolean; errors: string[] } {
-  const ajv = new Ajv({ allErrors: true });
-  ajv.errors;
+  const ajv = new Ajv({ allErrors: true, coerceTypes: true });
   ajvErrors(ajv);
   // Precompile validator
   const validate = ajv.compile(manifestSchema);
