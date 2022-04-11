@@ -1,23 +1,17 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import prettier from "prettier";
 import { defaultDir, releaseFiles } from "../../params";
-import { Manifest, ManifestFormat } from "../../types";
+import { Manifest, AllowedFormats } from "../../types";
 import { readFile } from "../../utils/file";
+import { stringifyJson } from "../../utils/stringifyJson";
+import { parseFormat } from "../../utils/parseFormat";
 
-export interface ManifestPaths {
+interface ManifestPaths {
   /** './folder', [optional] directory to load the manifest from */
   dir?: string;
   /** 'manifest-admin.json', [optional] name of the manifest file */
   manifestFileName?: string;
-}
-
-function parseFormat(filepath: string): ManifestFormat {
-  if (/.json$/.test(filepath)) return ManifestFormat.json;
-  if (/.yml$/.test(filepath)) return ManifestFormat.yml;
-  if (/.yaml$/.test(filepath)) return ManifestFormat.yaml;
-  throw Error(`Unsupported manifest format: ${filepath}`);
 }
 
 /**
@@ -25,7 +19,7 @@ function parseFormat(filepath: string): ManifestFormat {
  */
 export function readManifest(
   paths?: ManifestPaths
-): { manifest: Manifest; manifestFormat: ManifestFormat } {
+): { manifest: Manifest; manifestFormat: AllowedFormats } {
   // Figure out the path and format
   const manifestPath = findManifestPath(paths);
   const manifestFormat = parseFormat(manifestPath);
@@ -47,7 +41,7 @@ export function readManifest(
  */
 export function writeManifest(
   manifest: Manifest,
-  format: ManifestFormat,
+  format: AllowedFormats,
   paths?: ManifestPaths
 ): void {
   const manifestPath = getManifestPath(format, paths);
@@ -78,46 +72,13 @@ export function findManifestPath(paths?: ManifestPaths): string {
  * @return path = './dappnode_package.json'
  */
 export function getManifestPath(
-  format: ManifestFormat,
+  format: AllowedFormats,
   paths?: ManifestPaths
 ): string {
   return path.join(
     paths?.dir || defaultDir,
     paths?.manifestFileName || `dappnode_package.${format}`
   );
-}
-
-/**
- * JSON.stringify + run prettier on the result
- */
-export function stringifyJson<T>(json: T, format: ManifestFormat): string {
-  switch (format) {
-    case ManifestFormat.json:
-      return prettier.format(JSON.stringify(json, null, 2), {
-        // DAppNode prettier options, to match DAppNodeSDK + DAPPMANAGER
-        printWidth: 80,
-        tabWidth: 2,
-        useTabs: false,
-        semi: true,
-        singleQuote: false,
-        trailingComma: "none",
-        parser: "json"
-      });
-
-    case ManifestFormat.yml:
-    case ManifestFormat.yaml:
-      return prettier.format(yaml.dump(json, { indent: 2 }), {
-        // DAppNode prettier options, to match DAppNodeSDK + DAPPMANAGER
-        printWidth: 80,
-        tabWidth: 2,
-        useTabs: false,
-        semi: true,
-        singleQuote: false,
-        trailingComma: "none",
-        // Built-in parser for YAML
-        parser: "yaml"
-      });
-  }
 }
 
 /**

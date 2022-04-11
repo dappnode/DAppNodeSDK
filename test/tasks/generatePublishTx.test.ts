@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { defaultManifestFormat } from "../../src/params";
 import { generatePublishTx } from "../../src/tasks/generatePublishTx";
-import { writeManifest } from "../../src/utils/manifest";
+import { writeManifest } from "../../src/validation/manifest/manifest";
 import { testDir, cleanTestDir } from "../testUtils";
 
 // This test will create the following fake files

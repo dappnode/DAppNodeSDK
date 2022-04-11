@@ -1,27 +1,23 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import prettier from "prettier";
 import { defaultDir, releaseFiles } from "../../params";
-import { SetupWizard, WizardFormat } from "../../types";
+import { AllowedFormats, SetupWizard } from "../../types";
 import { readFile } from "../../utils/file";
-
-function parseFormat(filepath: string): WizardFormat {
-  if (/.json$/.test(filepath)) return WizardFormat.json;
-  if (/.yml$/.test(filepath)) return WizardFormat.yml;
-  if (/.yaml$/.test(filepath)) return WizardFormat.yaml;
-  throw Error(`Unsupported setup-wizard format: ${filepath}`);
-}
+import { stringifyJson } from "../../utils/stringifyJson";
+import { parseFormat } from "../../utils/parseFormat";
 
 /**
  * Reads a setupWizard. Without arguments defaults to read the setupWizard at './setup-wizard.yml'
  */
-export function readSetupWizardIfExists(): {
+export function readSetupWizardIfExists(
+  dir = defaultDir
+): {
   setupWizard: SetupWizard;
-  format: WizardFormat;
+  format: AllowedFormats;
 } | null {
   // Figure out the path and format
-  const setupWizardPath = findSetupWizardPath();
+  const setupWizardPath = findSetupWizardPath(dir);
   if (!setupWizardPath) return null;
   const format = parseFormat(setupWizardPath);
   const data = readFile(setupWizardPath);
@@ -42,7 +38,7 @@ export function readSetupWizardIfExists(): {
  */
 export function writeSetupWizard(
   setupWizard: SetupWizard,
-  format: WizardFormat
+  format: AllowedFormats
 ): void {
   const setupWizardPath = getsetupWizardPath(format);
   fs.writeFileSync(setupWizardPath, stringifyJson(setupWizard, format));
@@ -52,54 +48,19 @@ export function writeSetupWizard(
  * Get manifest path. Without arguments defaults to './setup-wizard.yml'
  * @return path = './setup-wizard.yml'
  */
-export function findSetupWizardPath(): string | null {
-  const dirPath = defaultDir;
-
-  const files = fs.readdirSync(dirPath);
+function findSetupWizardPath(dir: string): string | null {
+  const files = fs.readdirSync(dir);
   const filepath = files.find(file =>
     releaseFiles.setupWizard.regex.test(file)
   );
   if (!filepath) return null;
-  return path.join(dirPath, filepath);
+  return path.join(dir, filepath);
 }
 
 /**
  * Get setupWizard path. Without arguments defaults to './setup-wizard.yml'
  * @return path = './setup-wizard.yml'
  */
-export function getsetupWizardPath(format: WizardFormat): string {
+function getsetupWizardPath(format: AllowedFormats): string {
   return path.join(defaultDir, `setup-wizard.${format}`);
-}
-
-/**
- * JSON.stringify + run prettier on the result
- */
-export function stringifyJson<T>(json: T, format: WizardFormat): string {
-  switch (format) {
-    case WizardFormat.json:
-      return prettier.format(JSON.stringify(json, null, 2), {
-        // DAppNode prettier options, to match DAppNodeSDK + DAPPMANAGER
-        printWidth: 80,
-        tabWidth: 2,
-        useTabs: false,
-        semi: true,
-        singleQuote: false,
-        trailingComma: "none",
-        parser: "json"
-      });
-
-    case WizardFormat.yml:
-    case WizardFormat.yaml:
-      return prettier.format(yaml.dump(json, { indent: 2 }), {
-        // DAppNode prettier options, to match DAppNodeSDK + DAPPMANAGER
-        printWidth: 80,
-        tabWidth: 2,
-        useTabs: false,
-        semi: true,
-        singleQuote: false,
-        trailingComma: "none",
-        // Built-in parser for YAML
-        parser: "yaml"
-      });
-  }
 }
