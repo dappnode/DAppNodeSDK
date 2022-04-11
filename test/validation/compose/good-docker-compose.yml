@@ -1,0 +1,38 @@
+version: "3.4"
+services:
+  beacon-chain:
+    image: "beacon-chain.lighthouse-prater.dnp.dappnode.eth:0.1.0"
+    build:
+      context: beacon-chain
+      args:
+        UPSTREAM_VERSION: v2.2.0
+    volumes:
+      - "beacon-data:/root/.lighthouse"
+    ports:
+      - 9000/tcp
+      - 9000/udp
+    restart: unless-stopped
+    environment:
+      BEACON_API_PORT: 3500
+      HTTP_WEB3PROVIDER: "http://goerli-geth.dappnode:8545"
+      CORSDOMAIN: "http://lighthouse.dappnode"
+      CHECKPOINT_SYNC_URL: ""
+      EXTRA_OPTS: ""
+  validator:
+    image: "validator.lighthouse-prater.dnp.dappnode.eth:0.1.0"
+    build:
+      context: validator
+      args:
+        UPSTREAM_VERSION: v2.2.0
+    restart: unless-stopped
+    environment:
+      VALIDATORS_FILE: /root/.lighthouse/validators/validator_definitions.yml
+      PUBLIC_KEYS_FILE: /public_keys.txt
+      HTTP_WEB3SIGNER: "http://web3signer.web3signer-prater.dappnode:9000"
+      BEACON_NODE_ADDR: "http://beacon-chain.lighthouse-prater.dappnode:3500"
+      GRAFFITI: validating_from_DAppNode
+      SUPERVISOR_CONF: /etc/supervisor/conf.d/supervisord.conf
+      DEFAULT_VALIDATOR_PUBLIC_KEY: ""
+      EXTRA_OPTS: ""
+volumes:
+  beacon-data: {}

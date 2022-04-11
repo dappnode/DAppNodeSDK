@@ -7,17 +7,24 @@ import { readFile } from "../../utils/file";
 import { stringifyJson } from "../../utils/stringifyJson";
 import { parseFormat } from "../../utils/parseFormat";
 
+interface SetupWizardPaths {
+  /** './folder', [optional] directory to load the compose from */
+  dir?: string;
+  /** 'manifest-admin.json', [optional] name of the compose file */
+  setupWizardFileName?: string;
+}
+
 /**
  * Reads a setupWizard. Without arguments defaults to read the setupWizard at './setup-wizard.yml'
  */
 export function readSetupWizardIfExists(
-  dir = defaultDir
+  paths?: SetupWizardPaths
 ): {
   setupWizard: SetupWizard;
   format: AllowedFormats;
 } | null {
   // Figure out the path and format
-  const setupWizardPath = findSetupWizardPath(dir);
+  const setupWizardPath = findSetupWizardPath(paths);
   if (!setupWizardPath) return null;
   const format = parseFormat(setupWizardPath);
   const data = readFile(setupWizardPath);
@@ -48,13 +55,18 @@ export function writeSetupWizard(
  * Get manifest path. Without arguments defaults to './setup-wizard.yml'
  * @return path = './setup-wizard.yml'
  */
-function findSetupWizardPath(dir: string): string | null {
-  const files = fs.readdirSync(dir);
-  const filepath = files.find(file =>
-    releaseFiles.setupWizard.regex.test(file)
-  );
-  if (!filepath) return null;
-  return path.join(dir, filepath);
+function findSetupWizardPath(paths?: SetupWizardPaths): string | null {
+  const dirPath = paths?.dir || defaultDir;
+  if (paths?.setupWizardFileName) {
+    return path.join(dirPath, paths.setupWizardFileName);
+  } else {
+    const files = fs.readdirSync(dirPath);
+    const filepath = files.find(file =>
+      releaseFiles.setupWizard.regex.test(file)
+    );
+    if (!filepath) return null;
+    return path.join(dirPath, filepath);
+  }
 }
 
 /**

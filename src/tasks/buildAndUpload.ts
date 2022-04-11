@@ -141,10 +141,6 @@ export function buildAndUpload({
           }
         }
 
-        // Verify avatar (throws)
-        const avatarPath = path.join(buildDir, releaseFilesDefaultNames.avatar);
-        verifyAvatar(avatarPath);
-
         // Make sure git data is available before doing a long build
         await getGitHeadIfAvailable({ requireGitData });
       }
