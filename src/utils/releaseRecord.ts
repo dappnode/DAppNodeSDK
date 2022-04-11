@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { ManifestFormat } from "../types";
-import { stringifyJson } from "../validation/manifest/manifest";
+import { AllowedFormats } from "../types";
+import { stringifyJson } from "./stringifyJson";
 
 interface ReleaseRecord {
   hash: string;
@@ -45,7 +45,7 @@ function writeReleaseRecord(
   };
   fs.writeFileSync(
     releaseRecordPath,
-    stringifyJson(mergedReleaseRecord, ManifestFormat.json)
+    stringifyJson(mergedReleaseRecord, AllowedFormats.json)
   );
 }
 
