@@ -2,9 +2,9 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import prettier from "prettier";
-import { defaultDir, releaseFiles } from "../params";
-import { SetupWizard, WizardFormat } from "../types";
-import { readFile } from "./file";
+import { defaultDir, releaseFiles } from "../../params";
+import { SetupWizard, WizardFormat } from "../../types";
+import { readFile } from "../../utils/file";
 
 function parseFormat(filepath: string): WizardFormat {
   if (/.json$/.test(filepath)) return WizardFormat.json;
@@ -53,7 +53,7 @@ export function writeSetupWizard(
  * @return path = './setup-wizard.yml'
  */
 export function findSetupWizardPath(): string | null {
-  const dirPath = paths?.dir || defaultDir;
+  const dirPath = defaultDir;
 
   const files = fs.readdirSync(dirPath);
   const filepath = files.find(file =>
@@ -68,10 +68,7 @@ export function findSetupWizardPath(): string | null {
  * @return path = './setup-wizard.yml'
  */
 export function getsetupWizardPath(format: WizardFormat): string {
-  return path.join(
-    paths?.dir || defaultDir,
-    paths?.setupWizardFileName || `setup-wizard.${format}`
-  );
+  return path.join(defaultDir, `setup-wizard.${format}`);
 }
 
 /**

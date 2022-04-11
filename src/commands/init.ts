@@ -8,7 +8,7 @@ import {
   writeManifest,
   getManifestPath
 } from "../validation/manifest/manifest";
-import { writeCompose, getComposePath } from "../utils/compose";
+import { writeCompose, getComposePath } from "../validation/compose/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
 import {

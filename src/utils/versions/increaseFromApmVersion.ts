@@ -2,7 +2,11 @@ import {
   readManifest,
   writeManifest
 } from "../../validation/manifest/manifest";
-import { readCompose, writeCompose, updateComposeImageTags } from "../compose";
+import {
+  readCompose,
+  writeCompose,
+  updateComposeImageTags
+} from "../../validation/compose/compose";
 import { getNextVersionFromApm } from "./getNextVersionFromApm";
 import { ReleaseType } from "../../types";
 

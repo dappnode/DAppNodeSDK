@@ -8,7 +8,7 @@ import {
   readManifest,
   writeManifest
 } from "../../../validation/manifest/manifest";
-import { readCompose, writeCompose } from "../../../utils/compose";
+import { readCompose, writeCompose } from "../../../validation/compose/compose";
 import { parseCsv } from "../../../utils/csv";
 import { getLocalBranchExists, getGitHead } from "../../../utils/git";
 import { arrIsUnique } from "../../../utils/array";
