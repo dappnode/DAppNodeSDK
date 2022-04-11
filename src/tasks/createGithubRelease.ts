@@ -3,7 +3,7 @@ import path from "path";
 import Listr from "listr";
 import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
 import { getGitHead } from "../utils/git";
-import { compactManifestIfCore } from "../utils/compactManifest";
+import { compactManifestIfCore } from "../validation/manifest/compactManifest";
 import { contentHashFile, defaultDir } from "../params";
 import {
   TxData,

@@ -8,7 +8,7 @@ import {
   composeDeleteBuildProperties,
   writeCompose,
   readCompose
-} from "../../src/utils/compose";
+} from "../../src/validation/compose/compose";
 import { cleanTestDir, testDir } from "../testUtils";
 
 describe("util > compose", () => {

@@ -3,8 +3,14 @@ import semver from "semver";
 import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion";
 import { Manifest } from "../../../src/types";
 import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
-import { readManifest, writeManifest } from "../../../src/utils/manifest";
-import { readCompose, writeCompose } from "../../../src/utils/compose";
+import {
+  readManifest,
+  writeManifest
+} from "../../../src/validation/manifest/manifest";
+import {
+  readCompose,
+  writeCompose
+} from "../../../src/validation/compose/compose";
 import {
   defaultComposeFileName,
   defaultManifestFormat
