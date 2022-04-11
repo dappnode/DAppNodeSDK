@@ -11,7 +11,7 @@ import {
   ListrContextBuildAndPublish
 } from "../types";
 import { Github } from "../providers/github/Github";
-import { composeDeleteBuildProperties } from "../utils/compose";
+import { composeDeleteBuildProperties } from "../validation/compose/compose";
 
 /**
  * Create (or edit) a Github release, then upload all assets

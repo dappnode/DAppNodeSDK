@@ -2,17 +2,17 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import prettier from "prettier";
-import { Compose, PackageImage } from "../types";
+import { Compose, PackageImage } from "../../types";
 import {
   defaultComposeFileName,
   defaultDir,
   getImageTag,
   upstreamImageLabel,
   UPSTREAM_VERSION_VARNAME
-} from "../params";
-import { toTitleCase } from "./format";
+} from "../../params";
+import { toTitleCase } from "../../utils/format";
 import { mapValues, uniqBy } from "lodash";
-import { readFile } from "./file";
+import { readFile } from "../../utils/file";
 
 interface ComposePaths {
   /** './folder', [optional] directory to load the compose from */
