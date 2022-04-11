@@ -77,6 +77,9 @@ export interface Manifest {
 
   // Network metadata
   exposable?: ExposableServiceManifestInfo[];
+
+  // setupWizard for compacted manifests in core packages
+  setupWizard?: SetupWizard;
 }
 
 // Metrics
@@ -229,13 +232,7 @@ export enum FileFormat {
   TEXT = "TEXT"
 }
 
-export enum ManifestFormat {
-  json = "json",
-  yml = "yml",
-  yaml = "yaml"
-}
-
-export enum WizardFormat {
+export enum AllowedFormats {
   json = "json",
   yml = "yml",
   yaml = "yaml"
