@@ -238,6 +238,8 @@ export enum AllowedFormats {
   yaml = "yaml"
 }
 
+export type ValidateFile = "manifest" | "compose" | "setupWizard";
+
 export type ReleaseType = "major" | "minor" | "patch";
 export const releaseTypes: ReleaseType[] = ["major", "minor", "patch"];
 
