@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import Listr, { ListrTask } from "listr";
 import rimraf from "rimraf";
-import { readManifest, writeManifest } from "../validation/manifest/manifest";
+import { readManifest } from "../releaseFiles/manifest/manifest";
 import { verifyAvatar } from "../utils/verifyAvatar";
 import { copyReleaseFile } from "../utils/copyReleaseFile";
 import { addReleaseRecord } from "../utils/releaseRecord";
@@ -15,14 +15,17 @@ import {
 } from "../params";
 import {
   readCompose,
-  writeCompose,
   parseComposeUpstreamVersion,
   updateComposeImageTags,
   getComposePackageImages,
   getComposePath,
   composeDeleteBuildProperties
-} from "../validation/compose/compose";
-import { ListrContextBuildAndPublish } from "../types";
+} from "../releaseFiles/compose/compose";
+import {
+  AllowedFormats,
+  ListrContextBuildAndPublish,
+  ReleaseFileType
+} from "../types";
 import { parseTimeout } from "../utils/timeout";
 import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
@@ -39,10 +42,9 @@ import {
   cliArgsToReleaseUploaderProvider,
   UploadTo
 } from "../releaseUploader";
-import { readSetupWizardIfExists } from "../validation/setupWizard/setupWizard";
-import { validateManifest } from "../validation/manifest/validateManifest";
-import { validateSetupWizard } from "../validation/setupWizard/validateSetupWizard";
-import { validateCompose } from "../validation/compose/validateCompose";
+import { readSetupWizardIfExists } from "../releaseFiles/setupWizard/setupWizard";
+import { validateSchema } from "../releaseFiles/validateSchema";
+import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -125,14 +127,24 @@ export function buildAndUpload({
         for (const [fileId] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
             case "manifest":
-              validateManifest(manifest);
+              validateSchema({
+                type: ReleaseFileType.manifest,
+                data: manifest
+              });
               continue;
             case "compose":
-              validateCompose(composeForRelease);
+              validateSchema({
+                type: ReleaseFileType.compose,
+                data: composeForRelease
+              });
               continue;
 
             case "setupWizard":
-              if (setupWizard) validateSetupWizard(setupWizard.setupWizard);
+              if (setupWizard)
+                validateSchema({
+                  type: ReleaseFileType.setupWizard,
+                  data: setupWizard.setupWizard
+                });
               continue;
 
             default:
@@ -193,17 +205,28 @@ export function buildAndUpload({
         for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
             case "manifest":
-              writeManifest(manifest, manifestFormat, { dir: buildDir });
+              writeReleaseFile(
+                { type: ReleaseFileType.manifest, data: manifest },
+                manifestFormat,
+                {
+                  dir: buildDir
+                }
+              );
               continue;
             case "compose":
               // Write compose with build props for builds
-              writeCompose(composeForBuild, { dir, composeFileName });
+              writeReleaseFile(
+                { type: ReleaseFileType.compose, data: composeForBuild },
+                AllowedFormats.yml,
+                { dir, releaseFileName: composeFileName }
+              );
 
               // Copy files for release dir
-              writeCompose(composeForRelease, {
-                dir: buildDir,
-                composeFileName
-              });
+              writeReleaseFile(
+                { type: ReleaseFileType.compose, data: composeForRelease },
+                AllowedFormats.yml,
+                { dir: buildDir, releaseFileName: composeFileName }
+              );
               continue;
 
             default:
@@ -268,7 +291,10 @@ export function buildAndUpload({
 
         // Remove `build` property AFTER building. Otherwise it may break ISO installations
         // https://github.com/dappnode/DAppNode_Installer/issues/161
-        composeDeleteBuildProperties({ dir: buildDir, composeFileName });
+        composeDeleteBuildProperties({
+          dir: buildDir,
+          releaseFileName: composeFileName
+        });
 
         ctx.releaseHash = await releaseUploader.addFromFs({
           dirPath: buildDir,

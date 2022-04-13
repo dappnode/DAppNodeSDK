@@ -1,6 +1,6 @@
 import { fetchPinsGroupedByBranch } from "../../../pinStrategy";
 import { cliArgsToReleaseUploaderProvider } from "../../../releaseUploader";
-import { readManifest } from "../../../validation/manifest/manifest";
+import { readManifest } from "../../../releaseFiles/manifest/manifest";
 import { Github } from "../../../providers/github/Github";
 import { PinataPinManager } from "../../../providers/pinata/pinManager";
 
