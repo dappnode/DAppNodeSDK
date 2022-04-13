@@ -1,0 +1,3 @@
+// types paths
+// getPaths
+// read

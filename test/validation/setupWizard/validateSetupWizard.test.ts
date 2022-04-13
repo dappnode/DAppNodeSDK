@@ -1,6 +1,7 @@
 import { expect } from "chai";
-import { validateSetupWizard } from "../../../src/validation/setupWizard/validateSetupWizard";
-import { readSetupWizardIfExists } from "../../../src/validation/setupWizard/setupWizard";
+import { validateSchema } from "../../../src/releaseFiles/validateSchema";
+import { readSetupWizardIfExists } from "../../../src/releaseFiles/setupWizard/setupWizard";
+import { ReleaseFileType } from "../../../src/types";
 
 describe("utils / validateWizardSchema", () => {
   const setupWizardDir = "test/validation/setupWizard";
@@ -11,7 +12,10 @@ describe("utils / validateWizardSchema", () => {
       setupWizardFileName: "good-setup-wizard.yml"
     });
     if (!setupWizard) throw Error("No setup-wizard file found for tests");
-    validateSetupWizard(setupWizard.setupWizard);
+    validateSchema({
+      type: ReleaseFileType.setupWizard,
+      data: setupWizard.setupWizard
+    });
   });
 
   it("Should read and not validate an invalid setup-wizard file", () => {
@@ -20,6 +24,11 @@ describe("utils / validateWizardSchema", () => {
       setupWizardFileName: "bad-setup-wizard.yml"
     });
     if (!setupWizard) throw Error("No setup-wizard file found for tests");
-    expect(() => validateSetupWizard(setupWizard.setupWizard)).to.throw();
+    expect(() =>
+      validateSchema({
+        type: ReleaseFileType.setupWizard,
+        data: setupWizard.setupWizard
+      })
+    ).to.throw();
   });
 });

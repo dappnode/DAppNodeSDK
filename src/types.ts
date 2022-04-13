@@ -226,20 +226,6 @@ export interface ListrContextBuildAndPublish {
 
 // Interal types
 
-export enum FileFormat {
-  JSON = "JSON",
-  YAML = "YAML",
-  TEXT = "TEXT"
-}
-
-export enum AllowedFormats {
-  json = "json",
-  yml = "yml",
-  yaml = "yaml"
-}
-
-export type ValidateFile = "manifest" | "compose" | "setupWizard";
-
 export type ReleaseType = "major" | "minor" | "patch";
 export const releaseTypes: ReleaseType[] = ["major", "minor", "patch"];
 
@@ -274,6 +260,12 @@ export interface TxDataShortKeys {
   h: string; // hash
   d?: string; // developerAddress
 }
+
+// ============================================================
+
+/**
+ * Compose
+ */
 
 export interface ComposeVolumes {
   // volumeName: "dncore_ipfsdnpdappnodeeth_data"
@@ -340,3 +332,39 @@ export interface Compose {
   };
   volumes?: ComposeVolumes; // { dappmanagerdnpdappnodeeth_data: {} };
 }
+
+// ============================================================
+
+/**
+ * Release files
+ */
+
+export interface ReleaseFilePaths {
+  /** './folder', [optional] directory to load the compose from */
+  dir?: string;
+  /** 'manifest-admin.json', [optional] name of the compose file */
+  releaseFileName?: string;
+}
+
+export enum FileFormat {
+  JSON = "JSON",
+  YAML = "YAML",
+  TEXT = "TEXT"
+}
+
+export enum AllowedFormats {
+  json = "json",
+  yml = "yml",
+  yaml = "yaml"
+}
+
+export enum ReleaseFileType {
+  "manifest",
+  "compose",
+  "setupWizard"
+}
+
+export type ReleaseFile =
+  | { type: ReleaseFileType.manifest; data: Manifest }
+  | { type: ReleaseFileType.compose; data: Compose }
+  | { type: ReleaseFileType.setupWizard; data: SetupWizard };

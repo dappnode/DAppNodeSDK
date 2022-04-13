@@ -1,19 +1,14 @@
 import { expect } from "chai";
 import { increaseFromLocalVersion } from "../../../src/utils/versions/increaseFromLocalVersion";
-import {
-  readCompose,
-  writeCompose
-} from "../../../src/validation/compose/compose";
-import {
-  readManifest,
-  writeManifest
-} from "../../../src/validation/manifest/manifest";
+import { readCompose } from "../../../src/releaseFiles/compose/compose";
+import { readManifest } from "../../../src/releaseFiles/manifest/manifest";
+import { writeReleaseFile } from "../../../src/releaseFiles/writeReleaseFile";
 import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
 import {
   defaultComposeFileName,
   defaultManifestFormat
 } from "../../../src/params";
-import { Manifest } from "../../../src/types";
+import { AllowedFormats, Manifest, ReleaseFileType } from "../../../src/types";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -38,8 +33,20 @@ describe("increaseFromLocalVersion", function () {
   after("Clean testDir", () => cleanTestDir());
 
   it("Should get the last version from APM", async () => {
-    writeManifest(manifest, defaultManifestFormat, { dir: testDir });
-    writeCompose(generateCompose(manifest), { dir: testDir });
+    writeReleaseFile(
+      { type: ReleaseFileType.manifest, data: manifest },
+      defaultManifestFormat,
+      {
+        dir: testDir
+      }
+    );
+    writeReleaseFile(
+      { type: ReleaseFileType.compose, data: generateCompose(manifest) },
+      AllowedFormats.yml,
+      {
+        dir: testDir
+      }
+    );
 
     const nextVersion = await increaseFromLocalVersion({
       type: "patch",

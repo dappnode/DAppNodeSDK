@@ -2,8 +2,9 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import { releaseFiles } from "../../params";
-import { readManifest, writeManifest } from "./manifest";
-import { SetupWizard } from "../../types";
+import { readManifest } from "./manifest";
+import { ReleaseFileType, SetupWizard } from "../../types";
+import { writeReleaseFile } from "../writeReleaseFile";
 
 /**
  * Reads manifest and extra files in `buildDir` compacts them in the manifest
@@ -20,7 +21,9 @@ export function compactManifestIfCore(buildDir: string): void {
     manifest.setupWizard = setupWizard;
   }
 
-  writeManifest(manifest, format, { dir: buildDir });
+  writeReleaseFile({ type: ReleaseFileType.manifest, data: manifest }, format, {
+    dir: buildDir
+  });
 }
 
 function readSetupWizardIfExists(buildDir: string): SetupWizard | null {
