@@ -4,8 +4,6 @@ import chalk from "chalk";
 import { CommandModule } from "yargs";
 import semver from "semver";
 import inquirer from "inquirer";
-import { getManifestPath } from "../releaseFiles/manifest/manifest";
-import { getComposePath } from "../releaseFiles/compose/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
 import { releasesRecordFileName } from "../utils/releaseRecord";
@@ -26,6 +24,7 @@ import {
   ReleaseFileType
 } from "../types";
 import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
+import { getReleaseFilePath } from "../releaseFiles/getReleaseFilePath";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",
@@ -208,7 +207,12 @@ It only covers the most common items, and tries to guess sensible defaults.
   // Create package root dir
   fs.mkdirSync(dir, { recursive: true });
 
-  const manifestPath = getManifestPath(defaultManifestFormat, { dir });
+  const manifestPath = getReleaseFilePath(
+    defaultManifestFormat,
+    ReleaseFileType.manifest,
+    { dir }
+  );
+
   if (fs.existsSync(manifestPath) && !force) {
     const continueAnswer = await inquirer.prompt([
       {
@@ -233,7 +237,11 @@ It only covers the most common items, and tries to guess sensible defaults.
   );
 
   // Only write a compose if it doesn't exist
-  if (!fs.existsSync(getComposePath({ dir }))) {
+  if (
+    !fs.existsSync(
+      getReleaseFilePath(AllowedFormats.yml, ReleaseFileType.compose, { dir })
+    )
+  ) {
     writeReleaseFile(
       { type: ReleaseFileType.compose, data: compose },
       AllowedFormats.yml,

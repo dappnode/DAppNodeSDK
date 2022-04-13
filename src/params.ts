@@ -10,9 +10,16 @@ export const branchNameRoot = "dappnodebot/bump-upstream/";
 // DAppNode params
 
 export const defaultDir = "./";
+// Manifest
 export const defaultManifestFileName = "dappnode_package.json";
 export const defaultManifestFormat = AllowedFormats.json;
+// Compose
 export const defaultComposeFileName = "docker-compose.yml";
+export const defaultComposeFormat = AllowedFormats.yml;
+// Setup Wizard
+export const defaultSetupWizardFileName = "setup-wizard.yml";
+export const defaultSetupWizardFormat = AllowedFormats.yml;
+// Providers
 export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
 export const UPSTREAM_VERSION_VARNAME = "UPSTREAM_VERSION";
 export const upstreamImageLabel = "dappnode.dnp.upstreamImage";

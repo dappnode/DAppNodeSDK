@@ -1,21 +1,16 @@
 import { CommandModule } from "yargs";
-import {
-  AllowedFormats,
-  CliGlobalOptions,
-  ReleaseFileType
-} from "../../../types";
+import { CliGlobalOptions, ReleaseFileType } from "../../../types";
 import { branchNameRoot, defaultDir } from "../../../params";
 import { Github } from "../../../providers/github/Github";
 import { getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format";
 import { shell } from "../../../utils/shell";
-import { readManifest } from "../../../releaseFiles/manifest/manifest";
-import { readCompose } from "../../../releaseFiles/compose/compose";
 import { parseCsv } from "../../../utils/csv";
 import { getLocalBranchExists, getGitHead } from "../../../utils/git";
 import { arrIsUnique } from "../../../utils/array";
 import { buildAndComment } from "../build";
 import { closeOldPrs } from "./closeOldPrs";
 import { writeReleaseFile } from "../../../releaseFiles/writeReleaseFile";
+import { readReleaseFile } from "../../../releaseFiles/readReleaseFile";
 
 // This action should be run periodically
 
@@ -33,11 +28,13 @@ export const gaBumpUpstream: CommandModule<
 export async function gaBumpUpstreamHandler({
   dir = defaultDir
 }: CliGlobalOptions): Promise<void> {
-  const { manifest, manifestFormat: format } = readManifest({ dir });
-  const compose = readCompose({ dir });
+  const manifest = readReleaseFile(ReleaseFileType.manifest, { dir });
+  const compose = readReleaseFile(ReleaseFileType.compose, { dir });
 
-  const upstreamRepos = parseCsv(manifest.upstreamRepo);
-  const upstreamArgs = parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
+  const upstreamRepos = parseCsv(manifest.releaseFile.upstreamRepo);
+  const upstreamArgs = parseCsv(
+    manifest.releaseFile.upstreamArg || "UPSTREAM_VERSION"
+  );
 
   const githubActor = process.env.GITHUB_ACTOR || "bot";
   const userName = githubActor;
@@ -114,7 +111,9 @@ Compose - ${JSON.stringify(compose, null, 2)}
   // index by repoSlug, must be unique
   const versionsToUpdateMap = new Map<string, VersionToUpdate>();
 
-  for (const [serviceName, service] of Object.entries(compose.services))
+  for (const [serviceName, service] of Object.entries(
+    compose.releaseFile.services
+  ))
     if (typeof service.build === "object" && service.build.args)
       for (const [argName, argValue] of Object.entries(service.build.args)) {
         const upstreamRepoVersion = upstreamRepoVersions.get(argName);
@@ -125,7 +124,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
         if (currentVersion === newVersion) continue;
 
         // Update current version
-        compose.services[serviceName].build = {
+        compose.releaseFile.services[serviceName].build = {
           ...service.build,
           args: {
             ...service.build.args,
@@ -146,13 +145,19 @@ Compose - ${JSON.stringify(compose, null, 2)}
   }
 
   const versionsToUpdate = Array.from(versionsToUpdateMap.values());
-  manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
-  writeReleaseFile({ type: ReleaseFileType.manifest, data: manifest }, format, {
-    dir
-  });
+  manifest.releaseFile.upstreamVersion = getUpstreamVersionTag(
+    versionsToUpdate
+  );
   writeReleaseFile(
-    { type: ReleaseFileType.compose, data: compose },
-    AllowedFormats.yml,
+    { type: ReleaseFileType.manifest, data: manifest.releaseFile },
+    manifest.releaseFileFormat,
+    {
+      dir
+    }
+  );
+  writeReleaseFile(
+    { type: ReleaseFileType.compose, data: compose.releaseFile },
+    compose.releaseFileFormat,
     { dir }
   );
 

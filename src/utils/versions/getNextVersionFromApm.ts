@@ -1,8 +1,8 @@
 import semver from "semver";
-import { readManifest } from "../../releaseFiles/manifest/manifest";
 import { Apm } from "../Apm";
 import { checkSemverType } from "../checkSemverType";
-import { ReleaseType } from "../../types";
+import { ReleaseFileType, ReleaseType } from "../../types";
+import { readReleaseFile } from "../../releaseFiles/readReleaseFile";
 
 export async function getNextVersionFromApm({
   type,
@@ -20,8 +20,8 @@ export async function getNextVersionFromApm({
   const apm = new Apm(ethProvider);
 
   // Load manifest
-  const { manifest } = readManifest({ dir });
-  const ensName = manifest.name.toLowerCase();
+  const manifest = readReleaseFile(ReleaseFileType.manifest, { dir });
+  const ensName = manifest.releaseFile.name.toLowerCase();
 
   // Fetch the latest version from APM
   const currentVersion = await apm.getLatestVersion(ensName);

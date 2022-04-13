@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
+import { stringifyJson } from "../releaseFiles/writeReleaseFile";
 import { AllowedFormats } from "../types";
-import { stringifyJson } from "./stringifyJson";
 
 interface ReleaseRecord {
   hash: string;

@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import Listr, { ListrTask } from "listr";
 import rimraf from "rimraf";
-import { readManifest } from "../releaseFiles/manifest/manifest";
 import { verifyAvatar } from "../utils/verifyAvatar";
 import { copyReleaseFile } from "../utils/copyReleaseFile";
 import { addReleaseRecord } from "../utils/releaseRecord";
@@ -11,16 +10,15 @@ import {
   CliError,
   getImagePath,
   getLegacyImagePath,
-  releaseFilesDefaultNames
+  releaseFilesDefaultNames,
+  defaultComposeFormat
 } from "../params";
 import {
-  readCompose,
   parseComposeUpstreamVersion,
   updateComposeImageTags,
   getComposePackageImages,
-  getComposePath,
   composeDeleteBuildProperties
-} from "../releaseFiles/compose/compose";
+} from "../utils/compose";
 import {
   AllowedFormats,
   ListrContextBuildAndPublish,
@@ -42,9 +40,10 @@ import {
   cliArgsToReleaseUploaderProvider,
   UploadTo
 } from "../releaseUploader";
-import { readSetupWizardIfExists } from "../releaseFiles/setupWizard/setupWizard";
 import { validateSchema } from "../releaseFiles/validateSchema";
 import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
+import { getReleaseFilePath } from "../releaseFiles/getReleaseFilePath";
+import { readReleaseFile } from "../releaseFiles/readReleaseFile";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -73,43 +72,67 @@ export function buildAndUpload({
   composeFileName: string;
   dir: string;
 }): ListrTask<ListrContextBuildAndPublish>[] {
-  // Load files
-  const { manifest, manifestFormat } = readManifest({ dir });
-  const setupWizard = readSetupWizardIfExists();
-
   const buildTimeout = parseTimeout(userTimeout);
 
+  // Load files
+  const manifest = readReleaseFile(ReleaseFileType.manifest, { dir });
+  const setupWizard = readReleaseFile(ReleaseFileType.setupWizard);
+
   // Update compose
-  const composePath = getComposePath({ dir, composeFileName });
-  const composeForDev = readCompose({ dir, composeFileName });
-  const composeForBuild = updateComposeImageTags(composeForDev, manifest);
-  const composeForRelease = updateComposeImageTags(composeForDev, manifest, {
-    editExternalImages: true
+  const composePath = getReleaseFilePath(
+    defaultComposeFormat,
+    ReleaseFileType.compose,
+    { dir, releaseFileName: composeFileName }
+  );
+  const composeForDev = readReleaseFile(ReleaseFileType.compose, {
+    dir,
+    releaseFileName: composeFileName
   });
 
+  const composeForBuild = updateComposeImageTags(
+    composeForDev.releaseFile,
+    manifest.releaseFile
+  );
+  const composeForRelease = updateComposeImageTags(
+    composeForDev.releaseFile,
+    manifest.releaseFile,
+    {
+      editExternalImages: true
+    }
+  );
+
   // Get external image tags to pull and re-tag
-  const images = getComposePackageImages(composeForDev, manifest);
+  const images = getComposePackageImages(
+    composeForDev.releaseFile,
+    manifest.releaseFile
+  );
 
   const architectures =
-    manifest.architectures && parseArchitectures(manifest.architectures);
+    manifest.releaseFile.architectures &&
+    parseArchitectures(manifest.releaseFile.architectures);
 
   // get the architecture of the machine where is executed the dappnodesdk
   const hardwareArchitecture = getArchitecture();
 
   const imagePathAmd = path.join(
     buildDir,
-    getImagePath(manifest.name, manifest.version, hardwareArchitecture)
+    getImagePath(
+      manifest.releaseFile.name,
+      manifest.releaseFile.version,
+      hardwareArchitecture
+    )
   );
 
   const imagePathLegacy = path.join(
     buildDir,
-    getLegacyImagePath(manifest.name, manifest.version)
+    getLegacyImagePath(manifest.releaseFile.name, manifest.releaseFile.version)
   );
 
   // Bump upstreamVersion if provided
   const upstreamVersion =
-    parseComposeUpstreamVersion(composeForDev) || process.env.UPSTREAM_VERSION;
-  if (upstreamVersion) manifest.upstreamVersion = upstreamVersion;
+    parseComposeUpstreamVersion(composeForDev.releaseFile) ||
+    process.env.UPSTREAM_VERSION;
+  if (upstreamVersion) manifest.releaseFile.upstreamVersion = upstreamVersion;
 
   // Release upload. Use function for return syntax
   const releaseUploaderProvider = cliArgsToReleaseUploaderProvider({
@@ -129,7 +152,7 @@ export function buildAndUpload({
             case "manifest":
               validateSchema({
                 type: ReleaseFileType.manifest,
-                data: manifest
+                data: manifest.releaseFile
               });
               continue;
             case "compose":
@@ -140,10 +163,10 @@ export function buildAndUpload({
               continue;
 
             case "setupWizard":
-              if (setupWizard)
+              if (Object.entries(setupWizard.releaseFile).length > 0)
                 validateSchema({
                   type: ReleaseFileType.setupWizard,
-                  data: setupWizard.setupWizard
+                  data: setupWizard.releaseFile
                 });
               continue;
 
@@ -185,7 +208,11 @@ export function buildAndUpload({
 
         const imagePaths = architectures
           ? architectures.map(arch =>
-              getImagePath(manifest.name, manifest.version, arch)
+              getImagePath(
+                manifest.releaseFile.name,
+                manifest.releaseFile.version,
+                arch
+              )
             )
           : [imagePathAmd];
 
@@ -206,8 +233,8 @@ export function buildAndUpload({
           switch (fileId as keyof typeof releaseFiles) {
             case "manifest":
               writeReleaseFile(
-                { type: ReleaseFileType.manifest, data: manifest },
-                manifestFormat,
+                { type: ReleaseFileType.manifest, data: manifest.releaseFile },
+                manifest.releaseFileFormat,
                 {
                   dir: buildDir
                 }
@@ -266,7 +293,11 @@ export function buildAndUpload({
                   skipSave,
                   destPath: path.join(
                     buildDir,
-                    getImagePath(manifest.name, manifest.version, architecture)
+                    getImagePath(
+                      manifest.releaseFile.name,
+                      manifest.releaseFile.version,
+                      architecture
+                    )
                   )
                 })
               )
@@ -298,7 +329,10 @@ export function buildAndUpload({
 
         ctx.releaseHash = await releaseUploader.addFromFs({
           dirPath: buildDir,
-          metadata: getPinMetadata(manifest, gitHead) as PinKeyvaluesDefault,
+          metadata: getPinMetadata(
+            manifest.releaseFile,
+            gitHead
+          ) as PinKeyvaluesDefault,
           onProgress: percent => (task.output = percentToMessage(percent))
         });
       }
@@ -316,7 +350,7 @@ export function buildAndUpload({
         const pinata = new PinataPinManager(releaseUploaderProvider);
         const pinsToDelete = await fetchPinsWithBranchToDelete(
           pinata,
-          manifest,
+          manifest.releaseFile,
           gitHead
         );
 
@@ -334,7 +368,7 @@ export function buildAndUpload({
       task: async ctx => {
         addReleaseRecord({
           dir,
-          version: manifest.version,
+          version: manifest.releaseFile.version,
           hash: ctx.releaseHash,
           to: contentProvider
         });

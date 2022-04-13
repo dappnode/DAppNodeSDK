@@ -1,7 +1,5 @@
 import { expect } from "chai";
 import { increaseFromLocalVersion } from "../../../src/utils/versions/increaseFromLocalVersion";
-import { readCompose } from "../../../src/releaseFiles/compose/compose";
-import { readManifest } from "../../../src/releaseFiles/manifest/manifest";
 import { writeReleaseFile } from "../../../src/releaseFiles/writeReleaseFile";
 import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
 import {
@@ -9,6 +7,7 @@ import {
   defaultManifestFormat
 } from "../../../src/params";
 import { AllowedFormats, Manifest, ReleaseFileType } from "../../../src/types";
+import { readReleaseFile } from "../../../src/releaseFiles/readReleaseFile";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -61,14 +60,17 @@ describe("increaseFromLocalVersion", function () {
     );
 
     // Check that the compose was edited correctly to the next version
-    const compose = readCompose({ dir: testDir });
-    expect(compose.services[dnpName].image).to.equal(
+    const compose = readReleaseFile(ReleaseFileType.compose, { dir: testDir });
+    expect(compose.releaseFile.services[dnpName].image).to.equal(
       "admin.dnp.dappnode.eth:0.1.1",
       "compose should be edited to the next version"
     );
     // Check that the manifest was edited correctly to the next version
-    const { manifest: newManifest } = readManifest({ dir: testDir });
-    expect(newManifest.version).to.equal(
+    const newManifest = readReleaseFile(ReleaseFileType.manifest, {
+      dir: testDir
+    });
+
+    expect(newManifest.releaseFile.version).to.equal(
       "0.1.1",
       "manifest should be edited to the next version"
     );
