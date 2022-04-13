@@ -5,11 +5,15 @@ import {
   encodeNewVersionCall,
   encodeNewRepoWithVersionCall
 } from "../utils/Apm";
-import { readManifest } from "../releaseFiles/manifest/manifest";
 import { getPublishTxLink } from "../utils/getLinks";
 import { addReleaseTx } from "../utils/releaseRecord";
 import { defaultDir, YargsError } from "../params";
-import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
+import {
+  CliGlobalOptions,
+  ListrContextBuildAndPublish,
+  ReleaseFileType
+} from "../types";
+import { readReleaseFile } from "../releaseFiles/readReleaseFile";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
@@ -40,15 +44,15 @@ export function generatePublishTx({
   const apm = new Apm(ethProvider);
 
   // Load manifest ##### Verify manifest object
-  const { manifest } = readManifest({ dir });
+  const manifest = readReleaseFile(ReleaseFileType.manifest, { dir });
 
   // Compute tx data
   const contentURI =
     "0x" + Buffer.from(releaseMultiHash, "utf8").toString("hex");
   const contractAddress = "0x0000000000000000000000000000000000000000";
-  const currentVersion = manifest.version;
-  const ensName = manifest.name;
-  const shortName = manifest.name.split(".")[0];
+  const currentVersion = manifest.releaseFile.version;
+  const ensName = manifest.releaseFile.name;
+  const shortName = manifest.releaseFile.name.split(".")[0];
 
   return new Listr<ListrContextBuildAndPublish>(
     [
@@ -122,7 +126,7 @@ with command option:
            */
           addReleaseTx({
             dir,
-            version: manifest.version,
+            version: manifest.releaseFile.version,
             link: getPublishTxLink(ctx.txData)
           });
         }

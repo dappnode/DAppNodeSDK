@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { readCompose } from "../../../src/releaseFiles/compose/compose";
+import { readReleaseFile } from "../../../src/releaseFiles/readReleaseFile";
 import { validateSchema } from "../../../src/releaseFiles/validateSchema";
 import { ReleaseFileType } from "../../../src/types";
 
@@ -7,22 +7,29 @@ describe("validation / Compose", () => {
   const composeDir = "test/validation/compose";
 
   it("Should read and validate a valid docker-compose file", () => {
-    const compose = readCompose({
+    const compose = readReleaseFile(ReleaseFileType.compose, {
       dir: composeDir,
-      composeFileName: "good-docker-compose.yml"
+      releaseFileName: "good-docker-compose.yml"
     });
 
-    validateSchema({ type: ReleaseFileType.compose, data: compose });
+    validateSchema({
+      type: ReleaseFileType.compose,
+      data: compose.releaseFile
+    });
   });
 
   it("Should read and not validate an invalid docker-compose file", () => {
-    const compose = readCompose({
+    const compose = readReleaseFile(ReleaseFileType.compose, {
       dir: composeDir,
-      composeFileName: "bad-docker-compose.yml"
+      releaseFileName: "bad-docker-compose.yml"
     });
+
     // expect to throw error
     expect(() =>
-      validateSchema({ type: ReleaseFileType.compose, data: compose })
+      validateSchema({
+        type: ReleaseFileType.compose,
+        data: compose.releaseFile
+      })
     ).to.throw();
   });
 });

@@ -10,11 +10,11 @@ import {
   updateComposeImageTags,
   parseComposeUpstreamVersion,
   getComposePackageImages,
-  composeDeleteBuildProperties,
-  readCompose
-} from "../../src/releaseFiles/compose/compose";
+  composeDeleteBuildProperties
+} from "../../src/utils/compose";
 import { writeReleaseFile } from "../../src/releaseFiles/writeReleaseFile";
 import { cleanTestDir, testDir } from "../testUtils";
+import { readReleaseFile } from "../../src/releaseFiles/readReleaseFile";
 
 describe("util > compose", () => {
   describe("updateComposeImageTags", () => {
@@ -260,9 +260,11 @@ describe("util > compose", () => {
 
       composeDeleteBuildProperties({ dir: testDir });
 
-      const composeEdited = readCompose({ dir: testDir });
+      const composeEdited = readReleaseFile(ReleaseFileType.compose, {
+        dir: testDir
+      });
 
-      expect(composeEdited).to.deep.equal(composeEditedExpected);
+      expect(composeEdited.releaseFile).to.deep.equal(composeEditedExpected);
     });
   });
 });

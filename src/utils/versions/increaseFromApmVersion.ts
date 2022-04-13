@@ -1,11 +1,8 @@
-import { readManifest } from "../../releaseFiles/manifest/manifest";
-import {
-  readCompose,
-  updateComposeImageTags
-} from "../../releaseFiles/compose/compose";
+import { updateComposeImageTags } from "../compose";
 import { getNextVersionFromApm } from "./getNextVersionFromApm";
 import { AllowedFormats, ReleaseFileType, ReleaseType } from "../../types";
 import { writeReleaseFile } from "../../releaseFiles/writeReleaseFile";
+import { readReleaseFile } from "../../releaseFiles/readReleaseFile";
 
 export async function increaseFromApmVersion({
   type,
@@ -22,18 +19,28 @@ export async function increaseFromApmVersion({
   const nextVersion = await getNextVersionFromApm({ type, ethProvider, dir });
 
   // Load manifest
-  const { manifest, manifestFormat: format } = readManifest({ dir });
+  const manifest = readReleaseFile(ReleaseFileType.manifest, { dir });
 
   // Increase the version
-  manifest.version = nextVersion;
+  manifest.releaseFile.version = nextVersion;
 
   // Mofidy and write the manifest and docker-compose
-  writeReleaseFile({ type: ReleaseFileType.manifest, data: manifest }, format, {
-    dir
+  writeReleaseFile(
+    { type: ReleaseFileType.manifest, data: manifest.releaseFile },
+    manifest.releaseFileFormat,
+    {
+      dir
+    }
+  );
+  const { name, version } = manifest.releaseFile;
+  const compose = readReleaseFile(ReleaseFileType.compose, {
+    dir,
+    releaseFileName: composeFileName
   });
-  const { name, version } = manifest;
-  const compose = readCompose({ dir, composeFileName });
-  const newCompose = updateComposeImageTags(compose, { name, version });
+  const newCompose = updateComposeImageTags(compose.releaseFile, {
+    name,
+    version
+  });
   writeReleaseFile(
     { type: ReleaseFileType.compose, data: newCompose },
     AllowedFormats.yml,

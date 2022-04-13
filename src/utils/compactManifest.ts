@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import { releaseFiles } from "../../params";
-import { readManifest } from "./manifest";
-import { ReleaseFileType, SetupWizard } from "../../types";
-import { writeReleaseFile } from "../writeReleaseFile";
+import { releaseFiles } from "../params";
+import { ReleaseFileType, SetupWizard } from "../types";
+import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
+import { readReleaseFile } from "../releaseFiles/readReleaseFile";
 
 /**
  * Reads manifest and extra files in `buildDir` compacts them in the manifest
@@ -12,18 +12,22 @@ import { writeReleaseFile } from "../writeReleaseFile";
  * @param buildDir `build_0.1.0`
  */
 export function compactManifestIfCore(buildDir: string): void {
-  const { manifest, manifestFormat: format } = readManifest({ dir: buildDir });
+  const manifest = readReleaseFile(ReleaseFileType.manifest, { dir: buildDir });
 
-  if (manifest.type !== "dncore") return;
+  if (manifest.releaseFile.type !== "dncore") return;
 
   const setupWizard = readSetupWizardIfExists(buildDir);
   if (setupWizard) {
-    manifest.setupWizard = setupWizard;
+    manifest.releaseFile.setupWizard = setupWizard;
   }
 
-  writeReleaseFile({ type: ReleaseFileType.manifest, data: manifest }, format, {
-    dir: buildDir
-  });
+  writeReleaseFile(
+    { type: ReleaseFileType.manifest, data: manifest.releaseFile },
+    manifest.releaseFileFormat,
+    {
+      dir: buildDir
+    }
+  );
 }
 
 function readSetupWizardIfExists(buildDir: string): SetupWizard | null {
