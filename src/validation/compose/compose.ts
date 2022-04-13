@@ -1,8 +1,7 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import prettier from "prettier";
-import { Compose, PackageImage } from "../../types";
+import { AllowedFormats, Compose, PackageImage } from "../../types";
 import {
   defaultComposeFileName,
   defaultDir,
@@ -13,6 +12,7 @@ import {
 import { toTitleCase } from "../../utils/format";
 import { mapValues, uniqBy } from "lodash";
 import { readFile } from "../../utils/file";
+import { stringifyJson } from "../../utils/stringifyJson";
 
 interface ComposePaths {
   /** './folder', [optional] directory to load the compose from */
@@ -44,9 +44,13 @@ export function readCompose(paths?: ComposePaths): Compose {
 /**
  * Writes the docker-compose.
  */
-export function writeCompose(compose: Compose, paths?: ComposePaths): void {
+export function writeCompose(
+  compose: Compose,
+  paths?: ComposePaths,
+  format: AllowedFormats = AllowedFormats.yml
+): void {
   const composePath = getComposePath(paths);
-  fs.writeFileSync(composePath, stringifyCompose(compose));
+  fs.writeFileSync(composePath, stringifyJson(compose, format));
 }
 
 /**
@@ -58,20 +62,6 @@ export function getComposePath(paths?: ComposePaths): string {
     paths?.dir || defaultDir,
     paths?.composeFileName || defaultComposeFileName
   );
-}
-
-function stringifyCompose(compose: Compose): string {
-  return prettier.format(yaml.dump(compose, { indent: 2 }), {
-    // DAppNode prettier options, to match DAppNodeSDK + DAPPMANAGER
-    printWidth: 80,
-    tabWidth: 2,
-    useTabs: false,
-    semi: true,
-    singleQuote: false,
-    trailingComma: "none",
-    // Built-in parser for YAML
-    parser: "yaml"
-  });
 }
 
 /**
