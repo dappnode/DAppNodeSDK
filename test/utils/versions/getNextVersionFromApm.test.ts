@@ -4,7 +4,7 @@ import { getNextVersionFromApm } from "../../../src/utils/versions/getNextVersio
 import { writeReleaseFile } from "../../../src/releaseFiles/writeReleaseFile";
 import { cleanTestDir, testDir } from "../../testUtils";
 import { defaultManifestFormat } from "../../../src/params";
-import { ReleaseFileType } from "../../../src/types";
+import { ReleaseFileType } from "../../../src/releaseFiles/types";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

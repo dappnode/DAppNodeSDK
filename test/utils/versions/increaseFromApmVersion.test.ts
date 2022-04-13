@@ -1,15 +1,18 @@
 import { expect } from "chai";
 import semver from "semver";
 import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion";
-import { AllowedFormats, Manifest, ReleaseFileType } from "../../../src/types";
 import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
-import { readManifest } from "../../../src/releaseFiles/manifest/manifest";
-import { readCompose } from "../../../src/releaseFiles/compose/compose";
 import { writeReleaseFile } from "../../../src/releaseFiles/writeReleaseFile";
 import {
   defaultComposeFileName,
   defaultManifestFormat
 } from "../../../src/params";
+import { readReleaseFile } from "../../../src/releaseFiles/readReleaseFile";
+import { Manifest } from "../../../src/releaseFiles/manifest/types";
+import {
+  ReleaseFileType,
+  AllowedFormats
+} from "../../../src/releaseFiles/types";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -59,14 +62,16 @@ describe("increaseFromApmVersion", function () {
     expect(semver.valid(nextVersion)).to.be.ok;
 
     // Check that the compose was edited correctly to the next version
-    const compose = readCompose({ dir: testDir });
-    expect(compose.services[dnpName].image).to.equal(
+    const compose = readReleaseFile(ReleaseFileType.compose, { dir: testDir });
+    expect(compose.data.services[dnpName].image).to.equal(
       `admin.dnp.dappnode.eth:${nextVersion}`,
       "compose should be edited to the next version"
     );
     // Check that the manifest was edited correctly to the next version
-    const { manifest: newManifest } = readManifest({ dir: testDir });
-    expect(newManifest.version).to.equal(
+    const newManifest = readReleaseFile(ReleaseFileType.manifest, {
+      dir: testDir
+    });
+    expect(newManifest.data.version).to.equal(
       nextVersion,
       "manifest should be edited to the next version"
     );

@@ -5,7 +5,7 @@ import { CommandModule } from "yargs";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import moment from "moment";
-import { CliGlobalOptions, defaultArch, Manifest } from "../types";
+import { CliGlobalOptions, defaultArch } from "../types";
 import {
   contentHashFile,
   getImagePath,
@@ -17,6 +17,7 @@ import { getInstallDnpLink } from "../utils/getLinks";
 import { githubGetReleases, GithubRelease } from "../utils/githubGetReleases";
 import { ipfsAddDirFromUrls } from "../releaseUploader/ipfsNode/addDirFromUrls";
 import { verifyIpfsConnection } from "../releaseUploader/ipfsNode/verifyConnection";
+import { Manifest } from "../releaseFiles/manifest/types";
 
 interface CliCommandOptions extends CliGlobalOptions {
   repoSlug: string;

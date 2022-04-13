@@ -1,4 +1,4 @@
-version: "3.4"
+version: "3.5"
 services:
   beacon-chain:
     image: "beacon-chain.lighthouse-prater.dnp.dappnode.eth:0.1.0"
@@ -11,6 +11,7 @@ services:
     ports:
       - 9000/tcp
       - 9000/udp
+    pid: "service:erigon"
     restart: unless-stopped
     environment:
       BEACON_API_PORT: 3500

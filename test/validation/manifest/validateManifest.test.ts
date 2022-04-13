@@ -1,31 +1,34 @@
 import { expect } from "chai";
-import { readManifest } from "../../../src/releaseFiles/manifest/manifest";
+import { readReleaseFile } from "../../../src/releaseFiles/readReleaseFile";
+import { ReleaseFileType } from "../../../src/releaseFiles/types";
 import { validateSchema } from "../../../src/releaseFiles/validateSchema";
-import { ReleaseFileType } from "../../../src/types";
 
 describe("validation / Manifest", () => {
   const manifestDir = "test/validation/manifest";
 
   it("Should read and validate a valid Manifest file", () => {
-    const manifest = readManifest({
+    const manifest = readReleaseFile(ReleaseFileType.manifest, {
       dir: manifestDir,
-      manifestFileName: "good-dappnode_package.json"
+      releaseFileName: "good-dappnode_package.json"
     });
 
-    validateSchema({ type: ReleaseFileType.manifest, data: manifest.manifest });
+    validateSchema({
+      type: ReleaseFileType.manifest,
+      data: manifest.data
+    });
   });
 
   it("Should read and not validate an invalid Manifest file", () => {
-    const manifest = readManifest({
+    const manifest = readReleaseFile(ReleaseFileType.manifest, {
       dir: manifestDir,
-      manifestFileName: "bad-dappnode_package.json"
+      releaseFileName: "bad-dappnode_package.json"
     });
 
     // expect to throw error
     expect(() =>
       validateSchema({
         type: ReleaseFileType.manifest,
-        data: manifest.manifest
+        data: manifest.data
       })
     ).to.throw();
   });

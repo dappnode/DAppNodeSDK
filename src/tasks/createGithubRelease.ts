@@ -3,7 +3,7 @@ import path from "path";
 import Listr from "listr";
 import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
 import { getGitHead } from "../utils/git";
-import { compactManifestIfCore } from "../releaseFiles/manifest/compactManifest";
+import { compactManifestIfCore } from "../utils/compactManifest";
 import { contentHashFile, defaultDir } from "../params";
 import {
   TxData,
@@ -11,7 +11,7 @@ import {
   ListrContextBuildAndPublish
 } from "../types";
 import { Github } from "../providers/github/Github";
-import { composeDeleteBuildProperties } from "../releaseFiles/compose/compose";
+import { composeDeleteBuildProperties } from "../utils/compose";
 
 /**
  * Create (or edit) a Github release, then upload all assets
@@ -106,7 +106,10 @@ export function createGithubRelease({
 
           // Remove `build` property AFTER building. Otherwise it may break ISO installations
           // https://github.com/dappnode/DAppNode_Installer/issues/161
-          composeDeleteBuildProperties({ dir: buildDir, composeFileName });
+          composeDeleteBuildProperties({
+            dir: buildDir,
+            releaseFileName: composeFileName
+          });
 
           task.output = `Creating release for tag ${tag}...`;
           await github.createReleaseAndUploadAssets(tag, {

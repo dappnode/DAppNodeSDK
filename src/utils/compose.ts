@@ -1,61 +1,19 @@
-import path from "path";
-import yaml from "js-yaml";
+import { PackageImage } from "../types";
 import {
-  AllowedFormats,
-  Compose,
-  PackageImage,
-  ReleaseFilePaths,
-  ReleaseFileType
-} from "../../types";
-import {
-  defaultComposeFileName,
-  defaultDir,
   getImageTag,
   upstreamImageLabel,
   UPSTREAM_VERSION_VARNAME
-} from "../../params";
-import { toTitleCase } from "../../utils/format";
+} from "../params";
+import { toTitleCase } from "./format";
 import { mapValues, uniqBy } from "lodash";
-import { readFile } from "../../utils/file";
-import { writeReleaseFile } from "../writeReleaseFile";
-
-interface ComposePaths {
-  /** './folder', [optional] directory to load the compose from */
-  dir?: string;
-  /** 'manifest-admin.json', [optional] name of the compose file */
-  composeFileName?: string;
-}
-
-/**
- * Read a compose parsed data
- * Without arguments defaults to write the manifest at './docker-compose.yml'
- * @return compose object
- */
-export function readCompose(paths?: ComposePaths): Compose {
-  const composePath = getComposePath(paths);
-  const data = readFile(composePath);
-
-  // Parse compose in try catch block to show a comprehensive error message
-  try {
-    const compose = yaml.safeLoad(data);
-    if (!compose) throw Error("result is undefined");
-    if (typeof compose === "string") throw Error("result is a string");
-    return compose as Compose;
-  } catch (e) {
-    throw Error(`Error parsing docker-compose: ${e.message}`);
-  }
-}
-
-/**
- * Get compose path. Without arguments defaults to './docker-compose.yml'
- * @return path = './dappnode_package.json'
- */
-export function getComposePath(paths?: ComposePaths): string {
-  return path.join(
-    paths?.dir || defaultDir,
-    paths?.composeFileName || defaultComposeFileName
-  );
-}
+import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
+import { readReleaseFile } from "../releaseFiles/readReleaseFile";
+import { Compose } from "../releaseFiles/compose/types";
+import {
+  ReleaseFilePaths,
+  ReleaseFileType,
+  AllowedFormats
+} from "../releaseFiles/types";
 
 /**
  * Update service image tag to current version
@@ -139,12 +97,12 @@ export function parseComposeUpstreamVersion(
  * Delete all `build` properties from all services in a disk persisted compose
  */
 export function composeDeleteBuildProperties(paths?: ReleaseFilePaths): void {
-  const compose = readCompose(paths);
-  for (const service of Object.values(compose.services)) {
+  const compose = readReleaseFile(ReleaseFileType.compose, paths);
+  for (const service of Object.values(compose.data.services)) {
     delete service.build;
   }
   writeReleaseFile(
-    { type: ReleaseFileType.compose, data: compose },
+    { type: ReleaseFileType.compose, data: compose.data },
     AllowedFormats.yml,
     paths
   );

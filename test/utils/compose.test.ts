@@ -1,20 +1,17 @@
 import { expect } from "chai";
-import {
-  AllowedFormats,
-  Compose,
-  PackageImage,
-  ReleaseFileType
-} from "../../src/types";
+import { PackageImage } from "../../src/types";
 import { upstreamImageLabel } from "../../src/params";
 import {
   updateComposeImageTags,
   parseComposeUpstreamVersion,
   getComposePackageImages,
-  composeDeleteBuildProperties,
-  readCompose
-} from "../../src/releaseFiles/compose/compose";
+  composeDeleteBuildProperties
+} from "../../src/utils/compose";
 import { writeReleaseFile } from "../../src/releaseFiles/writeReleaseFile";
 import { cleanTestDir, testDir } from "../testUtils";
+import { readReleaseFile } from "../../src/releaseFiles/readReleaseFile";
+import { Compose } from "../../src/releaseFiles/compose/types";
+import { AllowedFormats, ReleaseFileType } from "../../src/releaseFiles/types";
 
 describe("util > compose", () => {
   describe("updateComposeImageTags", () => {
@@ -260,9 +257,11 @@ describe("util > compose", () => {
 
       composeDeleteBuildProperties({ dir: testDir });
 
-      const composeEdited = readCompose({ dir: testDir });
+      const composeEdited = readReleaseFile(ReleaseFileType.compose, {
+        dir: testDir
+      });
 
-      expect(composeEdited).to.deep.equal(composeEditedExpected);
+      expect(composeEdited.data).to.deep.equal(composeEditedExpected);
     });
   });
 });
