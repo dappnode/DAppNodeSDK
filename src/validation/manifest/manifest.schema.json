@@ -10,7 +10,9 @@
     "name": {
       "type": "string",
       "description": "DAppNode Package ENS name.",
-      "examples": ["ipfs.dnp.dappnode.eth"]
+      "examples": ["ipfs.dnp.dappnode.eth"],
+      "pattern": "^[a-z0-9\\-\\.]+$",
+      "errorMessage": "Should be lowercase alphanumeric, dashes and dots only."
     },
     "version": {
       "type": "string",
