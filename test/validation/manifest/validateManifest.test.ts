@@ -1,6 +1,7 @@
 import { expect } from "chai";
-import { readManifest } from "../../../src/validation/manifest/manifest";
-import { validateManifest } from "../../../src/validation/manifest/validateManifest";
+import { readManifest } from "../../../src/releaseFiles/manifest/manifest";
+import { validateSchema } from "../../../src/releaseFiles/validateSchema";
+import { ReleaseFileType } from "../../../src/types";
 
 describe("validation / Manifest", () => {
   const manifestDir = "test/validation/manifest";
@@ -11,7 +12,7 @@ describe("validation / Manifest", () => {
       manifestFileName: "good-dappnode_package.json"
     });
 
-    validateManifest(manifest.manifest);
+    validateSchema({ type: ReleaseFileType.manifest, data: manifest.manifest });
   });
 
   it("Should read and not validate an invalid Manifest file", () => {
@@ -21,6 +22,11 @@ describe("validation / Manifest", () => {
     });
 
     // expect to throw error
-    expect(() => validateManifest(manifest.manifest)).to.throw();
+    expect(() =>
+      validateSchema({
+        type: ReleaseFileType.manifest,
+        data: manifest.manifest
+      })
+    ).to.throw();
   });
 });

@@ -1,7 +1,8 @@
 import { expect } from "chai";
 import { defaultManifestFormat } from "../../src/params";
 import { generatePublishTx } from "../../src/tasks/generatePublishTx";
-import { writeManifest } from "../../src/validation/manifest/manifest";
+import { ReleaseFileType } from "../../src/types";
+import { writeReleaseFile } from "../../src/releaseFiles/writeReleaseFile";
 import { testDir, cleanTestDir } from "../testUtils";
 
 // This test will create the following fake files
@@ -22,7 +23,14 @@ describe("generatePublishTx", function () {
       name: "admin.dnp.dappnode.eth",
       version: "0.1.0"
     };
-    writeManifest(manifest, defaultManifestFormat, { dir: testDir });
+
+    writeReleaseFile(
+      { type: ReleaseFileType.manifest, data: manifest },
+      defaultManifestFormat,
+      {
+        dir: testDir
+      }
+    );
 
     const generatePublishTxTasks = generatePublishTx({
       dir: testDir,
@@ -54,7 +62,14 @@ describe("generatePublishTx", function () {
       name: "new-repo.dnp.dappnode.eth",
       version: "0.1.0"
     };
-    writeManifest(manifest, defaultManifestFormat, { dir: testDir });
+
+    writeReleaseFile(
+      { type: ReleaseFileType.manifest, data: manifest },
+      defaultManifestFormat,
+      {
+        dir: testDir
+      }
+    );
 
     const generatePublishTxTasks = generatePublishTx({
       dir: testDir,

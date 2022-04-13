@@ -1,16 +1,11 @@
 import { expect } from "chai";
 import semver from "semver";
 import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion";
-import { Manifest } from "../../../src/types";
+import { AllowedFormats, Manifest, ReleaseFileType } from "../../../src/types";
 import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
-import {
-  readManifest,
-  writeManifest
-} from "../../../src/validation/manifest/manifest";
-import {
-  readCompose,
-  writeCompose
-} from "../../../src/validation/compose/compose";
+import { readManifest } from "../../../src/releaseFiles/manifest/manifest";
+import { readCompose } from "../../../src/releaseFiles/compose/compose";
+import { writeReleaseFile } from "../../../src/releaseFiles/writeReleaseFile";
 import {
   defaultComposeFileName,
   defaultManifestFormat
@@ -38,8 +33,20 @@ describe("increaseFromApmVersion", function () {
   after("Clean testDir", () => cleanTestDir());
 
   it("Should get the last version from APM", async () => {
-    writeManifest(manifest, defaultManifestFormat, { dir: testDir });
-    writeCompose(generateCompose(manifest), { dir: testDir });
+    writeReleaseFile(
+      { type: ReleaseFileType.manifest, data: manifest },
+      defaultManifestFormat,
+      {
+        dir: testDir
+      }
+    );
+    writeReleaseFile(
+      { type: ReleaseFileType.compose, data: generateCompose(manifest) },
+      AllowedFormats.yml,
+      {
+        dir: testDir
+      }
+    );
 
     const nextVersion = await increaseFromApmVersion({
       type: "patch",

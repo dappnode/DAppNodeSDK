@@ -1,19 +1,21 @@
 import { CommandModule } from "yargs";
-import { CliGlobalOptions } from "../../../types";
+import {
+  AllowedFormats,
+  CliGlobalOptions,
+  ReleaseFileType
+} from "../../../types";
 import { branchNameRoot, defaultDir } from "../../../params";
 import { Github } from "../../../providers/github/Github";
 import { getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format";
 import { shell } from "../../../utils/shell";
-import {
-  readManifest,
-  writeManifest
-} from "../../../validation/manifest/manifest";
-import { readCompose, writeCompose } from "../../../validation/compose/compose";
+import { readManifest } from "../../../releaseFiles/manifest/manifest";
+import { readCompose } from "../../../releaseFiles/compose/compose";
 import { parseCsv } from "../../../utils/csv";
 import { getLocalBranchExists, getGitHead } from "../../../utils/git";
 import { arrIsUnique } from "../../../utils/array";
 import { buildAndComment } from "../build";
 import { closeOldPrs } from "./closeOldPrs";
+import { writeReleaseFile } from "../../../releaseFiles/writeReleaseFile";
 
 // This action should be run periodically
 
@@ -145,8 +147,14 @@ Compose - ${JSON.stringify(compose, null, 2)}
 
   const versionsToUpdate = Array.from(versionsToUpdateMap.values());
   manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
-  writeManifest(manifest, format, { dir });
-  writeCompose(compose, { dir });
+  writeReleaseFile({ type: ReleaseFileType.manifest, data: manifest }, format, {
+    dir
+  });
+  writeReleaseFile(
+    { type: ReleaseFileType.compose, data: compose },
+    AllowedFormats.yml,
+    { dir }
+  );
 
   const commitMsg = `bump ${versionsToUpdate
     .map(({ repoSlug, newVersion }) => `${repoSlug} to ${newVersion}`)

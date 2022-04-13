@@ -41,17 +41,6 @@ export function readSetupWizardIfExists(
 }
 
 /**
- * Writes a setupWizard. Without arguments defaults to write the setupWizard at './setup-wizard.yml'
- */
-export function writeSetupWizard(
-  setupWizard: SetupWizard,
-  format: AllowedFormats
-): void {
-  const setupWizardPath = getsetupWizardPath(format);
-  fs.writeFileSync(setupWizardPath, stringifyJson(setupWizard, format));
-}
-
-/**
  * Get manifest path. Without arguments defaults to './setup-wizard.yml'
  * @return path = './setup-wizard.yml'
  */

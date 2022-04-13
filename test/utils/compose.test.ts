@@ -1,14 +1,19 @@
 import { expect } from "chai";
-import { Compose, PackageImage } from "../../src/types";
+import {
+  AllowedFormats,
+  Compose,
+  PackageImage,
+  ReleaseFileType
+} from "../../src/types";
 import { upstreamImageLabel } from "../../src/params";
 import {
   updateComposeImageTags,
   parseComposeUpstreamVersion,
   getComposePackageImages,
   composeDeleteBuildProperties,
-  writeCompose,
   readCompose
-} from "../../src/validation/compose/compose";
+} from "../../src/releaseFiles/compose/compose";
+import { writeReleaseFile } from "../../src/releaseFiles/writeReleaseFile";
 import { cleanTestDir, testDir } from "../testUtils";
 
 describe("util > compose", () => {
@@ -245,7 +250,13 @@ describe("util > compose", () => {
         }
       };
 
-      writeCompose(compose, { dir: testDir });
+      writeReleaseFile(
+        { type: ReleaseFileType.compose, data: compose },
+        AllowedFormats.yml,
+        {
+          dir: testDir
+        }
+      );
 
       composeDeleteBuildProperties({ dir: testDir });
 

@@ -4,7 +4,6 @@ import yaml from "js-yaml";
 import { defaultDir, releaseFiles } from "../../params";
 import { Manifest, AllowedFormats } from "../../types";
 import { readFile } from "../../utils/file";
-import { stringifyJson } from "../../utils/stringifyJson";
 import { parseFormat } from "../../utils/parseFormat";
 
 interface ManifestPaths {
@@ -34,18 +33,6 @@ export function readManifest(
   } catch (e) {
     throw Error(`Error parsing manifest: ${e.message}`);
   }
-}
-
-/**
- * Writes a manifest. Without arguments defaults to write the manifest at './dappnode_package.json'
- */
-export function writeManifest(
-  manifest: Manifest,
-  format: AllowedFormats,
-  paths?: ManifestPaths
-): void {
-  const manifestPath = getManifestPath(format, paths);
-  fs.writeFileSync(manifestPath, stringifyJson(manifest, format));
 }
 
 /**

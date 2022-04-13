@@ -1,15 +1,12 @@
 import semver from "semver";
-import {
-  readManifest,
-  writeManifest
-} from "../../validation/manifest/manifest";
+import { readManifest } from "../../releaseFiles/manifest/manifest";
 import {
   readCompose,
-  writeCompose,
   updateComposeImageTags
-} from "../../validation/compose/compose";
+} from "../../releaseFiles/compose/compose";
 import { checkSemverType } from "../checkSemverType";
-import { ReleaseType } from "../../types";
+import { AllowedFormats, ReleaseFileType, ReleaseType } from "../../types";
+import { writeReleaseFile } from "../../releaseFiles/writeReleaseFile";
 
 export async function increaseFromLocalVersion({
   type,
@@ -35,11 +32,17 @@ export async function increaseFromLocalVersion({
   manifest.version = nextVersion;
 
   // Mofidy and write the manifest and docker-compose
-  writeManifest(manifest, format, { dir });
+  writeReleaseFile({ type: ReleaseFileType.manifest, data: manifest }, format, {
+    dir
+  });
   const { name, version } = manifest;
   const compose = readCompose({ dir, composeFileName });
   const newCompose = updateComposeImageTags(compose, { name, version });
-  writeCompose(newCompose, { dir, composeFileName });
+  writeReleaseFile(
+    { type: ReleaseFileType.compose, data: newCompose },
+    AllowedFormats.yml,
+    { dir, releaseFileName: composeFileName }
+  );
 
   return nextVersion;
 }

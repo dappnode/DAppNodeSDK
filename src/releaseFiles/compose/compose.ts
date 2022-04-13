@@ -1,7 +1,12 @@
-import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import { AllowedFormats, Compose, PackageImage } from "../../types";
+import {
+  AllowedFormats,
+  Compose,
+  PackageImage,
+  ReleaseFilePaths,
+  ReleaseFileType
+} from "../../types";
 import {
   defaultComposeFileName,
   defaultDir,
@@ -12,7 +17,7 @@ import {
 import { toTitleCase } from "../../utils/format";
 import { mapValues, uniqBy } from "lodash";
 import { readFile } from "../../utils/file";
-import { stringifyJson } from "../../utils/stringifyJson";
+import { writeReleaseFile } from "../writeReleaseFile";
 
 interface ComposePaths {
   /** './folder', [optional] directory to load the compose from */
@@ -39,18 +44,6 @@ export function readCompose(paths?: ComposePaths): Compose {
   } catch (e) {
     throw Error(`Error parsing docker-compose: ${e.message}`);
   }
-}
-
-/**
- * Writes the docker-compose.
- */
-export function writeCompose(
-  compose: Compose,
-  paths?: ComposePaths,
-  format: AllowedFormats = AllowedFormats.yml
-): void {
-  const composePath = getComposePath(paths);
-  fs.writeFileSync(composePath, stringifyJson(compose, format));
 }
 
 /**
@@ -145,10 +138,14 @@ export function parseComposeUpstreamVersion(
 /**
  * Delete all `build` properties from all services in a disk persisted compose
  */
-export function composeDeleteBuildProperties(paths?: ComposePaths): void {
+export function composeDeleteBuildProperties(paths?: ReleaseFilePaths): void {
   const compose = readCompose(paths);
   for (const service of Object.values(compose.services)) {
     delete service.build;
   }
-  writeCompose(compose, paths);
+  writeReleaseFile(
+    { type: ReleaseFileType.compose, data: compose },
+    AllowedFormats.yml,
+    paths
+  );
 }

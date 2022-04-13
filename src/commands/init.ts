@@ -4,11 +4,8 @@ import chalk from "chalk";
 import { CommandModule } from "yargs";
 import semver from "semver";
 import inquirer from "inquirer";
-import {
-  writeManifest,
-  getManifestPath
-} from "../validation/manifest/manifest";
-import { writeCompose, getComposePath } from "../validation/compose/compose";
+import { getManifestPath } from "../releaseFiles/manifest/manifest";
+import { getComposePath } from "../releaseFiles/compose/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
 import {
@@ -20,7 +17,14 @@ import {
   releaseFiles,
   YargsError
 } from "../params";
-import { CliGlobalOptions, Compose, Manifest } from "../types";
+import {
+  AllowedFormats,
+  CliGlobalOptions,
+  Compose,
+  Manifest,
+  ReleaseFileType
+} from "../types";
+import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",
@@ -218,11 +222,21 @@ It only covers the most common items, and tries to guess sensible defaults.
   }
 
   // Write manifest and compose
-  writeManifest(manifest, defaultManifestFormat, { dir });
+  writeReleaseFile(
+    { type: ReleaseFileType.manifest, data: manifest },
+    defaultManifestFormat,
+    {
+      dir
+    }
+  );
 
   // Only write a compose if it doesn't exist
   if (!fs.existsSync(getComposePath({ dir }))) {
-    writeCompose(compose, { dir, composeFileName });
+    writeReleaseFile(
+      { type: ReleaseFileType.compose, data: compose },
+      AllowedFormats.yml,
+      { dir, releaseFileName: composeFileName }
+    );
   }
 
   // Add default avatar so users can run the command right away
