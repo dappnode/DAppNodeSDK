@@ -6,8 +6,12 @@ import {
   defaultComposeFileName,
   defaultManifestFormat
 } from "../../../src/params";
-import { AllowedFormats, Manifest, ReleaseFileType } from "../../../src/types";
 import { readReleaseFile } from "../../../src/releaseFiles/readReleaseFile";
+import { Manifest } from "../../../src/releaseFiles/manifest/types";
+import {
+  ReleaseFileType,
+  AllowedFormats
+} from "../../../src/releaseFiles/types";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

@@ -80,7 +80,6 @@
       "type": "object",
 
       "properties": {
-        "deploy": { "$ref": "#/definitions/deployment" },
         "build": {
           "oneOf": [
             { "type": "string" },
@@ -146,7 +145,6 @@
           "items": { "type": "string" },
           "uniqueItems": true
         },
-        "cgroup_parent": { "type": "string" },
         "command": {
           "oneOf": [
             { "type": "string" },
@@ -164,16 +162,6 @@
         "cpu_rt_runtime": { "type": ["number", "string"] },
         "cpus": { "type": ["number", "string"] },
         "cpuset": { "type": "string" },
-        "credential_spec": {
-          "type": "object",
-          "properties": {
-            "config": { "type": "string" },
-            "file": { "type": "string" },
-            "registry": { "type": "string" }
-          },
-          "additionalProperties": false,
-          "patternProperties": { "^x-": {} }
-        },
         "depends_on": {
           "oneOf": [
             { "$ref": "#/definitions/list_of_strings" },
@@ -200,7 +188,6 @@
             }
           ]
         },
-        "device_cgroup_rules": { "$ref": "#/definitions/list_of_strings" },
         "devices": {
           "type": "array",
           "items": { "type": "string" },
@@ -213,7 +200,6 @@
           "uniqueItems": true
         },
         "dns_search": { "$ref": "#/definitions/string_or_list" },
-        "domainname": { "type": "string" },
         "entrypoint": {
           "oneOf": [
             { "type": "string" },
@@ -231,21 +217,6 @@
           },
           "uniqueItems": true
         },
-        "extends": {
-          "oneOf": [
-            { "type": "string" },
-            {
-              "type": "object",
-
-              "properties": {
-                "service": { "type": "string" },
-                "file": { "type": "string" }
-              },
-              "required": ["service"],
-              "additionalProperties": false
-            }
-          ]
-        },
         "external_links": {
           "type": "array",
           "items": { "type": "string" },
@@ -262,15 +233,7 @@
         "healthcheck": { "$ref": "#/definitions/healthcheck" },
         "hostname": { "type": "string" },
         "image": { "type": "string" },
-        "init": { "type": "boolean" },
-        "ipc": { "type": "string" },
-        "isolation": { "type": "string" },
         "labels": { "$ref": "#/definitions/list_or_dict" },
-        "links": {
-          "type": "array",
-          "items": { "type": "string" },
-          "uniqueItems": true
-        },
         "logging": {
           "type": "object",
 
@@ -286,7 +249,6 @@
           "additionalProperties": false,
           "patternProperties": { "^x-": {} }
         },
-        "mac_address": { "type": "string" },
         "mem_limit": { "type": ["number", "string"] },
         "mem_reservation": { "type": ["string", "integer"] },
         "mem_swappiness": { "type": "integer" },
@@ -322,15 +284,11 @@
             }
           ]
         },
-        "oom_kill_disable": { "type": "boolean" },
-        "oom_score_adj": {
-          "type": "integer",
-          "minimum": -1000,
-          "maximum": 1000
+        "pid": {
+          "type": "string",
+          "pattern": "^service:.*$"
         },
-        "pid": { "type": ["string", "null"] },
         "pids_limit": { "type": ["number", "string"] },
-        "platform": { "type": "string" },
         "ports": {
           "type": "array",
           "items": {
@@ -354,55 +312,11 @@
           "uniqueItems": true
         },
         "privileged": { "type": "boolean" },
-        "profiles": { "$ref": "#/definitions/list_of_strings" },
-        "pull_policy": {
-          "type": "string",
-          "enum": ["always", "never", "if_not_present", "build", "missing"]
-        },
-        "read_only": { "type": "boolean" },
         "restart": { "type": "string" },
-        "runtime": {
-          "type": "string"
-        },
-        "scale": {
-          "type": "integer"
-        },
-        "security_opt": {
-          "type": "array",
-          "items": { "type": "string" },
-          "uniqueItems": true
-        },
-        "shm_size": { "type": ["number", "string"] },
-        "secrets": { "$ref": "#/definitions/service_config_or_secret" },
-        "sysctls": { "$ref": "#/definitions/list_or_dict" },
         "stdin_open": { "type": "boolean" },
         "stop_grace_period": { "type": "string", "format": "duration" },
         "stop_signal": { "type": "string" },
-        "storage_opt": { "type": "object" },
-        "tmpfs": { "$ref": "#/definitions/string_or_list" },
-        "tty": { "type": "boolean" },
-        "ulimits": {
-          "type": "object",
-          "patternProperties": {
-            "^[a-z]+$": {
-              "oneOf": [
-                { "type": "integer" },
-                {
-                  "type": "object",
-                  "properties": {
-                    "hard": { "type": "integer" },
-                    "soft": { "type": "integer" }
-                  },
-                  "required": ["soft", "hard"],
-                  "additionalProperties": false,
-                  "patternProperties": { "^x-": {} }
-                }
-              ]
-            }
-          }
-        },
         "user": { "type": "string" },
-        "userns_mode": { "type": "string" },
         "volumes": {
           "type": "array",
           "items": {
@@ -482,105 +396,6 @@
         },
         "timeout": { "type": "string", "format": "duration" },
         "start_period": { "type": "string", "format": "duration" }
-      },
-      "additionalProperties": false,
-      "patternProperties": { "^x-": {} }
-    },
-    "deployment": {
-      "$id": "#/definitions/deployment",
-      "type": ["object", "null"],
-      "properties": {
-        "mode": { "type": "string" },
-        "endpoint_mode": { "type": "string" },
-        "replicas": { "type": "integer" },
-        "labels": { "$ref": "#/definitions/list_or_dict" },
-        "rollback_config": {
-          "type": "object",
-          "properties": {
-            "parallelism": { "type": "integer" },
-            "delay": { "type": "string", "format": "duration" },
-            "failure_action": { "type": "string" },
-            "monitor": { "type": "string", "format": "duration" },
-            "max_failure_ratio": { "type": "number" },
-            "order": { "type": "string", "enum": ["start-first", "stop-first"] }
-          },
-          "additionalProperties": false,
-          "patternProperties": { "^x-": {} }
-        },
-        "update_config": {
-          "type": "object",
-          "properties": {
-            "parallelism": { "type": "integer" },
-            "delay": { "type": "string", "format": "duration" },
-            "failure_action": { "type": "string" },
-            "monitor": { "type": "string", "format": "duration" },
-            "max_failure_ratio": { "type": "number" },
-            "order": { "type": "string", "enum": ["start-first", "stop-first"] }
-          },
-          "additionalProperties": false,
-          "patternProperties": { "^x-": {} }
-        },
-        "resources": {
-          "type": "object",
-          "properties": {
-            "limits": {
-              "type": "object",
-              "properties": {
-                "cpus": { "type": ["number", "string"] },
-                "memory": { "type": "string" },
-                "pids": { "type": "integer" }
-              },
-              "additionalProperties": false,
-              "patternProperties": { "^x-": {} }
-            },
-            "reservations": {
-              "type": "object",
-              "properties": {
-                "cpus": { "type": ["number", "string"] },
-                "memory": { "type": "string" },
-                "generic_resources": {
-                  "$ref": "#/definitions/generic_resources"
-                },
-                "devices": { "$ref": "#/definitions/devices" }
-              },
-              "additionalProperties": false,
-              "patternProperties": { "^x-": {} }
-            }
-          },
-          "additionalProperties": false,
-          "patternProperties": { "^x-": {} }
-        },
-        "restart_policy": {
-          "type": "object",
-          "properties": {
-            "condition": { "type": "string" },
-            "delay": { "type": "string", "format": "duration" },
-            "max_attempts": { "type": "integer" },
-            "window": { "type": "string", "format": "duration" }
-          },
-          "additionalProperties": false,
-          "patternProperties": { "^x-": {} }
-        },
-        "placement": {
-          "type": "object",
-          "properties": {
-            "constraints": { "type": "array", "items": { "type": "string" } },
-            "preferences": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "spread": { "type": "string" }
-                },
-                "additionalProperties": false,
-                "patternProperties": { "^x-": {} }
-              }
-            },
-            "max_replicas_per_node": { "type": "integer" }
-          },
-          "additionalProperties": false,
-          "patternProperties": { "^x-": {} }
-        }
       },
       "additionalProperties": false,
       "patternProperties": { "^x-": {} }

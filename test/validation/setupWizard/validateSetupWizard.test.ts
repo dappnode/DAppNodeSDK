@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { readReleaseFile } from "../../../src/releaseFiles/readReleaseFile";
+import { ReleaseFileType } from "../../../src/releaseFiles/types";
 import { validateSchema } from "../../../src/releaseFiles/validateSchema";
-import { ReleaseFileType } from "../../../src/types";
 
 describe("utils / validateWizardSchema", () => {
   const setupWizardDir = "test/validation/setupWizard";

@@ -1,4 +1,5 @@
-import { Architecture, FileFormat, AllowedFormats } from "./types";
+import { Architecture } from "./releaseFiles/manifest/types";
+import { AllowedFormats, FileFormat } from "./releaseFiles/types";
 
 export class CliError extends Error {}
 export class YargsError extends Error {}

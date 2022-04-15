@@ -1,5 +1,5 @@
-import { ReleaseFileType, ReleaseFilePaths } from "../types";
 import { readReleaseFile } from "../releaseFiles/readReleaseFile";
+import { ReleaseFilePaths, ReleaseFileType } from "../releaseFiles/types";
 
 /**
  * Gets the repo slug from a manifest, using the repository property

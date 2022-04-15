@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import semver from "semver";
 import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion";
-import { AllowedFormats, Manifest, ReleaseFileType } from "../../../src/types";
 import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
 import { writeReleaseFile } from "../../../src/releaseFiles/writeReleaseFile";
 import {
@@ -9,6 +8,11 @@ import {
   defaultManifestFormat
 } from "../../../src/params";
 import { readReleaseFile } from "../../../src/releaseFiles/readReleaseFile";
+import { Manifest } from "../../../src/releaseFiles/manifest/types";
+import {
+  ReleaseFileType,
+  AllowedFormats
+} from "../../../src/releaseFiles/types";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

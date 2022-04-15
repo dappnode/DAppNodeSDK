@@ -3,7 +3,7 @@ import { cliArgsToReleaseUploaderProvider } from "../../../releaseUploader";
 import { Github } from "../../../providers/github/Github";
 import { PinataPinManager } from "../../../providers/pinata/pinManager";
 import { readReleaseFile } from "../../../releaseFiles/readReleaseFile";
-import { ReleaseFileType } from "../../../types";
+import { ReleaseFileType } from "../../../releaseFiles/types";
 
 /**
  * Removes all pins associated with a branch that no longer exists

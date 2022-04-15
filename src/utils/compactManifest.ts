@@ -2,9 +2,10 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import { releaseFiles } from "../params";
-import { ReleaseFileType, SetupWizard } from "../types";
 import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
 import { readReleaseFile } from "../releaseFiles/readReleaseFile";
+import { SetupWizard } from "../releaseFiles/setupWizard.ts/types";
+import { ReleaseFileType } from "../releaseFiles/types";
 
 /**
  * Reads manifest and extra files in `buildDir` compacts them in the manifest

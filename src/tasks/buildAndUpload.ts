@@ -15,15 +15,11 @@ import {
 } from "../params";
 import {
   parseComposeUpstreamVersion,
-  updateComposeImageTags,
   getComposePackageImages,
-  composeDeleteBuildProperties
+  composeDeleteBuildProperties,
+  updateComposeImageTags
 } from "../utils/compose";
-import {
-  AllowedFormats,
-  ListrContextBuildAndPublish,
-  ReleaseFileType
-} from "../types";
+import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
 import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
@@ -44,6 +40,8 @@ import { validateSchema } from "../releaseFiles/validateSchema";
 import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
 import { getReleaseFilePath } from "../releaseFiles/getReleaseFilePath";
 import { readReleaseFile } from "../releaseFiles/readReleaseFile";
+import { ReleaseFileType, AllowedFormats } from "../releaseFiles/types";
+import { validateDappnodeCompose } from "../releaseFiles/compose/safeCompose";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -156,12 +154,17 @@ export function buildAndUpload({
               });
               continue;
             case "compose":
+              // Validates against the official docker compose schema
               validateSchema({
                 type: ReleaseFileType.compose,
-                data: composeForRelease
+                data: composeForDev.releaseFile
+              });
+              // Validates against custom dappnode docker specs
+              validateDappnodeCompose({
+                composeUnsafe: composeForDev.releaseFile,
+                manifest: manifest.releaseFile
               });
               continue;
-
             case "setupWizard":
               if (Object.entries(setupWizard.releaseFile).length > 0)
                 validateSchema({
@@ -169,7 +172,6 @@ export function buildAndUpload({
                   data: setupWizard.releaseFile
                 });
               continue;
-
             default:
               // validate release file
               continue;

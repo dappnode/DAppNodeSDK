@@ -16,15 +16,12 @@ import {
   releaseFiles,
   YargsError
 } from "../params";
-import {
-  AllowedFormats,
-  CliGlobalOptions,
-  Compose,
-  Manifest,
-  ReleaseFileType
-} from "../types";
+import { CliGlobalOptions } from "../types";
 import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
 import { getReleaseFilePath } from "../releaseFiles/getReleaseFilePath";
+import { Compose } from "../releaseFiles/compose/types";
+import { Manifest } from "../releaseFiles/manifest/types";
+import { ReleaseFileType, AllowedFormats } from "../releaseFiles/types";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",
@@ -194,7 +191,7 @@ It only covers the most common items, and tries to guess sensible defaults.
   };
 
   const compose: Compose = {
-    version: "3.4",
+    version: "3.5",
     services: {
       [serviceName]: {
         build: ".", // Dockerfile is in root dir

@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { defaultDir, releaseFiles } from "../params";
-import { ReleaseFilePaths, ReleaseFileType } from "../types";
+import { ReleaseFileType, ReleaseFilePaths } from "./types";
 
 /**
  * Get release file path. Without arguments defaults to './setup-wizard.yml' | './dappnode_package.json' | './setup-wizard.yml'
