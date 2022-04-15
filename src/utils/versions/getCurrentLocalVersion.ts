@@ -1,5 +1,5 @@
 import { readReleaseFile } from "../../releaseFiles/readReleaseFile";
-import { ReleaseFileType } from "../../types";
+import { ReleaseFileType } from "../../releaseFiles/types";
 
 export function getCurrentLocalVersion({ dir }: { dir: string }): string {
   // Load manifest

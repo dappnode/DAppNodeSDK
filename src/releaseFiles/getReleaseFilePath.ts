@@ -1,6 +1,6 @@
 import path from "path";
 import { defaultDir } from "../params";
-import { AllowedFormats, ReleaseFileType, ReleaseFilePaths } from "../types";
+import { AllowedFormats, ReleaseFileType, ReleaseFilePaths } from "./types";
 
 /**
  * Get release file path. Without arguments defaults to './dappnode_package.json' | './docker-compose.yml' | './setup-wizard.yaml'

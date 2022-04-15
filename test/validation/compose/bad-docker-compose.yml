@@ -1,4 +1,4 @@
-version: "3.4"
+version: "3.5"
 services:
   beacon-chain:
     image: "beacon-chain.lighthouse-prater.dnp.dappnode.eth:0.1.0"
@@ -12,6 +12,7 @@ services:
       - 9000/tcp
       - 9000/udp
     restart: unless-stopped
+    pid: "host"
     environment:
       BEACON_API_PORT: 3500
       HTTP_WEB3PROVIDER: "http://goerli-geth.dappnode:8545"

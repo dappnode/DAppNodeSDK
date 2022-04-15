@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import { defaultManifestFormat } from "../../src/params";
 import { generatePublishTx } from "../../src/tasks/generatePublishTx";
-import { ReleaseFileType } from "../../src/types";
 import { writeReleaseFile } from "../../src/releaseFiles/writeReleaseFile";
 import { testDir, cleanTestDir } from "../testUtils";
+import { ReleaseFileType } from "../../src/releaseFiles/types";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

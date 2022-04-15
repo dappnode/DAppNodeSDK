@@ -1,7 +1,8 @@
 import fs from "fs";
 import rimraf from "rimraf";
 import { getImageTag } from "../src/params";
-import { Manifest, Compose } from "../src/types";
+import { Manifest } from "../src/releaseFiles/manifest/types";
+import { Compose } from "../src/releaseFiles/compose/types";
 
 export const testDir = "test_files";
 export function cleanTestDir(): void {
@@ -14,7 +15,7 @@ export function generateCompose(manifest: Manifest): Compose {
     serviceName = manifest.name,
     version = manifest.version;
   return {
-    version: "3.4",
+    version: "3.5",
     services: {
       [serviceName]: {
         build: ".", // Dockerfile is in root dir

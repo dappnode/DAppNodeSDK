@@ -1,10 +1,5 @@
 import { expect } from "chai";
-import {
-  AllowedFormats,
-  Compose,
-  PackageImage,
-  ReleaseFileType
-} from "../../src/types";
+import { PackageImage } from "../../src/types";
 import { upstreamImageLabel } from "../../src/params";
 import {
   updateComposeImageTags,
@@ -15,6 +10,8 @@ import {
 import { writeReleaseFile } from "../../src/releaseFiles/writeReleaseFile";
 import { cleanTestDir, testDir } from "../testUtils";
 import { readReleaseFile } from "../../src/releaseFiles/readReleaseFile";
+import { Compose } from "../../src/releaseFiles/compose/types";
+import { AllowedFormats, ReleaseFileType } from "../../src/releaseFiles/types";
 
 describe("util > compose", () => {
   describe("updateComposeImageTags", () => {

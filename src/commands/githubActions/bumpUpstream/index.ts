@@ -1,5 +1,5 @@
 import { CommandModule } from "yargs";
-import { CliGlobalOptions, ReleaseFileType } from "../../../types";
+import { CliGlobalOptions } from "../../../types";
 import { branchNameRoot, defaultDir } from "../../../params";
 import { Github } from "../../../providers/github/Github";
 import { getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format";
@@ -11,6 +11,7 @@ import { buildAndComment } from "../build";
 import { closeOldPrs } from "./closeOldPrs";
 import { writeReleaseFile } from "../../../releaseFiles/writeReleaseFile";
 import { readReleaseFile } from "../../../releaseFiles/readReleaseFile";
+import { ReleaseFileType } from "../../../releaseFiles/types";
 
 // This action should be run periodically
 

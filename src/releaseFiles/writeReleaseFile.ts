@@ -1,8 +1,8 @@
 import yaml from "js-yaml";
 import prettier from "prettier";
 import fs from "fs";
-import { AllowedFormats, ReleaseFile, ReleaseFilePaths } from "../types";
 import { getReleaseFilePath } from "./getReleaseFilePath";
+import { ReleaseFile, AllowedFormats, ReleaseFilePaths } from "./types";
 
 /**
  * Writes a release file. Without arguments defaults to write the release file at './dappnode_package.json' | './docker-compose.yml' | './setup-wizard.yaml'

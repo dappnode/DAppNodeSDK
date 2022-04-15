@@ -1,9 +1,10 @@
 import semver from "semver";
 import { updateComposeImageTags } from "../compose";
 import { checkSemverType } from "../checkSemverType";
-import { AllowedFormats, ReleaseFileType, ReleaseType } from "../../types";
+import { ReleaseType } from "../../types";
 import { writeReleaseFile } from "../../releaseFiles/writeReleaseFile";
 import { readReleaseFile } from "../../releaseFiles/readReleaseFile";
+import { ReleaseFileType, AllowedFormats } from "../../releaseFiles/types";
 
 export async function increaseFromLocalVersion({
   type,

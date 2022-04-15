@@ -1,14 +1,10 @@
 import fs from "fs";
 import yaml from "js-yaml";
-import {
-  ReleaseFilePaths,
-  Manifest,
-  AllowedFormats,
-  ReleaseFileType,
-  SetupWizard,
-  Compose
-} from "../types";
+import { Compose } from "./compose/types";
 import { findReleaseFilePath } from "./findReleaseFilePath";
+import { Manifest } from "./manifest/types";
+import { SetupWizard } from "./setupWizard.ts/types";
+import { ReleaseFileType, ReleaseFilePaths, AllowedFormats } from "./types";
 
 type ComposeOrManifestOrSetupWizard<
   T extends

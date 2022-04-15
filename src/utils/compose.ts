@@ -1,10 +1,4 @@
-import {
-  AllowedFormats,
-  Compose,
-  PackageImage,
-  ReleaseFilePaths,
-  ReleaseFileType
-} from "../types";
+import { PackageImage } from "../types";
 import {
   getImageTag,
   upstreamImageLabel,
@@ -14,6 +8,12 @@ import { toTitleCase } from "./format";
 import { mapValues, uniqBy } from "lodash";
 import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
 import { readReleaseFile } from "../releaseFiles/readReleaseFile";
+import { Compose } from "../releaseFiles/compose/types";
+import {
+  ReleaseFilePaths,
+  ReleaseFileType,
+  AllowedFormats
+} from "../releaseFiles/types";
 
 /**
  * Update service image tag to current version

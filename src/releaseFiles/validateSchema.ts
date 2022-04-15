@@ -1,10 +1,10 @@
 import Ajv, { ErrorObject } from "ajv";
 import ajvErrors from "ajv-errors";
-import manifestSchema from "./schemas/manifest.schema.json";
-import composeSchema from "./schemas/compose.schema.json";
-import setupWizardSchema from "./schemas/setup-wizard.schema.json";
-import { ReleaseFile, ReleaseFileType } from "../types";
+import manifestSchema from "../releaseFiles/manifest/manifest.schema.json";
+import composeSchema from "../releaseFiles/compose/compose.schema.json";
+import setupWizardSchema from "../releaseFiles/setupWizard.ts/setup-wizard.schema.json";
 import { CliError } from "../params";
+import { ReleaseFile, ReleaseFileType } from "./types";
 
 export function validateSchema(releaseFile: ReleaseFile): void {
   const { valid, errors } = validateReleaseFile(releaseFile);
