@@ -53,12 +53,12 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
         type: "string"
       })
       .option("eth_provider", {
-        description: `Specify an eth provider: "dappnode" (default), "infura", "localhost:5002"`,
+        description: `Specify an eth provider: "dappnode" (default), "infura", "localhost:8545"`,
         default: "dappnode",
         type: "string"
       })
       .option("content_provider", {
-        description: `Specify an ipfs provider: "dappnode" (default), "infura", "http://localhost:8545"`,
+        description: `Specify an ipfs provider: "dappnode" (default), "infura", "http://localhost:5001"`,
         default: "dappnode",
         type: "string"
       })
