@@ -134,6 +134,11 @@ export interface ComposeService {
   cap_drop?: string[];
   devices?: string[];
   network_mode?: string;
+  deploy?: {
+    resources?: {
+      memory: string;
+    };
+  };
   command?: string;
   entrypoint?: string;
   // Logging
