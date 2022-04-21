@@ -136,7 +136,9 @@ export interface ComposeService {
   network_mode?: string;
   deploy?: {
     resources?: {
-      memory: string;
+      limits: {
+        memory: string;
+      };
     };
   };
   command?: string;
