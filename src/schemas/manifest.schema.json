@@ -58,7 +58,8 @@
             "ethereum-beacon-chain",
             "ethereum2-beacon-chain-prysm",
             "bitcoin",
-            "monero"
+            "monero",
+            "handshake"
           ]
         },
         {
@@ -71,7 +72,8 @@
                 "ethereum",
                 "ethereum-beacon-chain",
                 "ethereum2-beacon-chain-prysm",
-                "monero"
+                "monero",
+                "handshake"
               ],
               "description": "The blockchain driver used by this DAppNode Package",
               "examples": ["ethereum", "bitcoin"]
@@ -94,6 +96,7 @@
         "ethereum2-beacon-chain-prysm",
         "bitcoin",
         "monero",
+        "handshake",
         {
           "driver": "ethereum-beacon-chain",
           "serviceName": "beacon-chain",
