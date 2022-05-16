@@ -1,4 +1,3 @@
-import path from "path";
 import Listr from "listr";
 import chalk from "chalk";
 import { CommandModule } from "yargs";
@@ -7,14 +6,13 @@ import { buildAndUpload } from "../tasks/buildAndUpload";
 import { generatePublishTx } from "../tasks/generatePublishTx";
 import { createGithubRelease } from "../tasks/createGithubRelease";
 // Utils
-import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
-import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion";
 import { verifyEthConnection } from "../utils/verifyEthConnection";
-import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
+import { getInstallDnpLink } from "../utils/getLinks";
 import { defaultComposeFileName, defaultDir, YargsError } from "../params";
 import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
 import { printObject } from "../utils/print";
 import { UploadTo } from "../releaseUploader";
+import { readManifest } from "../utils/manifest";
 
 const typesList = releaseTypes.join(" | ");
 
@@ -88,9 +86,12 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       }),
 
   handler: async args => {
-    const { txData, nextVersion, releaseMultiHash } = await publishHanlder(
-      args
-    );
+    const {
+      version,
+      releaseMultiHash,
+      txData,
+      txPublishLink
+    } = await publishHanlder(args);
 
     if (!args.silent) {
       const txDataToPrint = {
@@ -101,7 +102,7 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       };
 
       console.log(`
-  ${chalk.green(`DNP (DAppNode Package) published (version ${nextVersion})`)} 
+  ${chalk.green(`DNP (DAppNode Package) published (version ${version})`)} 
   Release hash : ${releaseMultiHash}
   ${getInstallDnpLink(releaseMultiHash)}
   
@@ -113,7 +114,7 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
   
   ${"You can also execute this transaction with Metamask by following this pre-filled link"}
   
-  ${chalk.cyan(getPublishTxLink(txData))}
+  ${chalk.cyan(txPublishLink)}
   `);
     }
   }
@@ -140,8 +141,9 @@ export async function publishHanlder({
   silent,
   verbose
 }: CliCommandOptions): Promise<{
+  version: string;
   txData: TxData;
-  nextVersion: string;
+  txPublishLink: string;
   releaseMultiHash: string;
 }> {
   // Parse optionsalias: "release",
@@ -158,6 +160,10 @@ export async function publishHanlder({
   const isCi = process.env.CI;
   const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
   const typeFromEnv = process.env.RELEASE_TYPE;
+
+  // Target version to build
+  const { manifest } = readManifest({ dir });
+  const version = manifest.version;
 
   /**
    * Specific set of options used for internal DAppNode releases.
@@ -199,30 +205,7 @@ export async function publishHanlder({
 
   const publishTasks = new Listr(
     [
-      // 1. Fetch current version from APM
-      {
-        title: "Fetch current version from APM",
-        task: async (ctx, task) => {
-          let nextVersion;
-          try {
-            nextVersion = await increaseFromApmVersion({
-              type: type as ReleaseType,
-              ethProvider,
-              dir,
-              composeFileName
-            });
-          } catch (e) {
-            if (e.message.includes("NOREPO"))
-              nextVersion = getCurrentLocalVersion({ dir });
-            else throw e;
-          }
-          ctx.nextVersion = nextVersion;
-          ctx.buildDir = path.join(dir, `build_${nextVersion}`);
-          task.title = task.title + ` (next version: ${nextVersion})`;
-        }
-      },
-
-      // 2. Build and upload
+      // Build and upload
       {
         title: "Build and upload",
         task: ctx =>
@@ -241,7 +224,7 @@ export async function publishHanlder({
           )
       },
 
-      // 3. Generate transaction
+      // Generate transaction
       {
         title: "Generate transaction",
         task: ctx =>
@@ -256,7 +239,7 @@ export async function publishHanlder({
           })
       },
 
-      // 4. Create github release
+      // Create github release
       // [ONLY] add the Release task if requested
       {
         title: "Release on github",
@@ -276,6 +259,6 @@ export async function publishHanlder({
   );
 
   const tasksFinalCtx = await publishTasks.run();
-  const { txData, nextVersion, releaseMultiHash } = tasksFinalCtx;
-  return { txData, nextVersion, releaseMultiHash };
+  const { releaseMultiHash, txData, txPublishLink } = tasksFinalCtx;
+  return { version, releaseMultiHash, txData, txPublishLink };
 }

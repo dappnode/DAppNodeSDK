@@ -1,15 +1,11 @@
 import fs from "fs";
 import path from "path";
 import Listr from "listr";
-import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
+import { getInstallDnpLink } from "../utils/getLinks";
 import { getGitHead } from "../utils/git";
 import { compactManifestIfCore } from "../utils/compactManifest";
 import { contentHashFile, defaultDir } from "../params";
-import {
-  TxData,
-  CliGlobalOptions,
-  ListrContextBuildAndPublish
-} from "../types";
+import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
 import { Github } from "../providers/github/Github";
 import { composeDeleteBuildProperties } from "../utils/compose";
 
@@ -108,9 +104,41 @@ export function createGithubRelease({
           // https://github.com/dappnode/DAppNode_Installer/issues/161
           composeDeleteBuildProperties({ dir: buildDir, composeFileName });
 
+          const changelog = "";
+          const installLink = getInstallDnpLink(releaseMultiHash);
+          const releaseBody = `
+##### Changelog
+
+${changelog}
+
+---
+
+##### For package mantainer
+
+Authorized developer account may execute this transaction [from a pre-filled link](${ctx.txPublishLink})[.](${installLink})
+
+<details><summary>Release details</summary>
+<p>
+
+\`\`\`
+To: ${txData.to}
+Value: ${txData.value}
+Data: ${txData.data}
+Gas limit: ${txData.gasLimit}
+\`\`\`
+
+\`\`\`
+${ctx.releaseMultiHash}
+\`\`\`
+
+</p>
+</details>
+
+`.trim();
+
           task.output = `Creating release for tag ${tag}...`;
           await github.createReleaseAndUploadAssets(tag, {
-            body: getReleaseBody(txData),
+            body: releaseBody,
             // Tag as pre-release until it is actually published in APM mainnet
             prerelease: true,
             assetsDir: buildDir,
@@ -126,45 +154,4 @@ export function createGithubRelease({
     ],
     { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
   );
-}
-
-// Utils
-
-/**
- * Write the release body
- * #### TODO: Extend this to automatically write the body
- */
-function getReleaseBody(txData: TxData) {
-  const link = getPublishTxLink(txData);
-  const changelog = "";
-  const installLink = getInstallDnpLink(txData.releaseMultiHash);
-  return `
-##### Changelog
-
-${changelog}
-
----
-
-##### For package mantainer
-
-Authorized developer account may execute this transaction [from a pre-filled link](${link})[.](${installLink})
-
-<details><summary>Release details</summary>
-<p>
-
-\`\`\`
-To: ${txData.to}
-Value: ${txData.value}
-Data: ${txData.data}
-Gas limit: ${txData.gasLimit}
-\`\`\`
-
-\`\`\`
-${txData.releaseMultiHash}
-\`\`\`
-
-</p>
-</details>
-
-`.trim();
 }

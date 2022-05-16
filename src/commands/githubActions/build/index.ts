@@ -74,6 +74,7 @@ export async function gaBuildHandler({
     await buildHandler({
       provider: "dappnode",
       upload_to: "ipfs",
+      build_dir: "build",
       skip_save: true,
       verbose: true
     });
@@ -99,6 +100,7 @@ export async function buildAndComment({
   const { releaseMultiHash } = await buildHandler({
     provider: "pinata",
     upload_to: "ipfs",
+    build_dir: "build",
     require_git_data: true,
     delete_old_pins: true,
     verbose: true

@@ -1,8 +1,10 @@
 import { ethers } from "ethers";
-import { arrayToSemver } from "../utils/arrayToSemver";
-import repoAbi from "../contracts/RepoAbi.json";
-import registryAbi from "../contracts/ApmRegistryAbi.json";
-import { semverToArray } from "./semverToArray";
+import { arrayToSemver } from "../../../utils/arrayToSemver";
+import repoAbi from "./RepoAbi.json";
+import registryAbi from "./ApmRegistryAbi.json";
+import { semverToArray } from "../../../utils/semverToArray";
+import { IPM, TxInputs, TxSummary } from "../interface";
+import { YargsError } from "../../../params";
 
 function getEthereumProviderUrl(provider = "dappnode"): string {
   if (provider === "dappnode") {
@@ -18,6 +20,8 @@ function getEthereumProviderUrl(provider = "dappnode"): string {
   }
 }
 
+const zeroAddress = "0x0000000000000000000000000000000000000000";
+
 /**
  * @param provider user selected provider. Possible values:
  * - null
@@ -27,7 +31,7 @@ function getEthereumProviderUrl(provider = "dappnode"): string {
  * - "ws://localhost:8546"
  * @return apm instance
  */
-export class Apm {
+export class Apm implements IPM {
   provider: ethers.providers.JsonRpcProvider;
 
   constructor(providerId: string) {
@@ -37,6 +41,74 @@ export class Apm {
     const providerUrl = getEthereumProviderUrl(providerId);
 
     this.provider = new ethers.providers.JsonRpcProvider(providerUrl);
+  }
+
+  isListening(): Promise<boolean> {
+    return this.provider.send("net_listening", []);
+  }
+
+  async populatePublishTransaction({
+    dnpName,
+    version,
+    releaseMultiHash,
+    developerAddress
+  }: TxInputs): Promise<TxSummary> {
+    // TODO: Ensure APM format
+    const contentURI =
+      "0x" + Buffer.from(releaseMultiHash, "utf8").toString("hex");
+
+    const repository = await this.getRepoContract(dnpName);
+    if (repository) {
+      const repo = new ethers.utils.Interface(repoAbi);
+      // newVersion(
+      //   uint16[3] _newSemanticVersion,
+      //   address _contractAddress,
+      //   bytes _contentURI
+      // )
+      const txData = repo.encodeFunctionData("newVersion", [
+        semverToArray(version), // uint16[3] _newSemanticVersion
+        zeroAddress, // address _contractAddress
+        contentURI // bytes _contentURI
+      ]);
+
+      return {
+        to: repository.address,
+        value: 0,
+        data: txData,
+        gasLimit: 300000
+      };
+    }
+
+    // If repository does not exist, deploy new one
+    else {
+      const registry = await this.getRegistryContract(dnpName);
+      if (!registry) {
+        throw Error(`There must exist a registry for DNP name ${dnpName}`);
+      }
+
+      // newRepoWithVersion(
+      //   string _name,
+      //   address _dev,
+      //   uint16[3] _initialSemanticVersion,
+      //   address _contractAddress,
+      //   bytes _contentURI
+      // )
+      const registryInt = new ethers.utils.Interface(registryAbi);
+      const txData = registryInt.encodeFunctionData("newRepoWithVersion", [
+        getShortName(dnpName), // string _name
+        ensureValidDeveloperAddress(developerAddress), // address _dev
+        semverToArray(version), // uint16[3] _initialSemanticVersion
+        zeroAddress, // address _contractAddress
+        contentURI // bytes _contentURI
+      ]);
+
+      return {
+        to: registry.address,
+        value: 0,
+        data: txData,
+        gasLimit: 300000
+      };
+    }
   }
 
   // Ens throws if a node is not found
@@ -52,7 +124,7 @@ export class Apm {
       return await this.provider.resolveName(ensDomain);
     } catch (e) {
       // This error is particular for ethjs
-      if (e.message.includes("ENS name not defined")) return null;
+      if ((e as Error).message.includes("ENS name not defined")) return null;
       else throw e;
     }
   }
@@ -85,7 +157,9 @@ export class Apm {
       return arrayToSemver(res.semanticVersion);
     } catch (e) {
       // Rename error for user comprehension
-      e.message = `Error getting latest version of ${ensName}: ${e.message}`;
+      (e as Error).message = `Error getting latest version of ${ensName}: ${
+        (e as Error).message
+      }`;
       throw e;
     }
   }
@@ -97,7 +171,9 @@ export class Apm {
    * @param ensName: "admin.dnp.dappnode.eth"
    * @return contract instance of the Repo "admin.dnp.dappnode.eth"
    */
-  async getRepoContract(ensName: string): Promise<ethers.Contract | null> {
+  private async getRepoContract(
+    ensName: string
+  ): Promise<ethers.Contract | null> {
     const repoAddress = await this.resolve(ensName);
     if (!repoAddress) return null;
     return new ethers.Contract(repoAddress, repoAbi, this.provider);
@@ -112,7 +188,9 @@ export class Apm {
    * @param ensName: "admin.dnp.dappnode.eth"
    * @return contract instance of the Registry "dnp.dappnode.eth"
    */
-  async getRegistryContract(ensName: string): Promise<ethers.Contract | null> {
+  private async getRegistryContract(
+    ensName: string
+  ): Promise<ethers.Contract | null> {
     const repoId = ensName.split(".").slice(1).join(".");
     const registryAddress = await this.resolve(repoId);
     if (!registryAddress) return null;
@@ -120,58 +198,32 @@ export class Apm {
   }
 }
 
-/**
- * newVersion(
- *   uint16[3] _newSemanticVersion,
- *   address _contractAddress,
- *   bytes _contentURI
- * )
- */
-export function encodeNewVersionCall({
-  version,
-  contractAddress,
-  contentURI
-}: {
-  version: string;
-  contractAddress: string;
-  contentURI: string;
-}): string {
-  const repo = new ethers.utils.Interface(repoAbi);
-  return repo.encodeFunctionData("newVersion", [
-    semverToArray(version), // uint16[3] _newSemanticVersion
-    contractAddress, // address _contractAddress
-    contentURI // bytes _contentURI
-  ]);
+/** Short name is the last part of an ENS name */
+function getShortName(dnpName: string): string {
+  return dnpName.split(".")[0];
 }
 
-/**
- * newRepoWithVersion(
- *   string _name,
- *   address _dev,
- *   uint16[3] _initialSemanticVersion,
- *   address _contractAddress,
- *   bytes _contentURI
- * )
- */
-export function encodeNewRepoWithVersionCall({
-  name,
-  developerAddress,
-  version,
-  contractAddress,
-  contentURI
-}: {
-  name: string;
-  developerAddress: string;
-  version: string;
-  contractAddress: string;
-  contentURI: string;
-}): string {
-  const registry = new ethers.utils.Interface(registryAbi);
-  return registry.encodeFunctionData("newRepoWithVersion", [
-    name, // string _name
-    developerAddress, // address _dev
-    semverToArray(version), // uint16[3] _initialSemanticVersion
-    contractAddress, // address _contractAddress
-    contentURI // bytes _contentURI
-  ]);
+function ensureValidDeveloperAddress(address: string | undefined): string {
+  if (
+    !address ||
+    !ethers.utils.isAddress(address) ||
+    // check if is zero address
+    parseInt(address) === 0
+  ) {
+    throw new YargsError(
+      `A new Aragon Package Manager Repo must be created. 
+You must specify the developer address that will control it
+
+with ENV:
+
+DEVELOPER_ADDRESS=0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B dappnodesdk publish [type]
+
+with command option:
+
+dappnodesdk publish [type] --developer_address 0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B
+`
+    );
+  }
+
+  return address;
 }

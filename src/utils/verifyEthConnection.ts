@@ -1,5 +1,5 @@
-import { Apm } from "./Apm";
 import { CliError } from "../params";
+import { getPM } from "../providers/pm";
 
 /**
  * Verify the eth connection outside of the eth library to ensure
@@ -9,10 +9,10 @@ import { CliError } from "../params";
 export async function verifyEthConnection(ethProvider: string): Promise<void> {
   if (!ethProvider) throw Error("No ethProvider provided");
 
-  const apm = new Apm(ethProvider);
+  const pm = getPM(ethProvider);
+
   try {
-    const isListening = await apm.provider.send("net_listening", []);
-    if (isListening === false) {
+    if (!(await pm.isListening())) {
       throw new CliError(`Eth provider ${ethProvider} is not listening`);
     }
   } catch (e) {

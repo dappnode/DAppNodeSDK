@@ -14,6 +14,7 @@ export interface ListrContextBuildAndPublish {
   // create Github release
   nextVersion: string;
   txData: TxData;
+  txPublishLink: string;
 }
 
 // Interal types
@@ -53,10 +54,6 @@ export interface TxData {
   value: number;
   data: string;
   gasLimit: number;
-  ensName: string;
-  currentVersion: string;
-  releaseMultiHash: string;
-  developerAddress?: string;
 }
 
 export interface TxDataShortKeys {
