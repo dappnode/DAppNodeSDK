@@ -41,7 +41,7 @@ import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
 import { getReleaseFilePath } from "../releaseFiles/getReleaseFilePath";
 import { readReleaseFile } from "../releaseFiles/readReleaseFile";
 import { ReleaseFileType, AllowedFormats } from "../releaseFiles/types";
-import { validateDappnodeCompose } from "../releaseFiles/compose/safeCompose";
+import { validateDappnodeCompose } from "../releaseFiles/compose/validateDappnodeCompose";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
