@@ -106,7 +106,10 @@ export function createGithubRelease({
 
           // Remove `build` property AFTER building. Otherwise it may break ISO installations
           // https://github.com/dappnode/DAppNode_Installer/issues/161
-          composeDeleteBuildProperties({ dir: buildDir, composeFileName });
+          composeDeleteBuildProperties({
+            dir: buildDir,
+            releaseFileName: composeFileName
+          });
 
           task.output = `Creating release for tag ${tag}...`;
           await github.createReleaseAndUploadAssets(tag, {

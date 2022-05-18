@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { ManifestFormat } from "../types";
-import { stringifyJson } from "./manifest";
+import { AllowedFormats } from "../releaseFiles/types";
+import { stringifyJson } from "../releaseFiles/writeReleaseFile";
 
 interface ReleaseRecord {
   hash: string;
@@ -15,10 +15,10 @@ interface ReleaseRecords {
   [version: string]: ReleaseRecord;
 }
 
-export const releasesRecordFileName = "releases.json";
+const fileName = "releases.json";
 
 function readReleaseRecords(dir: string): ReleaseRecords {
-  const releaseRecordPath = path.join(dir, releasesRecordFileName);
+  const releaseRecordPath = path.join(dir, fileName);
   return fs.existsSync(releaseRecordPath)
     ? JSON.parse(fs.readFileSync(releaseRecordPath, "utf8"))
     : {};
@@ -34,7 +34,7 @@ function writeReleaseRecord(
   version: string,
   newReleaseRecord: Partial<ReleaseRecord>
 ): void {
-  const releaseRecordPath = path.join(dir, releasesRecordFileName);
+  const releaseRecordPath = path.join(dir, fileName);
   const releaseRecord = readReleaseRecords(dir);
   const mergedReleaseRecord = {
     ...releaseRecord,
@@ -45,7 +45,7 @@ function writeReleaseRecord(
   };
   fs.writeFileSync(
     releaseRecordPath,
-    stringifyJson(mergedReleaseRecord, ManifestFormat.json)
+    stringifyJson(mergedReleaseRecord, AllowedFormats.json)
   );
 }
 

@@ -1,8 +1,10 @@
 import semver from "semver";
-import { readManifest, writeManifest } from "../manifest";
-import { readCompose, writeCompose, updateComposeImageTags } from "../compose";
+import { updateComposeImageTags } from "../compose";
 import { checkSemverType } from "../checkSemverType";
 import { ReleaseType } from "../../types";
+import { writeReleaseFile } from "../../releaseFiles/writeReleaseFile";
+import { readReleaseFile } from "../../releaseFiles/readReleaseFile";
+import { ReleaseFileType, AllowedFormats } from "../../releaseFiles/types";
 
 export async function increaseFromLocalVersion({
   type,
@@ -18,21 +20,37 @@ export async function increaseFromLocalVersion({
   checkSemverType(type);
 
   // Load manifest
-  const { manifest, format } = readManifest({ dir });
+  const manifest = readReleaseFile(ReleaseFileType.manifest, { dir });
 
-  const currentVersion = manifest.version;
+  const currentVersion = manifest.releaseFile.version;
 
   // Increase the version
   const nextVersion = semver.inc(currentVersion, type);
   if (!nextVersion) throw Error(`Invalid increase: ${currentVersion} ${type}`);
-  manifest.version = nextVersion;
+  manifest.releaseFile.version = nextVersion;
 
   // Mofidy and write the manifest and docker-compose
-  writeManifest(manifest, format, { dir });
-  const { name, version } = manifest;
-  const compose = readCompose({ dir, composeFileName });
-  const newCompose = updateComposeImageTags(compose, { name, version });
-  writeCompose(newCompose, { dir, composeFileName });
+  writeReleaseFile(
+    { type: ReleaseFileType.manifest, data: manifest.releaseFile },
+    manifest.releaseFileFormat,
+    {
+      dir
+    }
+  );
+  const { name, version } = manifest.releaseFile;
+  const compose = readReleaseFile(ReleaseFileType.compose, {
+    dir,
+    releaseFileName: composeFileName
+  });
+  const newCompose = updateComposeImageTags(compose.releaseFile, {
+    name,
+    version
+  });
+  writeReleaseFile(
+    { type: ReleaseFileType.compose, data: newCompose },
+    AllowedFormats.yml,
+    { dir, releaseFileName: composeFileName }
+  );
 
   return nextVersion;
 }

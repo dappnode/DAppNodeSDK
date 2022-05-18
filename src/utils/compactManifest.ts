@@ -2,7 +2,10 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import { releaseFiles } from "../params";
-import { readManifest, writeManifest } from "./manifest";
+import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
+import { readReleaseFile } from "../releaseFiles/readReleaseFile";
+import { SetupWizard } from "../releaseFiles/setupWizard/types";
+import { ReleaseFileType } from "../releaseFiles/types";
 
 /**
  * Reads manifest and extra files in `buildDir` compacts them in the manifest
@@ -10,21 +13,25 @@ import { readManifest, writeManifest } from "./manifest";
  * @param buildDir `build_0.1.0`
  */
 export function compactManifestIfCore(buildDir: string): void {
-  const { manifest, format } = readManifest({ dir: buildDir });
+  const manifest = readReleaseFile(ReleaseFileType.manifest, { dir: buildDir });
 
-  if (manifest.type !== "dncore") return;
+  if (manifest.releaseFile.type !== "dncore") return;
 
   const setupWizard = readSetupWizardIfExists(buildDir);
   if (setupWizard) {
-    manifest.setupWizard = setupWizard;
+    manifest.releaseFile.setupWizard = setupWizard;
   }
 
-  writeManifest(manifest, format, { dir: buildDir });
+  writeReleaseFile(
+    { type: ReleaseFileType.manifest, data: manifest.releaseFile },
+    manifest.releaseFileFormat,
+    {
+      dir: buildDir
+    }
+  );
 }
 
-function readSetupWizardIfExists(
-  buildDir: string
-): Record<string, string> | null {
+function readSetupWizardIfExists(buildDir: string): SetupWizard | null {
   const files = fs.readdirSync(buildDir);
   const setupWizardFile = files.find(file =>
     releaseFiles.setupWizard.regex.test(file)

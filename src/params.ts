@@ -1,4 +1,5 @@
-import { Architecture, FileFormat, ManifestFormat } from "./types";
+import { Architecture } from "./releaseFiles/manifest/types";
+import { AllowedFormats, FileFormat } from "./releaseFiles/types";
 
 export class CliError extends Error {}
 export class YargsError extends Error {}
@@ -10,9 +11,16 @@ export const branchNameRoot = "dappnodebot/bump-upstream/";
 // DAppNode params
 
 export const defaultDir = "./";
+// Manifest
 export const defaultManifestFileName = "dappnode_package.json";
-export const defaultManifestFormat = ManifestFormat.json;
+export const defaultManifestFormat = AllowedFormats.json;
+// Compose
 export const defaultComposeFileName = "docker-compose.yml";
+export const defaultComposeFormat = AllowedFormats.yml;
+// Setup Wizard
+export const defaultSetupWizardFileName = "setup-wizard.yml";
+export const defaultSetupWizardFormat = AllowedFormats.yml;
+// Providers
 export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
 export const UPSTREAM_VERSION_VARNAME = "UPSTREAM_VERSION";
 export const upstreamImageLabel = "dappnode.dnp.upstreamImage";
@@ -57,27 +65,6 @@ export const releaseFiles = {
     required: false as const,
     multiple: false as const
   },
-  setupSchema: {
-    regex: /setup\..*\.json$/,
-    format: FileFormat.JSON,
-    maxSize: 10e3,
-    required: false as const,
-    multiple: false as const
-  },
-  setupTarget: {
-    regex: /setup-target\..*json$/,
-    format: FileFormat.JSON,
-    maxSize: 10e3,
-    required: false as const,
-    multiple: false as const
-  },
-  setupUiJson: {
-    regex: /setup-ui\..*json$/,
-    format: FileFormat.JSON,
-    maxSize: 10e3,
-    required: false as const,
-    multiple: false as const
-  },
   disclaimer: {
     regex: /disclaimer\.md$/i,
     format: FileFormat.TEXT,
@@ -115,9 +102,6 @@ export const releaseFilesDefaultNames: {
   compose: "docker-compose.yml",
   avatar: "avatar.png",
   setupWizard: "setup-wizard.json",
-  setupSchema: "setup.schema.json",
-  setupTarget: "setup-target.json",
-  setupUiJson: "setup-ui.json",
   disclaimer: "disclaimer.md",
   gettingStarted: "getting-started.md",
   grafanaDashboards: "grafana-dashboard.json",

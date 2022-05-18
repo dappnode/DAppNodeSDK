@@ -5,12 +5,12 @@ import { ListrTask } from "listr";
 import { getFileHash } from "../utils/getFileHash";
 import { loadCache, writeToCache, getCacheKey } from "../utils/cache";
 import {
-  Architecture,
   ListrContextBuildAndPublish,
   PackageImage,
   PackageImageExternal
 } from "../types";
 import { shell } from "../utils/shell";
+import { Architecture } from "../releaseFiles/manifest/types";
 
 /**
  * Save docker image
@@ -139,7 +139,7 @@ async function saveAndCompressImages({
           Error(`Error compressing image: xz exit ${code} \n${lastStderr}`)
         );
       } else {
-        resolve();
+        resolve(`Compressed image saved to ${destPath}`);
       }
     });
 

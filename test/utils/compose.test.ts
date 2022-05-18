@@ -1,15 +1,17 @@
 import { expect } from "chai";
-import { Compose, PackageImage } from "../../src/types";
+import { PackageImage } from "../../src/types";
 import { upstreamImageLabel } from "../../src/params";
 import {
   updateComposeImageTags,
   parseComposeUpstreamVersion,
   getComposePackageImages,
-  composeDeleteBuildProperties,
-  writeCompose,
-  readCompose
+  composeDeleteBuildProperties
 } from "../../src/utils/compose";
+import { writeReleaseFile } from "../../src/releaseFiles/writeReleaseFile";
 import { cleanTestDir, testDir } from "../testUtils";
+import { readReleaseFile } from "../../src/releaseFiles/readReleaseFile";
+import { Compose } from "../../src/releaseFiles/compose/types";
+import { AllowedFormats, ReleaseFileType } from "../../src/releaseFiles/types";
 
 describe("util > compose", () => {
   describe("updateComposeImageTags", () => {
@@ -245,13 +247,21 @@ describe("util > compose", () => {
         }
       };
 
-      writeCompose(compose, { dir: testDir });
+      writeReleaseFile(
+        { type: ReleaseFileType.compose, data: compose },
+        AllowedFormats.yml,
+        {
+          dir: testDir
+        }
+      );
 
       composeDeleteBuildProperties({ dir: testDir });
 
-      const composeEdited = readCompose({ dir: testDir });
+      const composeEdited = readReleaseFile(ReleaseFileType.compose, {
+        dir: testDir
+      });
 
-      expect(composeEdited).to.deep.equal(composeEditedExpected);
+      expect(composeEdited.releaseFile).to.deep.equal(composeEditedExpected);
     });
   });
 });

@@ -4,11 +4,8 @@ import chalk from "chalk";
 import { CommandModule } from "yargs";
 import semver from "semver";
 import inquirer from "inquirer";
-import { writeManifest, getManifestPath } from "../utils/manifest";
-import { writeCompose, getComposePath } from "../utils/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
-import { releasesRecordFileName } from "../utils/releaseRecord";
 import {
   defaultComposeFileName,
   defaultDir,
@@ -18,7 +15,12 @@ import {
   releaseFiles,
   YargsError
 } from "../params";
-import { CliGlobalOptions, Compose, Manifest } from "../types";
+import { CliGlobalOptions } from "../types";
+import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
+import { getReleaseFilePath } from "../releaseFiles/getReleaseFilePath";
+import { Compose } from "../releaseFiles/compose/types";
+import { Manifest } from "../releaseFiles/manifest/types";
+import { ReleaseFileType, AllowedFormats } from "../releaseFiles/types";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",
@@ -49,7 +51,6 @@ const gitignorePath = ".gitignore";
 const gitignoreCheck = "build_*";
 const gitignoreData = `# DAppNodeSDK release directories
 build_*
-${releasesRecordFileName}
 `;
 
 interface CliCommandOptions extends CliGlobalOptions {
@@ -188,7 +189,7 @@ It only covers the most common items, and tries to guess sensible defaults.
   };
 
   const compose: Compose = {
-    version: "3.4",
+    version: "3.5",
     services: {
       [serviceName]: {
         build: ".", // Dockerfile is in root dir
@@ -201,7 +202,12 @@ It only covers the most common items, and tries to guess sensible defaults.
   // Create package root dir
   fs.mkdirSync(dir, { recursive: true });
 
-  const manifestPath = getManifestPath(defaultManifestFormat, { dir });
+  const manifestPath = getReleaseFilePath(
+    defaultManifestFormat,
+    ReleaseFileType.manifest,
+    { dir }
+  );
+
   if (fs.existsSync(manifestPath) && !force) {
     const continueAnswer = await inquirer.prompt([
       {
@@ -217,11 +223,25 @@ It only covers the most common items, and tries to guess sensible defaults.
   }
 
   // Write manifest and compose
-  writeManifest(manifest, defaultManifestFormat, { dir });
+  writeReleaseFile(
+    { type: ReleaseFileType.manifest, data: manifest },
+    defaultManifestFormat,
+    {
+      dir
+    }
+  );
 
   // Only write a compose if it doesn't exist
-  if (!fs.existsSync(getComposePath({ dir }))) {
-    writeCompose(compose, { dir, composeFileName });
+  if (
+    !fs.existsSync(
+      getReleaseFilePath(AllowedFormats.yml, ReleaseFileType.compose, { dir })
+    )
+  ) {
+    writeReleaseFile(
+      { type: ReleaseFileType.compose, data: compose },
+      AllowedFormats.yml,
+      { dir, releaseFileName: composeFileName }
+    );
   }
 
   // Add default avatar so users can run the command right away

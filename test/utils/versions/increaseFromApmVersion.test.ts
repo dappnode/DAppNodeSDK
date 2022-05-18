@@ -1,14 +1,18 @@
 import { expect } from "chai";
 import semver from "semver";
 import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion";
-import { Manifest } from "../../../src/types";
 import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
-import { readManifest, writeManifest } from "../../../src/utils/manifest";
-import { readCompose, writeCompose } from "../../../src/utils/compose";
 import {
   defaultComposeFileName,
   defaultManifestFormat
 } from "../../../src/params";
+import { writeReleaseFile } from "../../../src/releaseFiles/writeReleaseFile";
+import { readReleaseFile } from "../../../src/releaseFiles/readReleaseFile";
+import { Manifest } from "../../../src/releaseFiles/manifest/types";
+import {
+  ReleaseFileType,
+  AllowedFormats
+} from "../../../src/releaseFiles/types";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -32,8 +36,20 @@ describe("increaseFromApmVersion", function () {
   after("Clean testDir", () => cleanTestDir());
 
   it("Should get the last version from APM", async () => {
-    writeManifest(manifest, defaultManifestFormat, { dir: testDir });
-    writeCompose(generateCompose(manifest), { dir: testDir });
+    writeReleaseFile(
+      { type: ReleaseFileType.manifest, data: manifest },
+      defaultManifestFormat,
+      {
+        dir: testDir
+      }
+    );
+    writeReleaseFile(
+      { type: ReleaseFileType.compose, data: generateCompose(manifest) },
+      AllowedFormats.yml,
+      {
+        dir: testDir
+      }
+    );
 
     const nextVersion = await increaseFromApmVersion({
       type: "patch",
@@ -46,14 +62,16 @@ describe("increaseFromApmVersion", function () {
     expect(semver.valid(nextVersion)).to.be.ok;
 
     // Check that the compose was edited correctly to the next version
-    const compose = readCompose({ dir: testDir });
-    expect(compose.services[dnpName].image).to.equal(
+    const compose = readReleaseFile(ReleaseFileType.compose, { dir: testDir });
+    expect(compose.releaseFile.services[dnpName].image).to.equal(
       `admin.dnp.dappnode.eth:${nextVersion}`,
       "compose should be edited to the next version"
     );
     // Check that the manifest was edited correctly to the next version
-    const { manifest: newManifest } = readManifest({ dir: testDir });
-    expect(newManifest.version).to.equal(
+    const newManifest = readReleaseFile(ReleaseFileType.manifest, {
+      dir: testDir
+    });
+    expect(newManifest.releaseFile.version).to.equal(
       nextVersion,
       "manifest should be edited to the next version"
     );
