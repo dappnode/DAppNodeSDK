@@ -7,7 +7,7 @@ import { readManifest, writeManifest } from "./manifest";
 /**
  * Reads manifest and extra files in `buildDir` compacts them in the manifest
  * and writes the resulting manifest in `buildDir`
- * @param buildDir `build_0.1.0`
+ * @param buildDir `./build`
  */
 export function compactManifestIfCore(buildDir: string): void {
   const { manifest, format } = readManifest({ dir: buildDir });

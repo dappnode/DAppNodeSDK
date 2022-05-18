@@ -1,19 +1,18 @@
-import path from "path";
 import chalk from "chalk";
 import { CommandModule } from "yargs";
 import Listr from "listr";
 // Tasks
 import { buildAndUpload } from "../tasks/buildAndUpload";
 // Utils
-import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
 import { getInstallDnpLink } from "../utils/getLinks";
 import { CliGlobalOptions } from "../types";
 import { UploadTo } from "../releaseUploader";
-import { defaultComposeFileName, defaultDir } from "../params";
+import { defaultBuildDir, defaultComposeFileName, defaultDir } from "../params";
 
 interface CliCommandOptions extends CliGlobalOptions {
   provider: string;
   upload_to: UploadTo;
+  build_dir: string;
   timeout?: string;
   skip_save?: boolean;
   skip_upload?: boolean;
@@ -36,6 +35,11 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       description: `Specify where to upload the release`,
       choices: ["ipfs", "swarm"] as UploadTo[],
       default: "ipfs" as UploadTo
+    },
+    build_dir: {
+      description: "Target directory to write build files",
+      default: defaultBuildDir,
+      normalize: true
     },
     timeout: {
       alias: "t",
@@ -74,6 +78,7 @@ export async function buildHandler({
   provider,
   timeout,
   upload_to,
+  build_dir,
   skip_save,
   skip_upload,
   require_git_data,
@@ -91,13 +96,11 @@ export async function buildHandler({
   const skipSave = skip_save;
   const skipUpload = skip_save || skip_upload;
   const composeFileName = compose_file_name;
-  const nextVersion = getCurrentLocalVersion({ dir });
-  const buildDir = path.join(dir, `build_${nextVersion}`);
 
   const buildTasks = new Listr(
     buildAndUpload({
       dir,
-      buildDir,
+      buildDir: build_dir,
       contentProvider,
       uploadTo,
       userTimeout,

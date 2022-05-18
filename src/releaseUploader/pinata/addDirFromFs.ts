@@ -4,7 +4,7 @@ import { PinataMetadata, PinataOptions, IpfsUploadResult } from "./PinataSDK";
 
 /**
  * Uploads a directory or file from the fs
- * @param dirOrFilePath "build_0.1.0/"
+ * @param dirOrFilePath "./build"
  * @param pinataUrl "https://api.pinata.cloud"
  * @param onProgress Reports upload progress, 0.4631
  * @returns "/ipfs/Qm..."

@@ -1,4 +1,3 @@
-import path from "path";
 import Listr from "listr";
 import chalk from "chalk";
 import { CommandModule } from "yargs";
@@ -11,7 +10,12 @@ import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion
 import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion";
 import { verifyEthConnection } from "../utils/verifyEthConnection";
 import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
-import { defaultComposeFileName, defaultDir, YargsError } from "../params";
+import {
+  defaultBuildDir,
+  defaultComposeFileName,
+  defaultDir,
+  YargsError
+} from "../params";
 import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
 import { printObject } from "../utils/print";
 import { UploadTo } from "../releaseUploader";
@@ -24,6 +28,7 @@ interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
   content_provider: string;
   upload_to: UploadTo;
+  build_dir: string;
   developer_address?: string;
   timeout?: string;
   github_release?: boolean;
@@ -66,6 +71,11 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
         description: `Specify where to upload the release`,
         choices: ["ipfs", "swarm"],
         default: "ipfs" as UploadTo
+      })
+      .option("build_dir", {
+        description: "Target directory to write build files",
+        default: defaultBuildDir,
+        normalize: true
       })
       .option("developer_address", {
         alias: "a",
@@ -130,6 +140,7 @@ export async function publishHanlder({
   developer_address,
   timeout,
   upload_to,
+  build_dir,
   github_release,
   dappnode_team_preset,
   require_git_data,
@@ -154,6 +165,7 @@ export async function publishHanlder({
   const composeFileName = compose_file_name;
   const requireGitData = require_git_data;
   const deleteOldPins = delete_old_pins;
+  const buildDir = build_dir;
 
   const isCi = process.env.CI;
   const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
@@ -217,7 +229,6 @@ export async function publishHanlder({
             else throw e;
           }
           ctx.nextVersion = nextVersion;
-          ctx.buildDir = path.join(dir, `build_${nextVersion}`);
           task.title = task.title + ` (next version: ${nextVersion})`;
         }
       },
@@ -225,12 +236,12 @@ export async function publishHanlder({
       // 2. Build and upload
       {
         title: "Build and upload",
-        task: ctx =>
+        task: () =>
           new Listr(
             buildAndUpload({
               dir,
               composeFileName,
-              buildDir: ctx.buildDir,
+              buildDir,
               contentProvider,
               uploadTo,
               userTimeout,
@@ -265,7 +276,7 @@ export async function publishHanlder({
           createGithubRelease({
             dir,
             compose_file_name,
-            buildDir: ctx.buildDir,
+            buildDir,
             releaseMultiHash: ctx.releaseMultiHash,
             verbose,
             silent

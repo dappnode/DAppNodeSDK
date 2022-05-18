@@ -7,6 +7,10 @@ export class YargsError extends Error {}
 
 export const branchNameRoot = "dappnodebot/bump-upstream/";
 
+// SDK params
+
+export const defaultBuildDir = "./build";
+
 // DAppNode params
 
 export const defaultDir = "./";

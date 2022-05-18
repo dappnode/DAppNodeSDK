@@ -10,6 +10,7 @@ import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
 import { releasesRecordFileName } from "../utils/releaseRecord";
 import {
+  defaultBuildDir,
   defaultComposeFileName,
   defaultDir,
   defaultManifestFileName,
@@ -46,11 +47,7 @@ ENTRYPOINT echo "happy buidl $USERNAME!"
 
 // .gitignore
 const gitignorePath = ".gitignore";
-const gitignoreCheck = "build_*";
-const gitignoreData = `# DAppNodeSDK release directories
-build_*
-${releasesRecordFileName}
-`;
+const gitignorePaths = [defaultBuildDir, releasesRecordFileName];
 
 interface CliCommandOptions extends CliGlobalOptions {
   yes?: boolean;
@@ -267,9 +264,16 @@ function getDnpName(name: string): string {
 function writeGitIgnore(filepath: string) {
   if (fs.existsSync(filepath)) {
     const currentGitignore = fs.readFileSync(filepath, "utf8");
-    if (!currentGitignore.includes(gitignoreCheck))
-      fs.writeFileSync(filepath, currentGitignore + gitignoreData);
+    const currentGitignorePaths = currentGitignore.split("\n");
+
+    for (const gitignorePath of gitignorePaths) {
+      if (!currentGitignorePaths.includes(gitignorePath)) {
+        currentGitignorePaths.push(gitignorePath);
+      }
+    }
+
+    fs.writeFileSync(filepath, currentGitignorePaths.join("\n"));
   } else {
-    fs.writeFileSync(filepath, gitignoreData);
+    fs.writeFileSync(filepath, gitignorePaths.join("\n"));
   }
 }

@@ -119,7 +119,7 @@ export function createGithubRelease({
           });
 
           // Clean content hash file so the directory uploaded to IPFS is the same
-          // as the local build_* dir. User can then `ipfs add -r` and get the same hash
+          // as the local ./build dir. User can then `ipfs add -r` and get the same hash
           fs.unlinkSync(contentHashPath);
         }
       }
