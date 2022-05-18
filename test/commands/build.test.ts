@@ -31,6 +31,7 @@ describe("Init and build", function () {
       dir: testDir,
       provider: contentProvider,
       upload_to: "ipfs",
+      build_dir: "build",
       timeout: "5min",
       verbose: true
     });

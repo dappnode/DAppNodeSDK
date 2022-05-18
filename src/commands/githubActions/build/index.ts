@@ -1,6 +1,6 @@
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types";
-import { defaultDir } from "../../../params";
+import { defaultBuildDir, defaultDir } from "../../../params";
 import { getGithubContext } from "../../../providers/github/githubActions";
 import { buildHandler } from "../../build";
 import { Github } from "../../../providers/github/Github";
@@ -74,6 +74,7 @@ export async function gaBuildHandler({
     await buildHandler({
       provider: "dappnode",
       upload_to: "ipfs",
+      build_dir: defaultBuildDir,
       skip_save: true,
       verbose: true
     });
@@ -99,6 +100,7 @@ export async function buildAndComment({
   const { releaseMultiHash } = await buildHandler({
     provider: "pinata",
     upload_to: "ipfs",
+    build_dir: defaultBuildDir,
     require_git_data: true,
     delete_old_pins: true,
     verbose: true
