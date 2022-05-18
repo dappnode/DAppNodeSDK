@@ -1,25 +1,8 @@
 import { Manifest } from "../manifest/types";
 import semver from "semver";
-import {
-  ComposeService,
-  Compose,
-  PackageEnvs,
-  ComposeServiceNetworksObj
-} from "./types";
+import { ComposeService, Compose } from "./types";
 import { params } from "./params";
-import {
-  sortBy,
-  toPairs,
-  fromPairs,
-  mapValues,
-  omitBy,
-  pick,
-  isObject,
-  isEmpty
-} from "lodash";
-import { getImageTag } from "../../params";
-
-const allowedNetworks = params.DOCKER_WHITELIST_NETWORKS.join(",");
+import { getIsCore } from "./utils";
 
 /**
  * Validates agains custom dappnode docker compose specs.
@@ -33,13 +16,16 @@ export function validateDappnodeCompose({
   composeUnsafe: Compose;
   manifest: Manifest;
 }): void {
+  const allowedNetworks = params.DOCKER_WHITELIST_NETWORKS.join(",");
+  const coreAliases = params.DOCKER_CORE_ALIASES.join(",");
+
   // COMPOSE TOP LEVEL restrictions
 
   // Check the minimum docker compose file version is 3.5 or higher
   if (
-    semver.lte(
+    semver.lt(
       composeUnsafe.version + ".0",
-      params.MINIMUM_COMPOSE_FILE_VERSION
+      params.MINIMUM_COMPOSE_FILE_VERSION + ".0"
     )
   )
     throw Error(
@@ -66,7 +52,7 @@ export function validateDappnodeCompose({
 
   const cpServices = composeUnsafe.services;
 
-  // - Ensure that there are only compose service safeKeys
+  // - TODO Ensure that there are only compose service safeKeys
   const composeServicesKeys = Object.keys(composeUnsafe.services);
   // Validate types with interface: https://betterprogramming.pub/runtime-data-validation-from-typescript-interfaces-1001ad22e775
 
@@ -139,11 +125,7 @@ export function validateDappnodeCompose({
             .flat()
             .some(alias => alias && params.DOCKER_CORE_ALIASES.includes(alias))
         ) {
-          throw Error(
-            `Aliases ${params.DOCKER_CORE_ALIASES.join(
-              ","
-            )} are reserved to core packages`
-          );
+          throw Error(`Aliases ${coreAliases} are reserved to core packages`);
         }
       } else {
         throw Error(`Compose service networks must be an array or an object`);
@@ -152,143 +134,32 @@ export function validateDappnodeCompose({
   }
 
   // Compose service volumes: MUST BE CHECK TOGETHER WITH COMPOSE TOP LEVEL VOLUMES
-  const cpServiceVolumes = cpServicesValues.map(
-    composeService => composeService.volumes
-  );
+  const cpServiceVolumes = cpServicesValues
+    .map(composeService => composeService.volumes)
+    .flat();
 
   if (cpServiceVolumes.length > 0) {
     for (const cpServiceVolume of cpServiceVolumes) {
       if (!cpServiceVolume) continue;
+      const cpVolumes = composeUnsafe.volumes;
+      if (!cpVolumes)
+        throw Error(
+          `All docker volumes defined in the service must be defined in the top level volumes`
+        );
+
+      const cpServiceVolumeName = cpServiceVolume.split(":")[0];
+      if (!cpServiceVolumeName)
+        throw Error("Compose service volume name is empty");
+
+      const cpVolumesNames = Object.keys(cpVolumes);
+      if (
+        !getIsCore(manifest) &&
+        !cpVolumesNames.includes(cpServiceVolumeName)
+      ) {
+        throw Error(
+          `Bind host volumes are not allowed. Make sure the compose service volume ${cpServiceVolumeName} is defined in the top level volumes`
+        );
+      }
     }
   }
-}
-
-export function parseToProductionCompose({
-  composeSafe,
-  manifest
-}: {
-  composeSafe: Compose;
-  manifest: Manifest;
-}): Compose {
-  const dnpName = manifest.name;
-  const version = manifest.version;
-  const isCore = getIsCore(manifest);
-
-  return cleanCompose({
-    version: composeSafe.version,
-    services: mapValues(
-      composeSafe.services,
-      (serviceSafe: ComposeService, serviceName: string) => {
-        return sortServiceKeys({
-          // Overridable defaults
-          restart: "unless-stopped",
-          logging: {
-            driver: "json-file",
-            options: {
-              "max-size": "10m",
-              "max-file": "3"
-            }
-          },
-
-          // Mandatory values
-          container_name: getContainerName({ dnpName, serviceName, isCore }),
-          image: getImageTag({ serviceName, dnpName, version }),
-          environment: parseEnvironment(serviceSafe.environment || {}),
-          dns: params.DNS_SERVICE, // Common DAppNode ENS
-          networks: serviceSafe.networks
-        });
-      }
-    ),
-    volumes: composeSafe.volumes,
-    networks: composeSafe.networks
-  });
-}
-
-// Utils
-
-/**
- * Cleans empty or null properties
- * Critical step to prevent writing faulty docker-compose.yml files
- * that can kill docker-compose calls.
- * - Removes service first levels keys that are objects or arrays and
- *   are empty (environment, env_files, ports, volumes)
- * @param compose
- */
-function cleanCompose(compose: Compose): Compose {
-  return {
-    version: compose.version,
-    ...omitBy(compose, isOmitable),
-    services: mapValues(compose.services, service => ({
-      ...omitBy(service, isOmitable),
-      // Add mandatory properties for the ts compiler
-      ...pick(service, ["container_name", "image"])
-    }))
-  };
-}
-
-function getContainerName({
-  dnpName,
-  serviceName,
-  isCore
-}: {
-  dnpName: string;
-  serviceName: string;
-  isCore: boolean;
-}): string {
-  // Note: _PREFIX variables already end with the character "-"
-  return [
-    isCore ? params.CONTAINER_CORE_NAME_PREFIX : params.CONTAINER_NAME_PREFIX,
-    getContainerDomain({ dnpName, serviceName })
-  ].join("");
-}
-
-/**
- * Get a unique domain per container, considering multi-service packages
- */
-function getContainerDomain({
-  dnpName,
-  serviceName
-}: {
-  serviceName: string;
-  dnpName: string;
-}): string {
-  if (!serviceName || serviceName === dnpName) {
-    return dnpName;
-  } else {
-    return [serviceName, dnpName].join(".");
-  }
-}
-
-function isOmitable(value: any): boolean {
-  return (
-    value === undefined || value === null || (isObject(value) && isEmpty(value))
-  );
-}
-
-/**
- * Sort service keys alphabetically, for better readibility
- * @param service
- */
-function sortServiceKeys(service: ComposeService): ComposeService {
-  return fromPairs(sortBy(toPairs(service), "0")) as ComposeService;
-}
-
-/**
- * Parses dappnode package by adding defualt values critical for dappnode
- */
-function parseEnvironment(envsArray: string[] | PackageEnvs): PackageEnvs {
-  // Make sure ENVs are in array format
-  if (typeof envsArray === "object" && !Array.isArray(envsArray))
-    return envsArray;
-
-  return envsArray
-    .filter(row => (row || "").trim())
-    .reduce((envs: PackageEnvs, row) => {
-      const [key, value] = (row || "").trim().split(/=(.*)/);
-      return key ? { ...envs, [key]: value || "" } : envs;
-    }, {});
-}
-
-function getIsCore(manifest: Manifest): boolean {
-  return manifest.type === "dncore";
 }

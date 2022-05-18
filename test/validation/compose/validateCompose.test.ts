@@ -2,17 +2,16 @@ import { expect } from "chai";
 import { readReleaseFile } from "../../../src/releaseFiles/readReleaseFile";
 import { ReleaseFileType } from "../../../src/releaseFiles/types";
 import { validateSchema } from "../../../src/releaseFiles/validateSchema";
+import { validateDappnodeCompose } from "../../../src/releaseFiles/compose/validateDappnodeCompose";
 
-describe.only("validation / Compose", () => {
+describe("validation / Compose", () => {
   const composeDir = "test/validation/compose";
 
-  it.only("Should read and validate a valid docker-compose file", () => {
+  it("Should read and validate a valid docker-compose file", () => {
     const compose = readReleaseFile(ReleaseFileType.compose, {
       dir: composeDir,
       releaseFileName: "good-docker-compose.yml"
     });
-
-    console.log(compose.releaseFile.services);
 
     validateSchema({
       type: ReleaseFileType.compose,
@@ -31,6 +30,26 @@ describe.only("validation / Compose", () => {
       validateSchema({
         type: ReleaseFileType.compose,
         data: compose.releaseFile
+      })
+    ).to.throw();
+  });
+
+  it("Should read and not validate an invalid docker-compose file with a host volume mounted", () => {
+    const compose = readReleaseFile(ReleaseFileType.compose, {
+      dir: composeDir,
+      releaseFileName: "bad-docker-compose.yml"
+    });
+
+    const manifest = readReleaseFile(ReleaseFileType.manifest, {
+      dir: "test/validation/manifest",
+      releaseFileName: "good-dappnode_package.json"
+    });
+
+    // expect to throw error
+    expect(() =>
+      validateDappnodeCompose({
+        composeUnsafe: compose.releaseFile,
+        manifest: manifest.releaseFile
       })
     ).to.throw();
   });
