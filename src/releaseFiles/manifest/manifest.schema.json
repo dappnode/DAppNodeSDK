@@ -1,17 +1,18 @@
 {
-  "meta:license": ["GNU General Public License v3.0"],
-  "meta:status": "Stable",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/dappnode/DAppNode/raw/schema/manifest.schema.json",
   "type": "object",
   "title": "DAppNode Package (DNP) manifest",
   "required": ["name", "version", "description", "type", "license"],
+  "additionalProperties": false,
   "description": "The DAppNode Package manifest defines all the necessary information for a DAppNode to understand this package:\n - IPFS of BZZ hashes to download its docker image \n - Docker related data to configure and run its container \n - Metadata to control how the package is shown in the admin UI.",
   "properties": {
     "name": {
       "type": "string",
       "description": "DAppNode Package ENS name.",
-      "examples": ["ipfs.dnp.dappnode.eth"]
+      "examples": ["ipfs.dnp.dappnode.eth"],
+      "pattern": "^[a-z0-9\\-\\.]+$",
+      "errorMessage": "Should be lowercase alphanumeric, dashes and dots only."
     },
     "version": {
       "type": "string",
@@ -42,23 +43,46 @@
       "description": "Type of this DAppNode Package. It is used to trigger some special features such as core functionality.",
       "default": "service",
       "examples": ["service", "dncore"],
-      "enum": ["service", "library", "dncore"],
-      "enumDescriptions": {
-        "service": "Can have ENVs a depend on library DAppNode Packages",
-        "library": "Should not have ENVs and cannot depend on service DAppNode Packages",
-        "dncore": "DAppNode Packages that are part of the DAppNode core and have special permissions"
-      }
+      "anyOf": [
+        {
+          "const": "service",
+          "description": "Can have ENVs a depend on library DAppNode Packages"
+        },
+        {
+          "const": "library",
+          "description": "Should not have ENVs and cannot depend on service DAppNode Packages"
+        },
+        {
+          "const": "dncore",
+          "description": "DAppNode Packages that are part of the DAppNode core and have special permissions"
+        }
+      ]
     },
     "chain": {
       "oneOf": [
         {
           "type": "string",
-          "enum": [
-            "ethereum",
-            "ethereum-beacon-chain",
-            "ethereum2-beacon-chain-prysm",
-            "bitcoin",
-            "monero"
+          "anyOf": [
+            {
+              "const": "ethereum",
+              "description": "Must have an Ethereum JSON RPC exposed internally at port 8545"
+            },
+            {
+              "const": "ethereum-beacon-chain",
+              "description": "Must have an Ethereum2 JSON RPC exposed internally"
+            },
+            {
+              "const": "ethereum2-beacon-chain-prysm",
+              "description": "Must have an Ethereum2 JSON RPC exposed internally"
+            },
+            {
+              "const": "bitcoin",
+              "description": "Must have a standard Bitcoin JSON API exposed at the default port (8332). Uses the NPM package `bitcoin-core`"
+            },
+            {
+              "const": "monero",
+              "description": "Must have a Monero API exposed internally at port 18081. Uses the NPM package `monero-rpc`"
+            }
           ]
         },
         {
@@ -99,12 +123,7 @@
           "serviceName": "beacon-chain",
           "portNumber": 3500
         }
-      ],
-      "enumDescriptions": {
-        "ethereum": "Must have an Ethereum JSON RPC exposed internally at port 8545",
-        "bitcoin": "Must have a standard Bitcoin JSON API exposed at the default port (8332). Uses the NPM package `bitcoin-core`",
-        "monero": "Must have a Monero API exposed internally at port 18081. Uses the NPM package `monero-rpc`"
-      }
+      ]
     },
     "mainService": {
       "type": "string",
@@ -167,11 +186,13 @@
       "items": {
         "type": "string",
         "examples": ["linux/amd64", "linux/arm64"],
-        "enum": ["linux/amd64", "linux/arm64"],
-        "enumDescriptions": {
-          "linux/amd64": "Default architecture, x86-64",
-          "linux/arm64": "ARM architecture"
-        }
+        "anyOf": [
+          {
+            "const": "linux/amd64",
+            "description": "Default architecture, x86-64"
+          },
+          { "const": "linux/arm64", "description": "ARM64 architecture" }
+        ]
       }
     },
     "backup": {
@@ -405,26 +426,40 @@
       "items": {
         "type": "string",
         "examples": ["Developer tools", "Blockchain", "Economic incentive"],
-        "enum": [
-          "Blockchain",
-          "Communications",
-          "Developer tools",
-          "ETH2.0",
-          "Economic incentive",
-          "Monitoring",
-          "Payment channels",
-          "Storage"
-        ],
-        "enumDescriptions": {
-          "Blockchain": "Blockchain nodes, i.e. Bitcoin, Monero",
-          "Communications": "Decentralized networking or chat solutions, i.e. Swarm",
-          "Developer tools": "Packages that their main purpose is to aid in developing, i.e. testnets",
-          "ETH2.0": "Packages to participate or use the Eth2.0 network",
-          "Economic incentive": "Packages that offer an economic incentive or reward to the admin that runs it, i.e. Lightning Network",
-          "Monitoring": "Packages that track metrics",
-          "Payment channels": "Packages whose main purpose is to manage or control payment channels, i.e. Raiden",
-          "Storage": "Decentralized storage solutions, i.e. Swarm"
-        }
+        "anyOf": [
+          {
+            "const": "Blockchain",
+            "description": "Blockchain nodes, i.e. Bitcoin, Monero"
+          },
+          {
+            "const": "Communications",
+            "description": "Decentralized networking or chat solutions, i.e. Swarm"
+          },
+          {
+            "const": "Developer tools",
+            "description": "Packages that their main purpose is to aid in developing, i.e. testnets"
+          },
+          {
+            "const": "ETH2.0",
+            "description": "Packages to participate or use the Eth2.0 network"
+          },
+          {
+            "const": "Economic incentive",
+            "description": "Packages that offer an economic incentive or reward to the admin that runs it, i.e. Lightning Network"
+          },
+          {
+            "const": "Monitoring",
+            "description": "Packages that track metrics"
+          },
+          {
+            "const": "Payment channels",
+            "description": "Packages whose main purpose is to manage or control payment channels, i.e. Raiden"
+          },
+          {
+            "const": "Storage",
+            "description": "Decentralized storage solutions, i.e. Swarm"
+          }
+        ]
       }
     },
     "keywords": {
