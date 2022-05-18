@@ -15,10 +15,10 @@ interface ReleaseRecords {
   [version: string]: ReleaseRecord;
 }
 
-const fileName = "releases.json";
+export const releasesRecordFileName = "releases.json";
 
 function readReleaseRecords(dir: string): ReleaseRecords {
-  const releaseRecordPath = path.join(dir, fileName);
+  const releaseRecordPath = path.join(dir, releasesRecordFileName);
   return fs.existsSync(releaseRecordPath)
     ? JSON.parse(fs.readFileSync(releaseRecordPath, "utf8"))
     : {};
@@ -34,7 +34,7 @@ function writeReleaseRecord(
   version: string,
   newReleaseRecord: Partial<ReleaseRecord>
 ): void {
-  const releaseRecordPath = path.join(dir, fileName);
+  const releaseRecordPath = path.join(dir, releasesRecordFileName);
   const releaseRecord = readReleaseRecords(dir);
   const mergedReleaseRecord = {
     ...releaseRecord,
