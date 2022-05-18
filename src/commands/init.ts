@@ -8,6 +8,7 @@ import { writeManifest, getManifestPath } from "../utils/manifest";
 import { writeCompose, getComposePath } from "../utils/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
+import { releasesRecordFileName } from "../utils/releaseRecord";
 import {
   defaultComposeFileName,
   defaultDir,
@@ -48,6 +49,7 @@ const gitignorePath = ".gitignore";
 const gitignoreCheck = "build_*";
 const gitignoreData = `# DAppNodeSDK release directories
 build_*
+${releasesRecordFileName}
 `;
 
 interface CliCommandOptions extends CliGlobalOptions {
