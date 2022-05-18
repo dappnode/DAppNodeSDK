@@ -1,8 +1,9 @@
 import { fetchPinsGroupedByBranch } from "../../../pinStrategy";
 import { cliArgsToReleaseUploaderProvider } from "../../../releaseUploader";
-import { readManifest } from "../../../utils/manifest";
 import { Github } from "../../../providers/github/Github";
 import { PinataPinManager } from "../../../providers/pinata/pinManager";
+import { readReleaseFile } from "../../../releaseFiles/readReleaseFile";
+import { ReleaseFileType } from "../../../releaseFiles/types";
 
 /**
  * Removes all pins associated with a branch that no longer exists
@@ -13,7 +14,7 @@ export async function cleanPinsFromDeletedBranches({
   dir: string;
 }): Promise<void> {
   // Read manifest from disk to get package name
-  const { manifest } = readManifest({ dir });
+  const manifest = readReleaseFile(ReleaseFileType.manifest, { dir });
 
   // Connect to Github Octokit REST API to know existing branches
   const github = Github.fromLocal(dir);
@@ -28,7 +29,10 @@ export async function cleanPinsFromDeletedBranches({
     throw Error("Must use pinata for deletePins");
   const pinata = new PinataPinManager(releaseUploaderProvider);
 
-  const pinsGroupedByBranch = await fetchPinsGroupedByBranch(pinata, manifest);
+  const pinsGroupedByBranch = await fetchPinsGroupedByBranch(
+    pinata,
+    manifest.releaseFile
+  );
   for (const { branch, pins } of pinsGroupedByBranch) {
     if (branches.find(b => b.name === branch)) continue;
 

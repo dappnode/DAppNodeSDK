@@ -1,7 +1,6 @@
 import Ajv, { ErrorObject } from "ajv";
 import ajvErrors from "ajv-errors";
 import manifestSchema from "../releaseFiles/manifest/manifest.schema.json";
-
 import setupWizardSchema from "../releaseFiles/setupWizard/setup-wizard.schema.json";
 import { CliError } from "../params";
 import { ReleaseFile, ReleaseFileType } from "./types";

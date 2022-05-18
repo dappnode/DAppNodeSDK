@@ -2,8 +2,6 @@ import fs from "fs";
 import path from "path";
 import Listr, { ListrTask } from "listr";
 import rimraf from "rimraf";
-import { readManifest, writeManifest } from "../utils/manifest";
-import { validateManifest } from "../utils/validateManifest";
 import { verifyAvatar } from "../utils/verifyAvatar";
 import { copyReleaseFile } from "../utils/copyReleaseFile";
 import { addReleaseRecord } from "../utils/releaseRecord";
@@ -12,16 +10,14 @@ import {
   CliError,
   getImagePath,
   getLegacyImagePath,
-  releaseFilesDefaultNames
+  releaseFilesDefaultNames,
+  defaultComposeFormat
 } from "../params";
 import {
-  readCompose,
-  writeCompose,
   parseComposeUpstreamVersion,
-  updateComposeImageTags,
   getComposePackageImages,
-  getComposePath,
-  composeDeleteBuildProperties
+  composeDeleteBuildProperties,
+  updateComposeImageTags
 } from "../utils/compose";
 import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
@@ -40,6 +36,11 @@ import {
   cliArgsToReleaseUploaderProvider,
   UploadTo
 } from "../releaseUploader";
+import { validateSchema } from "../releaseFiles/validateSchema";
+import { writeReleaseFile } from "../releaseFiles/writeReleaseFile";
+import { getReleaseFilePath } from "../releaseFiles/getReleaseFilePath";
+import { readReleaseFile } from "../releaseFiles/readReleaseFile";
+import { ReleaseFileType, AllowedFormats } from "../releaseFiles/types";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -70,59 +71,65 @@ export function buildAndUpload({
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
-  // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
-  const { manifest, format } = readManifest({ dir });
-
-  // Make sure the release is of correct type
-  if ((manifest as any).image)
-    throw new CliError(`
-DAppNode packages expect all docker related data to be contained only
-in the docker-compose.yml. Please translate the settings in 'manifest.image'
-to your package's docker-compose.yml and then delete the 'manifest.image' prop.
-`);
-  if (manifest.avatar)
-    throw new CliError(`
-DAppNode packages expect the avatar to be located at the root folder as a file
-and not declared in the manifest. Please add your package avatar to this directory
-as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' property.
-`);
-
-  // Define variables from manifest
-  const { name, version } = manifest;
-  if (/[A-Z]/.test(name))
-    throw new CliError("Package name in the manifest must be lowercase");
+  // Load files
+  const manifest = readReleaseFile(ReleaseFileType.manifest, { dir });
+  const setupWizard = readReleaseFile(ReleaseFileType.setupWizard);
 
   // Update compose
-  const composePath = getComposePath({ dir, composeFileName });
-  const composeForDev = readCompose({ dir, composeFileName });
-  const composeForBuild = updateComposeImageTags(composeForDev, manifest);
-  const composeForRelease = updateComposeImageTags(composeForDev, manifest, {
-    editExternalImages: true
+  const composePath = getReleaseFilePath(
+    defaultComposeFormat,
+    ReleaseFileType.compose,
+    { dir, releaseFileName: composeFileName }
+  );
+  const composeForDev = readReleaseFile(ReleaseFileType.compose, {
+    dir,
+    releaseFileName: composeFileName
   });
 
+  const composeForBuild = updateComposeImageTags(
+    composeForDev.releaseFile,
+    manifest.releaseFile
+  );
+  const composeForRelease = updateComposeImageTags(
+    composeForDev.releaseFile,
+    manifest.releaseFile,
+    {
+      editExternalImages: true
+    }
+  );
+
   // Get external image tags to pull and re-tag
-  const images = getComposePackageImages(composeForDev, manifest);
+  const images = getComposePackageImages(
+    composeForDev.releaseFile,
+    manifest.releaseFile
+  );
 
   const architectures =
-    manifest.architectures && parseArchitectures(manifest.architectures);
+    manifest.releaseFile.architectures &&
+    parseArchitectures(manifest.releaseFile.architectures);
 
   // get the architecture of the machine where is executed the dappnodesdk
   const hardwareArchitecture = getArchitecture();
 
   const imagePathAmd = path.join(
     buildDir,
-    getImagePath(name, version, hardwareArchitecture)
+    getImagePath(
+      manifest.releaseFile.name,
+      manifest.releaseFile.version,
+      hardwareArchitecture
+    )
   );
 
   const imagePathLegacy = path.join(
     buildDir,
-    getLegacyImagePath(name, version)
+    getLegacyImagePath(manifest.releaseFile.name, manifest.releaseFile.version)
   );
 
   // Bump upstreamVersion if provided
   const upstreamVersion =
-    parseComposeUpstreamVersion(composeForDev) || process.env.UPSTREAM_VERSION;
-  if (upstreamVersion) manifest.upstreamVersion = upstreamVersion;
+    parseComposeUpstreamVersion(composeForDev.releaseFile) ||
+    process.env.UPSTREAM_VERSION;
+  if (upstreamVersion) manifest.releaseFile.upstreamVersion = upstreamVersion;
 
   // Release upload. Use function for return syntax
   const releaseUploaderProvider = cliArgsToReleaseUploaderProvider({
@@ -132,6 +139,40 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
   const releaseUploader = getReleaseUploader(releaseUploaderProvider);
 
   return [
+    // Files must be validated before continuing
+    {
+      title: "Validate files",
+      task: async () => {
+        // Validate all other release files
+        for (const [fileId] of Object.entries(releaseFiles)) {
+          switch (fileId as keyof typeof releaseFiles) {
+            case "manifest":
+              validateSchema({
+                type: ReleaseFileType.manifest,
+                data: manifest.releaseFile
+              });
+              continue;
+            case "compose":
+              // TODO
+              continue;
+            case "setupWizard":
+              if (Object.entries(setupWizard.releaseFile).length > 0)
+                validateSchema({
+                  type: ReleaseFileType.setupWizard,
+                  data: setupWizard.releaseFile
+                });
+              continue;
+            default:
+              // validate release file
+              continue;
+          }
+        }
+
+        // Make sure git data is available before doing a long build
+        await getGitHeadIfAvailable({ requireGitData });
+      }
+    },
+
     {
       title: "Verify connection",
       skip: () => skipUpload,
@@ -158,7 +199,13 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         const buildFiles = fs.readdirSync(buildDir);
 
         const imagePaths = architectures
-          ? architectures.map(arch => getImagePath(name, version, arch))
+          ? architectures.map(arch =>
+              getImagePath(
+                manifest.releaseFile.name,
+                manifest.releaseFile.version,
+                arch
+              )
+            )
           : [imagePathAmd];
 
         // Clean all files except the expected target images
@@ -171,28 +218,43 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
     // Files should be copied for any type of release so they are available
     // in Github releases
     {
-      title: "Copy files and validate",
+      title: "Copy files",
       task: async () => {
-        // Write compose with build props for builds
-        writeCompose(composeForBuild, { dir, composeFileName });
-
-        // Copy files for release dir
-        writeCompose(composeForRelease, { dir: buildDir, composeFileName });
-        writeManifest(manifest, format, { dir: buildDir });
-        validateManifest(manifest);
-
         // Copy all other release files
         for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
             case "manifest":
+              writeReleaseFile(
+                { type: ReleaseFileType.manifest, data: manifest.releaseFile },
+                manifest.releaseFileFormat,
+                {
+                  dir: buildDir
+                }
+              );
+              continue;
             case "compose":
-              continue; // Hanlded above
+              // Write compose with build props for builds
+              writeReleaseFile(
+                { type: ReleaseFileType.compose, data: composeForBuild },
+                AllowedFormats.yml,
+                { dir, releaseFileName: composeFileName }
+              );
+
+              // Copy files for release dir
+              writeReleaseFile(
+                { type: ReleaseFileType.compose, data: composeForRelease },
+                AllowedFormats.yml,
+                { dir: buildDir, releaseFileName: composeFileName }
+              );
+              continue;
+
             default:
               copyReleaseFile({
                 fileConfig: { ...fileConfig, id: fileId },
                 fromDir: dir,
                 toDir: buildDir
               });
+              continue;
           }
         }
 
@@ -223,7 +285,11 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
                   skipSave,
                   destPath: path.join(
                     buildDir,
-                    getImagePath(name, version, architecture)
+                    getImagePath(
+                      manifest.releaseFile.name,
+                      manifest.releaseFile.version,
+                      architecture
+                    )
                   )
                 })
               )
@@ -248,11 +314,17 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
         // Remove `build` property AFTER building. Otherwise it may break ISO installations
         // https://github.com/dappnode/DAppNode_Installer/issues/161
-        composeDeleteBuildProperties({ dir: buildDir, composeFileName });
+        composeDeleteBuildProperties({
+          dir: buildDir,
+          releaseFileName: composeFileName
+        });
 
         ctx.releaseHash = await releaseUploader.addFromFs({
           dirPath: buildDir,
-          metadata: getPinMetadata(manifest, gitHead) as PinKeyvaluesDefault,
+          metadata: getPinMetadata(
+            manifest.releaseFile,
+            gitHead
+          ) as PinKeyvaluesDefault,
           onProgress: percent => (task.output = percentToMessage(percent))
         });
       }
@@ -270,7 +342,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         const pinata = new PinataPinManager(releaseUploaderProvider);
         const pinsToDelete = await fetchPinsWithBranchToDelete(
           pinata,
-          manifest,
+          manifest.releaseFile,
           gitHead
         );
 
@@ -288,7 +360,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
       task: async ctx => {
         addReleaseRecord({
           dir,
-          version,
+          version: manifest.releaseFile.version,
           hash: ctx.releaseHash,
           to: contentProvider
         });
