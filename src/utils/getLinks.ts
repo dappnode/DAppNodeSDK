@@ -1,7 +1,6 @@
 import querystring from "querystring";
 import { URL } from "url";
 import { publishTxAppUrl } from "../params";
-import { TxData } from "../types";
 
 const adminUiBaseUrl = "http://my.dappnode/#";
 
@@ -9,11 +8,16 @@ const adminUiBaseUrl = "http://my.dappnode/#";
  * Get link to publish a TX from a txData object
  * @param txData
  */
-export function getPublishTxLink(txData: TxData): string {
+export function getPublishTxLink(txData: {
+  dnpName: string;
+  version: string;
+  releaseMultiHash: string;
+  developerAddress?: string;
+}): string {
   // txData => Admin UI link
   const txDataShortKeys: { [key: string]: string } = {
-    r: txData.ensName,
-    v: txData.currentVersion,
+    r: txData.dnpName,
+    v: txData.version,
     h: txData.releaseMultiHash
   };
   // Only add developerAddress if necessary to not pollute the link

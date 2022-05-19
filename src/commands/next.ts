@@ -1,8 +1,9 @@
 import { CommandModule } from "yargs";
-import { getNextVersionFromApm } from "../utils/versions/getNextVersionFromApm";
-import { verifyEthConnection } from "../utils/verifyEthConnection";
+import semver from "semver";
 import { CliGlobalOptions, ReleaseType } from "../types";
 import { defaultDir } from "../params";
+import { getPM, verifyEthConnection } from "../providers/pm";
+import { readManifest } from "../utils/manifest";
 
 interface CliCommandOptions extends CliGlobalOptions {
   type: string;
@@ -11,7 +12,7 @@ interface CliCommandOptions extends CliGlobalOptions {
 
 export const next: CommandModule<CliGlobalOptions, CliCommandOptions> = {
   command: "next [type]",
-  describe: "Compute the next release version from local",
+  describe: "Compute the next release version from published repo",
 
   builder: yargs =>
     yargs
@@ -45,12 +46,18 @@ export async function nextHandler({
 }: CliCommandOptions): Promise<string> {
   const ethProvider = provider;
 
-  await verifyEthConnection(ethProvider);
+  const pm = getPM(ethProvider);
+  await verifyEthConnection(pm);
+
+  const { manifest } = readManifest({ dir });
+  const latestVersion = await pm.getLatestVersion(manifest.name);
+
+  const nextVersion = semver.inc(latestVersion, type as ReleaseType);
+  if (!nextVersion)
+    throw Error(
+      `Error computing next version, is this increase type correct? type: ${type}`
+    );
 
   // Execute command
-  return await getNextVersionFromApm({
-    type: type as ReleaseType,
-    ethProvider,
-    dir
-  });
+  return nextVersion;
 }

@@ -1,7 +1,13 @@
 import { CommandModule } from "yargs";
-import { increaseFromLocalVersion } from "../utils/versions/increaseFromLocalVersion";
-import { CliGlobalOptions, ReleaseType } from "../types";
+import semver, { ReleaseType } from "semver";
+import { CliGlobalOptions } from "../types";
 import { defaultComposeFileName, defaultDir } from "../params";
+import { readManifest, writeManifest } from "../utils/manifest";
+import {
+  readCompose,
+  updateComposeImageTags,
+  writeCompose
+} from "../utils/compose";
 
 export const command = "increase [type]";
 
@@ -38,9 +44,24 @@ export async function increaseHandler({
   dir = defaultDir,
   compose_file_name = defaultComposeFileName
 }: CliCommandOptions): Promise<string> {
-  return await increaseFromLocalVersion({
-    type: type as ReleaseType,
-    dir,
-    compose_file_name
-  });
+  const composeFileName = compose_file_name;
+
+  // Load manifest
+  const { manifest, format } = readManifest({ dir });
+
+  const currentVersion = manifest.version;
+
+  // Increase the version
+  const nextVersion = semver.inc(currentVersion, type as ReleaseType);
+  if (!nextVersion) throw Error(`Invalid increase: ${currentVersion} ${type}`);
+  manifest.version = nextVersion;
+
+  // Mofidy and write the manifest and docker-compose
+  writeManifest(manifest, format, { dir });
+  const { name, version } = manifest;
+  const compose = readCompose({ dir, composeFileName });
+  const newCompose = updateComposeImageTags(compose, { name, version });
+  writeCompose(newCompose, { dir, composeFileName });
+
+  return nextVersion;
 }

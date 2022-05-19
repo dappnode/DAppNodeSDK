@@ -1,12 +1,15 @@
 import { expect } from "chai";
-import { increaseFromLocalVersion } from "../../../src/utils/versions/increaseFromLocalVersion";
-import { readCompose, writeCompose } from "../../../src/utils/compose";
-import { readManifest, writeManifest } from "../../../src/utils/manifest";
-import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
+import semver from "semver";
+import { increaseFromRemoteVersion } from "../../src/utils/increaseFromRemoteVersion";
+import { Manifest } from "../../src/types";
+import { cleanTestDir, generateCompose, testDir } from "../testUtils";
+import { readManifest, writeManifest } from "../../src/utils/manifest";
+import { readCompose, writeCompose } from "../../src/utils/compose";
 import {
   defaultComposeFileName,
   defaultManifestFormat
-} from "../../../src/params";
+} from "../../src/params";
+import { getPM } from "../../src/providers/pm";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -16,21 +19,14 @@ import {
 // - modify the existing manifest and increase its version
 // - generate a docker compose with the next version
 
-describe("increaseFromLocalVersion", function () {
+describe("increaseFromRemoteVersion", function () {
   this.timeout(60 * 1000);
 
   const dnpName = "admin.dnp.dappnode.eth";
-  const manifest = {
+  const manifest: Manifest = {
     name: dnpName,
     version: "0.1.0",
-    avatar: "/ipfs/QmUG9Y13BvmKC4RzFu85F7Ai63emnEYrci4pqbbLxt3mt1",
-    type: "dncore",
-    image: {
-      path: "dnpinner.public.dappnode.eth_0.0.1.tar.xz",
-      hash: "/ipfs/QmcgHQ17z1UK4poEXDr4bzhiPPtLKxPEZTgiktXgcy1JJU",
-      size: 22019270,
-      restart: "always"
-    }
+    type: "dncore"
   };
 
   before("Clean testDir", () => cleanTestDir());
@@ -40,28 +36,26 @@ describe("increaseFromLocalVersion", function () {
     writeManifest(manifest, defaultManifestFormat, { dir: testDir });
     writeCompose(generateCompose(manifest), { dir: testDir });
 
-    const nextVersion = await increaseFromLocalVersion({
+    const nextVersion = await increaseFromRemoteVersion({
       type: "patch",
-      compose_file_name: defaultComposeFileName,
+      pm: getPM("infura"),
+      composeFileName: defaultComposeFileName,
       dir: testDir
     });
 
     // Check that the console output contains a valid semver version
-    expect(nextVersion).to.equal(
-      "0.1.1",
-      "Should output to console the next version"
-    );
+    expect(semver.valid(nextVersion)).to.be.ok;
 
     // Check that the compose was edited correctly to the next version
     const compose = readCompose({ dir: testDir });
     expect(compose.services[dnpName].image).to.equal(
-      "admin.dnp.dappnode.eth:0.1.1",
+      `admin.dnp.dappnode.eth:${nextVersion}`,
       "compose should be edited to the next version"
     );
     // Check that the manifest was edited correctly to the next version
     const { manifest: newManifest } = readManifest({ dir: testDir });
     expect(newManifest.version).to.equal(
-      "0.1.1",
+      nextVersion,
       "manifest should be edited to the next version"
     );
   });
