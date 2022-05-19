@@ -5,11 +5,11 @@ import Listr from "listr";
 // Tasks
 import { buildAndUpload } from "../tasks/buildAndUpload";
 // Utils
-import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
 import { getInstallDnpLink } from "../utils/getLinks";
 import { CliGlobalOptions } from "../types";
 import { UploadTo } from "../releaseUploader";
 import { defaultComposeFileName, defaultDir } from "../params";
+import { readManifest } from "../utils/manifest";
 
 interface CliCommandOptions extends CliGlobalOptions {
   provider: string;
@@ -91,7 +91,7 @@ export async function buildHandler({
   const skipSave = skip_save;
   const skipUpload = skip_save || skip_upload;
   const composeFileName = compose_file_name;
-  const nextVersion = getCurrentLocalVersion({ dir });
+  const nextVersion = readManifest({ dir }).manifest.version;
   const buildDir = path.join(dir, `build_${nextVersion}`);
 
   const buildTasks = new Listr(
