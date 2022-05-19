@@ -1,4 +1,3 @@
-import path from "path";
 import Listr from "listr";
 import chalk from "chalk";
 import { CommandModule } from "yargs";
@@ -7,19 +6,14 @@ import { buildAndUpload } from "../tasks/buildAndUpload";
 import { generatePublishTx } from "../tasks/generatePublishTx";
 import { createGithubRelease } from "../tasks/createGithubRelease";
 // Utils
-import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
-import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion";
 import { verifyEthConnection } from "../utils/verifyEthConnection";
 import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
-import { defaultComposeFileName, defaultDir, YargsError } from "../params";
-import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
+import { defaultComposeFileName, defaultDir } from "../params";
+import { CliGlobalOptions, TxData } from "../types";
 import { printObject } from "../utils/print";
 import { UploadTo } from "../releaseUploader";
 
-const typesList = releaseTypes.join(" | ");
-
 interface CliCommandOptions extends CliGlobalOptions {
-  type?: string;
   provider?: string;
   eth_provider: string;
   content_provider: string;
@@ -33,18 +27,12 @@ interface CliCommandOptions extends CliGlobalOptions {
 }
 
 export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
-  command: "publish [type]",
+  command: "publish",
   describe:
     "Publish a new version of the package in an Aragon Package Manager Repository",
 
   builder: yargs =>
     yargs
-      // Do not add `.require("type")`, it is verified below
-      .positional("type", {
-        description: `Semver update type. Can also be provided with env RELEASE_TYPE=[type] or via TRAVIS_TAG=release (patch), TRAVIS_TAG=release/[type]`,
-        choices: releaseTypes,
-        type: "string"
-      })
       .option("provider", {
         alias: "p",
         description: `Specify a provider (overwrittes content_provider and eth_provider): "dappnode" (default), "infura", "http://localhost:8545"`,
@@ -123,7 +111,6 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
  * Common handler for CLI and programatic usage
  */
 export async function publishHanlder({
-  type,
   provider,
   eth_provider,
   content_provider,
@@ -156,8 +143,6 @@ export async function publishHanlder({
   const deleteOldPins = delete_old_pins;
 
   const isCi = process.env.CI;
-  const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
-  const typeFromEnv = process.env.RELEASE_TYPE;
 
   /**
    * Specific set of options used for internal DAppNode releases.
@@ -175,54 +160,11 @@ export async function publishHanlder({
     githubRelease = true;
   }
 
-  /**
-   * Custom options to pass the type argument
-   */
-  if (!type && typeFromEnv) {
-    type = typeFromEnv as ReleaseType;
-  }
-  if (!type && tag && tag.includes("release")) {
-    type = (tag.split("release/")[1] || "patch") as ReleaseType;
-  }
-
-  /**
-   * Make sure the release type exists and is correct
-   */
-  if (!type)
-    throw new YargsError(`Missing required argument [type]: ${typesList}`);
-  if (!releaseTypes.includes(type as ReleaseType))
-    throw new YargsError(
-      `Invalid release type "${type}", must be: ${typesList}`
-    );
-
   await verifyEthConnection(ethProvider);
 
   const publishTasks = new Listr(
     [
-      // 1. Fetch current version from APM
-      {
-        title: "Fetch current version from APM",
-        task: async (ctx, task) => {
-          let nextVersion;
-          try {
-            nextVersion = await increaseFromApmVersion({
-              type: type as ReleaseType,
-              ethProvider,
-              dir,
-              composeFileName
-            });
-          } catch (e) {
-            if (e.message.includes("NOREPO"))
-              nextVersion = getCurrentLocalVersion({ dir });
-            else throw e;
-          }
-          ctx.nextVersion = nextVersion;
-          ctx.buildDir = path.join(dir, `build_${nextVersion}`);
-          task.title = task.title + ` (next version: ${nextVersion})`;
-        }
-      },
-
-      // 2. Build and upload
+      // Build and upload
       {
         title: "Build and upload",
         task: ctx =>
@@ -241,7 +183,7 @@ export async function publishHanlder({
           )
       },
 
-      // 3. Generate transaction
+      // Generate transaction
       {
         title: "Generate transaction",
         task: ctx =>
@@ -256,7 +198,7 @@ export async function publishHanlder({
           })
       },
 
-      // 4. Create github release
+      // Create github release
       // [ONLY] add the Release task if requested
       {
         title: "Release on github",
