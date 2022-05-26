@@ -1,15 +1,11 @@
 import fs from "fs";
 import path from "path";
 import Listr from "listr";
-import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
+import { getInstallDnpLink } from "../utils/getLinks";
 import { getGitHead } from "../utils/git";
 import { compactManifestIfCore } from "../utils/compactManifest";
 import { contentHashFile, defaultDir } from "../params";
-import {
-  TxData,
-  CliGlobalOptions,
-  ListrContextBuildAndPublish
-} from "../types";
+import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
 import { Github } from "../providers/github/Github";
 import { composeDeleteBuildProperties } from "../utils/compose";
 
@@ -83,7 +79,7 @@ export function createGithubRelease({
         task: async (ctx, task) => {
           //   console.log(res);
           // Get next version from context, fir
-          const { nextVersion, txData } = ctx;
+          const { nextVersion } = ctx;
           if (!nextVersion) throw Error("Missing ctx.nextVersion");
           const tag = `v${nextVersion}`;
 
@@ -110,7 +106,7 @@ export function createGithubRelease({
 
           task.output = `Creating release for tag ${tag}...`;
           await github.createReleaseAndUploadAssets(tag, {
-            body: getReleaseBody(txData),
+            body: getReleaseBody(ctx),
             // Tag as pre-release until it is actually published in APM mainnet
             prerelease: true,
             assetsDir: buildDir,
@@ -134,10 +130,13 @@ export function createGithubRelease({
  * Write the release body
  * #### TODO: Extend this to automatically write the body
  */
-function getReleaseBody(txData: TxData) {
-  const link = getPublishTxLink(txData);
+function getReleaseBody({
+  txData,
+  txPublishLink,
+  releaseMultiHash
+}: ListrContextBuildAndPublish) {
   const changelog = "";
-  const installLink = getInstallDnpLink(txData.releaseMultiHash);
+  const installLink = getInstallDnpLink(releaseMultiHash);
   return `
 ##### Changelog
 
@@ -147,7 +146,7 @@ ${changelog}
 
 ##### For package mantainer
 
-Authorized developer account may execute this transaction [from a pre-filled link](${link})[.](${installLink})
+Authorized developer account may execute this transaction [from a pre-filled link](${txPublishLink})[.](${installLink})
 
 <details><summary>Release details</summary>
 <p>
@@ -160,7 +159,7 @@ Gas limit: ${txData.gasLimit}
 \`\`\`
 
 \`\`\`
-${txData.releaseMultiHash}
+${releaseMultiHash}
 \`\`\`
 
 </p>

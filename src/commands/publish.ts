@@ -7,14 +7,13 @@ import { buildAndUpload } from "../tasks/buildAndUpload";
 import { generatePublishTx } from "../tasks/generatePublishTx";
 import { createGithubRelease } from "../tasks/createGithubRelease";
 // Utils
-import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
-import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion";
-import { verifyEthConnection } from "../utils/verifyEthConnection";
-import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
+import { increaseFromRemoteVersion } from "../utils/increaseFromRemoteVersion";
+import { getInstallDnpLink } from "../utils/getLinks";
 import { defaultComposeFileName, defaultDir, YargsError } from "../params";
 import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
 import { printObject } from "../utils/print";
 import { UploadTo } from "../releaseUploader";
+import { getPM, verifyEthConnection } from "../providers/pm";
 
 const typesList = releaseTypes.join(" | ");
 
@@ -88,9 +87,12 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       }),
 
   handler: async args => {
-    const { txData, nextVersion, releaseMultiHash } = await publishHanlder(
-      args
-    );
+    const {
+      txData,
+      nextVersion,
+      releaseMultiHash,
+      txPublishLink
+    } = await publishHanlder(args);
 
     if (!args.silent) {
       const txDataToPrint = {
@@ -113,7 +115,7 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
   
   ${"You can also execute this transaction with Metamask by following this pre-filled link"}
   
-  ${chalk.cyan(getPublishTxLink(txData))}
+  ${chalk.cyan(txPublishLink)}
   `);
     }
   }
@@ -143,6 +145,7 @@ export async function publishHanlder({
   txData: TxData;
   nextVersion: string;
   releaseMultiHash: string;
+  txPublishLink: string;
 }> {
   // Parse optionsalias: "release",
   let ethProvider = provider || eth_provider;
@@ -195,7 +198,8 @@ export async function publishHanlder({
       `Invalid release type "${type}", must be: ${typesList}`
     );
 
-  await verifyEthConnection(ethProvider);
+  const pm = getPM(ethProvider);
+  await verifyEthConnection(pm);
 
   const publishTasks = new Listr(
     [
@@ -203,19 +207,13 @@ export async function publishHanlder({
       {
         title: "Fetch current version from APM",
         task: async (ctx, task) => {
-          let nextVersion;
-          try {
-            nextVersion = await increaseFromApmVersion({
-              type: type as ReleaseType,
-              ethProvider,
-              dir,
-              composeFileName
-            });
-          } catch (e) {
-            if (e.message.includes("NOREPO"))
-              nextVersion = getCurrentLocalVersion({ dir });
-            else throw e;
-          }
+          const nextVersion = await increaseFromRemoteVersion({
+            type: type as ReleaseType,
+            pm,
+            dir,
+            composeFileName
+          });
+
           ctx.nextVersion = nextVersion;
           ctx.buildDir = path.join(dir, `build_${nextVersion}`);
           task.title = task.title + ` (next version: ${nextVersion})`;
@@ -276,6 +274,11 @@ export async function publishHanlder({
   );
 
   const tasksFinalCtx = await publishTasks.run();
-  const { txData, nextVersion, releaseMultiHash } = tasksFinalCtx;
-  return { txData, nextVersion, releaseMultiHash };
+  const {
+    txData,
+    nextVersion,
+    releaseMultiHash,
+    txPublishLink
+  } = tasksFinalCtx;
+  return { txData, nextVersion, releaseMultiHash, txPublishLink };
 }

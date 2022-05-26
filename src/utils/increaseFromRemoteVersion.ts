@@ -1,24 +1,30 @@
-import { readManifest, writeManifest } from "../manifest";
-import { readCompose, writeCompose, updateComposeImageTags } from "../compose";
-import { getNextVersionFromApm } from "./getNextVersionFromApm";
-import { ReleaseType } from "../../types";
+import semver from "semver";
+import { readManifest, writeManifest } from "./manifest";
+import { readCompose, writeCompose, updateComposeImageTags } from "./compose";
+import { ReleaseType } from "../types";
+import { IPM } from "../providers/pm";
 
-export async function increaseFromApmVersion({
+export async function increaseFromRemoteVersion({
   type,
-  ethProvider,
+  pm,
   dir,
   composeFileName
 }: {
   type: ReleaseType;
-  ethProvider: string;
+  pm: IPM;
   dir: string;
   composeFileName: string;
 }): Promise<string> {
-  // Check variables
-  const nextVersion = await getNextVersionFromApm({ type, ethProvider, dir });
-
   // Load manifest
   const { manifest, format } = readManifest({ dir });
+
+  const curretVersion = await pm.getLatestVersion(manifest.name);
+
+  const nextVersion = semver.inc(curretVersion, type);
+  if (!nextVersion)
+    throw Error(
+      `Error computing next version, is this increase type correct? type: ${type}`
+    );
 
   // Increase the version
   manifest.version = nextVersion;
