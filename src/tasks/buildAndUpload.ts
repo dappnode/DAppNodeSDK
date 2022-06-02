@@ -94,11 +94,33 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
   // Update compose
   const composePath = getComposePath({ dir, composeFileName });
+  // Compose for dev is the compose as is, containing images from Dockerhub
+  // services:
+  //   db:
+  //     image: prom/prometheus
   const composeForDev = readCompose({ dir, composeFileName });
+  // Same as dev but overwriting image field for what the DAPPMANAGER expects
+  // services:
+  //   db:
+  //     image: db.dnp.dappnode.eth:0.1.0
   const composeForBuild = updateComposeImageTags(composeForDev, manifest);
-  const composeForRelease = updateComposeImageTags(composeForDev, manifest, {
-    editExternalImages: true
-  });
+
+  // TODO:
+  // - Assert that compose has EITHER defined service.build OR service.image
+  // - IF service.build is defined, build and re-tag after the fact with expected image name 'project_service'
+  //   Note that docker-compose throws if image name contains characters outside of [a-zA-Z0-9\._\-].
+  //   As of Docker version 20.10.12, docker-compose version 1.29.2
+  //   ```
+  //   services:
+  //     db:
+  //       build: .
+  //   ```
+  // - IF service.image is defined, then pull and re-tag (external image flow)
+  //   ```
+  //   services:
+  //     db:
+  //       image: prom/prometheus
+  //   ```
 
   // Get external image tags to pull and re-tag
   const images = getComposePackageImages(composeForDev, manifest);
@@ -177,7 +199,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         writeCompose(composeForBuild, { dir, composeFileName });
 
         // Copy files for release dir
-        writeCompose(composeForRelease, { dir: buildDir, composeFileName });
+        writeCompose(composeForBuild, { dir: buildDir, composeFileName });
         writeManifest(manifest, format, { dir: buildDir });
         validateManifest(manifest);
 

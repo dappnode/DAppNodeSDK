@@ -7,7 +7,6 @@ import {
   defaultComposeFileName,
   defaultDir,
   getImageTag,
-  upstreamImageLabel,
   UPSTREAM_VERSION_VARNAME
 } from "../params";
 import { toTitleCase } from "./format";
@@ -80,28 +79,16 @@ function stringifyCompose(compose: Compose): string {
  */
 export function updateComposeImageTags(
   compose: Compose,
-  { name: dnpName, version }: { name: string; version: string },
-  options?: { editExternalImages?: boolean }
+  { name: dnpName, version }: { name: string; version: string }
 ): Compose {
   return {
     ...compose,
     services: mapValues(compose.services, (service, serviceName) => {
       const newImageTag = getImageTag({ dnpName, serviceName, version });
-      return service.build
-        ? {
-            ...service,
-            image: newImageTag
-          }
-        : options?.editExternalImages
-        ? {
-            ...service,
-            image: newImageTag,
-            labels: {
-              ...(service.labels || {}),
-              [upstreamImageLabel]: service.image
-            }
-          }
-        : service;
+      return {
+        ...service,
+        image: newImageTag
+      };
     })
   };
 }
