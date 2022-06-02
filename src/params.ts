@@ -129,12 +129,12 @@ export const releaseFilesDefaultNames: {
 // Single arch images
 export const getArchTag = (arch: Architecture): string =>
   arch.replace(/\//g, "-");
-export const getImagePath = (
+export const getImageFilename = (
   name: string,
   version: string,
   arch: Architecture
 ): string => `${name}_${version}_${getArchTag(arch)}.txz`;
-export const getLegacyImagePath = (name: string, version: string): string =>
+export const getLegacyImageFilename = (name: string, version: string): string =>
   `${name}_${version}.tar.xz`;
 
 /**

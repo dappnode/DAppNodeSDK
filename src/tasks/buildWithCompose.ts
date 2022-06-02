@@ -1,7 +1,5 @@
 import { ListrTask } from "listr";
-import { defaultArch, PackageImage } from "../types";
 import { shell } from "../utils/shell";
-import { saveAndCompressImagesCached } from "./saveAndCompressImages";
 
 /**
  * Save docker image
@@ -9,17 +7,11 @@ import { saveAndCompressImagesCached } from "./saveAndCompressImages";
  * A local cache file will prevent unnecessary compressions if the image hasn't changed
  */
 export function buildWithCompose({
-  images,
   composePath,
-  destPath,
-  buildTimeout,
-  skipSave
+  buildTimeout
 }: {
-  images: PackageImage[];
   composePath: string;
-  destPath: string;
   buildTimeout: number;
-  skipSave?: boolean;
 }): ListrTask[] {
   return [
     {
@@ -32,14 +24,6 @@ export function buildWithCompose({
           onData: data => (task.output = data)
         });
       }
-    },
-
-    ...saveAndCompressImagesCached({
-      images,
-      architecture: defaultArch,
-      destPath,
-      buildTimeout,
-      skipSave
-    })
+    }
   ];
 }
