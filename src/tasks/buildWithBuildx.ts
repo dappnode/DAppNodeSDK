@@ -2,7 +2,6 @@ import { ListrTask } from "listr";
 import semver from "semver";
 import { shell } from "../utils/shell";
 import { Architecture, PackageImage, PackageImageLocal } from "../types";
-import { saveAndCompressImagesCached } from "./saveAndCompressImages";
 import { getDockerVersion } from "../utils/getDockerVersion";
 
 const minimumDockerVersion = "19.3.0";
@@ -17,16 +16,12 @@ export function buildWithBuildx({
   architecture,
   images,
   composePath,
-  destPath,
-  buildTimeout,
-  skipSave
+  buildTimeout
 }: {
   architecture: Architecture;
   images: PackageImage[];
   composePath: string;
-  destPath: string;
   buildTimeout: number;
-  skipSave?: boolean;
 }): ListrTask[] {
   const localImages = images.filter(
     (image): image is PackageImageLocal => image.type === "local"
@@ -102,14 +97,6 @@ export function buildWithBuildx({
           }
         }
       }
-    },
-
-    ...saveAndCompressImagesCached({
-      images,
-      architecture,
-      destPath,
-      buildTimeout,
-      skipSave
-    })
+    }
   ];
 }

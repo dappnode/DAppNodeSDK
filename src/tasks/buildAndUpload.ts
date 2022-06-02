@@ -10,8 +10,8 @@ import { addReleaseRecord } from "../utils/releaseRecord";
 import {
   releaseFiles,
   CliError,
-  getImagePath,
-  getLegacyImagePath,
+  getImageFilename,
+  getLegacyImageFilename,
   releaseFilesDefaultNames
 } from "../params";
 import {
@@ -23,7 +23,11 @@ import {
   getComposePath,
   composeDeleteBuildProperties
 } from "../utils/compose";
-import { ListrContextBuildAndPublish } from "../types";
+import {
+  Architecture,
+  defaultArch,
+  ListrContextBuildAndPublish
+} from "../types";
 import { parseTimeout } from "../utils/timeout";
 import { buildWithBuildx } from "./buildWithBuildx";
 import { buildWithCompose } from "./buildWithCompose";
@@ -40,6 +44,7 @@ import {
   cliArgsToReleaseUploaderProvider,
   UploadTo
 } from "../releaseUploader";
+import { saveAndCompressImagesCached } from "./saveAndCompressImages";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -103,21 +108,15 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
   // Get external image tags to pull and re-tag
   const images = getComposePackageImages(composeForDev, manifest);
 
-  const architectures =
-    manifest.architectures && parseArchitectures(manifest.architectures);
+  const useBuildx = manifest.architectures !== undefined;
+  const architectures = manifest.architectures
+    ? parseArchitectures(manifest.architectures)
+    : [defaultArch];
 
-  // get the architecture of the machine where is executed the dappnodesdk
-  const hardwareArchitecture = getArchitecture();
-
-  const imagePathAmd = path.join(
-    buildDir,
-    getImagePath(name, version, hardwareArchitecture)
-  );
-
-  const imagePathLegacy = path.join(
-    buildDir,
-    getLegacyImagePath(name, version)
-  );
+  /** Returns image destination full path based on architecture */
+  function getImageDestPath(architecture: Architecture): string {
+    return path.join(buildDir, getImageFilename(name, version, architecture));
+  }
 
   // Bump upstreamVersion if provided
   const upstreamVersion =
@@ -157,13 +156,13 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         fs.mkdirSync(buildDir, { recursive: true }); // Ok on existing dir
         const buildFiles = fs.readdirSync(buildDir);
 
-        const imagePaths = architectures
-          ? architectures.map(arch => getImagePath(name, version, arch))
-          : [imagePathAmd];
+        const imageFilenames = architectures.map(arch =>
+          getImageFilename(name, version, arch)
+        );
 
         // Clean all files except the expected target images
         for (const filepath of buildFiles)
-          if (!imagePaths.includes(filepath))
+          if (!imageFilenames.includes(filepath))
             rimraf.sync(path.join(buildDir, filepath));
       }
     },
@@ -209,40 +208,51 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
     // compatible with DAppNodes that expect a single ".tar.xz" file
     // which must be amd64, x86_64
     // const imageEntry = files.find(file => /\.tar\.xz$/.test(file));
-    ...(architectures
-      ? architectures.map(
-          (architecture): ListrTask<ListrContextBuildAndPublish> => ({
-            title: `Build architecture ${architecture}`,
-            task: () =>
-              new Listr(
-                buildWithBuildx({
+    ...architectures.map(
+      (architecture): ListrTask<ListrContextBuildAndPublish> => ({
+        title: `Build architecture ${architecture}`,
+        task: () =>
+          new Listr([
+            ...(useBuildx
+              ? buildWithBuildx({
                   architecture,
                   images,
                   composePath,
-                  buildTimeout,
-                  skipSave,
-                  destPath: path.join(
-                    buildDir,
-                    getImagePath(name, version, architecture)
-                  )
+                  buildTimeout
                 })
-              )
-          })
-        )
-      : buildWithCompose({
-          images,
-          composePath,
-          buildTimeout,
-          skipSave,
-          destPath: imagePathAmd
-        })),
+              : buildWithCompose({
+                  composePath,
+                  buildTimeout
+                })),
+
+            // Save images once per architecture, since the image tag is the same?
+            ...saveAndCompressImagesCached({
+              images,
+              architecture,
+              destPath: getImageDestPath(architecture),
+              buildTimeout,
+              skipSave
+            })
+          ])
+      })
+    ),
 
     {
       title: `Upload release to ${releaseUploader.networkName}`,
       skip: () => skipUpload,
       task: async (ctx, task) => {
-        if (fs.existsSync(imagePathAmd))
-          fs.copyFileSync(imagePathAmd, imagePathLegacy);
+        // get the architecture of the machine where is executed the dappnodesdk
+        const architectureHost = getArchitecture();
+        const imageHostArchPath = getImageDestPath(architectureHost);
+        const imageLegacyPath = path.join(
+          buildDir,
+          getLegacyImageFilename(name, version)
+        );
+
+        // Legacy code for backwards compatibility.
+        // Old DAppNodes expect a single linux/amd64 image at a different path than `getImageDestPath()`.
+        if (fs.existsSync(imageHostArchPath))
+          fs.copyFileSync(imageHostArchPath, imageLegacyPath);
 
         const gitHead = await getGitHeadIfAvailable({ requireGitData });
 

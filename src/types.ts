@@ -32,7 +32,7 @@ export enum ManifestFormat {
 
 export type Architecture = "linux/amd64" | "linux/arm64";
 export const architectures: Architecture[] = ["linux/amd64", "linux/arm64"];
-export const defaultArch = "linux/amd64";
+export const defaultArch = "linux/amd64" as const;
 
 export type ReleaseType = "major" | "minor" | "patch";
 export const releaseTypes: ReleaseType[] = ["major", "minor", "patch"];

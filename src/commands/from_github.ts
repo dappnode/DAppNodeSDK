@@ -8,8 +8,8 @@ import moment from "moment";
 import { CliGlobalOptions, defaultArch, Manifest } from "../types";
 import {
   contentHashFile,
-  getImagePath,
-  getLegacyImagePath,
+  getImageFilename,
+  getLegacyImageFilename,
   releaseFiles,
   releaseFilesDefaultNames
 } from "../params";
@@ -99,13 +99,13 @@ export async function fromGithubHandler({
     const { name, version }: Manifest = await got(
       manifestAsset.browser_download_url
     ).json();
-    const legacyImagePath = getLegacyImagePath(name, version);
+    const imageLegacyFilename = getLegacyImageFilename(name, version);
     const legacyImageAsset = release.assets.find(
-      asset => asset.name === legacyImagePath
+      asset => asset.name === imageLegacyFilename
     );
     if (legacyImageAsset) {
-      const imageAmdPath = getImagePath(name, version, defaultArch);
-      release.assets.push({ ...legacyImageAsset, name: imageAmdPath });
+      const imageAmdFilename = getImageFilename(name, version, defaultArch);
+      release.assets.push({ ...legacyImageAsset, name: imageAmdFilename });
     }
   }
 
