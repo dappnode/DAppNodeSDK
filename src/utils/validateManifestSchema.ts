@@ -1,9 +1,9 @@
-import Ajv from "ajv";
+import Ajv, { ErrorObject } from "ajv";
 import ajvErrors from "ajv-errors";
 import manifestSchema from "../schemas/manifest.schema.json";
 import { Manifest } from "../types";
 
-const ajv = new Ajv({ allErrors: true, jsonPointers: true });
+const ajv = new Ajv({ allErrors: true });
 ajvErrors(ajv);
 // Precompile validator
 const validate = ajv.compile(manifestSchema);
@@ -80,8 +80,11 @@ export function validateManifestSchema(
  * @returns errorMessage:
  * "manifest.avatar should match pattern "^/(ipfs|bzz)/w+$""
  */
-function processError(errorObject: Ajv.ErrorObject): string {
-  const { dataPath, message } = errorObject;
-  const path = `manifest${dataPath}`.replace(new RegExp("/", "g"), ".");
+function processError(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  errorObject: ErrorObject<string, Record<string, any>, unknown>
+): string {
+  const { schemaPath, message } = errorObject;
+  const path = `manifest${schemaPath}`.replace(new RegExp("/", "g"), ".");
   return `${path} ${message}`;
 }

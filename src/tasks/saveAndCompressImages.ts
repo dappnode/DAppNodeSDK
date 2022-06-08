@@ -139,7 +139,7 @@ async function saveAndCompressImages({
           Error(`Error compressing image: xz exit ${code} \n${lastStderr}`)
         );
       } else {
-        resolve();
+        resolve;
       }
     });
 
