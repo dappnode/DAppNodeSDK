@@ -3,7 +3,11 @@ import ajvErrors from "ajv-errors";
 import manifestSchema from "../schemas/manifest.schema.json";
 import { Manifest } from "../types";
 
-const ajv = new Ajv({ allErrors: true });
+const ajv = new Ajv({
+  allErrors: true,
+  coerceTypes: true,
+  strictSchema: false
+});
 ajvErrors(ajv);
 // Precompile validator
 const validate = ajv.compile(manifestSchema);
