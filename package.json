@@ -36,8 +36,8 @@
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
     "@octokit/rest": "^18.0.12",
-    "ajv": "^6.12.2",
-    "ajv-errors": "^1.0.1",
+    "ajv": "^8.11.0",
+    "ajv-errors": "^3.0.0",
     "async-retry": "^1.2.3",
     "chalk": "^2.4.2",
     "cli-progress": "^3.8.2",
@@ -63,7 +63,8 @@
     "yargs": "^13.2.4"
   },
   "devDependencies": {
-    "@types/ajv-errors": "^1.0.2",
+    "@types/ajv": "^1.0.0",
+    "@types/ajv-errors": "^2.0.1",
     "@types/async-retry": "^1.4.2",
     "@types/chai": "^4.2.11",
     "@types/cli-progress": "^3.7.0",
@@ -87,7 +88,7 @@
     "eslint": "^7.3.1",
     "mocha": "^6.2.2",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.5"
+    "typescript": "^4.7.3"
   },
   "engines": {
     "node": ">=8.0.0"
