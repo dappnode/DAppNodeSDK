@@ -40,7 +40,6 @@ import {
   UploadTo
 } from "../releaseUploader";
 import { validateSchema } from "../schemaValidation/validateSchema";
-import yaml from "js-yaml";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -70,11 +69,6 @@ export function buildAndUpload({
   dir: string;
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
-
-  const files = fs.readdirSync(dir);
-  const setupWizardString = files.find(file =>
-    releaseFiles.setupWizard.regex.test(file)
-  );
 
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
   const { manifest, format } = readManifest({ dir });
@@ -181,14 +175,18 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         for (const [fileId] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
             case "setupWizard":
-              if (!setupWizardString) continue;
-              validateSchema(yaml.load(setupWizardString));
+              validateSchema({
+                type: "setupWizard",
+                data: fs
+                  .readdirSync(dir)
+                  .find(file => releaseFiles.setupWizard.regex.test(file))
+              });
               break;
             case "manifest":
-              validateSchema(manifest);
+              validateSchema({ type: "manifest", data: manifest });
               break;
             case "compose":
-              validateSchema(composeForDev);
+              validateSchema({ type: "compose", data: composeForDev });
               break;
             default:
               break;

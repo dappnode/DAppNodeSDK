@@ -55,5 +55,3 @@ export interface TxDataShortKeys {
   h: string; // hash
   d?: string; // developerAddress
 }
-
-export type ReleaseFileType = "manifest" | "compose" | "setupWizard";
