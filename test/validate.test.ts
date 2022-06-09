@@ -1,9 +1,10 @@
 import { expect } from "chai";
-import { validateManifestSchema } from "../src/utils/validateManifestSchema";
+import { Manifest } from "../src/releaseFiles/manifest/types";
+import { validateReleaseFile } from "../src/schemaValidation/validateSchema";
 
 describe("utils / format", () => {
   it("validateManifest chainDriver as string", () => {
-    const manifest = {
+    const manifest: Manifest = {
       name: "",
       version: "1.0.0",
       description: "",
@@ -14,13 +15,13 @@ describe("utils / format", () => {
       }
     };
 
-    const validManifest = validateManifestSchema(manifest);
+    const validManifest = validateReleaseFile(manifest);
     expect(validManifest.valid).to.be.true;
     expect(validManifest.errors).to.be.empty;
   });
 
   it("validateManifest chainDriver as object", () => {
-    const manifest = {
+    const manifest: Manifest = {
       name: "",
       version: "1.0.0",
       description: "",
@@ -29,13 +30,14 @@ describe("utils / format", () => {
       chain: "ethereum"
     };
 
-    const validManifest = validateManifestSchema(manifest);
+    const validManifest = validateReleaseFile(manifest);
     expect(validManifest.valid).to.be.true;
     expect(validManifest.errors).to.be.empty;
   });
 
   it("throw error validating", () => {
-    const manifest = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const manifest: any = {
       name: "",
       version: "1.0.0",
       description: "",
@@ -44,7 +46,7 @@ describe("utils / format", () => {
       chain: "notAllowed"
     };
 
-    const validManifest = validateManifestSchema(manifest);
+    const validManifest = validateReleaseFile(manifest);
     expect(validManifest.valid).to.be.false;
     expect(validManifest.errors).to.not.be.empty;
   });

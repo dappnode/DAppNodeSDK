@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "id": "compose_spec.json",
+  "$id": "compose_spec.json",
   "type": "object",
   "title": "Compose Specification",
   "description": "The Compose file is a YAML file defining a multi-containers based application.",
@@ -17,7 +17,7 @@
     },
 
     "services": {
-      "id": "#/properties/services",
+      "$id": "#/properties/services",
       "type": "object",
       "patternProperties": {
         "^[a-zA-Z0-9._-]+$": {
@@ -28,7 +28,7 @@
     },
 
     "networks": {
-      "id": "#/properties/networks",
+      "$id": "#/properties/networks",
       "type": "object",
       "patternProperties": {
         "^[a-zA-Z0-9._-]+$": {
@@ -38,7 +38,7 @@
     },
 
     "volumes": {
-      "id": "#/properties/volumes",
+      "$id": "#/properties/volumes",
       "type": "object",
       "patternProperties": {
         "^[a-zA-Z0-9._-]+$": {
@@ -49,7 +49,7 @@
     },
 
     "secrets": {
-      "id": "#/properties/secrets",
+      "$id": "#/properties/secrets",
       "type": "object",
       "patternProperties": {
         "^[a-zA-Z0-9._-]+$": {
@@ -60,7 +60,7 @@
     },
 
     "configs": {
-      "id": "#/properties/configs",
+      "$id": "#/properties/configs",
       "type": "object",
       "patternProperties": {
         "^[a-zA-Z0-9._-]+$": {
@@ -76,7 +76,7 @@
 
   "definitions": {
     "service": {
-      "id": "#/definitions/service",
+      "$id": "#/definitions/service",
       "type": "object",
 
       "properties": {
@@ -472,7 +472,7 @@
     },
 
     "healthcheck": {
-      "id": "#/definitions/healthcheck",
+      "$id": "#/definitions/healthcheck",
       "type": "object",
       "properties": {
         "disable": { "type": "boolean" },
@@ -491,7 +491,7 @@
       "patternProperties": { "^x-": {} }
     },
     "deployment": {
-      "id": "#/definitions/deployment",
+      "$id": "#/definitions/deployment",
       "type": ["object", "null"],
       "properties": {
         "mode": { "type": "string" },
@@ -591,7 +591,7 @@
     },
 
     "generic_resources": {
-      "id": "#/definitions/generic_resources",
+      "$id": "#/definitions/generic_resources",
       "type": "array",
       "items": {
         "type": "object",
@@ -612,7 +612,7 @@
     },
 
     "devices": {
-      "id": "#/definitions/devices",
+      "$id": "#/definitions/devices",
       "type": "array",
       "items": {
         "type": "object",
@@ -629,7 +629,7 @@
     },
 
     "network": {
-      "id": "#/definitions/network",
+      "$id": "#/definitions/network",
       "type": ["object", "null"],
       "properties": {
         "name": { "type": "string" },
@@ -692,7 +692,7 @@
     },
 
     "volume": {
-      "id": "#/definitions/volume",
+      "$id": "#/definitions/volume",
       "type": ["object", "null"],
       "properties": {
         "name": { "type": "string" },
@@ -721,7 +721,7 @@
     },
 
     "secret": {
-      "id": "#/definitions/secret",
+      "$id": "#/definitions/secret",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
@@ -748,7 +748,7 @@
     },
 
     "config": {
-      "id": "#/definitions/config",
+      "$id": "#/definitions/config",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
@@ -837,7 +837,7 @@
 
     "constraints": {
       "service": {
-        "id": "#/definitions/constraints/service",
+        "$id": "#/definitions/constraints/service",
         "anyOf": [{ "required": ["build"] }, { "required": ["image"] }],
         "properties": {
           "build": {

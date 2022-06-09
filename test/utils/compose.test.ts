@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Compose, PackageImage } from "../../src/types";
+import { PackageImage } from "../../src/types";
 import { upstreamImageLabel } from "../../src/params";
 import {
   updateComposeImageTags,
@@ -10,6 +10,7 @@ import {
   readCompose
 } from "../../src/utils/compose";
 import { cleanTestDir, testDir } from "../testUtils";
+import { Compose } from "../../src/releaseFiles/compose/types";
 
 describe("util > compose", () => {
   describe("updateComposeImageTags", () => {

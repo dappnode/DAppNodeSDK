@@ -1,5 +1,6 @@
 import { ListrTask } from "listr";
-import { defaultArch, PackageImage } from "../types";
+import { defaultArch } from "../releaseFiles/manifest/types";
+import { PackageImage } from "../types";
 import { shell } from "../utils/shell";
 import { saveAndCompressImagesCached } from "./saveAndCompressImages";
 

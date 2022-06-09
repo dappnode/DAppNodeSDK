@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { ManifestFormat } from "../types";
+import { ManifestFormat } from "../releaseFiles/manifest/types";
 import { stringifyJson } from "./manifest";
 
 interface ReleaseRecord {

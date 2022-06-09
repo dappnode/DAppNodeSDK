@@ -3,8 +3,8 @@ import path from "path";
 import yaml from "js-yaml";
 import prettier from "prettier";
 import { defaultDir, releaseFiles } from "../params";
-import { Manifest, ManifestFormat } from "../types";
 import { readFile } from "./file";
+import { Manifest, ManifestFormat } from "../releaseFiles/manifest/types";
 
 export interface ManifestPaths {
   /** './folder', [optional] directory to load the manifest from */

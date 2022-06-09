@@ -18,7 +18,9 @@ import {
   releaseFiles,
   YargsError
 } from "../params";
-import { CliGlobalOptions, Compose, Manifest } from "../types";
+import { Manifest } from "../releaseFiles/manifest/types";
+import { Compose } from "../releaseFiles/compose/types";
+import { CliGlobalOptions } from "../types";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",

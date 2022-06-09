@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import prettier from "prettier";
-import { Compose, PackageImage } from "../types";
+import { PackageImage } from "../types";
 import {
   defaultComposeFileName,
   defaultDir,
@@ -13,6 +13,7 @@ import {
 import { toTitleCase } from "./format";
 import { mapValues, uniqBy } from "lodash";
 import { readFile } from "./file";
+import { Compose } from "../releaseFiles/compose/types";
 
 interface ComposePaths {
   /** './folder', [optional] directory to load the compose from */

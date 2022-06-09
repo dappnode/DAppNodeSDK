@@ -1,4 +1,5 @@
-import { Architecture, FileFormat, ManifestFormat } from "./types";
+import { Architecture, ManifestFormat } from "./releaseFiles/manifest/types";
+import { FileFormat } from "./types";
 
 export class CliError extends Error {}
 export class YargsError extends Error {}

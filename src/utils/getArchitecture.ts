@@ -1,5 +1,5 @@
-import { Architecture } from "../types";
 import os from "os";
+import { Architecture } from "../releaseFiles/manifest/types";
 
 /**
  * Returns the architecture of the host machine doing the build
