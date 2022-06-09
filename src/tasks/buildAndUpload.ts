@@ -3,7 +3,6 @@ import path from "path";
 import Listr, { ListrTask } from "listr";
 import rimraf from "rimraf";
 import { readManifest, writeManifest } from "../utils/manifest";
-import { validateManifest } from "../utils/validateManifest";
 import { verifyAvatar } from "../utils/verifyAvatar";
 import { copyReleaseFile } from "../utils/copyReleaseFile";
 import { addReleaseRecord } from "../utils/releaseRecord";
@@ -40,6 +39,8 @@ import {
   cliArgsToReleaseUploaderProvider,
   UploadTo
 } from "../releaseUploader";
+import { validateSchema } from "../schemaValidation/validateSchema";
+import yaml from "js-yaml";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -70,10 +71,16 @@ export function buildAndUpload({
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
+  const files = fs.readdirSync(dir);
+  const setupWizardString = files.find(file =>
+    releaseFiles.setupWizard.regex.test(file)
+  );
+
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
   const { manifest, format } = readManifest({ dir });
 
   // Make sure the release is of correct type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if ((manifest as any).image)
     throw new CliError(`
 DAppNode packages expect all docker related data to be contained only
@@ -168,25 +175,47 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
       }
     },
 
+    {
+      title: "Validate files",
+      task: () => {
+        for (const [fileId] of Object.entries(releaseFiles)) {
+          switch (fileId as keyof typeof releaseFiles) {
+            case "setupWizard":
+              if (!setupWizardString) continue;
+              validateSchema(yaml.load(setupWizardString));
+              break;
+            case "manifest":
+              validateSchema(manifest);
+              break;
+            case "compose":
+              validateSchema(composeForDev);
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    },
+
     // Files should be copied for any type of release so they are available
     // in Github releases
     {
-      title: "Copy files and validate",
+      title: "Copy files",
       task: async () => {
-        // Write compose with build props for builds
-        writeCompose(composeForBuild, { dir, composeFileName });
-
-        // Copy files for release dir
-        writeCompose(composeForRelease, { dir: buildDir, composeFileName });
-        writeManifest(manifest, format, { dir: buildDir });
-        validateManifest(manifest);
-
-        // Copy all other release files
         for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
             case "manifest":
+              writeManifest(manifest, format, { dir: buildDir });
+              break;
             case "compose":
-              continue; // Hanlded above
+              // Write compose with build props for builds
+              writeCompose(composeForBuild, { dir, composeFileName });
+              // Copy files for release dir
+              writeCompose(composeForRelease, {
+                dir: buildDir,
+                composeFileName
+              });
+              break;
             default:
               copyReleaseFile({
                 fileConfig: { ...fileConfig, id: fileId },
