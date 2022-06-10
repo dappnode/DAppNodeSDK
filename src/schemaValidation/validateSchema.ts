@@ -6,8 +6,7 @@ import manifestSchema from "./schemas/manifest.schema.json";
 import composeSchema from "./schemas/compose.schema.json";
 import setupWizardSchema from "./schemas/setup-wizard.schema.json";
 import yaml from "js-yaml";
-import { Manifest } from "../releaseFiles/manifest/types";
-import { Compose } from "../releaseFiles/compose/types";
+import { Compose, Manifest } from "../files";
 
 const ajv = new Ajv({
   allErrors: true,

@@ -7,10 +7,10 @@ import {
   getComposePackageImages,
   composeDeleteBuildProperties,
   writeCompose,
-  readCompose
-} from "../../src/utils/compose";
+  readCompose,
+  Compose
+} from "../../src/files";
 import { cleanTestDir, testDir } from "../testUtils";
-import { Compose } from "../../src/releaseFiles/compose/types";
 
 describe("util > compose", () => {
   describe("updateComposeImageTags", () => {

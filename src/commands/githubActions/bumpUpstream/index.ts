@@ -4,13 +4,13 @@ import { branchNameRoot, defaultDir } from "../../../params";
 import { Github } from "../../../providers/github/Github";
 import { getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format";
 import { shell } from "../../../utils/shell";
-import { readManifest, writeManifest } from "../../../utils/manifest";
-import { readCompose, writeCompose } from "../../../utils/compose";
+import { readCompose, writeCompose } from "../../../files/compose";
 import { parseCsv } from "../../../utils/csv";
 import { getLocalBranchExists, getGitHead } from "../../../utils/git";
 import { arrIsUnique } from "../../../utils/array";
 import { buildAndComment } from "../build";
 import { closeOldPrs } from "./closeOldPrs";
+import { readManifest, writeManifest } from "../../../files";
 
 // This action should be run periodically
 

@@ -1,6 +1,5 @@
 import { expect } from "chai";
-import { Manifest } from "../../src/releaseFiles/manifest/types";
-import { Compose } from "../../src/releaseFiles/compose/types";
+import { Manifest, Compose } from "../../src/files";
 import {
   validateComposeSchema,
   validateManifestSchema,

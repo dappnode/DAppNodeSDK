@@ -1,4 +1,4 @@
-import { readManifest } from "../manifest";
+import { readManifest } from "../../files";
 
 export function getCurrentLocalVersion({ dir }: { dir: string }): string {
   // Load manifest

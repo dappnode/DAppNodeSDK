@@ -117,3 +117,12 @@ export interface Compose {
   };
   volumes?: ComposeVolumes; // { dappmanagerdnpdappnodeeth_data: {} };
 }
+
+// Compose paths
+
+export interface ComposePaths {
+  /** './folder', [optional] directory to load the compose from */
+  dir?: string;
+  /** 'manifest-admin.json', [optional] name of the compose file */
+  composeFileName?: string;
+}

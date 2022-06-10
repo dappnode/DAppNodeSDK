@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import Listr, { ListrTask } from "listr";
 import rimraf from "rimraf";
-import { readManifest, writeManifest } from "../utils/manifest";
 import { verifyAvatar } from "../utils/verifyAvatar";
 import { copyReleaseFile } from "../utils/copyReleaseFile";
 import { addReleaseRecord } from "../utils/releaseRecord";
@@ -13,15 +12,6 @@ import {
   getLegacyImagePath,
   releaseFilesDefaultNames
 } from "../params";
-import {
-  readCompose,
-  writeCompose,
-  parseComposeUpstreamVersion,
-  updateComposeImageTags,
-  getComposePackageImages,
-  getComposePath,
-  composeDeleteBuildProperties
-} from "../utils/compose";
 import { ListrContextBuildAndPublish } from "../types";
 import { parseTimeout } from "../utils/timeout";
 import { buildWithBuildx } from "./buildWithBuildx";
@@ -44,6 +34,17 @@ import {
   validateManifestSchema,
   validateSetupWizardSchema
 } from "../schemaValidation/validateSchema";
+import {
+  getComposePath,
+  readCompose,
+  updateComposeImageTags,
+  getComposePackageImages,
+  parseComposeUpstreamVersion,
+  writeCompose,
+  composeDeleteBuildProperties,
+  readManifest,
+  writeManifest
+} from "../files";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>

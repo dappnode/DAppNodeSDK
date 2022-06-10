@@ -1,8 +1,8 @@
 import semver from "semver";
-import { readManifest } from "../manifest";
 import { Apm } from "../Apm";
 import { checkSemverType } from "../checkSemverType";
 import { ReleaseType } from "../../types";
+import { readManifest } from "../../files";
 
 export async function getNextVersionFromApm({
   type,

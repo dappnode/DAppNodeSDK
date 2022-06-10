@@ -1,10 +1,23 @@
-import { Manifest } from "../releaseFiles/manifest/types";
+import { Manifest } from "../files";
 import { GitHead } from "./git";
 
 export function toTitleCase(str: string): string {
   return str.replace(/\w\S*/g, function (txt) {
     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
   });
+}
+
+export function prettyPinataPinName(
+  manifest: Manifest,
+  gitHead?: GitHead
+): string {
+  const shortDomain = getShortDomain(manifest.name);
+
+  if (gitHead) {
+    return `${shortDomain} ${gitHead.branch} ${gitHead.commit.slice(0, 7)}`;
+  } else {
+    return `${shortDomain} v${manifest.version}`;
+  }
 }
 
 /**
@@ -19,21 +32,8 @@ export function toTitleCase(str: string): string {
  *
  * name=$(echo $name | sed 's/DAppNodePackage-//g'| sed 's/\.dappnode\.eth//g' |  sed 's/\.dnp//g' | tr -d '/_')
  */
-export function getShortDomain(dnpName: string): string {
+function getShortDomain(dnpName: string): string {
   for (const suffix of [".dnp.dappnode.eth", ".dappnode.eth", ".eth"])
     if (dnpName.endsWith(suffix)) return dnpName.slice(0, -suffix.length);
   return dnpName;
-}
-
-export function prettyPinataPinName(
-  manifest: Manifest,
-  gitHead?: GitHead
-): string {
-  const shortDomain = getShortDomain(manifest.name);
-
-  if (gitHead) {
-    return `${shortDomain} ${gitHead.branch} ${gitHead.commit.slice(0, 7)}`;
-  } else {
-    return `${shortDomain} v${manifest.version}`;
-  }
 }
