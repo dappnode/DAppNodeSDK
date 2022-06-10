@@ -1,12 +1,13 @@
 import { CliError } from "../params";
-import Ajv, { ErrorObject, ValidateFunction } from "ajv";
+import Ajv, { ErrorObject } from "ajv";
 import ajvErrors from "ajv-errors";
 // Schemas
 import manifestSchema from "./schemas/manifest.schema.json";
 import composeSchema from "./schemas/compose.schema.json";
 import setupWizardSchema from "./schemas/setup-wizard.schema.json";
-import { ReleaseFile } from "./types";
 import yaml from "js-yaml";
+import { Manifest } from "../releaseFiles/manifest/types";
+import { Compose } from "../releaseFiles/compose/types";
 
 const ajv = new Ajv({
   allErrors: true,
@@ -17,56 +18,58 @@ const ajv = new Ajv({
 ajvErrors(ajv);
 
 /**
- * Validate schema of a given release file:
- * - manifest
- * - compose
- * - setup-wizard.yml
+ * Validates manifest file with schema
+ * @param manifest
  */
-export function validateSchema(releaseFile: ReleaseFile): void {
-  let validate: ValidateFunction<{
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    [x: string]: {};
-  }>;
-  let valid: boolean;
-  let errors: string[];
-
-  switch (releaseFile.type) {
-    case "manifest":
-      validate = ajv.compile(manifestSchema);
-      valid = Boolean(validate(releaseFile.data));
-      errors = validate.errors
-        ? validate.errors.map(e => processError(e, releaseFile.type))
-        : [];
-      break;
-
-    case "compose":
-      // compose-schema:  https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
-      validate = ajv.compile(composeSchema);
-      valid = Boolean(validate(releaseFile.data));
-      errors = validate.errors
-        ? validate.errors.map(e => processError(e, releaseFile.type))
-        : [];
-      break;
-
-    case "setupWizard":
-      // setup-wizard is not a mandatory file, it may be undefined
-      if (!releaseFile.data) return;
-      validate = ajv.compile(setupWizardSchema);
-      valid = Boolean(validate(yaml.load(releaseFile.data)));
-      errors = validate.errors
-        ? validate.errors.map(e => processError(e, releaseFile.type))
-        : [];
-      break;
-    default:
-      throw new Error(`Unknown release file type`);
+export function validateManifestSchema(manifest: Manifest): void {
+  const validateManifest = ajv.compile(manifestSchema);
+  const valid = validateManifest(manifest);
+  if (!valid) {
+    const errors = validateManifest.errors
+      ? validateManifest.errors.map(e => processError(e, "manifest"))
+      : [];
+    throw new CliError(
+      `Invalid manifest: \n${errors.map(msg => `  - ${msg}`).join("\n")}`
+    );
   }
+}
 
-  if (valid) return;
+/**
+ * Validates compose file with schema
+ * @param compose
+ */
+export function validateComposeSchema(compose: Compose): void {
+  const validateCompose = ajv.compile(composeSchema);
+  const valid = validateCompose(compose);
+  if (!valid) {
+    const errors = validateCompose.errors
+      ? validateCompose.errors.map(e => processError(e, "compose"))
+      : [];
+    throw new CliError(
+      `Invalid compose: \n${errors.map(msg => `  - ${msg}`).join("\n")}`
+    );
+  }
+}
 
-  // If not valid, print errors and stop execution
-  throw new CliError(
-    `Invalid ${releaseFile}: \n${errors.map(msg => `  - ${msg}`).join("\n")}`
-  );
+/**
+ * Validates setupWizard file with schema
+ * @param setupWizard
+ */
+export function validateSetupWizardSchema(
+  setupWizard: string | undefined
+): void {
+  // The setupwizard file is not mandatory and may not be present
+  if (!setupWizard) return;
+  const validateSetupWizard = ajv.compile(setupWizardSchema);
+  const valid = validateSetupWizard(yaml.load(setupWizard));
+  if (!valid) {
+    const errors = validateSetupWizard.errors
+      ? validateSetupWizard.errors.map(e => processError(e, "setupWizard"))
+      : [];
+    throw new CliError(
+      `Invalid setupWizard: \n${errors.map(msg => `  - ${msg}`).join("\n")}`
+    );
+  }
 }
 
 // validate.errors = [

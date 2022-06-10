@@ -39,7 +39,11 @@ import {
   cliArgsToReleaseUploaderProvider,
   UploadTo
 } from "../releaseUploader";
-import { validateSchema } from "../schemaValidation/validateSchema";
+import {
+  validateComposeSchema,
+  validateManifestSchema,
+  validateSetupWizardSchema
+} from "../schemaValidation/validateSchema";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -175,18 +179,17 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         for (const [fileId] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
             case "setupWizard":
-              validateSchema({
-                type: "setupWizard",
-                data: fs
+              validateSetupWizardSchema(
+                fs
                   .readdirSync(dir)
                   .find(file => releaseFiles.setupWizard.regex.test(file))
-              });
+              );
               break;
             case "manifest":
-              validateSchema({ type: "manifest", data: manifest });
+              validateManifestSchema(manifest);
               break;
             case "compose":
-              validateSchema({ type: "compose", data: composeForDev });
+              validateComposeSchema(composeForDev);
               break;
             default:
               break;

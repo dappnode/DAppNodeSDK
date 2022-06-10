@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { Manifest } from "../src/releaseFiles/manifest/types";
-import { validateSchema } from "../src/schemaValidation/validateSchema";
+import { validateManifestSchema } from "../src/schemaValidation/validateSchema";
 
 describe("utils / format", () => {
   it("validateManifest chainDriver as string", () => {
@@ -15,9 +15,7 @@ describe("utils / format", () => {
       }
     };
 
-    expect(() =>
-      validateSchema({ type: "manifest", data: manifest })
-    ).to.not.throw();
+    expect(() => validateManifestSchema(manifest)).to.not.throw();
   });
 
   it("validateManifest chainDriver as object", () => {
@@ -30,9 +28,7 @@ describe("utils / format", () => {
       chain: "ethereum"
     };
 
-    expect(() =>
-      validateSchema({ type: "manifest", data: manifest })
-    ).to.not.throw();
+    expect(() => validateManifestSchema(manifest)).to.not.throw();
   });
 
   it("throw error validating", () => {
@@ -46,8 +42,6 @@ describe("utils / format", () => {
       chain: "notAllowed"
     };
 
-    expect(() =>
-      validateSchema({ type: "manifest", data: manifest })
-    ).to.throw();
+    expect(() => validateManifestSchema(manifest)).to.throw();
   });
 });
