@@ -21,15 +21,10 @@ const setupWizardValidate = ajv.compile(setupWizardSchema);
 const composeValidate = ajv.compile(composeSchema); // compose schema https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 
 /**
- * Validates a manifest syncronously. Does NOT throw.
- * @param manifest
- * @returns = {
- *   valid: false|true
- *   errors: [
- *     "manifest should have required property 'description'",
- *     "manifest.image.path should be an non-empty string",
- *   ]
- * }
+ * Validate schema of a given release file:
+ * - manifest
+ * - compose
+ * - setup-wizard.yml
  */
 export function validateSchema(releaseFile: ReleaseFile): void {
   let valid: boolean;
