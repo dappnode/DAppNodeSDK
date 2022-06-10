@@ -10,7 +10,7 @@ import {
   PackageImageExternal
 } from "../types";
 import { shell } from "../utils/shell";
-import { Architecture } from "../releaseFiles/manifest/types";
+import { Architecture } from "../files";
 
 /**
  * Save docker image

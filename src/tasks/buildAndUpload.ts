@@ -41,9 +41,10 @@ import {
   getComposePackageImages,
   parseComposeUpstreamVersion,
   writeCompose,
-  composeDeleteBuildProperties
-} from "../releaseFiles/compose";
-import { readManifest, writeManifest } from "../releaseFiles/manifest";
+  composeDeleteBuildProperties,
+  readManifest,
+  writeManifest
+} from "../files";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>

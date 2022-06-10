@@ -1,4 +1,4 @@
-import { Manifest } from "../releaseFiles/manifest/types";
+import { Manifest } from "../files";
 import { GitHead } from "./git";
 
 export function toTitleCase(str: string): string {

@@ -1,12 +1,14 @@
 import semver from "semver";
+
+import { checkSemverType } from "../checkSemverType";
+import { ReleaseType } from "../../types";
 import {
+  readManifest,
+  writeManifest,
   readCompose,
   writeCompose,
   updateComposeImageTags
-} from "../../releaseFiles/compose";
-import { checkSemverType } from "../checkSemverType";
-import { ReleaseType } from "../../types";
-import { readManifest, writeManifest } from "../../releaseFiles/manifest";
+} from "../../files";
 
 export async function increaseFromLocalVersion({
   type,

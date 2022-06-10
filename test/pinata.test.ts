@@ -2,7 +2,7 @@ import { PinataPinManager } from "../src/providers/pinata/pinManager";
 import { fetchPinsWithBranchToDelete } from "../src/pinStrategy";
 import { cliArgsToReleaseUploaderProvider } from "../src/releaseUploader";
 import { GitHead } from "../src/utils/git";
-import { Manifest } from "../src/releaseFiles/manifest/types";
+import { Manifest } from "../src/files";
 
 // Test used to locally debug Pinata issues
 describe.skip("Pinata pin management", () => {

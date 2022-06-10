@@ -9,7 +9,7 @@ import { getPublishTxLink } from "../utils/getLinks";
 import { addReleaseTx } from "../utils/releaseRecord";
 import { defaultDir, YargsError } from "../params";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
-import { readManifest } from "../releaseFiles/manifest";
+import { readManifest } from "../files";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 

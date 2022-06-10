@@ -2,7 +2,7 @@ import { fetchPinsGroupedByBranch } from "../../../pinStrategy";
 import { cliArgsToReleaseUploaderProvider } from "../../../releaseUploader";
 import { Github } from "../../../providers/github/Github";
 import { PinataPinManager } from "../../../providers/pinata/pinManager";
-import { readManifest } from "../../../releaseFiles/manifest";
+import { readManifest } from "../../../files";
 
 /**
  * Removes all pins associated with a branch that no longer exists

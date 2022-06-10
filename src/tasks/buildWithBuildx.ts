@@ -4,7 +4,7 @@ import { shell } from "../utils/shell";
 import { PackageImage, PackageImageLocal } from "../types";
 import { saveAndCompressImagesCached } from "./saveAndCompressImages";
 import { getDockerVersion } from "../utils/getDockerVersion";
-import { Architecture } from "../releaseFiles/manifest/types";
+import { Architecture } from "../files";
 
 const minimumDockerVersion = "19.3.0";
 const buildxInstanceName = "dappnode-multiarch-builder";
