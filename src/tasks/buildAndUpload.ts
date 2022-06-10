@@ -45,6 +45,7 @@ import {
   readManifest,
   writeManifest
 } from "../files";
+import { validateDappnodeCompose } from "../files/compose/validateDappnodeCompose";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
@@ -190,7 +191,13 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
               validateManifestSchema(manifest);
               break;
             case "compose":
+              // validate against official docker compose schema
               validateComposeSchema(composeForDev);
+              // validate against custom dappnode requirements
+              validateDappnodeCompose({
+                composeUnsafe: composeForDev,
+                manifest: manifest
+              });
               break;
             default:
               break;
