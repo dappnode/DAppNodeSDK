@@ -1,5 +1,5 @@
 import { CliError } from "../params";
-import Ajv, { ErrorObject } from "ajv";
+import Ajv, { ErrorObject, ValidateFunction } from "ajv";
 import ajvErrors from "ajv-errors";
 // Schemas
 import manifestSchema from "./schemas/manifest.schema.json";
@@ -16,10 +16,6 @@ const ajv = new Ajv({
 
 ajvErrors(ajv);
 
-const manifestValidate = ajv.compile(manifestSchema);
-const setupWizardValidate = ajv.compile(setupWizardSchema);
-const composeValidate = ajv.compile(composeSchema); // compose schema https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
-
 /**
  * Validate schema of a given release file:
  * - manifest
@@ -27,30 +23,38 @@ const composeValidate = ajv.compile(composeSchema); // compose schema https://ra
  * - setup-wizard.yml
  */
 export function validateSchema(releaseFile: ReleaseFile): void {
+  let validate: ValidateFunction<{
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    [x: string]: {};
+  }>;
   let valid: boolean;
   let errors: string[];
 
   switch (releaseFile.type) {
     case "manifest":
-      valid = Boolean(manifestValidate(releaseFile.data));
-      errors = manifestValidate.errors
-        ? manifestValidate.errors.map(e => processError(e, releaseFile.type))
+      validate = ajv.compile(manifestSchema);
+      valid = Boolean(validate(releaseFile.data));
+      errors = validate.errors
+        ? validate.errors.map(e => processError(e, releaseFile.type))
         : [];
       break;
 
     case "compose":
-      valid = Boolean(composeValidate(releaseFile.data));
-      errors = composeValidate.errors
-        ? composeValidate.errors.map(e => processError(e, releaseFile.type))
+      // compose-schema:  https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+      validate = ajv.compile(composeSchema);
+      valid = Boolean(validate(releaseFile.data));
+      errors = validate.errors
+        ? validate.errors.map(e => processError(e, releaseFile.type))
         : [];
       break;
 
     case "setupWizard":
       // setup-wizard is not a mandatory file, it may be undefined
       if (!releaseFile.data) return;
-      valid = Boolean(setupWizardValidate(yaml.load(releaseFile.data)));
-      errors = setupWizardValidate.errors
-        ? setupWizardValidate.errors.map(e => processError(e, releaseFile.type))
+      validate = ajv.compile(setupWizardSchema);
+      valid = Boolean(validate(yaml.load(releaseFile.data)));
+      errors = validate.errors
+        ? validate.errors.map(e => processError(e, releaseFile.type))
         : [];
       break;
     default:
