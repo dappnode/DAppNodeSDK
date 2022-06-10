@@ -20,7 +20,8 @@ describe("increaseFromLocalVersion", function () {
   this.timeout(60 * 1000);
 
   const dnpName = "admin.dnp.dappnode.eth";
-  const manifest = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const manifest: any = {
     name: dnpName,
     version: "0.1.0",
     avatar: "/ipfs/QmUG9Y13BvmKC4RzFu85F7Ai63emnEYrci4pqbbLxt3mt1",

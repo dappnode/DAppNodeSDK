@@ -1,10 +1,10 @@
 import { PinataMetadata } from "../releaseUploader/pinata";
 import { PinataPinManager } from "../providers/pinata/pinManager";
-import { Manifest } from "../types";
 import { GitHead } from "../utils/git";
 import { prettyPinataPinName } from "../utils/format";
 import { DnpPinMetadata, PinDataSummary, PinsByBranch } from "./types";
 import { groupPinsByBranch } from "./utils";
+import { Manifest } from "../releaseFiles/manifest/types";
 
 // This file has all logic for the pin strategy of DAppNode packages
 // In development, builds will be uploaded on each push on a PR

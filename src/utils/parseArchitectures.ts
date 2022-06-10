@@ -1,4 +1,4 @@
-import { Architecture, architectures } from "../types";
+import { Architecture, architectures } from "../releaseFiles/manifest/types";
 
 const architecturesList = architectures.join(" ");
 

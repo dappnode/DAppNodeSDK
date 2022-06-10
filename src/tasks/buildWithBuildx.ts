@@ -1,9 +1,10 @@
 import { ListrTask } from "listr";
 import semver from "semver";
 import { shell } from "../utils/shell";
-import { Architecture, PackageImage, PackageImageLocal } from "../types";
+import { PackageImage, PackageImageLocal } from "../types";
 import { saveAndCompressImagesCached } from "./saveAndCompressImages";
 import { getDockerVersion } from "../utils/getDockerVersion";
+import { Architecture } from "../releaseFiles/manifest/types";
 
 const minimumDockerVersion = "19.3.0";
 const buildxInstanceName = "dappnode-multiarch-builder";
