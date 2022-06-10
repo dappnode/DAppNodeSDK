@@ -32,8 +32,8 @@ describe("utils / format", () => {
   });
 
   it("throw error validating", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const manifest: any = {
+    // Override chain property with invalid valid to test schema
+    const manifest: Omit<Manifest, "chain"> & { chain: string } = {
       name: "",
       version: "1.0.0",
       description: "",
@@ -42,6 +42,6 @@ describe("utils / format", () => {
       chain: "notAllowed"
     };
 
-    expect(() => validateManifestSchema(manifest)).to.throw();
+    expect(() => validateManifestSchema(manifest as Manifest)).to.throw();
   });
 });
