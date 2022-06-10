@@ -159,3 +159,12 @@ export enum ManifestFormat {
   yml = "yml",
   yaml = "yaml"
 }
+
+// Manifest paths
+
+export interface ManifestPaths {
+  /** './folder', [optional] directory to load the manifest from */
+  dir?: string;
+  /** 'manifest-admin.json', [optional] name of the manifest file */
+  manifestFileName?: string;
+}
