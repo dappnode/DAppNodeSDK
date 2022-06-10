@@ -1,7 +1,11 @@
-import { readManifest, writeManifest } from "../manifest";
-import { readCompose, writeCompose, updateComposeImageTags } from "../compose";
+import {
+  readCompose,
+  writeCompose,
+  updateComposeImageTags
+} from "../../releaseFiles/compose";
 import { getNextVersionFromApm } from "./getNextVersionFromApm";
 import { ReleaseType } from "../../types";
+import { readManifest, writeManifest } from "../../releaseFiles/manifest";
 
 export async function increaseFromApmVersion({
   type,

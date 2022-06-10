@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import semver from "semver";
 import { getNextVersionFromApm } from "../../../src/utils/versions/getNextVersionFromApm";
-import { writeManifest } from "../../../src/utils/manifest";
+import { writeManifest } from "../../../src/releaseFiles/manifest";
 import { cleanTestDir, testDir } from "../../testUtils";
 import { defaultManifestFormat } from "../../../src/params";
 

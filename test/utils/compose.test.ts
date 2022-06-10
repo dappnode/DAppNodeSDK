@@ -8,7 +8,7 @@ import {
   composeDeleteBuildProperties,
   writeCompose,
   readCompose
-} from "../../src/utils/compose";
+} from "../../src/releaseFiles/compose";
 import { cleanTestDir, testDir } from "../testUtils";
 import { Compose } from "../../src/releaseFiles/compose/types";
 

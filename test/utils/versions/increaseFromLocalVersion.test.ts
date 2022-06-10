@@ -1,7 +1,10 @@
 import { expect } from "chai";
 import { increaseFromLocalVersion } from "../../../src/utils/versions/increaseFromLocalVersion";
-import { readCompose, writeCompose } from "../../../src/utils/compose";
-import { readManifest, writeManifest } from "../../../src/utils/manifest";
+import { readCompose, writeCompose } from "../../../src/releaseFiles/compose";
+import {
+  readManifest,
+  writeManifest
+} from "../../../src/releaseFiles/manifest";
 import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
 import {
   defaultComposeFileName,

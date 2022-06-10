@@ -1,8 +1,12 @@
 import semver from "semver";
-import { readManifest, writeManifest } from "../manifest";
-import { readCompose, writeCompose, updateComposeImageTags } from "../compose";
+import {
+  readCompose,
+  writeCompose,
+  updateComposeImageTags
+} from "../../releaseFiles/compose";
 import { checkSemverType } from "../checkSemverType";
 import { ReleaseType } from "../../types";
+import { readManifest, writeManifest } from "../../releaseFiles/manifest";
 
 export async function increaseFromLocalVersion({
   type,

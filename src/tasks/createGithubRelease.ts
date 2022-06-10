@@ -3,7 +3,7 @@ import path from "path";
 import Listr from "listr";
 import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
 import { getGitHead } from "../utils/git";
-import { compactManifestIfCore } from "../utils/compactManifest";
+import { compactManifestIfCore } from "../releaseFiles/manifest";
 import { contentHashFile, defaultDir } from "../params";
 import {
   TxData,
@@ -11,7 +11,7 @@ import {
   ListrContextBuildAndPublish
 } from "../types";
 import { Github } from "../providers/github/Github";
-import { composeDeleteBuildProperties } from "../utils/compose";
+import { composeDeleteBuildProperties } from "../releaseFiles/compose";
 
 /**
  * Create (or edit) a Github release, then upload all assets

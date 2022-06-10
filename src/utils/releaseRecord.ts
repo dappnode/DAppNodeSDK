@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { ManifestFormat } from "../releaseFiles/manifest/types";
-import { stringifyJson } from "./manifest";
+import { stringifyJson } from "../releaseFiles/manifest";
 
 interface ReleaseRecord {
   hash: string;

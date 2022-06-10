@@ -4,8 +4,7 @@ import chalk from "chalk";
 import { CommandModule } from "yargs";
 import semver from "semver";
 import inquirer from "inquirer";
-import { writeManifest, getManifestPath } from "../utils/manifest";
-import { writeCompose, getComposePath } from "../utils/compose";
+import { writeCompose, getComposePath } from "../releaseFiles/compose";
 import defaultAvatar from "../assets/defaultAvatar";
 import { shell } from "../utils/shell";
 import { releasesRecordFileName } from "../utils/releaseRecord";
@@ -21,6 +20,7 @@ import {
 import { Manifest } from "../releaseFiles/manifest/types";
 import { Compose } from "../releaseFiles/compose/types";
 import { CliGlobalOptions } from "../types";
+import { getManifestPath, writeManifest } from "../releaseFiles/manifest";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",
