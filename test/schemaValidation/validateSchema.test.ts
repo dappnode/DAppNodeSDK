@@ -7,7 +7,7 @@ import {
   validateSetupWizardSchema
 } from "../../src/schemaValidation/validateSchema";
 
-describe.only("schemaValidation", () => {
+describe("schemaValidation", () => {
   describe("manifest", () => {
     it("validateManifest chainDriver as string", () => {
       const manifest: Manifest = {
