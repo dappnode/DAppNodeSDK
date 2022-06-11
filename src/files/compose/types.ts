@@ -110,6 +110,7 @@ export interface Compose {
   };
   networks?: {
     [networkName: string]: {
+      name?: string;
       external?: boolean;
       driver?: string; // "bridge";
       ipam?: { config: { subnet: string }[] }; // { subnet: "172.33.0.0/16" }

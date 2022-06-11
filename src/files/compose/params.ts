@@ -17,11 +17,13 @@ export const params = {
     "cap_add",
     "cap_drop",
     "command",
+    "depends_on",
     "devices",
     "entrypoint",
     "environment",
     "expose",
     "extra_hosts",
+    "healthcheck",
     "labels",
     "logging",
     "network_mode",
@@ -33,6 +35,11 @@ export const params = {
     "stop_signal",
     "user",
     "volumes",
-    "working_dir"
+    "working_dir",
+    "security_opt",
+    "image",
+    "build",
+    "volumes",
+    "environment"
   ]
 };
