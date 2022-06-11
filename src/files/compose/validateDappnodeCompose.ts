@@ -95,12 +95,22 @@ function validateComposeNetworks(
  * Ensures the compose keys are whitelisted
  */
 function validateComposeServicesKeys(compose: Compose): void {
-  const composeServicesKeys = Object.keys(compose.services);
-  const composeSafeServiceKeys = params.SAFE_KEYS;
+  const composeServicesNames = Object.keys(compose.services);
 
-  for (const composeServiceKey of composeServicesKeys) {
-    if (!composeSafeServiceKeys.includes(composeServiceKey))
-      throw Error(`Compose service key ${composeServiceKey} is not allowed`);
+  for (const composeServiceName of composeServicesNames) {
+    const composeServiceKeys = Object.keys(
+      compose.services[composeServiceName]
+    );
+    if (
+      composeServiceKeys.some(
+        composeServiceKey => params.SAFE_KEYS.indexOf(composeServiceKey) === -1
+      )
+    )
+      throw Error(
+        `Compose service ${composeServiceName} has keys that are not allowed. Allowed keys are: ${params.SAFE_KEYS.join(
+          ","
+        )}`
+      );
   }
 }
 
@@ -203,6 +213,10 @@ function validateComposeServicesNetworks(
 function validateComposeAndComposeServicesVolumes(
   compose: Compose,
   cpServiceVolumes: (string | undefined)[],
+  isCore: boolean
+function validateComposeAndComposeServicesVolume(
+  compose: Compose,
+  volumeStr: string,
   isCore: boolean
 ): void {
   for (const cpServiceVolume of cpServiceVolumes) {

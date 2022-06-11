@@ -43,9 +43,9 @@ import {
   writeCompose,
   composeDeleteBuildProperties,
   readManifest,
-  writeManifest
+  writeManifest,
+  validateDappnodeCompose
 } from "../files";
-import { validateDappnodeCompose } from "../files/compose/validateDappnodeCompose";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
