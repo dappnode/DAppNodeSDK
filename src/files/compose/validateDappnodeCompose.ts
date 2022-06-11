@@ -23,21 +23,14 @@ export function validateDappnodeCompose({
   // COMPOSE TOP LEVEL restrictions
 
   validateComposeVersion(composeUnsafe);
-
   validateComposeNetworks(composeUnsafe, allowedNetworks);
 
   // COMPOSE SERVICE LEVEL restrictions
 
-  const cpServices = composeUnsafe.services;
+  const cpServicesValues = Object.values(composeUnsafe.services);
 
-  // - TODO Ensure that there are only compose service safeKeys
-  const composeServicesKeys = Object.keys(composeUnsafe.services);
-  // Validate types with interface: https://betterprogramming.pub/runtime-data-validation-from-typescript-interfaces-1001ad22e775
-
-  const cpServicesValues = Object.values(cpServices);
-
+  validateComposeServicesKeys(composeUnsafe);
   validateComposeServicesValues(cpServicesValues, isCore);
-
   validateComposeServicesNetworks(
     cpServicesValues,
     allowedNetworks,
@@ -101,8 +94,14 @@ function validateComposeNetworks(
 /**
  * Ensures the compose keys are whitelisted
  */
-function validateComposeServicesKeys(): void {
-  return;
+function validateComposeServicesKeys(compose: Compose): void {
+  const composeServicesKeys = Object.keys(compose.services);
+  const composeSafeServiceKeys = params.SAFE_KEYS;
+
+  for (const composeServiceKey of composeServicesKeys) {
+    if (!composeSafeServiceKeys.includes(composeServiceKey))
+      throw Error(`Compose service key ${composeServiceKey} is not allowed`);
+  }
 }
 
 /**
