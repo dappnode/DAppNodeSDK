@@ -170,7 +170,7 @@ describe("files / compose / validateDappnodeCompose", () => {
     );
   });
 
-  it("Should throw an error due to unsafe service values", () => {
+  it("Should throw an error due to unsafe compose version", () => {
     expect(() =>
       validateDappnodeCompose({
         composeUnsafe: {
@@ -200,5 +200,26 @@ describe("files / compose / validateDappnodeCompose", () => {
     ).to.throw(
       "Only docker networks dncore_network,dnpublic_network are allowed"
     );
+  });
+
+  it("Should throw an error due to unsafe compose version and unsafe volumes", () => {
+    expect(() =>
+      validateDappnodeCompose({
+        composeUnsafe: {
+          ...compose,
+          version: "3.4",
+          services: {
+            ...compose.services,
+            validator: {
+              ...compose.services.validator,
+              volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+            }
+          }
+        },
+        manifest
+      })
+    ).to.throw(`
+Error: Compose version 3.4 is not supported. Minimum version is 3.5
+Error: Bind host volumes are not allowed. Make sure the compose service volume /var/run/docker.sock is defined in the top level volumes`);
   });
 });
