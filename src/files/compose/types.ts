@@ -79,7 +79,7 @@ export interface ComposeServiceNetwork {
   aliases?: string[];
 }
 
-export type ComposeServiceNetworks = string[] | ComposeServiceNetworksObj;
+export type ComposeServiceNetworks = string[] | ComposeServiceNetworksObj[];
 
 export type ComposeServiceNetworksObj = {
   [networkName: string]: ComposeServiceNetwork;

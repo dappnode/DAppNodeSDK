@@ -146,7 +146,7 @@ describe("files / compose / validateDappnodeCompose", () => {
         manifest
       })
     ).to.throw(
-      "Bind host volumes are not allowed. Make sure the compose service volume /var/run/docker.sock is defined in the top level volumes"
+      "Error: Compose service validator has a bind-mounted volume, Bind.mounted volumes are not allowed. Make sure the compose service volume /var/run/docker.sock is defined in the top level volumes"
     );
   });
 
@@ -198,7 +198,7 @@ describe("files / compose / validateDappnodeCompose", () => {
         manifest
       })
     ).to.throw(
-      "Only docker networks dncore_network,dnpublic_network are allowed"
+      `Error: Compose service validator has a non-whitelisted docker network. Only docker networks dncore_network,dnpublic_network are allowed`
     );
   });
 
@@ -220,6 +220,6 @@ describe("files / compose / validateDappnodeCompose", () => {
       })
     ).to.throw(`
 Error: Compose version 3.4 is not supported. Minimum version is 3.5
-Error: Bind host volumes are not allowed. Make sure the compose service volume /var/run/docker.sock is defined in the top level volumes`);
+Error: Compose service validator has a bind-mounted volume, Bind.mounted volumes are not allowed. Make sure the compose service volume /var/run/docker.sock is defined in the top level volumes`);
   });
 });
