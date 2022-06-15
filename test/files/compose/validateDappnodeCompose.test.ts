@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Compose, Manifest, validateDappnodeCompose } from "../../../src/files";
 
-describe.only("files / compose / validateDappnodeCompose", () => {
+describe("files / compose / validateDappnodeCompose", () => {
   const manifest: Manifest = {
     name: "prysm-prater.dnp.dappnode.eth",
     version: "1.0.0",
