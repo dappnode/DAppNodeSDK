@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Compose, Manifest, validateDappnodeCompose } from "../../../src/files";
 
-describe("files / compose / validateDappnodeCompose", () => {
+describe.only("files / compose / validateDappnodeCompose", () => {
   const manifest: Manifest = {
     name: "prysm-prater.dnp.dappnode.eth",
     version: "1.0.0",
@@ -106,15 +106,13 @@ describe("files / compose / validateDappnodeCompose", () => {
   };
 
   it("Should validate the compose file", () => {
-    expect(() =>
-      validateDappnodeCompose({ composeUnsafe: compose, manifest })
-    ).to.not.throw();
+    validateDappnodeCompose(compose, manifest);
   });
 
   it("Should throw an error due to unsafe networks", () => {
     expect(() =>
-      validateDappnodeCompose({
-        composeUnsafe: {
+      validateDappnodeCompose(
+        {
           ...compose,
           networks: {
             danger_network: {
@@ -124,7 +122,7 @@ describe("files / compose / validateDappnodeCompose", () => {
           }
         },
         manifest
-      })
+      )
     ).to.throw(`Error validating compose file with dappnode requirements:
 
 The docker network danger_network is not allowed. Only docker networks dncore_network,dnpublic_network are allowed`);
@@ -132,8 +130,8 @@ The docker network danger_network is not allowed. Only docker networks dncore_ne
 
   it("Should throw an error due to unsafe volumes", () => {
     expect(() =>
-      validateDappnodeCompose({
-        composeUnsafe: {
+      validateDappnodeCompose(
+        {
           ...compose,
           services: {
             ...compose.services,
@@ -144,16 +142,16 @@ The docker network danger_network is not allowed. Only docker networks dncore_ne
           }
         },
         manifest
-      })
+      )
     ).to.throw(`Error validating compose file with dappnode requirements:
 
-Compose service validator has the bind-mounted volume /var/run/docker.sock. Bind-mounted volumes are not allowed and restricted for core packages. Make sure the compose service volume /var/run/docker.sock is defined at the top level volumes`);
+service validator volume /var/run/docker.sock:/var/run/docker.sock is a bind-mount, only named non-external volumes are allowed`);
   });
 
   it("Should throw an error due to unsafe service keys", () => {
     expect(() =>
-      validateDappnodeCompose({
-        composeUnsafe: {
+      validateDappnodeCompose(
+        {
           ...compose,
           services: {
             ...compose.services,
@@ -164,21 +162,21 @@ Compose service validator has the bind-mounted volume /var/run/docker.sock. Bind
           }
         } as Compose,
         manifest
-      })
+      )
     ).to.throw(`Error validating compose file with dappnode requirements:
 
-Compose service validator has key credential_spec that is not allowed. Allowed keys are: cap_add,cap_drop,command,depends_on,devices,entrypoint,environment,expose,extra_hosts,healthcheck,labels,logging,network_mode,networks,ports,privileged,restart,stop_grace_period,stop_signal,user,volumes,working_dir,security_opt,image,build,volumes,environment`);
+service validator has key credential_spec that is not allowed. Allowed keys are: cap_add,cap_drop,command,depends_on,devices,entrypoint,environment,expose,extra_hosts,healthcheck,labels,logging,network_mode,networks,ports,privileged,restart,stop_grace_period,stop_signal,user,volumes,working_dir,security_opt,image,build,volumes,environment`);
   });
 
   it("Should throw an error due to unsafe compose version", () => {
     expect(() =>
-      validateDappnodeCompose({
-        composeUnsafe: {
+      validateDappnodeCompose(
+        {
           ...compose,
           version: "3.4"
         },
         manifest
-      })
+      )
     ).to.throw(`Error validating compose file with dappnode requirements:
 
 Compose version 3.4 is not supported. Minimum version is 3.5`);
@@ -186,8 +184,8 @@ Compose version 3.4 is not supported. Minimum version is 3.5`);
 
   it("Should throw an error due to unsafe service networks in string format", () => {
     expect(() =>
-      validateDappnodeCompose({
-        composeUnsafe: {
+      validateDappnodeCompose(
+        {
           ...compose,
           services: {
             ...compose.services,
@@ -198,16 +196,16 @@ Compose version 3.4 is not supported. Minimum version is 3.5`);
           }
         },
         manifest
-      })
+      )
     ).to.throw(`Error validating compose file with dappnode requirements:
 
-Compose service validator has a non-whitelisted docker network. Only docker networks dncore_network,dnpublic_network are allowed`);
+service validator has a non-whitelisted docker network: danger_network. Only docker networks dncore_network,dnpublic_network are allowed`);
   });
 
   it("Should throw an error due to unsafe service networks in object format", () => {
     expect(() =>
-      validateDappnodeCompose({
-        composeUnsafe: {
+      validateDappnodeCompose(
+        {
           ...compose,
           services: {
             ...compose.services,
@@ -229,18 +227,18 @@ Compose service validator has a non-whitelisted docker network. Only docker netw
           }
         },
         manifest
-      })
+      )
     ).to.throw(`Error validating compose file with dappnode requirements:
 
-Compose service validator has a non-whitelisted docker network: danger_network. Only docker networks dncore_network,dnpublic_network are allowed
-Compose service validator has the network danger_network with reserved docker alias. Aliases dappmanager.dappnode,wifi.dappnode,vpn.dappnode,wireguard.dappnode,ipfs.dappnode,bind.dappnode are reserved to core packages
-Compose service validator has a non-whitelisted docker network: other_network. Only docker networks dncore_network,dnpublic_network are allowed`);
+service validator has a non-whitelisted docker network: danger_network. Only docker networks dncore_network,dnpublic_network are allowed
+service validator has the network danger_network with reserved docker alias. Aliases dappmanager.dappnode,wifi.dappnode,vpn.dappnode,wireguard.dappnode,ipfs.dappnode,bind.dappnode are reserved to core packages
+service validator has a non-whitelisted docker network: other_network. Only docker networks dncore_network,dnpublic_network are allowed`);
   });
 
   it("Should throw an error due to unsafe compose version and unsafe volumes", () => {
     expect(() =>
-      validateDappnodeCompose({
-        composeUnsafe: {
+      validateDappnodeCompose(
+        {
           ...compose,
           version: "3.4",
           services: {
@@ -252,10 +250,10 @@ Compose service validator has a non-whitelisted docker network: other_network. O
           }
         },
         manifest
-      })
+      )
     ).to.throw(`Error validating compose file with dappnode requirements:
 
 Compose version 3.4 is not supported. Minimum version is 3.5
-Compose service validator has the bind-mounted volume /var/run/docker.sock. Bind-mounted volumes are not allowed and restricted for core packages. Make sure the compose service volume /var/run/docker.sock is defined at the top level volumes`);
+service validator volume /var/run/docker.sock:/var/run/docker.sock is a bind-mount, only named non-external volumes are allowed`);
   });
 });

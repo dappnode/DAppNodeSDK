@@ -194,10 +194,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
               // validate against official docker compose schema
               validateComposeSchema(composeForDev);
               // validate against custom dappnode requirements
-              validateDappnodeCompose({
-                composeUnsafe: composeForDev,
-                manifest: manifest
-              });
+              validateDappnodeCompose(composeForDev, manifest);
               break;
             default:
               break;

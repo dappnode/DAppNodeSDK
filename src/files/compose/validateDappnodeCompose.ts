@@ -161,7 +161,7 @@ function validateComposeServiceNetworks(
       // Check docker network is whitelisted when defined in array format
       if (!params.DOCKER_WHITELIST_NETWORKS.includes(serviceNetwork))
         err(
-          `service ${serviceName} has a non-whitelisted docker network. Only docker networks ${DOCKER_WHITELIST_NETWORKS_STR} are allowed`
+          `service ${serviceName} has a non-whitelisted docker network: ${serviceNetwork}. Only docker networks ${DOCKER_WHITELIST_NETWORKS_STR} are allowed`
         );
     } else {
       for (const serviceNetworkObjectName of Object.keys(serviceNetwork)) {
@@ -234,7 +234,7 @@ bind mounts are forbidden unless explicitly whitelisted. Reach out to DAppNode t
   // Check volume name contains only valid charaters.
   // Note: this validation is also done by Docker.
   // Note: this also protects against weird paths.
-  if (/^[a-zA-Z0-9_.-]+$/.test(volumeName)) {
+  if (!/^[a-zA-Z0-9_.-]+$/.test(volumeName)) {
     return err(
       `service ${serviceName} volume ${volume} must only include characters [a-zA-Z0-9_.-]`
     );
