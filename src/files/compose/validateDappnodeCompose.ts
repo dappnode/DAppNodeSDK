@@ -1,60 +1,39 @@
-import { Manifest } from "../manifest/types";
 import semver from "semver";
-import { Compose, ComposeVolumes } from "./types";
+import { Manifest } from "../manifest/types";
+import { Compose } from "./types";
 import { getIsCore } from "../../utils/getIsCore";
 import { params } from "./params";
 
 let aggregatedError: string[];
+
+function err(msg: string): void {
+  aggregatedError.push(msg);
+}
 
 /**
  * Validates against custom dappnode docker compose specs.
  * This function must be executed after the official docker schema
  * @param param0
  */
-export function validateDappnodeCompose({
-  composeUnsafe,
-  manifest
-}: {
-  composeUnsafe: Compose;
-  manifest: Manifest;
-}): void {
+export function validateDappnodeCompose(
+  compose: Compose,
+  manifest: Manifest
+): void {
   // clean the errors
   aggregatedError = [];
   const isCore = getIsCore(manifest);
 
   // COMPOSE TOP LEVEL restrictions
 
-  validateComposeVersion(composeUnsafe);
-  validateComposeNetworks(composeUnsafe);
+  validateComposeVersion(compose);
+  validateComposeNetworks(compose);
 
-  // COMPOSE SERVICE LEVEL restrictions
+  // SERVICE LEVEL restrictions
 
-  const servicesNames = Object.keys(composeUnsafe.services);
+  const servicesNames = Object.keys(compose.services);
 
   for (const serviceName of servicesNames) {
-    validateComposeServiceKeys(composeUnsafe, serviceName);
-    validateComposeServiceValues(composeUnsafe, isCore, serviceName);
-    validateComposeServiceNetworks(composeUnsafe, isCore, serviceName);
-
-    const serviceVolumes = composeUnsafe.services[serviceName].volumes;
-    if (serviceVolumes) {
-      for (const serviceVolume of serviceVolumes) {
-        // named volume: `some_volume:/some/container/path
-        const volumeName = serviceVolume.split(":")[0];
-        // Check that all volumes have names
-        if (!volumeName)
-          aggregatedError.push(
-            `Compose service ${serviceName} has the volume ${serviceVolume} without name`
-          );
-
-        validateComposeAndComposeServiceVolumes(
-          composeUnsafe,
-          isCore,
-          serviceName,
-          volumeName
-        );
-      }
-    }
+    validateComposeService(compose, isCore, serviceName);
   }
 
   if (aggregatedError.length > 0)
@@ -75,7 +54,7 @@ function validateComposeVersion(compose: Compose): void {
       params.MINIMUM_COMPOSE_FILE_VERSION + ".0"
     )
   )
-    aggregatedError.push(
+    err(
       `Compose version ${compose.version} is not supported. Minimum version is ${params.MINIMUM_COMPOSE_FILE_VERSION}`
     );
 }
@@ -90,14 +69,14 @@ function validateComposeNetworks(compose: Compose): void {
     for (const networkName of Object.keys(networks)) {
       // Check there are only defined whitelisted compose networks
       if (!params.DOCKER_WHITELIST_NETWORKS.includes(networkName))
-        aggregatedError.push(
+        err(
           `The docker network ${networkName} is not allowed. Only docker networks ${params.DOCKER_WHITELIST_NETWORKS.join(
             ","
           )} are allowed`
         );
       // Check all networks are external
       if (networks[networkName].external === false)
-        aggregatedError.push(
+        err(
           `The docker network ${networkName} is not allowed. Docker internal networks are not allowed`
         );
     }
@@ -105,62 +84,64 @@ function validateComposeNetworks(compose: Compose): void {
 }
 
 /**
- * Ensures the compose keys are whitelisted
- */
-function validateComposeServiceKeys(
-  compose: Compose,
-  serviceName: string
-): void {
-  const serviceKeys = Object.keys(compose.services[serviceName]);
-  for (const serviceKey of serviceKeys) {
-    if (!params.SAFE_KEYS.includes(serviceKey))
-      aggregatedError.push(
-        `Compose service ${serviceName} has key ${serviceKey} that is not allowed. Allowed keys are: ${params.SAFE_KEYS.join(
-          ","
-        )}`
-      );
-  }
-}
-
-/**
  * Ensures the compose keys values are valid for dappnode
  */
-function validateComposeServiceValues(
+function validateComposeService(
   compose: Compose,
   isCore: boolean,
   serviceName: string
 ): void {
+  for (const serviceKey of Object.keys(compose.services[serviceName])) {
+    if (!params.SAFE_KEYS.includes(serviceKey))
+      err(
+        `service ${serviceName} has key ${serviceKey} that is not allowed. Allowed keys are: ${params.SAFE_KEYS.join(
+          ","
+        )}`
+      );
+  }
+
+  const { dns, pid, privileged, network_mode, volumes } = compose.services[
+    serviceName
+  ];
+
   // Check that if defined, the DNS must be the one provided from the bind package
-  const { dns } = compose.services[serviceName];
   if (!isCore && dns && !params.DNS_SERVICE.includes(dns))
-    aggregatedError.push(
-      `Compose service ${serviceName} has DNS different than ${params.DNS_SERVICE}`
-    );
+    err(`service ${serviceName} has DNS different than ${params.DNS_SERVICE}`);
 
   // Check compose pid feature can only be used with the format service:*. The pid:host is dangerous
-  const { pid } = compose.services[serviceName];
   if (pid && !pid.startsWith("service:"))
-    aggregatedError.push(
-      `Compose service ${serviceName} has PID feature differnet than service:*`
-    );
+    err(`service ${serviceName} has PID feature differnet than service:*`);
 
   // Check only core packages cand be privileged
-  const { privileged } = compose.services[serviceName];
   if (!isCore && privileged && privileged === true)
-    aggregatedError.push(
-      `Compose service ${serviceName} has privileged as true but is not a core package`
+    err(
+      `service ${serviceName} has privileged as true but is not a core package`
     );
 
   // Check Only core packages can use network_mode: host
-  const { network_mode } = compose.services[serviceName];
   if (!isCore && network_mode && network_mode === "host")
-    aggregatedError.push(
-      `Compose service ${serviceName} has network_mode: host but is not a core package`
+    err(
+      `service ${serviceName} has network_mode: host but is not a core package`
     );
+
+  validateComposeServiceNetworks(compose, isCore, serviceName);
+
+  if (volumes) {
+    for (const [i, volume] of volumes.entries()) {
+      if (typeof volume !== "string") {
+        // https://docs.docker.com/compose/compose-file/compose-file-v3/#short-syntax-3
+        err(
+          `service ${serviceName}.volumes[${i}] must use volume short-syntax`
+        );
+      }
+
+      validateComposeServiceVolumes(compose, serviceName, volume);
+    }
+  }
 }
 
 /**
- * Ensure the compose services networks are whitelisted
+ * Ensure the services networks are whitelisted
  */
 function validateComposeServiceNetworks(
   compose: Compose,
@@ -176,40 +157,33 @@ function validateComposeServiceNetworks(
   if (!serviceNetworks) return;
 
   for (const serviceNetwork of serviceNetworks) {
-    if (!serviceNetwork) continue;
-
     if (typeof serviceNetwork === "string") {
       // Check docker network is whitelisted when defined in array format
       if (!params.DOCKER_WHITELIST_NETWORKS.includes(serviceNetwork))
-        aggregatedError.push(
-          `Compose service ${serviceName} has a non-whitelisted docker network. Only docker networks ${DOCKER_WHITELIST_NETWORKS_STR} are allowed`
+        err(
+          `service ${serviceName} has a non-whitelisted docker network. Only docker networks ${DOCKER_WHITELIST_NETWORKS_STR} are allowed`
         );
     } else {
-      const serviceNetworkObjectNames = Object.keys(serviceNetwork);
-
-      for (const serviceNetworkObjectName of serviceNetworkObjectNames) {
-        if (!serviceNetworkObjectName) continue;
-
+      for (const serviceNetworkObjectName of Object.keys(serviceNetwork)) {
         // Check docker network is whitelisted when defined in object format
         if (
           !params.DOCKER_WHITELIST_NETWORKS.includes(serviceNetworkObjectName)
         )
-          aggregatedError.push(
-            `Compose service ${serviceName} has a non-whitelisted docker network: ${serviceNetworkObjectName}. Only docker networks ${DOCKER_WHITELIST_NETWORKS_STR} are allowed`
+          err(
+            `service ${serviceName} has a non-whitelisted docker network: ${serviceNetworkObjectName}. Only docker networks ${DOCKER_WHITELIST_NETWORKS_STR} are allowed`
           );
 
         // Check core aliases are not used by non core packages
-        const serviceNetworkAliases =
-          serviceNetwork[serviceNetworkObjectName].aliases;
+        const { aliases } = serviceNetwork[serviceNetworkObjectName];
         if (
           !isCore &&
-          serviceNetworkAliases &&
+          aliases &&
           params.DOCKER_CORE_ALIASES.some(coreAlias =>
-            serviceNetworkAliases.includes(coreAlias)
+            aliases.includes(coreAlias)
           )
         ) {
-          aggregatedError.push(
-            `Compose service ${serviceName} has the network ${serviceNetworkObjectName} with reserved docker alias. Aliases ${DOCKER_WHITELIST_ALIASES_STR} are reserved to core packages`
+          err(
+            `service ${serviceName} has the network ${serviceNetworkObjectName} with reserved docker alias. Aliases ${DOCKER_WHITELIST_ALIASES_STR} are reserved to core packages`
           );
         }
       }
@@ -220,16 +194,69 @@ function validateComposeServiceNetworks(
 /**
  * Ensure only core packages can use bind-mounted volumes
  */
-function validateComposeAndComposeServiceVolumes(
+function validateComposeServiceVolumes(
   compose: Compose,
-  isCore: boolean,
   serviceName: string,
-  volumeName: string
+  volume: string
 ): void {
-  // Check that compose service volumes are defined also at top compose level
-  const volumeDefinition: ComposeVolumes = compose.volumes?.[volumeName];
-  if (!volumeDefinition && !isCore)
-    aggregatedError.push(
-      `Compose service ${serviceName} has the bind-mounted volume ${volumeName}. Bind-mounted volumes are not allowed and restricted for core packages. Make sure the compose service volume ${volumeName} is defined at the top level volumes`
+  // From https://docs.docker.com/compose/compose-file/compose-file-v3/#short-syntax-3
+  // docker supports multiple short-syntax. DAppNode only supports exclicit declaration of name
+  //
+  // # Just specify a path and let the Engine create a volume
+  // - /var/lib/mysql              <- NOK
+  // # Specify an absolute path mapping
+  // - /opt/data:/var/lib/mysql    <- NOK
+  // # Path on the host, relative to the Compose file
+  // - ./cache:/tmp/cache          <- NOK
+  // # User-relative path
+  // - ~/configs:/etc/configs/:ro  <- NOK
+  // # Named volume
+  // - datavolume:/var/lib/mysql   <- OK
+
+  // [volumeName, targetPath, modes]
+  const [volumeName, targetPath] = volume.split(":");
+
+  if (!volumeName || !targetPath) {
+    return err(`service ${serviceName} volume ${volume} must use short-syntax declaring volume exclitly:
+- datavolume:/var/lib/mysql   <- OK
+- ./cache:/tmp/cache          <- NOK
+bind mounts are forbidden unless explicitly whitelisted. Reach out to DAppNode team for that.
+    `);
+  }
+
+  // Extra check REDUNDANT but for better UX in case developers use bind-mounts
+  if (volumeName.includes("/")) {
+    return err(
+      `service ${serviceName} volume ${volume} is a bind-mount, only named non-external volumes are allowed`
     );
+  }
+
+  // Check volume name contains only valid charaters.
+  // Note: this validation is also done by Docker.
+  // Note: this also protects against weird paths.
+  if (/^[a-zA-Z0-9_.-]+$/.test(volumeName)) {
+    return err(
+      `service ${serviceName} volume ${volume} must only include characters [a-zA-Z0-9_.-]`
+    );
+  }
+
+  // Check that service volumes are defined also at top compose level
+  const volumeDefinition = compose.volumes?.[volumeName];
+  if (!volumeDefinition)
+    return err(
+      `service ${serviceName} volume ${volumeName} must have a volume definition at the top-level volumes section`
+    );
+
+  // Extra check REDUNDANT but for better UX
+  if (volumeDefinition?.external) {
+    err(
+      `service ${serviceName} volume ${volumeName} is external. Only named non-external volumes are allowed`
+    );
+  }
+
+  if (Object.keys(volumeDefinition).length > 0) {
+    err(
+      `service ${serviceName} volume ${volumeName} definition must not set any property`
+    );
+  }
 }
