@@ -189,7 +189,7 @@ It only covers the most common items, and tries to guess sensible defaults.
   };
 
   const compose: Compose = {
-    version: "3.4",
+    version: "3.5",
     services: {
       [serviceName]: {
         build: ".", // Dockerfile is in root dir

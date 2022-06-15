@@ -25,6 +25,11 @@ export interface Manifest {
     gateway?: string;
     [linkName: string]: string | undefined;
   };
+  bugs?: {
+    url: string;
+  };
+  keywords?: string[];
+  contributors?: string[];
 
   // Docker instructions
   type?: "service" | "library" | "dncore";

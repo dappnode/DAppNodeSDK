@@ -43,7 +43,8 @@ import {
   writeCompose,
   composeDeleteBuildProperties,
   readManifest,
-  writeManifest
+  writeManifest,
+  validateDappnodeCompose
 } from "../files";
 
 // Pretty percent uploaded reporting
@@ -190,7 +191,10 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
               validateManifestSchema(manifest);
               break;
             case "compose":
+              // validate against official docker compose schema
               validateComposeSchema(composeForDev);
+              // validate against custom dappnode requirements
+              validateDappnodeCompose(composeForDev, manifest);
               break;
             default:
               break;

@@ -13,11 +13,6 @@ export interface ComposeInspectVolumes {
   };
 }
 
-export interface ComposeVolumes {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [volumeName: string]: any;
-}
-
 export interface ComposeServiceBuild {
   context?: string; // ./dir
   dockerfile?: string; // Dockerfile-alternate
@@ -79,7 +74,7 @@ export interface ComposeServiceNetwork {
   aliases?: string[];
 }
 
-export type ComposeServiceNetworks = string[] | ComposeServiceNetworksObj;
+export type ComposeServiceNetworks = string[] | ComposeServiceNetworksObj[];
 
 export type ComposeServiceNetworksObj = {
   [networkName: string]: ComposeServiceNetwork;
@@ -110,15 +105,20 @@ export interface Compose {
   };
   networks?: {
     [networkName: string]: {
+      name?: string;
       external?: boolean;
       driver?: string; // "bridge";
       ipam?: { config: { subnet: string }[] }; // { subnet: "172.33.0.0/16" }
     };
   };
-  volumes?: ComposeVolumes; // { dappmanagerdnpdappnodeeth_data: {} };
+  // { dappmanagerdnpdappnodeeth_data: {} };
+  volumes?: {
+    [volumeName: string]: {
+      // NOTE: Not allowed
+      external?: boolean | { name: string }; // name: "dncore_ipfsdnpdappnodeeth_data"
+    };
+  };
 }
-
-// Compose paths
 
 export interface ComposePaths {
   /** './folder', [optional] directory to load the compose from */
