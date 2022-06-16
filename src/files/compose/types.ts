@@ -58,6 +58,7 @@ export interface ComposeService {
   pid?: string;
   privileged?: boolean;
   restart?: string;
+  security_opt?: string;
   stop_grace_period?: string;
   stop_signal?: string;
   user?: string;
