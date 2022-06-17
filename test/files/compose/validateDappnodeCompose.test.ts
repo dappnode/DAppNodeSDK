@@ -211,18 +211,16 @@ service validator has a non-whitelisted docker network: danger_network. Only doc
             ...compose.services,
             validator: {
               ...compose.services.validator,
-              networks: [
-                {
-                  danger_network: {
-                    ipv4_address: "172.33.4.5",
-                    aliases: ["dappmanager.dappnode"]
-                  },
-                  other_network: {
-                    ipv4_address: "",
-                    aliases: ["core.dappnode"]
-                  }
+              networks: {
+                danger_network: {
+                  ipv4_address: "172.33.4.5",
+                  aliases: ["dappmanager.dappnode"]
+                },
+                other_network: {
+                  ipv4_address: "",
+                  aliases: ["core.dappnode"]
                 }
-              ]
+              }
             }
           }
         },

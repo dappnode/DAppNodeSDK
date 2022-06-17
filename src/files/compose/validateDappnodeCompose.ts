@@ -75,7 +75,8 @@ function validateComposeNetworks(compose: Compose): void {
           )} are allowed`
         );
       // Check all networks are external
-      if (networks[networkName].external === false)
+      const network = networks[networkName];
+      if (network && network.external === false)
         err(
           `The docker network ${networkName} is not allowed. Docker internal networks are not allowed`
         );
@@ -156,36 +157,34 @@ function validateComposeServiceNetworks(
   const serviceNetworks = service.networks;
   if (!serviceNetworks) return;
 
-  for (const serviceNetwork of serviceNetworks) {
-    if (typeof serviceNetwork === "string") {
+  if (Array.isArray(serviceNetworks)) {
+    for (const serviceNetwork of serviceNetworks) {
       // Check docker network is whitelisted when defined in array format
       if (!params.DOCKER_WHITELIST_NETWORKS.includes(serviceNetwork))
         err(
           `service ${serviceName} has a non-whitelisted docker network: ${serviceNetwork}. Only docker networks ${DOCKER_WHITELIST_NETWORKS_STR} are allowed`
         );
-    } else {
-      for (const serviceNetworkObjectName of Object.keys(serviceNetwork)) {
-        // Check docker network is whitelisted when defined in object format
-        if (
-          !params.DOCKER_WHITELIST_NETWORKS.includes(serviceNetworkObjectName)
-        )
-          err(
-            `service ${serviceName} has a non-whitelisted docker network: ${serviceNetworkObjectName}. Only docker networks ${DOCKER_WHITELIST_NETWORKS_STR} are allowed`
-          );
+    }
+  } else {
+    for (const serviceNetworkObjectName of Object.keys(serviceNetworks)) {
+      // Check docker network is whitelisted when defined in object format
+      if (!params.DOCKER_WHITELIST_NETWORKS.includes(serviceNetworkObjectName))
+        err(
+          `service ${serviceName} has a non-whitelisted docker network: ${serviceNetworkObjectName}. Only docker networks ${DOCKER_WHITELIST_NETWORKS_STR} are allowed`
+        );
 
-        // Check core aliases are not used by non core packages
-        const { aliases } = serviceNetwork[serviceNetworkObjectName];
-        if (
-          !isCore &&
-          aliases &&
-          params.DOCKER_CORE_ALIASES.some(coreAlias =>
-            aliases.includes(coreAlias)
-          )
-        ) {
-          err(
-            `service ${serviceName} has the network ${serviceNetworkObjectName} with reserved docker alias. Aliases ${DOCKER_WHITELIST_ALIASES_STR} are reserved to core packages`
-          );
-        }
+      // Check core aliases are not used by non core packages
+      const { aliases } = serviceNetworks[serviceNetworkObjectName];
+      if (
+        !isCore &&
+        aliases &&
+        params.DOCKER_CORE_ALIASES.some(coreAlias =>
+          aliases.includes(coreAlias)
+        )
+      ) {
+        err(
+          `service ${serviceName} has the network ${serviceNetworkObjectName} with reserved docker alias. Aliases ${DOCKER_WHITELIST_ALIASES_STR} are reserved to core packages`
+        );
       }
     }
   }

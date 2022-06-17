@@ -118,15 +118,15 @@ interface Dependencies {
 
 // Driver
 
-type ChainDriver = ChainDriverType | ChainDriverSpecs;
+export type ChainDriver = ChainDriverType | ChainDriverSpecs;
 
-type ChainDriverSpecs = {
+export type ChainDriverSpecs = {
   driver: ChainDriverType;
   serviceName?: string;
   portNumber?: number;
 };
 
-type ChainDriverType =
+export type ChainDriverType =
   | "bitcoin"
   | "ethereum"
   | "ethereum-beacon-chain"

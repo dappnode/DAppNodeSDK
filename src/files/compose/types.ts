@@ -58,6 +58,7 @@ export interface ComposeService {
   pid?: string;
   privileged?: boolean;
   restart?: string;
+  security_opt?: string;
   stop_grace_period?: string;
   stop_signal?: string;
   user?: string;
@@ -74,7 +75,7 @@ export interface ComposeServiceNetwork {
   aliases?: string[];
 }
 
-export type ComposeServiceNetworks = string[] | ComposeServiceNetworksObj[];
+export type ComposeServiceNetworks = string[] | ComposeServiceNetworksObj;
 
 export type ComposeServiceNetworksObj = {
   [networkName: string]: ComposeServiceNetwork;
@@ -103,21 +104,27 @@ export interface Compose {
   services: {
     [dnpName: string]: ComposeService;
   };
-  networks?: {
-    [networkName: string]: {
-      name?: string;
-      external?: boolean;
-      driver?: string; // "bridge";
-      ipam?: { config: { subnet: string }[] }; // { subnet: "172.33.0.0/16" }
-    };
-  };
+  networks?: ComposeNetworks;
   // { dappmanagerdnpdappnodeeth_data: {} };
-  volumes?: {
-    [volumeName: string]: {
-      // NOTE: Not allowed
-      external?: boolean | { name: string }; // name: "dncore_ipfsdnpdappnodeeth_data"
-    };
-  };
+  volumes?: ComposeVolumes;
+}
+
+export interface ComposeVolumes {
+  /** volumeName: "dncore_ipfsdnpdappnodeeth_data" */
+  [volumeName: string]: ComposeVolume | null;
+}
+
+export interface ComposeVolume {
+  // FORBIDDEN
+  // external?: boolean | { name: string }; // name: "dncore_ipfsdnpdappnodeeth_data"
+  // NOT allowed to user, only used by DAppNode internally (if any)
+  external?: boolean;
+  name?: string; // Volumes can only be declared locally or be external
+  driver?: string; // Dangerous
+  driver_opts?:
+    | { type: "none"; device: string; o: "bind" }
+    | { [driverOptName: string]: string }; // driver_opts are passed down to whatever driver is being used, there's. No verification on docker's part nor detailed documentation
+  labels?: { [labelName: string]: string }; // User should not use this feature
 }
 
 export interface ComposePaths {
