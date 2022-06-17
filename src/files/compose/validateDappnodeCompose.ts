@@ -75,7 +75,8 @@ function validateComposeNetworks(compose: Compose): void {
           )} are allowed`
         );
       // Check all networks are external
-      if (networks[networkName].external === false)
+      const network = networks[networkName];
+      if (network && network.external === false)
         err(
           `The docker network ${networkName} is not allowed. Docker internal networks are not allowed`
         );
