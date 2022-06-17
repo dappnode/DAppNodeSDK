@@ -104,7 +104,7 @@ export interface Compose {
   services: {
     [dnpName: string]: ComposeService;
   };
-  networks?: ComposeNetwork;
+  networks?: ComposeNetworks;
   // { dappmanagerdnpdappnodeeth_data: {} };
   volumes?: ComposeVolumes;
 }
