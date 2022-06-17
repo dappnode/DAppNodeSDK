@@ -104,14 +104,7 @@ export interface Compose {
   services: {
     [dnpName: string]: ComposeService;
   };
-  networks?: {
-    [networkName: string]: {
-      name?: string;
-      external?: boolean;
-      driver?: string; // "bridge";
-      ipam?: { config: { subnet: string }[] }; // { subnet: "172.33.0.0/16" }
-    };
-  };
+  networks?: ComposeNetwork;
   // { dappmanagerdnpdappnodeeth_data: {} };
   volumes?: ComposeVolumes;
 }
