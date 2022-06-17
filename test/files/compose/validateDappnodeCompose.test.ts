@@ -173,13 +173,13 @@ service validator has key credential_spec that is not allowed. Allowed keys are:
       validateDappnodeCompose(
         {
           ...compose,
-          version: "3.4"
+          version: "3.3"
         },
         manifest
       )
     ).to.throw(`Error validating compose file with dappnode requirements:
 
-Compose version 3.4 is not supported. Minimum version is 3.5`);
+Compose version 3.3 is not supported. Minimum version is 3.4`);
   });
 
   it("Should throw an error due to unsafe service networks in string format", () => {
@@ -238,7 +238,7 @@ service validator has a non-whitelisted docker network: other_network. Only dock
       validateDappnodeCompose(
         {
           ...compose,
-          version: "3.4",
+          version: "3.3",
           services: {
             ...compose.services,
             validator: {
@@ -251,7 +251,7 @@ service validator has a non-whitelisted docker network: other_network. Only dock
       )
     ).to.throw(`Error validating compose file with dappnode requirements:
 
-Compose version 3.4 is not supported. Minimum version is 3.5
+Compose version 3.3 is not supported. Minimum version is 3.4
 service validator volume /var/run/docker.sock:/var/run/docker.sock is a bind-mount, only named non-external volumes are allowed`);
   });
 });
