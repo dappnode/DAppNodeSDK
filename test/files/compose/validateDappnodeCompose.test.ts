@@ -173,13 +173,13 @@ service validator has key credential_spec that is not allowed. Allowed keys are:
       validateDappnodeCompose(
         {
           ...compose,
-          version: "3.4"
+          version: "3.3"
         },
         manifest
       )
     ).to.throw(`Error validating compose file with dappnode requirements:
 
-Compose version 3.4 is not supported. Minimum version is 3.5`);
+Compose version 3.3 is not supported. Minimum version is 3.4`);
   });
 
   it("Should throw an error due to unsafe service networks in string format", () => {
