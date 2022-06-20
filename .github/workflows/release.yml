@@ -7,6 +7,7 @@ on:
 
 jobs:
   tag:
+    name: Get latest tag
     runs-on: ubuntu-latest
     outputs:
       latest_version: ${{ steps.npm-version.outputs.latest_version }}
