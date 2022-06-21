@@ -13,3 +13,6 @@ export const dappnodesdk = {
   next: nextHandler,
   publish: publishHanlder
 };
+
+// Export validation files and its types to be used in the dappmanager
+export * from "./files";
