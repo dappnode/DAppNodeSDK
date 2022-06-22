@@ -6,4 +6,5 @@ export { readCompose } from "./readCompose";
 export { updateComposeImageTags } from "./updateComposeImageTags";
 export { writeCompose } from "./writeCompose";
 export { validateDappnodeCompose } from "./validateDappnodeCompose";
+export { params } from "./params";
 export * from "./types";
