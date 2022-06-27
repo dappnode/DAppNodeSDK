@@ -42,7 +42,7 @@ export interface ComposeService {
     interval?: string;
     timeout?: string;
     start_period?: string;
-    retries?: string;
+    retries?: string | number;
   };
   image: string;
   labels?: { [labelName: string]: string };
@@ -58,7 +58,7 @@ export interface ComposeService {
   pid?: string;
   privileged?: boolean;
   restart?: string;
-  security_opt?: string;
+  security_opt?: string | string[];
   stop_grace_period?: string;
   stop_signal?: string;
   user?: string;
