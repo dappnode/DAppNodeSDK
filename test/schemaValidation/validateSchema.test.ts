@@ -5,6 +5,9 @@ import {
   validateManifestSchema,
   validateSetupWizardSchema
 } from "../../src/schemaValidation/validateSchema";
+import fs from "fs";
+import path from "path";
+import { cleanTestDir, testDir } from "../testUtils";
 
 describe("schemaValidation", () => {
   describe("manifest", () => {
@@ -101,6 +104,11 @@ describe("schemaValidation", () => {
   });
 
   describe("setupWizard", () => {
+    const setupWizardPath = path.join(testDir, "setup-wizard.yml");
+
+    beforeEach(() => {
+      cleanTestDir();
+    });
     it("should validate a valid setupWizard", () => {
       const validSetupWizardString = `
 version: "2"
@@ -143,9 +151,9 @@ fields:
       Get your checkpoint sync from [infura](https://infura.io/) (i.e https://XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX@eth2-beacon-prater.infura.io)
     required: false`;
 
-      expect(() =>
-        validateSetupWizardSchema(validSetupWizardString)
-      ).to.not.throw();
+      fs.writeFileSync(setupWizardPath, validSetupWizardString);
+
+      expect(() => validateSetupWizardSchema(testDir)).to.not.throw();
     });
 
     it("should throw error with an invalid setupWizard", () => {
@@ -191,9 +199,9 @@ fields:
     required: false
   - notAllowed: random`;
 
-      expect(() =>
-        validateSetupWizardSchema(invalidSetupWizardString)
-      ).to.throw();
+      fs.writeFileSync(setupWizardPath, invalidSetupWizardString);
+
+      expect(() => validateSetupWizardSchema(testDir)).to.throw();
     });
 
     it("should not throw with and empty setupWizard", () => {
