@@ -11,7 +11,8 @@ import { Compose, Manifest } from "../files";
 const ajv = new Ajv({
   allErrors: true,
   coerceTypes: true,
-  strictSchema: false
+  strictSchema: false,
+  allowUnionTypes: true
 });
 
 ajvErrors(ajv);
