@@ -23,7 +23,7 @@ jobs:
 
       - name: Get latest version from NPM
         id: npm-version
-        run: echo "::set-output name=latest_version::$(npx run @dappnode/dappnodesdk --version)"
+        run: echo "::set-output name=latest_version::$(npx -y run @dappnode/dappnodesdk --version)"
     
       - name: Get latest tag from git
         id: get-latest-git-tag
