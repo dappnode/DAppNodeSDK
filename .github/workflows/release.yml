@@ -7,34 +7,42 @@ on:
 
 jobs:
   tag:
-    name: Check and Tag
+    name: Get latest tag
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    outputs:
+      latest_version: ${{ steps.npm-version.outputs.latest_version }}
+      latest_git_tag: ${{ steps.get-latest-git-tag.outputs.tag }}
+      is_update: ${{ steps.is-update.outputs.is_update }}
 
-      - name: Get latest tag
+    steps:
+      - name: Get latest version from NPM
+        id: npm-version
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16.x"
+          registry-url: https://registry.npmjs.org/
+        run: echo "::set-output name=latest_version::$(npx run @dappnode/dappnodesdk --version)"
+    
+      - name: Get latest tag from git
+        id: get-latest-git-tag
         uses: actions-ecosystem/action-get-latest-tag@v1
         with:
           with_initial_version: false
-        id: get-latest-tag
 
-      - name: Create tag
-        id: tag
-        uses: butlerlogic/action-autotag@1.1.1
-        with:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          tag_prefix: "v"
-    outputs:
-      tag: ${{ steps.tag.outputs.tagname }}
-      previous_tag: ${{ steps.get-latest-tag.outputs.tag }}
-      version: ${{ steps.tag.outputs.version }}
+      - name: Check if latest tag is greater than the one published in npm
+        id: is-update
+        run: |
+          if [ "${{ steps.npm-version.outputs.latest_version }}" != "${{ steps.get-latest-git-tag.outputs.tag }}" ]; then
+            echo "::set-output name=is_update::true"
+          else
+            echo "::set-output name=is_update::false"
+          fi
 
   release:
     name: Publish
     runs-on: ubuntu-latest
     needs: tag
-    if: needs.tag.outputs.tag != ''
+    if: needs.tag.outputs.is_update == 'true'
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
@@ -44,32 +52,14 @@ jobs:
       - run: yarn install
       - run: yarn build
 
-      - name: Generate changelog
-        id: changelog
-        uses: heinrichreimer/github-changelog-generator-action@v2.2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issues: "false"
-          pullRequests: "true"
-          prWoLabels: "true"
-          author: "true"
-          usernamesAsGithubLogins: "true"
-          compareLink: "true"
-          filterByMilestone: "false"
-          unreleased: "false"
-          sinceTag: "${{ needs.tag.outputs.previous_tag }}"
-          maxIssues: "0"
-          stripGeneratorNotice: "true"
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.tag.outputs.tag }}
-          body_path: "CHANGELOG.md"
-          release_name: Release ${{ needs.tag.outputs.tag }}
+          tag_name: ${{ needs.tag.outputs.latest_git_tag }}
+          release_name: Release ${{ needs.tag.outputs.latest_git_tag }}
 
       - name: Publish to npm registry
         run: npm publish --access public
@@ -79,10 +69,10 @@ jobs:
       # In case of failure
       - name: Rollback on failure
         if: failure()
-        uses: author/action-rollback@9ec72a6af74774e00343c6de3e946b0901c23013
+        uses: author/action-rollback@9ec72ca6af74774e00343c6de3e946b0901c23013
         with:
           id: ${{ steps.create_release.outputs.id }}
-          tag: ${{ needs.tag.outputs.tag }}
+          tag: ${{ needs.tag.outputs.latest_git_tag }}
           delete_orphan_tag: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
