@@ -71,9 +71,9 @@ jobs:
       # In case of failure
       - name: Rollback on failure
         if: failure()
-        uses: author/action-rollback@9ec72ca6af74774e00343c6de3e946b0901c23013
+        uses: author/action-rollback@stable
         with:
-          id: ${{ steps.create_release.outputs.id }}
+          release_id: ${{ steps.create_release.outputs.id }}
           tag: ${{ needs.tag.outputs.latest_git_tag }}
           delete_orphan_tag: true
         env:
