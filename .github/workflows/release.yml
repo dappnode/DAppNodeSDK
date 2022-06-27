@@ -15,12 +15,15 @@ jobs:
       is_update: ${{ steps.is-update.outputs.is_update }}
 
     steps:
-      - name: Get latest version from NPM
-        id: npm-version
+      - name: Set up node version
         uses: actions/setup-node@v1
         with:
           node-version: "16.x"
           registry-url: https://registry.npmjs.org/
+        run: echo "::set-output name=latest_version::$(npx run @dappnode/dappnodesdk --version)"
+
+      - name: Get latest version from NPM
+        id: npm-version
         run: echo "::set-output name=latest_version::$(npx run @dappnode/dappnodesdk --version)"
     
       - name: Get latest tag from git
