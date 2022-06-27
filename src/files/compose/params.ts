@@ -40,6 +40,7 @@ export const params = {
     "image",
     "build",
     "volumes",
-    "environment"
+    "environment",
+    "pid"
   ]
 };
