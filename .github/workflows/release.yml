@@ -20,7 +20,6 @@ jobs:
         with:
           node-version: "16.x"
           registry-url: https://registry.npmjs.org/
-        run: echo "::set-output name=latest_version::$(npx run @dappnode/dappnodesdk --version)"
 
       - name: Get latest version from NPM
         id: npm-version
