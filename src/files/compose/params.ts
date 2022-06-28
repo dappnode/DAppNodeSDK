@@ -3,6 +3,14 @@ export const params = {
   CONTAINER_CORE_NAME_PREFIX: "DAppNodeCore-",
   CONTAINER_TOOL_NAME_PREFIX: "DAppNodeTool-",
   DOCKER_WHITELIST_NETWORKS: ["dncore_network", "dnpublic_network"],
+  DOCKER_WHITELIST_BIND_VOLUMES: [
+    "dappmanager.dnp.dappnode.eth",
+    "wifi.dnp.dappnode.eth",
+    "vpn.dnp.dappnode.eth",
+    "wireguard.dnp.dappnode.eth",
+    "core.dnp.dappnode.eth",
+    "dappnode-exporter.dnp.dappnode.eth"
+  ],
   DOCKER_CORE_ALIASES: [
     "dappmanager.dappnode",
     "wifi.dappnode",
@@ -41,6 +49,8 @@ export const params = {
     "build",
     "volumes",
     "environment",
-    "pid"
+    "pid",
+    "container_name",
+    "dns"
   ]
 };

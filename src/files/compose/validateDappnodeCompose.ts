@@ -33,7 +33,7 @@ export function validateDappnodeCompose(
   const servicesNames = Object.keys(compose.services);
 
   for (const serviceName of servicesNames) {
-    validateComposeService(compose, isCore, serviceName);
+    validateComposeService(compose, isCore, serviceName, manifest.name);
   }
 
   if (aggregatedError.length > 0)
@@ -90,7 +90,8 @@ function validateComposeNetworks(compose: Compose): void {
 function validateComposeService(
   compose: Compose,
   isCore: boolean,
-  serviceName: string
+  serviceName: string,
+  dnpName: string
 ): void {
   for (const serviceKey of Object.keys(compose.services[serviceName])) {
     if (!params.SAFE_KEYS.includes(serviceKey))
@@ -127,7 +128,7 @@ function validateComposeService(
 
   validateComposeServiceNetworks(compose, isCore, serviceName);
 
-  if (volumes) {
+  if (volumes && !params.DOCKER_WHITELIST_BIND_VOLUMES.includes(dnpName)) {
     for (const [i, volume] of volumes.entries()) {
       if (typeof volume !== "string") {
         // https://docs.docker.com/compose/compose-file/compose-file-v3/#short-syntax-3
