@@ -181,11 +181,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         for (const [fileId] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
             case "setupWizard":
-              validateSetupWizardSchema(
-                fs
-                  .readdirSync(dir)
-                  .find(file => releaseFiles.setupWizard.regex.test(file))
-              );
+              validateSetupWizardSchema();
               break;
             case "manifest":
               validateManifestSchema(manifest);

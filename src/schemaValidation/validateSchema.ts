@@ -5,10 +5,10 @@ import ajvErrors from "ajv-errors";
 import manifestSchema from "./schemas/manifest.schema.json";
 import composeSchema from "./schemas/compose.schema.json";
 import setupWizardSchema from "./schemas/setup-wizard.schema.json";
-import yaml from "js-yaml";
-import { Compose, Manifest } from "../files";
+import { Compose, Manifest, readSetupWizardIfExists } from "../files";
 
 const ajv = new Ajv({
+  logger: false,
   allErrors: true,
   coerceTypes: true,
   strictSchema: false,
@@ -55,13 +55,12 @@ export function validateComposeSchema(compose: Compose): void {
  * Validates setupWizard file with schema
  * @param setupWizard
  */
-export function validateSetupWizardSchema(
-  setupWizard: string | undefined
-): void {
+export function validateSetupWizardSchema(dir?: string): void {
   // The setupwizard file is not mandatory and may not be present
+  const setupWizard = readSetupWizardIfExists(dir);
   if (!setupWizard) return;
   const validateSetupWizard = ajv.compile(setupWizardSchema);
-  const valid = validateSetupWizard(yaml.load(setupWizard));
+  const valid = validateSetupWizard(setupWizard);
   if (!valid) {
     const errors = validateSetupWizard.errors
       ? validateSetupWizard.errors.map(e => processError(e, "setupWizard"))
