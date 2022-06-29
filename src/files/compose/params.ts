@@ -51,6 +51,7 @@ export const params = {
     "environment",
     "pid",
     "container_name",
-    "dns"
+    "dns",
+    "ulimits"
   ]
 };
