@@ -64,6 +64,7 @@ export interface ComposeService {
   user?: string;
   volumes?: string[]; // ["dappmanagerdnpdappnodeeth_data:/usr/src/app/dnp_repo/"];
   working_dir?: string;
+  ulimits?: { nproc: number } | { nofile: { soft: number; hard: number } };
 }
 
 export interface PackageEnvs {
