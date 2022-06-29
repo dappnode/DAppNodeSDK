@@ -18,10 +18,34 @@ export interface ComposeServiceBuild {
   dockerfile?: string; // Dockerfile-alternate
   args?: { [varName: string]: string }; // { buildno: 1}
 }
+/**
+ * Docs: https://docs.docker.com/compose/compose-file/deploy/#resources
+ */
+export interface ComposeServiceResources {
+  resources: {
+    limits?: {
+      cpus?: number | string;
+      memory?: string;
+      pids?: number;
+    };
+    reservations?: {
+      cpus?: number | string;
+      memory?: string;
+      devices?: {
+        capabilities?: string[];
+        driver?: string;
+        count?: number;
+        device_ids?: string[];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        options?: { [key: string]: any };
+      };
+    };
+  };
+}
 
 /**
  * Docker compose file-
- * Ref: https://docs.docker.com/compose/compose-file/compose-file-v3/#depends_on
+ * Ref: https://docs.docker.com/compose/compose-file/compose-file-v3/
  */
 export interface ComposeService {
   build?: string | ComposeServiceBuild;
@@ -30,6 +54,7 @@ export interface ComposeService {
   command?: string;
   container_name?: string; // "DAppNodeCore-dappmanager.dnp.dappnode.eth";
   depends_on?: string[];
+  deploy?: ComposeServiceResources;
   dns?: string;
   devices?: string[];
   entrypoint?: string;
@@ -61,10 +86,10 @@ export interface ComposeService {
   security_opt?: string | string[];
   stop_grace_period?: string;
   stop_signal?: string;
+  ulimits?: { nproc: number } | { nofile: { soft: number; hard: number } };
   user?: string;
   volumes?: string[]; // ["dappmanagerdnpdappnodeeth_data:/usr/src/app/dnp_repo/"];
   working_dir?: string;
-  ulimits?: { nproc: number } | { nofile: { soft: number; hard: number } };
 }
 
 export interface PackageEnvs {
