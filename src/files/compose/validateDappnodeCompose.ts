@@ -1,8 +1,8 @@
 import semver from "semver";
 import { Manifest } from "../manifest/types";
-import { Compose } from "./types";
+import { Compose, ComposeService } from "./types";
 import { getIsCore } from "../../utils/getIsCore";
-import { params } from "./params";
+import { composeSafeKeys, params } from "./params";
 
 let aggregatedError: string[];
 
@@ -94,9 +94,9 @@ function validateComposeService(
   dnpName: string
 ): void {
   for (const serviceKey of Object.keys(compose.services[serviceName])) {
-    if (!params.SAFE_KEYS.includes(serviceKey))
+    if (!composeSafeKeys.includes(serviceKey as keyof ComposeService))
       err(
-        `service ${serviceName} has key ${serviceKey} that is not allowed. Allowed keys are: ${params.SAFE_KEYS.join(
+        `service ${serviceName} has key ${serviceKey} that is not allowed. Allowed keys are: ${composeSafeKeys.join(
           ","
         )}`
       );
