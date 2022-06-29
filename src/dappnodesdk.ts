@@ -7,10 +7,10 @@ import dotenv from "dotenv";
 
 import { build } from "./commands/build";
 import { fromGithub } from "./commands/from_github";
-import { increase } from "./commands/increase";
 import { init } from "./commands/init";
-import { next } from "./commands/next";
+import { list } from "./commands/list";
 import { publish } from "./commands/publish";
+import { version } from "./commands/version";
 import { githubActions } from "./commands/githubActions";
 
 // "source-map-support" MUST be imported for stack traces to work properly after Typescript transpile -
@@ -53,10 +53,10 @@ const dappnodesdk = yargs
   })
   .command(build)
   .command(fromGithub)
-  .command(increase)
   .command(init)
-  .command(next)
+  .command(list)
   .command(publish)
+  .command(version)
   .command(githubActions);
 
 dappnodesdk.alias("h", "help");
