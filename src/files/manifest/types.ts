@@ -1,4 +1,9 @@
-import { SetupWizard } from "../setupWizard/types";
+import {
+  SetupSchema,
+  SetupTarget,
+  SetupUiJson,
+  SetupWizard
+} from "../setupWizard/types";
 
 export interface Manifest {
   // Package metadata
@@ -78,6 +83,11 @@ export interface Manifest {
   // Monitoring
   grafanaDashboards?: GrafanaDashboard[];
   prometheusTargets?: PrometheusTarget[];
+
+  // Legacy setupWizardv1
+  setupSchema?: SetupSchema;
+  setupTarget?: SetupTarget;
+  setupUiJson?: SetupUiJson;
 
   // Network metadata
   exposable?: ExposableServiceManifestInfo[];

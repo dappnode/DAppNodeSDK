@@ -39,6 +39,20 @@ export type SetupSchema = {
   oneOf?: any[];
 };
 
+export interface SetupTarget {
+  [propId: string]: UserSettingTarget;
+}
+
+export interface SetupUiJson {
+  [propId: string]: {
+    "ui:widget"?: "password";
+  };
+  // SetupUiJson is a legacy non-critical type that needs to exist and be
+  // different from any so await Promise.all([ ... ]) typing works
+  // @ts-ignore
+  "ui:order"?: string[];
+}
+
 export type UserSettingTarget =
   | { type: "environment"; name: string; service?: string[] | string }
   | { type: "portMapping"; containerPort: string; service?: string }
