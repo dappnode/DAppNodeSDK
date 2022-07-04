@@ -187,7 +187,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
               validateManifestSchema(manifest);
               break;
             case "compose":
-              // validate against official docker compose schema. Bypass until fix:
+              // validate against official docker compose schema.
               validateComposeSchema(path.join(dir, composeFileName));
 
               // validate against custom dappnode requirements
