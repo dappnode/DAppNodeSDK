@@ -1,11 +1,12 @@
 import { CliError } from "../params";
 import Ajv, { ErrorObject } from "ajv";
 import ajvErrors from "ajv-errors";
+import fs from "fs";
 // Schemas
 import manifestSchema from "./schemas/manifest.schema.json";
-import composeSchema from "./schemas/compose.schema.json";
 import setupWizardSchema from "./schemas/setup-wizard.schema.json";
-import { Compose, Manifest, readSetupWizardIfExists } from "../files";
+import { Manifest, readSetupWizardIfExists } from "../files";
+import { shell } from "../utils/shell";
 
 const ajv = new Ajv({
   logger: false,
@@ -35,20 +36,17 @@ export function validateManifestSchema(manifest: Manifest): void {
 }
 
 /**
- * Validates compose file with schema
+ * Validates compose file with docker-compose config
  * @param compose
  */
-export function validateComposeSchema(compose: Compose): void {
-  const validateCompose = ajv.compile(composeSchema);
-  const valid = validateCompose(compose);
-  if (!valid) {
-    const errors = validateCompose.errors
-      ? validateCompose.errors.map(e => processError(e, "compose"))
-      : [];
-    throw new CliError(
-      `Invalid compose: \n${errors.map(msg => `  - ${msg}`).join("\n")}`
-    );
-  }
+export async function validateComposeSchema(
+  composeFilePath: string
+): Promise<void> {
+  if (!fs.existsSync(composeFilePath))
+    throw Error(`Compose file ${composeFilePath} not found`);
+  await shell(`docker-compose -f ${composeFilePath} config`).catch(e => {
+    throw new CliError(`Invalid compose:\n${e.stderr}`);
+  });
 }
 
 /**

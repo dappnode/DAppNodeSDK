@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Manifest, Compose } from "../../src/files";
+import { Manifest } from "../../src/files";
 import {
   validateComposeSchema,
   validateManifestSchema,
@@ -55,51 +55,105 @@ describe("schemaValidation", () => {
   });
 
   describe("compose", () => {
-    it("should validate a valid compose", () => {
-      const validCompose: Compose = {
-        version: "3.5",
-        services: {
-          "dncore-node": {
-            image: "dncore/dncore-node:latest",
-            volumes: ["dncore_data:/some/path"],
-            ports: ["30303:30303"]
-          }
-        },
-        networks: {
-          dncore_network: {
-            external: true,
-            driver: "bridge"
-          }
-        },
-        volumes: { dncore_data: {} }
-      };
-
-      expect(() => validateComposeSchema(validCompose)).to.not.throw();
+    it("should validate a valid compose", async () => {
+      const validCompose = `version: "3.4"
+services:
+  beacon-chain:
+    image: "beacon-chain.prysm-prater.dnp.dappnode.eth:1.0.0"
+    volumes:
+      - "beacon-chain-data:/data"
+    ports:
+      - "13000"
+      - 12000/udp
+    restart: unless-stopped
+    environment:
+      HTTP_WEB3PROVIDER: "http://goerli-geth.dappnode:8545"
+      CHECKPOINT_SYNC_URL: ""
+      CORSDOMAIN: "http://prysm-prater.dappnode"
+      WEB3_BACKUP: ""
+      EXTRA_OPTS: ""
+  validator:
+    image: "validator.prysm-prater.dnp.dappnode.eth:1.0.0"
+    volumes:
+      - "validator-data:/root/"
+    restart: unless-stopped
+    environment:
+      LOG_TYPE: INFO
+      BEACON_RPC_PROVIDER: "beacon-chain.prysm-prater.dappnode:4000"
+      BEACON_RPC_GATEWAY_PROVIDER: "beacon-chain.prysm-prater.dappnode:3500"
+      GRAFFITI: validating_from_DAppNode
+      EXTRA_OPTS: ""
+      FEE_RECIPIENT_ADDRESS: ""
+volumes:
+  beacon-chain-data: {}
+  validator-data: {}`;
+      const validComposePath = path.join(testDir, "valid-docker-compose.yml");
+      fs.writeFileSync(validComposePath, validCompose);
+      expect(
+        async () => await validateComposeSchema(validComposePath)
+      ).to.not.throw();
     });
 
-    it("should throw error with an invalid compose", () => {
-      const invalidCompose: Omit<Compose, "notAllowed"> & {
-        notAllowed: string;
-      } = {
-        version: "3.5",
-        services: {
-          "dncore-node": {
-            image: "dncore/dncore-node:latest",
-            volumes: ["dncore_data:/some/path"],
-            ports: ["30303:30303"]
-          }
-        },
-        notAllowed: "random",
-        networks: {
-          dncore_network: {
-            external: true,
-            driver: "bridge"
-          }
-        },
-        volumes: { dncore_data: {} }
-      };
+    it("should throw error with an invalid compose", async () => {
+      const invalidCompose = `version: "3.5"
+services:
+  ui:
+    image: "ui.web3signer-gnosis.dnp.dappnode.eth:0.1.0"
+    build:
+      context: ui
+    restart: unless-stopped
+  web3signer:
+    image: "web3signer.web3signer-gnosis.dnp.dappnode.eth:0.1.0"
+    depends_on:
+      - postgres
+    security_opt:
+      - "seccomp:unconfined"
+    environment:
+      ETH2_CLIENT: ""
+      LOG_TYPE: INFO
+      EXTRA_OPTS: ""
+    volumes:
+      - "web3signer_data:/opt/web3signer"
+    restart: unless-stopped
+  postgres:
+    notAllowed: wrong
+    image: "postgres.web3signer-gnosis.dnp.dappnode.eth:0.1.0"
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    build:
+      context: postgres
+      dockerfile: Dockerfile
+      args:
+        UPSTREAM_VERSION: 22.6.0
+    user: postgres
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
+      - "postgres_migrations:/docker-entrypoint-initdb.d"
+    restart: unless-stopped
+volumes:
+  web3signer_data: {}
+  postgres_data: {}
+  postgres_migrations: {}`;
+      const invalidComposePath = path.join(
+        testDir,
+        "invalid-docker-compose.yml"
+      );
+      fs.writeFileSync(invalidComposePath, invalidCompose);
 
-      expect(() => validateComposeSchema(invalidCompose)).to.throw();
+      const error = await validateComposeSchema(invalidComposePath).catch(
+        e => e
+      );
+      const expectedErrorMessage = `Invalid compose:
+The Compose file './test_files/invalid-docker-compose.yml' is invalid because:
+Unsupported config option for services.postgres: 'notAllowed'`;
+      expect(error.message).to.include(expectedErrorMessage);
+    });
+
+    after(() => {
+      cleanTestDir();
     });
   });
 
