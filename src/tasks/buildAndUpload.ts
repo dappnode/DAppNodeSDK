@@ -177,7 +177,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
     {
       title: "Validate files",
-      task: () => {
+      task: async () => {
         for (const [fileId] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
             case "setupWizard":
@@ -188,7 +188,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
               break;
             case "compose":
               // validate against official docker compose schema.
-              validateComposeSchema(path.join(dir, composeFileName));
+              await validateComposeSchema(path.join(dir, composeFileName));
 
               // validate against custom dappnode requirements
               validateDappnodeCompose(composeForDev, manifest);
