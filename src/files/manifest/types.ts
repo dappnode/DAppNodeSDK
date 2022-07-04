@@ -87,11 +87,11 @@ export interface Manifest {
 }
 
 // Metrics
-interface GrafanaDashboard {
+export interface GrafanaDashboard {
   uid: string;
 }
 
-interface PrometheusTarget {
+export interface PrometheusTarget {
   targets: string[];
   labels?: {
     job?: string;
@@ -100,19 +100,19 @@ interface PrometheusTarget {
 }
 
 // Update warnings
-interface ManifestUpdateAlert {
+export interface ManifestUpdateAlert {
   from: string;
   to: string;
   message: string;
 }
 
-interface PackageBackup {
+export interface PackageBackup {
   name: string;
   path: string;
   service?: string;
 }
 
-interface Dependencies {
+export interface Dependencies {
   [dependencyName: string]: string;
 }
 
