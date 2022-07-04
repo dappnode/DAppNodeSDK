@@ -1,4 +1,9 @@
-import { SetupWizard } from "../setupWizard/types";
+import {
+  SetupSchema,
+  SetupTarget,
+  SetupUiJson,
+  SetupWizard
+} from "../setupWizard/types";
 
 export interface Manifest {
   // Package metadata
@@ -79,6 +84,11 @@ export interface Manifest {
   grafanaDashboards?: GrafanaDashboard[];
   prometheusTargets?: PrometheusTarget[];
 
+  // Legacy setupWizardv1
+  setupSchema?: SetupSchema;
+  setupTarget?: SetupTarget;
+  setupUiJson?: SetupUiJson;
+
   // Network metadata
   exposable?: ExposableServiceManifestInfo[];
 
@@ -87,11 +97,11 @@ export interface Manifest {
 }
 
 // Metrics
-interface GrafanaDashboard {
+export interface GrafanaDashboard {
   uid: string;
 }
 
-interface PrometheusTarget {
+export interface PrometheusTarget {
   targets: string[];
   labels?: {
     job?: string;
@@ -100,19 +110,19 @@ interface PrometheusTarget {
 }
 
 // Update warnings
-interface ManifestUpdateAlert {
+export interface ManifestUpdateAlert {
   from: string;
   to: string;
   message: string;
 }
 
-interface PackageBackup {
+export interface PackageBackup {
   name: string;
   path: string;
   service?: string;
 }
 
-interface Dependencies {
+export interface Dependencies {
   [dependencyName: string]: string;
 }
 
