@@ -57,6 +57,26 @@ export class Apm {
     }
   }
 
+  async getIpfsHashesFromDnpName(dnpName: string): Promise<string[]> {
+    const ensName = await this.resolve(dnpName);
+    if (!ensName) throw Error(`Error: ${dnpName} not found`);
+    const repository = await this.getRepoContract(ensName);
+    if (!repository) throw Error(`Error: ${dnpName} has no repo`);
+    const repositoryInterface = new ethers.utils.Interface(repoAbi);
+
+    const numberOfPackageVersions = await repository.getVersionsCount();
+    const packageIpfsHashes: string[] = [];
+    for (let i = 0; i < numberOfPackageVersions; i++) {
+      const result = await repository.getByVersionId(i);
+      const decoded = repositoryInterface.decodeFunctionData(
+        "getByVersionId",
+        result
+      );
+      packageIpfsHashes.push(decoded.contentURI);
+    }
+    return packageIpfsHashes;
+  }
+
   /**
    * Get the lastest version of an APM repo contract for an ENS domain.
    *

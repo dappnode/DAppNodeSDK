@@ -6,6 +6,7 @@ import { cliArgsToReleaseUploaderProvider } from "../../../releaseUploader";
 import { Github } from "../../../providers/github/Github";
 import { PinataPinManager } from "../../../providers/pinata/pinManager";
 import { readManifest } from "../../../files";
+import { Apm } from "../../../utils/Apm";
 
 /**
  * Remove pins in the following conditions:
@@ -46,8 +47,16 @@ export async function cleanPins({ dir }: { dir: string }): Promise<void> {
 
   // CLEAN OLD PINS (>30 days) NOT RELEASED
   const pinsOlderThan = await fetchPinsOlderThan(pinata, manifest, 30);
+  const apm = new Apm("remote");
+  const packageProductionHashes = await apm.getIpfsHashesFromDnpName(
+    manifest.name
+  );
   for (const pin of pinsOlderThan) {
     console.log(`Unpin ${pin.commit} ${pin.ipfsHash}`);
+    // Do not unpin if it is a production IPFS hash
+    if (packageProductionHashes.find(ipfsHash => ipfsHash === pin.ipfsHash))
+      continue;
+
     await pinata.unpin(pin.ipfsHash).catch(e => {
       // Don't prevent unpinning other pins if one is faulty
       console.error(`Error on unpin ${pin.ipfsHash}`, e);
