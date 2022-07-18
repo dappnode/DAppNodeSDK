@@ -52,11 +52,11 @@ export async function cleanPins({ dir }: { dir: string }): Promise<void> {
     manifest.name
   );
   for (const pin of pinsOlderThan) {
-    console.log(`Unpin ${pin.commit} ${pin.ipfsHash}`);
     // Do not unpin if it is a production IPFS hash
     if (packageProductionHashes.find(ipfsHash => ipfsHash === pin.ipfsHash))
       continue;
 
+    console.log(`Unpin ${pin.commit} ${pin.ipfsHash}`);
     await pinata.unpin(pin.ipfsHash).catch(e => {
       // Don't prevent unpinning other pins if one is faulty
       console.error(`Error on unpin ${pin.ipfsHash}`, e);

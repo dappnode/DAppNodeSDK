@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { arrayToSemver } from "../utils/arrayToSemver";
 import repoAbi from "../contracts/RepoAbi.json";
 import registryAbi from "../contracts/ApmRegistryAbi.json";
@@ -57,22 +57,27 @@ export class Apm {
     }
   }
 
+  /**
+   * Returns all the IPFS hashes from a given package dnpName
+   */
   async getIpfsHashesFromDnpName(dnpName: string): Promise<string[]> {
     const ensName = await this.resolve(dnpName);
     if (!ensName) throw Error(`Error: ${dnpName} not found`);
     const repository = await this.getRepoContract(ensName);
     if (!repository) throw Error(`Error: ${dnpName} has no repo`);
-    const repositoryInterface = new ethers.utils.Interface(repoAbi);
 
-    const numberOfPackageVersions = await repository.getVersionsCount();
+    const numberOfPackageVersions = await repository
+      .getVersionsCount()
+      .then((res: BigNumber) => res.toNumber());
+    console.log(`Found ${numberOfPackageVersions} versions of ${dnpName}`);
+
     const packageIpfsHashes: string[] = [];
-    for (let i = 0; i < numberOfPackageVersions; i++) {
-      const result = await repository.getByVersionId(i);
-      const decoded = repositoryInterface.decodeFunctionData(
-        "getByVersionId",
-        result
-      );
-      packageIpfsHashes.push(decoded.contentURI);
+    for (let i = 1; i <= numberOfPackageVersions; i++) {
+      const packageData = await repository.getByVersionId(i);
+      const packageIpfsHash = ethers.utils
+        .toUtf8String(packageData.contentURI)
+        .replace(/^\/ipfs\//, "");
+      packageIpfsHashes.push(packageIpfsHash);
     }
     return packageIpfsHashes;
   }
