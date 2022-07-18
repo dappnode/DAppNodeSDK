@@ -2,7 +2,7 @@ import semver from "semver";
 import { expect } from "chai";
 import { Apm } from "../../src/utils/Apm";
 
-describe.only("Apm constructor", function () {
+describe("Apm constructor", function () {
   this.timeout(60_000);
 
   const dnpName = "admin.dnp.dappnode.eth";
