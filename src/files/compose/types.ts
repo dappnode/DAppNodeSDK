@@ -58,7 +58,7 @@ export interface ComposeService {
   dns?: string;
   devices?: string[];
   entrypoint?: string;
-  environment?: { [key: string]: string | number } | (string | number)[];
+  environment?: { [key: string]: string } | string[];
   env_file?: string[];
   expose?: string[];
   extra_hosts?: string[];
