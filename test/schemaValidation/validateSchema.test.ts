@@ -180,7 +180,7 @@ fields:
     target:
       type: environment
       name: HTTP_WEB3PROVIDER
-      service: beacon-chain
+      service: [validator, beacon-chain]
     title: Eth1.x node URL
     description: >-
       URL to the Eth1.x node need for the Beacon chain.
@@ -252,6 +252,25 @@ fields:
       Get your checkpoint sync from [infura](https://infura.io/) (i.e https://XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX@eth2-beacon-prater.infura.io)
     required: false
   - notAllowed: random`;
+
+      fs.writeFileSync(setupWizardPath, invalidSetupWizardString);
+
+      expect(() => validateSetupWizardSchema(testDir)).to.throw();
+    });
+
+    it("should throw error with an empty service array in setupWizard", () => {
+      const invalidSetupWizardString = `
+version: "2"
+fields:
+  - id: GRAFFITI
+    target:
+      type: environment
+      name: GRAFFITI
+      service: []
+    title: Graffiti
+    maxLength: 32
+    description: >-
+      Add a string to your proposed blocks, which will be seen on the block explorer`
 
       fs.writeFileSync(setupWizardPath, invalidSetupWizardString);
 

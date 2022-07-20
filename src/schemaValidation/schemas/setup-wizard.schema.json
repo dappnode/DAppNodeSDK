@@ -42,7 +42,11 @@
                     "example": ["PAYOUT_ADDRESS"]
                   },
                   "service": {
-                    "type": "string",
+                    "type": ["string", "array"],
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
                     "title": "Service to target",
                     "description": "In multi-service package, which service should be targeted",
                     "example": ["service1", "service2"]
