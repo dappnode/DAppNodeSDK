@@ -46,9 +46,11 @@ export interface Manifest {
   requirements?: {
     minimumDappnodeVersion: string;
   };
-  globalEnvs?: {
-    all?: boolean;
-  };
+  globalEnvs?:
+    | {
+        all?: boolean;
+      }
+    | string[];
   architectures?: Architecture[];
 
   // Safety properties to solve problematic updates

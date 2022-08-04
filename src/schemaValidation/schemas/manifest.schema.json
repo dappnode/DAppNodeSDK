@@ -150,15 +150,26 @@
       }
     },
     "globalEnvs": {
-      "type": "object",
-      "description": "Request the DAPPMANAGER to inject global ENVs to this package's containers",
-      "properties": {
-        "all": {
-          "type": "boolean",
-          "description": "Request the DAPPMANAGER to inject all available global ENVs",
-          "examples": ["true"]
+      "oneOf": [
+        {
+          "type": "array",
+          "description": "Request the DAPPMANAGER to inject the selected global ENVs to this package's containers",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "object",
+          "description": "Request the DAPPMANAGER to inject global ENVs to this package's containers",
+          "properties": {
+            "all": {
+              "type": "boolean",
+              "description": "Request the DAPPMANAGER to inject all available global ENVs",
+              "examples": ["true"]
+            }
+          }
         }
-      }
+      ]
     },
     "architectures": {
       "type": "array",

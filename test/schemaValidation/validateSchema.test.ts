@@ -11,6 +11,38 @@ import { cleanTestDir, testDir } from "../testUtils";
 
 describe("schemaValidation", () => {
   describe("manifest", () => {
+    it("validateManifest globalEnvs as array of strings", () => {
+      const manifest: Manifest = {
+        name: "",
+        version: "1.0.0",
+        description: "",
+        type: "dncore",
+        license: "1",
+        globalEnvs: ["_first_env", "_second_env"],
+        chain: {
+          driver: "ethereum"
+        }
+      };
+
+      expect(() => validateManifestSchema(manifest)).to.not.throw();
+    });
+
+    it("validateManifest globalEnvs as object", () => {
+      const manifest: Manifest = {
+        name: "",
+        version: "1.0.0",
+        description: "",
+        type: "dncore",
+        license: "1",
+        globalEnvs: { all: true },
+        chain: {
+          driver: "ethereum"
+        }
+      };
+
+      expect(() => validateManifestSchema(manifest)).to.not.throw();
+    });
+
     it("validateManifest chainDriver as string", () => {
       const manifest: Manifest = {
         name: "",
@@ -270,7 +302,7 @@ fields:
     title: Graffiti
     maxLength: 32
     description: >-
-      Add a string to your proposed blocks, which will be seen on the block explorer`
+      Add a string to your proposed blocks, which will be seen on the block explorer`;
 
       fs.writeFileSync(setupWizardPath, invalidSetupWizardString);
 
