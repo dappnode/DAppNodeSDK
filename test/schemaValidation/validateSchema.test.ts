@@ -11,6 +11,47 @@ import { cleanTestDir, testDir } from "../testUtils";
 
 describe("schemaValidation", () => {
   describe("manifest", () => {
+    it("validateManifest globalEnvs as array of strings", () => {
+      const manifest: Manifest = {
+        name: "",
+        version: "1.0.0",
+        description: "",
+        type: "dncore",
+        license: "1",
+        globalEnvs: [
+          {
+            services: ["web3signer", "ui"],
+            envs: ["_DAPPNODE_GLOBAL_INTERNAL_IP", "_DAPPNODE_GLOBAL_PUBLIC_IP"]
+          },
+          {
+            services: ["db"],
+            envs: ["_DAPPNODE_GLOBAL_PUBKEY"]
+          }
+        ],
+        chain: {
+          driver: "ethereum"
+        }
+      };
+
+      expect(() => validateManifestSchema(manifest)).to.not.throw();
+    });
+
+    it("validateManifest globalEnvs as object", () => {
+      const manifest: Manifest = {
+        name: "",
+        version: "1.0.0",
+        description: "",
+        type: "dncore",
+        license: "1",
+        globalEnvs: { all: true },
+        chain: {
+          driver: "ethereum"
+        }
+      };
+
+      expect(() => validateManifestSchema(manifest)).to.not.throw();
+    });
+
     it("validateManifest chainDriver as string", () => {
       const manifest: Manifest = {
         name: "",
@@ -270,7 +311,7 @@ fields:
     title: Graffiti
     maxLength: 32
     description: >-
-      Add a string to your proposed blocks, which will be seen on the block explorer`
+      Add a string to your proposed blocks, which will be seen on the block explorer`;
 
       fs.writeFileSync(setupWizardPath, invalidSetupWizardString);
 
