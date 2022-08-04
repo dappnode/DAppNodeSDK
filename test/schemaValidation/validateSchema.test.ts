@@ -10,7 +10,7 @@ import path from "path";
 import { cleanTestDir, testDir } from "../testUtils";
 
 describe("schemaValidation", () => {
-  describe.only("manifest", () => {
+  describe("manifest", () => {
     it("validateManifest globalEnvs as array of strings", () => {
       const manifest: Manifest = {
         name: "",
