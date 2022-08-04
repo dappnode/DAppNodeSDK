@@ -155,7 +155,28 @@
           "type": "array",
           "description": "Request the DAPPMANAGER to inject the selected global ENVs to this package's containers",
           "items": {
-            "type": "string"
+            "type": "object",
+            "properties": {
+              "envs": {
+                "type": "array",
+                "description": "The list of envs to inject to the defined services",
+                "items": {
+                  "type": "string",
+                  "examples": [
+                    "_DAPPNODE_GLOBAL_NO_NAT_LOOPBACK",
+                    "_DAPPNODE_GLOBAL_PUBLIC_IP"
+                  ]
+                },
+                "services": {
+                  "type": "array",
+                  "description": "The services to inject the global ENVs to",
+                  "items": {
+                    "type": "string",
+                    "examples": ["webserver", "backend", "service1"]
+                  }
+                }
+              }
+            }
           }
         },
         {

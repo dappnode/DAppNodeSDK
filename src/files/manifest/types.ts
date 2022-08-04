@@ -50,7 +50,10 @@ export interface Manifest {
     | {
         all?: boolean;
       }
-    | string[];
+    | {
+        envs: string[];
+        services: string[];
+      }[];
   architectures?: Architecture[];
 
   // Safety properties to solve problematic updates

@@ -18,7 +18,16 @@ describe("schemaValidation", () => {
         description: "",
         type: "dncore",
         license: "1",
-        globalEnvs: ["_first_env", "_second_env"],
+        globalEnvs: [
+          {
+            services: ["web3signer", "ui"],
+            envs: ["_DAPPNODE_GLOBAL_INTERNAL_IP", "_DAPPNODE_GLOBAL_PUBLIC_IP"]
+          },
+          {
+            services: ["db"],
+            envs: ["_DAPPNODE_GLOBAL_PUBKEY"]
+          }
+        ],
         chain: {
           driver: "ethereum"
         }
