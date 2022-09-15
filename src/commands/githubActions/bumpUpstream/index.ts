@@ -11,28 +11,34 @@ import { arrIsUnique } from "../../../utils/array";
 import { buildAndComment } from "../build";
 import { closeOldPrs } from "./closeOldPrs";
 import { readManifest, writeManifest } from "../../../files";
+import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv";
 
 // This action should be run periodically
 
-export const gaBumpUpstream: CommandModule<
-  CliGlobalOptions,
-  CliGlobalOptions
-> = {
-  command: "bump-upstream",
-  describe:
-    "Check if upstream repo has released a new version and open a PR with version bump",
-  builder: {},
-  handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
-};
+export const gaBumpUpstream: CommandModule<CliGlobalOptions, CliGlobalOptions> =
+  {
+    command: "bump-upstream",
+    describe:
+      "Check if upstream repo has released a new version and open a PR with version bump",
+    builder: {},
+    handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
+  };
 
 export async function gaBumpUpstreamHandler({
   dir = defaultDir
 }: CliGlobalOptions): Promise<void> {
+  // Check if buildSdkEnvFileName file exists
+  const masterArgs = readBuildSdkEnvFileNotThrow(dir);
+
   const { manifest, format } = readManifest({ dir });
   const compose = readCompose({ dir });
 
-  const upstreamRepos = parseCsv(manifest.upstreamRepo);
-  const upstreamArgs = parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
+  const upstreamRepos = masterArgs
+    ? [masterArgs._BUILD_UPSTREAM_REPO]
+    : parseCsv(manifest.upstreamRepo);
+  const upstreamArgs = masterArgs
+    ? [masterArgs._BUILD_UPSTREAM_VERSION]
+    : parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
 
   const githubActor = process.env.GITHUB_ACTOR || "bot";
   const userName = githubActor;

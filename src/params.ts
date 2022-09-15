@@ -18,6 +18,8 @@ export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
 export const UPSTREAM_VERSION_VARNAME = "UPSTREAM_VERSION";
 export const upstreamImageLabel = "dappnode.dnp.upstreamImage";
 export const PINATA_URL = "https://api.pinata.cloud";
+// The build_sdk.env file is used by "slaves" DAppNode packages to define the UPSTREAM_PROJECT and UPSTREAM_VERSION used in the gha
+export const buildSdkEnvFileName = "build_sdk.env";
 
 /**
  * Plain text file with should contain the IPFS hash of the release
