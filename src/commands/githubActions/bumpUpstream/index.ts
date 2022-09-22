@@ -28,16 +28,16 @@ export async function gaBumpUpstreamHandler({
   dir = defaultDir
 }: CliGlobalOptions): Promise<void> {
   // Check if buildSdkEnvFileName file exists
-  const masterArgs = readBuildSdkEnvFileNotThrow(dir);
+  const templateArgs = readBuildSdkEnvFileNotThrow(dir);
 
   const { manifest, format } = readManifest({ dir });
   const compose = readCompose({ dir });
 
-  const upstreamRepos = masterArgs
-    ? [masterArgs._BUILD_UPSTREAM_REPO]
+  const upstreamRepos = templateArgs
+    ? [templateArgs._BUILD_UPSTREAM_REPO]
     : parseCsv(manifest.upstreamRepo);
-  const upstreamArgs = masterArgs
-    ? [masterArgs._BUILD_UPSTREAM_VERSION]
+  const upstreamArgs = templateArgs
+    ? [templateArgs._BUILD_UPSTREAM_VERSION]
     : parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
 
   const githubActor = process.env.GITHUB_ACTOR || "bot";

@@ -1,4 +1,4 @@
-name: Test GA bump-upstream
+name: Test GA bump-upstream template
 on:
   push:
   pull_request:
@@ -13,7 +13,7 @@ jobs:
       - run: yarn build
 
       # Simulate Github Actions run on an actual DAppNode package
-      - name: Setup a "master" mock package to test locally
+      - name: Setup a "template" mock package to test locally
         run: node dist/dappnodesdk.js init --yes --force
 
       - name: Echo manifest with upstream
