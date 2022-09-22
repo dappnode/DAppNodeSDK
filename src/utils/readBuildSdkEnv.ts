@@ -24,8 +24,16 @@ export function readBuildSdkEnvFileNotThrow(dir: string): BuildSdkEnvs | null {
     const envFileParsed = dotenv.parse(envFile);
     const envsKeys = Object.keys(envFileParsed);
 
-    if (envsKeys.some(envKey => !(envKey in Object.values(EnvsKeysAllowed))))
-      throw Error(`Env key is not allowed. Allowed envs keys are ${envsKeys}`);
+    for (const envKey of envsKeys) {
+      if (
+        envKey !== EnvsKeysAllowed.upstreamRepo &&
+        envKey !== EnvsKeysAllowed.upstreamVersion
+      ) {
+        throw Error(
+          `Env key ${envKey} is not allowed. Allowed envs keys are ${EnvsKeysAllowed.upstreamRepo} and ${EnvsKeysAllowed.upstreamVersion}`
+        );
+      }
+    }
 
     if (
       envFileParsed[EnvsKeysAllowed.upstreamRepo] in envFileParsed &&

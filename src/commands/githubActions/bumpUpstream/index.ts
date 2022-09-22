@@ -1,3 +1,4 @@
+import path from "path";
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types";
 import { branchNameRoot, defaultDir } from "../../../params";
@@ -156,8 +157,8 @@ Compose - ${JSON.stringify(compose, null, 2)}
     .join(", ")}`;
   console.log(`commitMsg: ${commitMsg}`);
 
-  console.log(await shell(`cat dappnode_package.json`));
-  console.log(await shell(`cat docker-compose.yml`));
+  console.log(await shell(`cat ${path.join(dir, "dappnode_package.json")}`));
+  console.log(await shell(`cat ${path.join(dir, "docker-compose.yml")}`));
 
   if (process.env.SKIP_COMMIT) {
     console.log("SKIP_COMMIT=true");
@@ -171,8 +172,16 @@ Compose - ${JSON.stringify(compose, null, 2)}
   // Check if there are changes
   console.log(await shell(`git status`));
 
-  await shell(`git commit -a -m "${commitMsg}"`, { pipeToMain: true });
-  await shell(`git push -u origin ${branchRef}`, { pipeToMain: true });
+  await shell(`git commit -a -m "${commitMsg}"`, {
+    pipeToMain: true
+  });
+  await shell(`git push -u origin ${branchRef}`, {
+    pipeToMain: true
+  });
+
+  // Skip PR creation for testing
+  if (process.env.ENVIRONMENT === "TEST") return;
+
   await thisRepo.openPR({
     from: branch,
     to: repoData.data.default_branch,

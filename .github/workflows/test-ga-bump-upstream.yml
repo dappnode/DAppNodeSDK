@@ -3,9 +3,11 @@ on:
   push:
   pull_request:
 
+env:
+  ENVIRONMENT: TEST
+
 jobs:
   test:
-    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -13,37 +15,53 @@ jobs:
       - run: yarn build
 
       # Simulate Github Actions run on an actual DAppNode package
-      - name: Setup a mock package to test locally
-        run: node dist/dappnodesdk.js init --yes --force
+      - name: Setup a "template" mock package to test locally
+        run: node dist/dappnodesdk.js init --yes --force --dir template
 
-      - name: Echo manifest with upstream
+      - name: Add upstream repo and arg to manifest
         run: |
-          cat > dappnode_package.json <<EOL
+          cat <<EOT > ./template/dappnode_package.json
           {
             "name": "dappnodesdk.public.dappnode.eth",
             "version": "0.1.0",
+            "description": "dappnodesdk.public.dappnode.eth description",
+            "type": "service",
+            "author": "runner",
+            "categories": ["Developer tools"],
+            "links": {
+              "homepage": "https://your-project-homepage-or-docs.io"
+            },
+            "license": "GPL-3.0",
             "upstreamRepo": "ipfs/go-ipfs",
             "upstreamArg": "UPSTREAM_VERSION",
-            "type": "service",
-            "description": "test",
-            "license": "test"
-          } 
-          EOL
+            "upstreamVersion": "v0.4.0"
+          }
+          EOT
 
-      - name: Echo compose with upstream
+      - name: Add upstream arg to compose
         run: |
-          cat > docker-compose.yml <<EOL
-          version: "3.4"
+          cat <<EOT > ./template/docker-compose.yml
+          version: "3.5"
           services:
-            dappnodesdk.public.dappnode.eth:
+            sdk.public.dappnode.eth:
               build:
                 context: .
                 args:
                   UPSTREAM_VERSION: v0.4.0
-              image: "dappnodesdk.public.dappnode.eth:0.1.0"
-          EOL
+              image: "sdk.public.dappnode.eth:0.1.0"
+              restart: unless-stopped
+          EOT
 
-      - run: node dist/dappnodesdk.js github-action bump-upstream
+      - name: Init a git repository at the template directory
+        run: |
+          cd template
+          git init && git config user.name "DAppNodeBot"&& git config user.email "dappnodeBot@gmail.com"&& git add .&& git commit -m "Initial commit"
+          git remote add origin .
+
+      - name: Bump upstream version
+        run: |
+          cd template
+          node ../dist/dappnodesdk.js github-action bump-upstream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
