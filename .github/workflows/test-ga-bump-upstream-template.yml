@@ -1,4 +1,4 @@
-name: Test GA bump-upstream
+name: Test GA bump-upstream template
 on:
   push:
   pull_request:
@@ -52,10 +52,21 @@ jobs:
               restart: unless-stopped
           EOT
 
+      - name: Echo master env file with upstream
+        run: |
+          cat <<EOT >> ./template/build_sdk.env
+          _BUILD_UPSTREAM_REPO=ipfs/go-ipfs
+          _BUILD_UPSTREAM_VERSION=0.1.0
+          EOL
+
       - name: Init a git repository at the template directory
         run: |
           cd template
-          git init && git config user.name "DAppNodeBot"&& git config user.email "dappnodeBot@gmail.com"&& git add .&& git commit -m "Initial commit"
+          git init
+          git config user.name "DAppNodeBot"
+          git config user.email "dappnodeBot@gmail.com"
+          git add .
+          git commit -m "Initial commit"
           git remote add origin .
 
       - name: Bump upstream version
