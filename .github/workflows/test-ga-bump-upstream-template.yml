@@ -57,7 +57,7 @@ jobs:
           cat <<EOT >> ./template/build_sdk.env
           _BUILD_UPSTREAM_REPO=ipfs/go-ipfs
           _BUILD_UPSTREAM_VERSION=0.1.0
-          EOL
+          EOT
 
       - name: Init a git repository at the template directory
         run: |
