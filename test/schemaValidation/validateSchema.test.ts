@@ -11,7 +11,7 @@ import { cleanTestDir, testDir } from "../testUtils";
 
 describe("schemaValidation", () => {
   describe("manifest", () => {
-    it("validateManifest globalEnvs as array of strings", () => {
+    it("validateManifest globalEnvs as array of objects", () => {
       const manifest: Manifest = {
         name: "",
         version: "1.0.0",
@@ -28,22 +28,6 @@ describe("schemaValidation", () => {
             envs: ["_DAPPNODE_GLOBAL_PUBKEY"]
           }
         ],
-        chain: {
-          driver: "ethereum"
-        }
-      };
-
-      expect(() => validateManifestSchema(manifest)).to.not.throw();
-    });
-
-    it("validateManifest globalEnvs as object", () => {
-      const manifest: Manifest = {
-        name: "",
-        version: "1.0.0",
-        description: "",
-        type: "dncore",
-        license: "1",
-        globalEnvs: { all: true },
         chain: {
           driver: "ethereum"
         }
