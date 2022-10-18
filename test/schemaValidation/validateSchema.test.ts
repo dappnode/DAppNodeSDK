@@ -77,19 +77,6 @@ describe("schemaValidation", () => {
 
       expect(() => validateManifestSchema(manifest as Manifest)).to.throw();
     });
-
-    it("throw error validating with a non-defined key", () => {
-      const manifest: Manifest = {
-        name: "",
-        version: "1.0.0",
-        description: "",
-        type: "dncore",
-        license: "1",
-        notAllowed: "error"
-      } as Manifest;
-
-      expect(() => validateManifestSchema(manifest as Manifest)).to.throw();
-    });
   });
 
   describe("compose", () => {

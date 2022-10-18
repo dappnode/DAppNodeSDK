@@ -6,7 +6,6 @@
   "type": "object",
   "title": "DAppNode Package (DNP) manifest",
   "required": ["name", "version", "description", "type", "license"],
-  "additionalProperties": false,
   "description": "The DAppNode Package manifest defines all the necessary information for a DAppNode to understand this package:\n - IPFS of BZZ hashes to download its docker image \n - Docker related data to configure and run its container \n - Metadata to control how the package is shown in the admin UI.",
   "properties": {
     "name": {
