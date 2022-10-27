@@ -80,3 +80,32 @@ export async function fetchPinsWithBranchToDelete(
   const pins = await fetchPinsWithBranch(pinata, manifest, gitHead);
   return pins.filter(pin => pin.commit && pin.commit !== gitHead.commit);
 }
+
+/**
+ * Fetch pins with same branch, assuming pins are upload with `DnpPinMetadata` metadata.
+ */
+export async function fetchPinsOlderThan(
+  pinata: PinataPinManager,
+  manifest: Manifest,
+  days: number
+): Promise<PinDataSummary[]> {
+  const dateNow = new Date();
+  const pins = await pinata.pinList<DnpPinMetadata>({
+    status: "pinned",
+    keyvalues: {
+      dnpName: { value: manifest.name, op: "eq" }
+    }
+  });
+  return pins
+    .filter(pin => {
+      // return pins older the days provided
+      const datePinned = new Date(pin.date_pinned);
+      const dateDiff = Math.abs(dateNow.getTime() - datePinned.getTime());
+      const diffDays = Math.ceil(dateDiff / (1000 * 3600 * 24));
+      return diffDays > days;
+    })
+    .map(pin => ({
+      commit: pin.metadata.keyvalues?.commit,
+      ipfsHash: pin.ipfs_pin_hash
+    }));
+}

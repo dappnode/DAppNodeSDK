@@ -39,4 +39,22 @@ describe("Apm constructor", function () {
       `Resulting version is not a valid semver: ${semver}`
     );
   });
+
+  it("Should get all the IPFS hashes from a given dnpName", async () => {
+    const expectedIpfsHashes = [
+      "QmdSKdCBQ5Jy1GGDJkBMFi3LtkbCckoRwXoM67pNezdG1x",
+      "QmTZDB4Mq1SpSk2iB211f8EHxgiP6tcTrtZAZayEzZMuev",
+      "Qmabpx7SrMP9hie8Qh7fhpuEnji13V3fNmNBe1XrSVTfDp",
+      "QmbDew4vuHa8cmJ2KH2bt9Pyd3uRq7j6Uezwb9rz5oozfU",
+      "QmZAy91PeBJvg7ruv7tuEavvbGAEWDHxS7m4HeMxb7wBjQ",
+      "QmVycHEPxcdVzw9sYmjJfq6Tj2hJpQwqYQWGg81baUJuD2",
+      "QmbAtNRRRSojMRTWNoqH9qMWVWLRatpUbEyG9cNfS5W1Hw"
+    ];
+    const apm = new Apm("infura");
+    const ipfsHashes = await apm.getIpfsHashesFromDnpName(
+      "web3signer-gnosis.dnp.dappnode.eth"
+    );
+
+    expect(ipfsHashes).to.deep.equal(expectedIpfsHashes);
+  });
 });

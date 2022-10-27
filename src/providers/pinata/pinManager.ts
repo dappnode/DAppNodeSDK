@@ -21,7 +21,7 @@ export class PinataPinManager {
   }
 
   /**
-   * GET https://api.pinata.cloud/data/pinList
+   * GET https://docs.pinata.cloud/pinata-api/data/query-files#querying-files
    * This endpoint returns data on what content the sender has pinned to IPFS through Pinata.
    * The purpose of this endpoint is to provide insight into what is being pinned, and how long it has been pinned.
    * The results of this call can be filtered using multiple query parameters that will be discussed below.
@@ -29,6 +29,7 @@ export class PinataPinManager {
   async pinList<PinKeyvalues>(filters?: {
     name?: string;
     status?: "all" | "pinned" | "unpinned";
+    pinStart?: string; // date format ISO_8601
     keyvalues?: {
       // Each query on custom values takes the form of an object with a "value" key, and an "op" key.
       // The "value" is fairly straightforward. This is simply the value that you wish your query operation to be applied to

@@ -6,7 +6,7 @@ import { buildHandler } from "../../build";
 import { Github } from "../../../providers/github/Github";
 import { parseRef } from "../../../providers/github/utils";
 import { getBuildBotComment, isTargetComment } from "./botComment";
-import { cleanPinsFromDeletedBranches } from "./cleanPinsFromDeletedBranches";
+import { cleanPins } from "./cleanPins";
 
 // This action should be run on 'push' and 'pull_request' events
 //
@@ -45,7 +45,7 @@ export async function gaBuildHandler({
   // Doing it here prevents having to add two workflows per repo.
   // Also, ensures that pins are deleted eventually, even if this fails sometimes
   try {
-    await cleanPinsFromDeletedBranches({ dir });
+    await cleanPins({ dir });
   } catch (e) {
     console.error("Error on cleanPinsFromDeletedBranches", e);
   }
