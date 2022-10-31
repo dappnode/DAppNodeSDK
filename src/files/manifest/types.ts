@@ -103,7 +103,7 @@ export interface Manifest {
 
 // Metrics
 export interface GrafanaDashboard {
-  uid: string;
+  uid?: string;
 }
 
 export interface PrometheusTarget {
