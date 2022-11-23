@@ -42,7 +42,7 @@
     "chalk": "^2.4.2",
     "cli-progress": "^3.8.2",
     "dotenv": "^8.2.0",
-    "ethers": "^5.0.3",
+    "ethers": "^5.7.2",
     "figlet": "^1.2.3",
     "form-data": "^3.0.0",
     "got": "^10.5.5",
