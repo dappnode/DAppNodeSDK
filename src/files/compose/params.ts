@@ -11,7 +11,8 @@ export const params = {
     "vpn.dnp.dappnode.eth",
     "wireguard.dnp.dappnode.eth",
     "core.dnp.dappnode.eth",
-    "dappnode-exporter.dnp.dappnode.eth"
+    "dappnode-exporter.dnp.dappnode.eth",
+    "dms.dnp.dappnode.eth"
   ],
   DOCKER_CORE_ALIASES: [
     "dappmanager.dappnode",
