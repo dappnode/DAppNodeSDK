@@ -132,7 +132,7 @@ function validateComposeService(
         isMonoService: true
       })
   )
-    err(`mono-service ${serviceName} has image tag with service name`);
+    err(`Package is mono-service, but it has image tag that is not equal to its ENS name`);
 
   // Check that if defined, the DNS must be the one provided from the bind package
   if (!isCore && dns && !params.DNS_SERVICE.includes(dns))
