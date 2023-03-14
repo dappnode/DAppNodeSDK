@@ -3,6 +3,7 @@ import { Manifest } from "../manifest/types";
 import { Compose, ComposeService } from "./types";
 import { getIsCore } from "../../utils/getIsCore";
 import { composeSafeKeys, params } from "./params";
+import { getIsMonoService } from "../../utils/getIsMonoService";
 
 let aggregatedError: string[];
 
@@ -102,9 +103,18 @@ function validateComposeService(
       );
   }
 
-  const { dns, pid, privileged, network_mode, volumes } = compose.services[
-    serviceName
-  ];
+  const {
+    dns,
+    pid,
+    privileged,
+    network_mode,
+    volumes,
+    image
+  } = compose.services[serviceName];
+
+  // Check that image tag does not contain service name if compose is mono service
+  if (getIsMonoService(compose) && image && image.includes(serviceName))
+    err(`service ${serviceName} has image tag with service name`);
 
   // Check that if defined, the DNS must be the one provided from the bind package
   if (!isCore && dns && !params.DNS_SERVICE.includes(dns))
