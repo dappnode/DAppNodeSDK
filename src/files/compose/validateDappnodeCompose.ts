@@ -4,6 +4,7 @@ import { Compose, ComposeService } from "./types";
 import { getIsCore } from "../../utils/getIsCore";
 import { composeSafeKeys, params } from "./params";
 import { getIsMonoService } from "../../utils/getIsMonoService";
+import { getImageTag } from "../../params";
 
 let aggregatedError: string[];
 
@@ -113,7 +114,17 @@ function validateComposeService(
   } = compose.services[serviceName];
 
   // Check that image tag does not contain service name if compose is mono service
-  if (getIsMonoService(compose) && image && image.includes(serviceName))
+  if (
+    getIsMonoService(compose) &&
+    image &&
+    image !==
+      getImageTag({
+        dnpName,
+        serviceName,
+        version: dnpName,
+        isMonoService: true
+      })
+  )
     err(`service ${serviceName} has image tag with service name`);
 
   // Check that if defined, the DNS must be the one provided from the bind package
