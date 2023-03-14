@@ -3,6 +3,8 @@ import { Manifest } from "../manifest/types";
 import { Compose, ComposeService } from "./types";
 import { getIsCore } from "../../utils/getIsCore";
 import { composeSafeKeys, params } from "./params";
+import { getIsMonoService } from "../../utils/getIsMonoService";
+import { getImageTag } from "../../params";
 
 let aggregatedError: string[];
 
@@ -33,7 +35,13 @@ export function validateDappnodeCompose(
   const servicesNames = Object.keys(compose.services);
 
   for (const serviceName of servicesNames) {
-    validateComposeService(compose, isCore, serviceName, manifest.name);
+    validateComposeService(
+      compose,
+      isCore,
+      serviceName,
+      manifest.version,
+      manifest.name
+    );
   }
 
   if (aggregatedError.length > 0)
@@ -91,6 +99,7 @@ function validateComposeService(
   compose: Compose,
   isCore: boolean,
   serviceName: string,
+  version: string,
   dnpName: string
 ): void {
   for (const serviceKey of Object.keys(compose.services[serviceName])) {
@@ -102,9 +111,28 @@ function validateComposeService(
       );
   }
 
-  const { dns, pid, privileged, network_mode, volumes } = compose.services[
-    serviceName
-  ];
+  const {
+    dns,
+    pid,
+    privileged,
+    network_mode,
+    volumes,
+    image
+  } = compose.services[serviceName];
+
+  // Check that image tag does not contain service name if compose is mono service
+  if (
+    getIsMonoService(compose) &&
+    image &&
+    image !==
+      getImageTag({
+        dnpName,
+        serviceName,
+        version,
+        isMonoService: true
+      })
+  )
+    err(`Package is mono-service, but it has image tag that is not equal to its ENS name`);
 
   // Check that if defined, the DNS must be the one provided from the bind package
   if (!isCore && dns && !params.DNS_SERVICE.includes(dns))
