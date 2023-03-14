@@ -35,7 +35,13 @@ export function validateDappnodeCompose(
   const servicesNames = Object.keys(compose.services);
 
   for (const serviceName of servicesNames) {
-    validateComposeService(compose, isCore, serviceName, manifest.name);
+    validateComposeService(
+      compose,
+      isCore,
+      serviceName,
+      manifest.version,
+      manifest.name
+    );
   }
 
   if (aggregatedError.length > 0)
@@ -93,6 +99,7 @@ function validateComposeService(
   compose: Compose,
   isCore: boolean,
   serviceName: string,
+  version: string,
   dnpName: string
 ): void {
   for (const serviceKey of Object.keys(compose.services[serviceName])) {
@@ -121,7 +128,7 @@ function validateComposeService(
       getImageTag({
         dnpName,
         serviceName,
-        version: dnpName,
+        version,
         isMonoService: true
       })
   )
