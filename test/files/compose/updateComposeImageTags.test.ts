@@ -57,7 +57,7 @@ describe("files / compose / updateComposeImageTags", () => {
       const expectedImages: PackageImage[] = [
         {
           type: "local",
-          imageTag: "mypackage.public.dappnode.eth:0.1.0"
+          imageTag: "mypackage.mypackage.public.dappnode.eth:0.1.0"
         }
       ];
 

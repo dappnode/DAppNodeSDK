@@ -174,7 +174,6 @@ It only covers the most common items, and tries to guess sensible defaults.
   // Construct DNP
   const dnpName = answers.name ? getDnpName(answers.name) : defaultName;
   const serviceName = dnpName;
-  const isMonoService = true;
   const version = answers.version || defaultVersion;
   const manifest: Manifest = {
     name: dnpName,
@@ -194,7 +193,7 @@ It only covers the most common items, and tries to guess sensible defaults.
     services: {
       [serviceName]: {
         build: ".", // Dockerfile is in root dir
-        image: getImageTag({ dnpName, serviceName, version, isMonoService }),
+        image: getImageTag({ dnpName, serviceName, version }),
         restart: "unless-stopped"
       }
     }

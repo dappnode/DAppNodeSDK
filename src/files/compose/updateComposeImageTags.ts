@@ -1,7 +1,6 @@
 import { mapValues } from "lodash";
 import { getImageTag, upstreamImageLabel } from "../../params";
 import { Compose } from "./types";
-import { getIsMonoService } from "../../utils/getIsMonoService";
 
 /**
  * Update service image tag to current version
@@ -12,16 +11,10 @@ export function updateComposeImageTags(
   { name: dnpName, version }: { name: string; version: string },
   options?: { editExternalImages?: boolean }
 ): Compose {
-  const isMonoService = getIsMonoService(compose);
   return {
     ...compose,
     services: mapValues(compose.services, (service, serviceName) => {
-      const newImageTag = getImageTag({
-        dnpName,
-        serviceName,
-        version,
-        isMonoService
-      });
+      const newImageTag = getImageTag({ dnpName, serviceName, version });
       return service.build
         ? {
             ...service,
