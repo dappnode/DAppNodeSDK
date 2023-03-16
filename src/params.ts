@@ -143,18 +143,26 @@ export const getLegacyImagePath = (name: string, version: string): string =>
 /**
  * Get a unique domain per container, considering multi-service packages
  */
+export const getContainerDomain = ({
+  dnpName,
+  serviceName
+}: {
+  serviceName: string;
+  dnpName: string;
+}): string => {
+  if (!serviceName || serviceName === dnpName) {
+    return dnpName;
+  } else {
+    return [serviceName, dnpName].join(".");
+  }
+};
+
 export const getImageTag = ({
   dnpName,
   serviceName,
-  version,
-  isMonoService
+  version
 }: {
   dnpName: string;
   serviceName: string;
   version: string;
-  isMonoService: boolean;
-}): string => {
-  if (isMonoService || !serviceName || serviceName === dnpName)
-    return [dnpName, version].join(":");
-  else return [[serviceName, dnpName].join("."), version].join(":");
-};
+}): string => [getContainerDomain({ dnpName, serviceName }), version].join(":");
