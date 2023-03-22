@@ -46,6 +46,13 @@ export const releaseFiles = {
     required: true as const,
     multiple: false as const
   },
+  signature: {
+    regex: /^signature\.json$/,
+    format: FileFormat.JSON,
+    maxSize: 10e3, // Limit size to ~10KB
+    required: false as const,
+    multiple: false as const
+  },
   avatar: {
     regex: /avatar.*\.png$/,
     format: null,
@@ -117,6 +124,7 @@ export const releaseFilesDefaultNames: {
   manifest: "dappnode_package.json",
   compose: "docker-compose.yml",
   avatar: "avatar.png",
+  signature: "signature.json",
   setupWizard: "setup-wizard.json",
   setupSchema: "setup.schema.json",
   setupTarget: "setup-target.json",
