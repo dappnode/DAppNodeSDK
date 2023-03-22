@@ -17,12 +17,13 @@ function parseIpfsProviderUrl(provider: string) {
     // http://ipfs.dappnode
     // http://ipfs.dappnode:5002
     const [protocol, hostAndPort] = provider.split("://");
-    const [host, port = 5001] = hostAndPort.split(":");
+    const defaultPort = protocol === "https" ? 443 : 5001;
+    const [host, port = defaultPort] = hostAndPort.split(":");
     return { host, port, protocol };
   } else {
     // ipfs.dappnode
     // ipfs.dappnode:5002
-    const [host, port = 5001] = provider.split(":");
+    const [host, port = 443] = provider.split(":");
     return { host, port, protocol: "https" };
   }
 }
