@@ -1,6 +1,10 @@
 import got from "got";
-import { getFormDataFileUpload } from "../utils/formDataFileUpload";
-import { PinataMetadata, PinataOptions, IpfsUploadResult } from "./PinataSDK";
+import { getFormDataFileUpload } from "../utils/formDataFileUpload.js";
+import {
+  PinataMetadata,
+  PinataOptions,
+  IpfsUploadResult
+} from "./PinataSDK.js";
 
 /**
  * Uploads a directory or file from the fs

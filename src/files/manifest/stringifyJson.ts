@@ -1,6 +1,6 @@
 import yaml from "js-yaml";
 import prettier from "prettier";
-import { ManifestFormat } from "./types";
+import { ManifestFormat } from "./types.js";
 
 /**
  * JSON.stringify + run prettier on the result

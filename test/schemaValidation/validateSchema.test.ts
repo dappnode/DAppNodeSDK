@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Manifest } from "../../src/files";
+import { Manifest } from "../../src/files.js";
 import {
   validateComposeSchema,
   validateManifestSchema,
@@ -7,7 +7,7 @@ import {
 } from "../../src/schemaValidation/validateSchema";
 import fs from "fs";
 import path from "path";
-import { cleanTestDir, testDir } from "../testUtils";
+import { cleanTestDir, testDir } from "../testUtils.js";
 
 describe("schemaValidation", () => {
   describe("manifest", () => {

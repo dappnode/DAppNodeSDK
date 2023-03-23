@@ -1,6 +1,6 @@
-import { IReleaseUploader } from "../interface";
-import { swarmAddDirFromFs } from "./addDirFromFs";
-import { getSwarmGatewayUrl } from "./provider";
+import { IReleaseUploader } from "../interface.js";
+import { swarmAddDirFromFs } from "./addDirFromFs.js";
+import { getSwarmGatewayUrl } from "./provider.js";
 
 export class ReleaseUploaderSwarmNode implements IReleaseUploader {
   networkName = "Swarm node";

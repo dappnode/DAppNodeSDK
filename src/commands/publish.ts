@@ -3,18 +3,23 @@ import Listr from "listr";
 import chalk from "chalk";
 import { CommandModule } from "yargs";
 // Tasks
-import { buildAndUpload } from "../tasks/buildAndUpload";
-import { generatePublishTx } from "../tasks/generatePublishTx";
-import { createGithubRelease } from "../tasks/createGithubRelease";
+import { buildAndUpload } from "../tasks/buildAndUpload.js";
+import { generatePublishTx } from "../tasks/generatePublishTx.js";
+import { createGithubRelease } from "../tasks/createGithubRelease.js";
 // Utils
-import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
-import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion";
-import { verifyEthConnection } from "../utils/verifyEthConnection";
-import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks";
-import { defaultComposeFileName, defaultDir, YargsError } from "../params";
-import { CliGlobalOptions, ReleaseType, releaseTypes, TxData } from "../types";
-import { printObject } from "../utils/print";
-import { UploadTo } from "../releaseUploader";
+import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion.js";
+import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion.js";
+import { verifyEthConnection } from "../utils/verifyEthConnection.js";
+import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks.js";
+import { defaultComposeFileName, defaultDir, YargsError } from "../params.js";
+import {
+  CliGlobalOptions,
+  ReleaseType,
+  releaseTypes,
+  TxData
+} from "../types.js";
+import { printObject } from "../utils/print.js";
+import { UploadTo } from "../releaseUploader/index.js";
 
 const typesList = releaseTypes.join(" | ");
 

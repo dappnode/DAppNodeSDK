@@ -1,7 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { getImageId, getImageIds } from "./getImageId";
+import { getImageId, getImageIds } from "./getImageId.js";
 
 // Local cache specs. Path = $cachePath
 type CacheMap = Map<string, string>;

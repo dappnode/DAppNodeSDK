@@ -4,10 +4,17 @@ import chalk from "chalk";
 import { CommandModule } from "yargs";
 import semver from "semver";
 import inquirer from "inquirer";
-import { writeCompose, getComposePath } from "../files/compose";
-import defaultAvatar from "../assets/defaultAvatar";
-import { shell } from "../utils/shell";
-import { releasesRecordFileName } from "../utils/releaseRecord";
+import {
+  writeCompose,
+  getComposePath,
+  Manifest,
+  Compose,
+  getManifestPath,
+  writeManifest
+} from "../files/index.js";
+import defaultAvatar from "../assets/defaultAvatar.js";
+import { shell } from "../utils/shell.js";
+import { releasesRecordFileName } from "../utils/releaseRecord.js";
 import {
   defaultComposeFileName,
   defaultDir,
@@ -16,10 +23,8 @@ import {
   getImageTag,
   releaseFiles,
   YargsError
-} from "../params";
-import {} from "../files/manifest/types";
-import { CliGlobalOptions } from "../types";
-import { Manifest, Compose, getManifestPath, writeManifest } from "../files";
+} from "../params.js";
+import { CliGlobalOptions } from "../types.js";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",

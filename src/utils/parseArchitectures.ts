@@ -1,4 +1,4 @@
-import { Architecture, architectures } from "../files";
+import { Architecture, architectures } from "../files/index.js";
 
 const architecturesList = architectures.join(" ");
 

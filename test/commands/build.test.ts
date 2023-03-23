@@ -1,7 +1,7 @@
 import { expect } from "chai";
-import { cleanTestDir, testDir } from "../testUtils";
-import { initHandler } from "../../src/commands/init";
-import { buildHandler } from "../../src/commands/build";
+import { cleanTestDir, testDir } from "../testUtils.js";
+import { initHandler } from "../../src/commands/init.js";
+import { buildHandler } from "../../src/commands/build.js";
 
 const contentProvider = "http://ipfs.dappnode.io:5001";
 

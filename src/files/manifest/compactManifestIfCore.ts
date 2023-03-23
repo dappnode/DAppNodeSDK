@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import { releaseFiles } from "../../params";
-import { SetupWizard } from "../setupWizard/types";
-import { readManifest } from "./readManifest";
-import { writeManifest } from "./writeManifest";
+import { releaseFiles } from "../../params.js";
+import { SetupWizard } from "../setupWizard/types.js";
+import { readManifest } from "./readManifest.js";
+import { writeManifest } from "./writeManifest.js";
 
 /**
  * Reads manifest and extra files in `buildDir` compacts them in the manifest

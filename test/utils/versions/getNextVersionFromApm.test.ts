@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import semver from "semver";
-import { getNextVersionFromApm } from "../../../src/utils/versions/getNextVersionFromApm";
-import { writeManifest } from "../../../src/files";
-import { cleanTestDir, testDir } from "../../testUtils";
-import { defaultManifestFormat } from "../../../src/params";
+import { getNextVersionFromApm } from "../../../src/utils/versions/getNextVersionFromApm.js";
+import { writeManifest } from "../../../src/files.js";
+import { cleanTestDir, testDir } from "../../testUtils.js";
+import { defaultManifestFormat } from "../../../src/params.js";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

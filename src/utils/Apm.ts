@@ -1,8 +1,8 @@
 import { ethers } from "ethers";
-import { arrayToSemver } from "../utils/arrayToSemver";
-import repoAbi from "../contracts/RepoAbi.json";
-import registryAbi from "../contracts/ApmRegistryAbi.json";
-import { semverToArray } from "./semverToArray";
+import { arrayToSemver } from "../utils/arrayToSemver.js";
+import repoAbi from "../contracts/RepoAbi.json" assert { type: "json" };
+import registryAbi from "../contracts/ApmRegistryAbi.json" assert { type: "json" };
+import { semverToArray } from "./semverToArray.js";
 
 function getEthereumProviderUrl(provider = "dappnode"): string {
   if (provider === "dappnode") {

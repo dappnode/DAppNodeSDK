@@ -1,7 +1,7 @@
 import { CommandModule } from "yargs";
-import { increaseFromLocalVersion } from "../utils/versions/increaseFromLocalVersion";
-import { CliGlobalOptions, ReleaseType } from "../types";
-import { defaultComposeFileName, defaultDir } from "../params";
+import { increaseFromLocalVersion } from "../utils/versions/increaseFromLocalVersion.js";
+import { CliGlobalOptions, ReleaseType } from "../types.js";
+import { defaultComposeFileName, defaultDir } from "../params.js";
 
 export const command = "increase [type]";
 

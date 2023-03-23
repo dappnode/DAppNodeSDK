@@ -2,10 +2,10 @@ import {
   readCompose,
   writeCompose,
   updateComposeImageTags
-} from "../../files/compose";
-import { getNextVersionFromApm } from "./getNextVersionFromApm";
-import { ReleaseType } from "../../types";
-import { readManifest, writeManifest } from "../../files";
+} from "../../files/compose/index.js";
+import { getNextVersionFromApm } from "./getNextVersionFromApm.js";
+import { ReleaseType } from "../../types.js";
+import { readManifest, writeManifest } from "../../files/index.js";
 
 export async function increaseFromApmVersion({
   type,

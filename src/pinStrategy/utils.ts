@@ -1,5 +1,5 @@
-import { PinItem } from "../releaseUploader/pinata";
-import { DnpPinMetadata, PinDataSummary, PinsByBranch } from "./types";
+import { PinItem } from "../releaseUploader/pinata/index.js";
+import { DnpPinMetadata, PinDataSummary, PinsByBranch } from "./types.js";
 
 export function groupPinsByBranch(
   pins: PinItem<DnpPinMetadata>[]

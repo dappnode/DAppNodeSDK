@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
-import { buildSdkEnvFileName } from "../params";
+import { buildSdkEnvFileName } from "../params.js";
 
 enum EnvsKeysAllowed {
   upstreamRepo = "_BUILD_UPSTREAM_REPO",

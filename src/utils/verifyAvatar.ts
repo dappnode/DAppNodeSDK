@@ -1,5 +1,5 @@
 import sizeOf from "image-size";
-import { CliError } from "../params";
+import { CliError } from "../params.js";
 
 const maxSize = 300;
 const minSize = 200;

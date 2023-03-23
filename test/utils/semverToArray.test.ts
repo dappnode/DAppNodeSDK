@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { semverToArray } from "../../src/utils/semverToArray";
-import { arrayToSemver } from "../../src/utils/arrayToSemver";
+import { semverToArray } from "../../src/utils/semverToArray.js";
+import { arrayToSemver } from "../../src/utils/arrayToSemver.js";
 
 describe("semver to array conversions", () => {
   const semver = "0.1.5";

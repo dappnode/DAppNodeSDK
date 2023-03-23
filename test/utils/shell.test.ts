@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import fs from "fs";
-import { shell, ShellError } from "../../src/utils/shell";
+import { shell, ShellError } from "../../src/utils/shell.js";
 
 describe("shell utility", () => {
   const scriptPath = "test-script.sh";

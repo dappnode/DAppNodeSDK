@@ -1,39 +1,42 @@
 import fs from "fs";
 import path from "path";
-import Listr, { ListrTask } from "listr";
+import Listr, { ListrTask } from "listr/index.js";
 import rimraf from "rimraf";
-import { verifyAvatar } from "../utils/verifyAvatar";
-import { copyReleaseFile } from "../utils/copyReleaseFile";
-import { addReleaseRecord } from "../utils/releaseRecord";
+import { verifyAvatar } from "../utils/verifyAvatar.js";
+import { copyReleaseFile } from "../utils/copyReleaseFile.js";
+import { addReleaseRecord } from "../utils/releaseRecord.js";
 import {
   releaseFiles,
   CliError,
   getImagePath,
   getLegacyImagePath,
   releaseFilesDefaultNames
-} from "../params";
-import { ListrContextBuildAndPublish } from "../types";
-import { parseTimeout } from "../utils/timeout";
-import { buildWithBuildx } from "./buildWithBuildx";
-import { buildWithCompose } from "./buildWithCompose";
-import { parseArchitectures } from "../utils/parseArchitectures";
-import { pruneCache } from "../utils/cache";
-import { getArchitecture } from "../utils/getArchitecture";
-import { getGitHead, getGitHeadIfAvailable } from "../utils/git";
-import { fetchPinsWithBranchToDelete, getPinMetadata } from "../pinStrategy";
-import { PinataPinManager } from "../providers/pinata/pinManager";
-import { PinKeyvaluesDefault } from "../releaseUploader/pinata";
+} from "../params.js";
+import { ListrContextBuildAndPublish } from "../types.js";
+import { parseTimeout } from "../utils/timeout.js";
+import { buildWithBuildx } from "./buildWithBuildx.js";
+import { buildWithCompose } from "./buildWithCompose.js";
+import { parseArchitectures } from "../utils/parseArchitectures.js";
+import { pruneCache } from "../utils/cache.js";
+import { getArchitecture } from "../utils/getArchitecture.js";
+import { getGitHead, getGitHeadIfAvailable } from "../utils/git.js";
+import {
+  fetchPinsWithBranchToDelete,
+  getPinMetadata
+} from "../pinStrategy/index.js";
+import { PinataPinManager } from "../providers/pinata/pinManager.js";
+import { PinKeyvaluesDefault } from "../releaseUploader/pinata/index.js";
 import {
   getReleaseUploader,
   ReleaseUploaderConnectionError,
   cliArgsToReleaseUploaderProvider,
   UploadTo
-} from "../releaseUploader";
+} from "../releaseUploader/index.js";
 import {
   validateComposeSchema,
   validateManifestSchema,
   validateSetupWizardSchema
-} from "../schemaValidation/validateSchema";
+} from "../schemaValidation/validateSchema.js";
 import {
   getComposePath,
   readCompose,
@@ -45,7 +48,7 @@ import {
   readManifest,
   writeManifest,
   validateDappnodeCompose
-} from "../files";
+} from "../files/index.js";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>

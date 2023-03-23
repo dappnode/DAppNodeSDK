@@ -1,9 +1,9 @@
 import yaml from "js-yaml";
 import fs from "fs";
 import path from "path";
-import { readFile } from "../../utils/file";
-import { ManifestPaths, Manifest, ManifestFormat } from "./types";
-import { defaultDir, releaseFiles } from "../../params";
+import { readFile } from "../../utils/file.js";
+import { ManifestPaths, Manifest, ManifestFormat } from "./types.js";
+import { defaultDir, releaseFiles } from "../../params.js";
 
 /**
  * Reads a manifest. Without arguments defaults to read the manifest at './dappnode_package.json'

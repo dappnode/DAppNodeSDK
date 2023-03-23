@@ -1,5 +1,5 @@
-import { Manifest } from "../files";
-import { GitHead } from "./git";
+import { Manifest } from "../files/index.js";
+import { GitHead } from "./git.js";
 
 export function toTitleCase(str: string): string {
   return str.replace(/\w\S*/g, function (txt) {

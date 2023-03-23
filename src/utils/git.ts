@@ -1,4 +1,4 @@
-import { shell } from "./shell";
+import { shell } from "./shell.js";
 
 export interface GitHead {
   /**

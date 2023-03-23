@@ -1,5 +1,5 @@
-import { readManifest } from "./readManifest";
-import { ManifestPaths } from "./types";
+import { readManifest } from "./readManifest.js";
+import { ManifestPaths } from "./types.js";
 
 /**
  * Gets the repo slug from a manifest, using the repository property

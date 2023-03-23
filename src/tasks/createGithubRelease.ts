@@ -1,16 +1,19 @@
 import fs from "fs";
 import path from "path";
 import Listr from "listr";
-import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks";
-import { getGitHead } from "../utils/git";
-import { compactManifestIfCore, composeDeleteBuildProperties } from "../files";
-import { contentHashFile, defaultDir } from "../params";
+import { getPublishTxLink, getInstallDnpLink } from "../utils/getLinks.js";
+import { getGitHead } from "../utils/git.js";
+import {
+  compactManifestIfCore,
+  composeDeleteBuildProperties
+} from "../files/index.js";
+import { contentHashFile, defaultDir } from "../params.js";
 import {
   TxData,
   CliGlobalOptions,
   ListrContextBuildAndPublish
-} from "../types";
-import { Github } from "../providers/github/Github";
+} from "../types.js";
+import { Github } from "../providers/github/Github.js";
 
 /**
  * Create (or edit) a Github release, then upload all assets

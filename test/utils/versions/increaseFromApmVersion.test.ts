@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import semver from "semver";
-import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion";
-import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
+import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion.js";
+import { cleanTestDir, generateCompose, testDir } from "../../testUtils.js";
 import {
   defaultComposeFileName,
   defaultManifestFormat

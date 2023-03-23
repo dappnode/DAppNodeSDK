@@ -1,9 +1,9 @@
 import got from "got";
-import { IReleaseUploader } from "../interface";
-import { PinataMetadata } from "./PinataSDK";
-import { pinataAddFromFs } from "./addDirFromFs";
-import { PINATA_URL } from "../../params";
-export * from "./PinataSDK";
+import { IReleaseUploader } from "../interface.js";
+import { PinataMetadata } from "./PinataSDK.js";
+import { pinataAddFromFs } from "./addDirFromFs.js";
+import { PINATA_URL } from "../../params.js";
+export * from "./PinataSDK.js";
 
 interface PinataCredentials {
   apiKey: string;

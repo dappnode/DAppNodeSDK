@@ -1,5 +1,5 @@
-import { PackageImage } from "../../../src/types";
-import { upstreamImageLabel } from "../../../src/params";
+import { PackageImage } from "../../../src/types.js";
+import { upstreamImageLabel } from "../../../src/params.js";
 import {
   updateComposeImageTags,
   getComposePackageImages,

@@ -1,7 +1,7 @@
 import { CommandModule } from "yargs";
-import { CliGlobalOptions } from "../../types";
-import { gaBuild } from "./build";
-import { gaBumpUpstream } from "./bumpUpstream";
+import { CliGlobalOptions } from "../../types.js";
+import { gaBuild } from "./build/index.js";
+import { gaBumpUpstream } from "./bumpUpstream/index.js";
 
 export const githubActions: CommandModule<
   CliGlobalOptions,

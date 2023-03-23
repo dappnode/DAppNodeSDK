@@ -1,6 +1,6 @@
 import path from "path";
-import { defaultDir, defaultComposeFileName } from "../../params";
-import { ComposePaths } from "./types";
+import { defaultDir, defaultComposeFileName } from "../../params.js";
+import { ComposePaths } from "./types.js";
 
 /**
  * Get compose path. Without arguments defaults to './docker-compose.yml'

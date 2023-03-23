@@ -1,9 +1,9 @@
-import { buildHandler } from "./commands/build";
-import { fromGithubHandler } from "./commands/from_github";
-import { increaseHandler } from "./commands/increase";
-import { initHandler } from "./commands/init";
-import { nextHandler } from "./commands/next";
-import { publishHanlder } from "./commands/publish";
+import { buildHandler } from "./commands/build.js";
+import { fromGithubHandler } from "./commands/from_github.js";
+import { increaseHandler } from "./commands/increase.js";
+import { initHandler } from "./commands/init.js";
+import { nextHandler } from "./commands/next.js";
+import { publishHanlder } from "./commands/publish.js";
 
 export const dappnodesdk = {
   build: buildHandler,

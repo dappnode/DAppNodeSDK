@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Compose, parseComposeUpstreamVersion } from "../../../src/files";
+import { Compose, parseComposeUpstreamVersion } from "../../../src/files.js";
 
 describe("files / compose / parseComposeUpstreamVersion", () => {
   it("Should parse multiple upstream versions", () => {

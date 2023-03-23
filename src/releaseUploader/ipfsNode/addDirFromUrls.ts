@@ -1,7 +1,7 @@
 import got from "got";
 import FormData from "form-data";
 import request from "request";
-import { normalizeIpfsProvider } from "./ipfsProvider";
+import { normalizeIpfsProvider } from "./ipfsProvider.js";
 
 /**
  * Streams a list of file download urls, uploading them to IPFS as a directory

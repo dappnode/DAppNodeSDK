@@ -1,7 +1,7 @@
 import yaml from "js-yaml";
-import { readFile } from "../../utils/file";
-import { getComposePath } from "./getComposePath";
-import { ComposePaths, Compose } from "./types";
+import { readFile } from "../../utils/file.js";
+import { getComposePath } from "./getComposePath.js";
+import { ComposePaths, Compose } from "./types.js";
 
 /**
  * Read a compose parsed data

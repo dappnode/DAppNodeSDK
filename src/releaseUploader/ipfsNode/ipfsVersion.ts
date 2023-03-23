@@ -1,5 +1,5 @@
 import got from "got";
-import { normalizeIpfsProvider } from "./ipfsProvider";
+import { normalizeIpfsProvider } from "./ipfsProvider.js";
 
 interface IpfsApiVersionResponse {
   Version: string; // "0.4.21",

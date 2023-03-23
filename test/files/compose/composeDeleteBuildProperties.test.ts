@@ -5,7 +5,7 @@ import {
   readCompose,
   writeCompose
 } from "../../../src/files";
-import { cleanTestDir, testDir } from "../../testUtils";
+import { cleanTestDir, testDir } from "../../testUtils.js";
 
 describe("files / compose / composeDeleteBuildProperties", () => {
   after(() => {

@@ -1,5 +1,5 @@
 import semver from "semver";
-import { shell } from "./shell";
+import { shell } from "./shell.js";
 
 /**
  * Returns parsed and validated semver of docker -v

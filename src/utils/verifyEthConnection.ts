@@ -1,5 +1,5 @@
-import { Apm } from "./Apm";
-import { CliError } from "../params";
+import { Apm } from "./Apm.js";
+import { CliError } from "../params.js";
 
 /**
  * Verify the eth connection outside of the eth library to ensure

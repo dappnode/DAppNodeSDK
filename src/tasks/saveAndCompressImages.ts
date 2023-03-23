@@ -2,15 +2,15 @@ import fs from "fs";
 import path from "path";
 import { spawn } from "child_process";
 import { ListrTask } from "listr";
-import { getFileHash } from "../utils/getFileHash";
-import { loadCache, writeToCache, getCacheKey } from "../utils/cache";
+import { getFileHash } from "../utils/getFileHash.js";
+import { loadCache, writeToCache, getCacheKey } from "../utils/cache.js";
 import {
   ListrContextBuildAndPublish,
   PackageImage,
   PackageImageExternal
 } from "../types";
-import { shell } from "../utils/shell";
-import { Architecture } from "../files";
+import { shell } from "../utils/shell.js";
+import { Architecture } from "../files/index.js";
 
 /**
  * Save docker image

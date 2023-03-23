@@ -1,6 +1,6 @@
 import semver from "semver";
 import { expect } from "chai";
-import { Apm } from "../../src/utils/Apm";
+import { Apm } from "../../src/utils/Apm.js";
 
 describe("Apm constructor", function () {
   this.timeout(60_000);

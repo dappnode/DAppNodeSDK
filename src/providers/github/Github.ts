@@ -3,7 +3,7 @@ import path from "path";
 import mime from "mime-types";
 import retry from "async-retry";
 import { Octokit } from "@octokit/rest";
-import { getRepoSlugFromManifest } from "../../files";
+import { getRepoSlugFromManifest } from "../../files/index.js";
 
 export class Github {
   private octokit: Octokit;

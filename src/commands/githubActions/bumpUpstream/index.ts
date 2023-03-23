@@ -1,29 +1,35 @@
 import path from "path";
 import { CommandModule } from "yargs";
-import { CliGlobalOptions } from "../../../types";
-import { branchNameRoot, defaultDir } from "../../../params";
-import { Github } from "../../../providers/github/Github";
-import { getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format";
-import { shell } from "../../../utils/shell";
-import { readCompose, writeCompose } from "../../../files/compose";
-import { parseCsv } from "../../../utils/csv";
-import { getLocalBranchExists, getGitHead } from "../../../utils/git";
-import { arrIsUnique } from "../../../utils/array";
-import { buildAndComment } from "../build";
-import { closeOldPrs } from "./closeOldPrs";
-import { readManifest, writeManifest } from "../../../files";
-import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv";
+import { CliGlobalOptions } from "../../../types.js";
+import { branchNameRoot, defaultDir } from "../../../params.js";
+import { Github } from "../../../providers/github/Github.js";
+import { getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format.js";
+import { shell } from "../../../utils/shell.js";
+import { parseCsv } from "../../../utils/csv.js";
+import { getLocalBranchExists, getGitHead } from "../../../utils/git.js";
+import { arrIsUnique } from "../../../utils/array.js";
+import { buildAndComment } from "../build/index.js";
+import { closeOldPrs } from "./closeOldPrs.js";
+import {
+  readManifest,
+  writeManifest,
+  readCompose,
+  writeCompose
+} from "../../../files/index.js";
+import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv.js";
 
 // This action should be run periodically
 
-export const gaBumpUpstream: CommandModule<CliGlobalOptions, CliGlobalOptions> =
-  {
-    command: "bump-upstream",
-    describe:
-      "Check if upstream repo has released a new version and open a PR with version bump",
-    builder: {},
-    handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
-  };
+export const gaBumpUpstream: CommandModule<
+  CliGlobalOptions,
+  CliGlobalOptions
+> = {
+  command: "bump-upstream",
+  describe:
+    "Check if upstream repo has released a new version and open a PR with version bump",
+  builder: {},
+  handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
+};
 
 export async function gaBumpUpstreamHandler({
   dir = defaultDir

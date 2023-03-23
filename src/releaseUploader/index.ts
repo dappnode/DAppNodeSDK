@@ -1,11 +1,11 @@
-import { CliError } from "../params";
-import { IReleaseUploader } from "./interface";
-import { ReleaseUploaderIpfsNode } from "./ipfsNode";
-import { ReleaseUploaderIpfsPinata } from "./pinata";
-import { ReleaseUploaderSwarmNode } from "./swarmNode";
+import { CliError } from "../params.js";
+import { IReleaseUploader } from "./interface.js";
+import { ReleaseUploaderIpfsNode } from "./ipfsNode/index.js";
+import { ReleaseUploaderIpfsPinata } from "./pinata/index.js";
+import { ReleaseUploaderSwarmNode } from "./swarmNode/index.js";
 
-export * from "./interface";
-export * from "./errors";
+export * from "./interface.js";
+export * from "./errors.js";
 
 export type UploadTo = "ipfs" | "swarm";
 

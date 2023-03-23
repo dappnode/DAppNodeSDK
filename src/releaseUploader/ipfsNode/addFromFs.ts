@@ -1,6 +1,6 @@
 import got from "got";
-import { normalizeIpfsProvider } from "./ipfsProvider";
-import { getFormDataFileUpload } from "../utils/formDataFileUpload";
+import { normalizeIpfsProvider } from "./ipfsProvider.js";
+import { getFormDataFileUpload } from "../utils/formDataFileUpload.js";
 
 /**
  * Uploads a directory or file from the fs

@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { increaseFromLocalVersion } from "../../../src/utils/versions/increaseFromLocalVersion";
+import { increaseFromLocalVersion } from "../../../src/utils/versions/increaseFromLocalVersion.js";
 import {
   readCompose,
   writeCompose,
@@ -7,7 +7,7 @@ import {
   writeManifest
 } from "../../../src/files";
 
-import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
+import { cleanTestDir, generateCompose, testDir } from "../../testUtils.js";
 import {
   defaultComposeFileName,
   defaultManifestFormat

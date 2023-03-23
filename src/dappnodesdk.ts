@@ -5,17 +5,17 @@ import chalk from "chalk";
 import figlet from "figlet";
 import dotenv from "dotenv";
 
-import { build } from "./commands/build";
-import { fromGithub } from "./commands/from_github";
-import { increase } from "./commands/increase";
-import { init } from "./commands/init";
-import { next } from "./commands/next";
-import { publish } from "./commands/publish";
-import { githubActions } from "./commands/githubActions";
+import { build } from "./commands/build.js";
+import { fromGithub } from "./commands/from_github.js";
+import { increase } from "./commands/increase.js";
+import { init } from "./commands/init.js";
+import { next } from "./commands/next.js";
+import { publish } from "./commands/publish.js";
+import { githubActions } from "./commands/githubActions/index.js";
 
 // "source-map-support" MUST be imported for stack traces to work properly after Typescript transpile -
-import "source-map-support/register";
-import { CliError, defaultDir, YargsError } from "./params";
+import "source-map-support/register.js";
+import { CliError, defaultDir, YargsError } from "./params.js";
 dotenv.config();
 
 // Set up commands

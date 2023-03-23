@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import path from "path";
-import { testDir, cleanTestDir } from "../testUtils";
-import { loadCache, writeToCache, _pruneCache } from "../../src/utils/cache";
+import { testDir, cleanTestDir } from "../testUtils.js";
+import { loadCache, writeToCache, _pruneCache } from "../../src/utils/cache.js";
 
 describe("util > cache", () => {
   const cacheEntry = ["image:version", "0x00000000"];
