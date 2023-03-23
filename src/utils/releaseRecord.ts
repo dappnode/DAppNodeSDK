@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { ManifestFormat, stringifyJson } from "../files";
+import { ManifestFormat, stringifyJson } from "../files/index.js";
 
 interface ReleaseRecord {
   hash: string;

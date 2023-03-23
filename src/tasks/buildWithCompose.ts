@@ -1,8 +1,8 @@
 import { ListrTask } from "listr";
-import { defaultArch } from "../files/";
-import { PackageImage } from "../types";
-import { shell } from "../utils/shell";
-import { saveAndCompressImagesCached } from "./saveAndCompressImages";
+import { defaultArch } from "../files/index.js";
+import { PackageImage } from "../types.js";
+import { shell } from "../utils/shell.js";
+import { saveAndCompressImagesCached } from "./saveAndCompressImages.js";
 
 /**
  * Save docker image

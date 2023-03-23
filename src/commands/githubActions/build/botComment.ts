@@ -1,4 +1,4 @@
-import { getInstallDnpLink } from "../../../utils/getLinks";
+import { getInstallDnpLink } from "../../../utils/getLinks.js";
 
 const botCommentTag = "(by dappnodebot/build-action)";
 

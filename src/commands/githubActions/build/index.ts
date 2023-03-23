@@ -1,12 +1,12 @@
 import { CommandModule } from "yargs";
-import { CliGlobalOptions } from "../../../types";
-import { defaultDir } from "../../../params";
-import { getGithubContext } from "../../../providers/github/githubActions";
-import { buildHandler } from "../../build";
-import { Github } from "../../../providers/github/Github";
-import { parseRef } from "../../../providers/github/utils";
-import { getBuildBotComment, isTargetComment } from "./botComment";
-import { cleanPinsFromDeletedBranches } from "./cleanPinsFromDeletedBranches";
+import { CliGlobalOptions } from "../../../types.js";
+import { defaultDir } from "../../../params.js";
+import { getGithubContext } from "../../../providers/github/githubActions.js";
+import { buildHandler } from "../../build.js";
+import { Github } from "../../../providers/github/Github.js";
+import { parseRef } from "../../../providers/github/utils.js";
+import { getBuildBotComment, isTargetComment } from "./botComment.js";
+import { cleanPinsFromDeletedBranches } from "./cleanPinsFromDeletedBranches.js";
 
 // This action should be run on 'push' and 'pull_request' events
 //

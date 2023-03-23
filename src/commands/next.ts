@@ -1,8 +1,8 @@
 import { CommandModule } from "yargs";
-import { getNextVersionFromApm } from "../utils/versions/getNextVersionFromApm";
-import { verifyEthConnection } from "../utils/verifyEthConnection";
-import { CliGlobalOptions, ReleaseType } from "../types";
-import { defaultDir } from "../params";
+import { getNextVersionFromApm } from "../utils/versions/getNextVersionFromApm.js";
+import { verifyEthConnection } from "../utils/verifyEthConnection.js";
+import { CliGlobalOptions, ReleaseType } from "../types.js";
+import { defaultDir } from "../params.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   type: string;

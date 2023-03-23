@@ -1,6 +1,6 @@
 import got from "got";
-import { PINATA_URL } from "../../params";
-import { PinItem } from "../../releaseUploader/pinata";
+import { PINATA_URL } from "../../params.js";
+import { PinItem } from "../../releaseUploader/pinata/index.js";
 
 interface PinataCredentials {
   apiKey: string;

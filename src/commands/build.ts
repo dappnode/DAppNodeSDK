@@ -3,13 +3,13 @@ import chalk from "chalk";
 import { CommandModule } from "yargs";
 import Listr from "listr";
 // Tasks
-import { buildAndUpload } from "../tasks/buildAndUpload";
+import { buildAndUpload } from "../tasks/buildAndUpload.js";
 // Utils
-import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion";
-import { getInstallDnpLink } from "../utils/getLinks";
-import { CliGlobalOptions } from "../types";
-import { UploadTo } from "../releaseUploader";
-import { defaultComposeFileName, defaultDir } from "../params";
+import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion.js";
+import { getInstallDnpLink } from "../utils/getLinks.js";
+import { CliGlobalOptions } from "../types.js";
+import { UploadTo } from "../releaseUploader/index.js";
+import { defaultComposeFileName, defaultDir } from "../params.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   provider: string;

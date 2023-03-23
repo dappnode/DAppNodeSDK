@@ -1,7 +1,7 @@
-export { compactManifestIfCore } from "./compactManifestIfCore";
-export { getManifestPath } from "./getManifestPath";
-export { getRepoSlugFromManifest } from "./getRepoSlugFromManifest";
-export { readManifest } from "./readManifest";
-export { writeManifest } from "./writeManifest";
-export { stringifyJson } from "./stringifyJson";
-export * from "./types";
+export { compactManifestIfCore } from "./compactManifestIfCore.js";
+export { getManifestPath } from "./getManifestPath.js";
+export { getRepoSlugFromManifest } from "./getRepoSlugFromManifest.js";
+export { readManifest } from "./readManifest.js";
+export { writeManifest } from "./writeManifest.js";
+export { stringifyJson } from "./stringifyJson.js";
+export * from "./types.js";

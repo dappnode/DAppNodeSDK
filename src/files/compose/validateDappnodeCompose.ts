@@ -1,8 +1,8 @@
 import semver from "semver";
-import { Manifest } from "../manifest/types";
-import { Compose, ComposeService } from "./types";
-import { getIsCore } from "../../utils/getIsCore";
-import { composeSafeKeys, params } from "./params";
+import { Manifest } from "../manifest/types.js";
+import { Compose, ComposeService } from "./types.js";
+import { getIsCore } from "../../utils/getIsCore.js";
+import { composeSafeKeys, params } from "./params.js";
 
 let aggregatedError: string[];
 

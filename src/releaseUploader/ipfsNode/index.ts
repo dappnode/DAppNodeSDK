@@ -1,6 +1,6 @@
-import { IReleaseUploader } from "../interface";
-import { ipfsAddFromFs } from "./addFromFs";
-import { verifyIpfsConnection } from "./verifyConnection";
+import { IReleaseUploader } from "../interface.js";
+import { ipfsAddFromFs } from "./addFromFs.js";
+import { verifyIpfsConnection } from "./verifyConnection.js";
 
 export class ReleaseUploaderIpfsNode implements IReleaseUploader {
   networkName = "IPFS node";

@@ -1,12 +1,12 @@
-import { CliError } from "../params";
+import { CliError } from "../params.js";
 import Ajv, { ErrorObject } from "ajv";
 import ajvErrors from "ajv-errors";
 import fs from "fs";
 // Schemas
-import manifestSchema from "./schemas/manifest.schema.json";
-import setupWizardSchema from "./schemas/setup-wizard.schema.json";
-import { Manifest, readSetupWizardIfExists } from "../files";
-import { shell } from "../utils/shell";
+import manifestSchema from "./schemas/manifest.schema.json" assert { type: "json" };
+import setupWizardSchema from "./schemas/setup-wizard.schema.json" assert { type: "json" };
+import { Manifest, readSetupWizardIfExists } from "../files/index.js";
+import { shell } from "../utils/shell.js";
 
 const ajv = new Ajv({
   logger: false,

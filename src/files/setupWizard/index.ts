@@ -1,2 +1,2 @@
-export * from "./types";
-export { readSetupWizardIfExists } from "./readSetupWizardIfExists";
+export * from "./types.js";
+export { readSetupWizardIfExists } from "./readSetupWizardIfExists.js";

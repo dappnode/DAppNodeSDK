@@ -1,5 +1,5 @@
-import { Architecture, ManifestFormat } from "./files";
-import { FileFormat } from "./types";
+import { Architecture, ManifestFormat } from "./files/index.js";
+import { FileFormat } from "./types.js";
 
 export class CliError extends Error {}
 export class YargsError extends Error {}

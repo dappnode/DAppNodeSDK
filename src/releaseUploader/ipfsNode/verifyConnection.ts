@@ -1,5 +1,5 @@
-import { ipfsVersion } from "./ipfsVersion";
-import { ReleaseUploaderConnectionError } from "../errors";
+import { ipfsVersion } from "./ipfsVersion.js";
+import { ReleaseUploaderConnectionError } from "../errors.js";
 
 /**
  * Verify the IPFS connection

@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import FormData from "form-data";
-import { traverseDir } from "./traverseDir";
+import { traverseDir } from "./traverseDir.js";
 
 /**
  * Prepares FormData for a HTTP POST request to upload files

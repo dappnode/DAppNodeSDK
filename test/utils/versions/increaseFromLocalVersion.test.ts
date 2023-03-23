@@ -1,17 +1,16 @@
 import { expect } from "chai";
-import { increaseFromLocalVersion } from "../../../src/utils/versions/increaseFromLocalVersion";
+import { increaseFromLocalVersion } from "../../../src/utils/versions/increaseFromLocalVersion.js";
 import {
   readCompose,
   writeCompose,
   readManifest,
   writeManifest
-} from "../../../src/files";
-
-import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
+} from "../../../src/files/index.js";
+import { cleanTestDir, generateCompose, testDir } from "../../testUtils.js";
 import {
   defaultComposeFileName,
   defaultManifestFormat
-} from "../../../src/params";
+} from "../../../src/params.js";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

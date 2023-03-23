@@ -1,8 +1,8 @@
 import { expect } from "chai";
-import { defaultManifestFormat } from "../../src/params";
-import { generatePublishTx } from "../../src/tasks/generatePublishTx";
-import { writeManifest } from "../../src/files";
-import { testDir, cleanTestDir } from "../testUtils";
+import { defaultManifestFormat } from "../../src/params.js";
+import { generatePublishTx } from "../../src/tasks/generatePublishTx.js";
+import { writeManifest } from "../../src/files/index.js";
+import { testDir, cleanTestDir } from "../testUtils.js";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

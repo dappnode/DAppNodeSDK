@@ -4,12 +4,12 @@ import {
   Apm,
   encodeNewVersionCall,
   encodeNewRepoWithVersionCall
-} from "../utils/Apm";
-import { getPublishTxLink } from "../utils/getLinks";
-import { addReleaseTx } from "../utils/releaseRecord";
-import { defaultDir, YargsError } from "../params";
-import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types";
-import { readManifest } from "../files";
+} from "../utils/Apm.js";
+import { getPublishTxLink } from "../utils/getLinks.js";
+import { addReleaseTx } from "../utils/releaseRecord.js";
+import { defaultDir, YargsError } from "../params.js";
+import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types.js";
+import { readManifest } from "../files/index.js";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 

@@ -1,7 +1,7 @@
 import { expect } from "chai";
-import { GitHead } from "../../src/utils/git";
-import { prettyPinataPinName } from "../../src/utils/format";
-import { Manifest } from "../../src/files";
+import { GitHead } from "../../src/utils/git.js";
+import { prettyPinataPinName } from "../../src/utils/format.js";
+import { Manifest } from "../../src/files/index.js";
 
 describe("utils / format", () => {
   describe("prettyPinataPinName", () => {

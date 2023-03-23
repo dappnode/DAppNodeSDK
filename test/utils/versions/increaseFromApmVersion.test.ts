@@ -1,18 +1,18 @@
 import { expect } from "chai";
 import semver from "semver";
-import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion";
-import { cleanTestDir, generateCompose, testDir } from "../../testUtils";
+import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion.js";
+import { cleanTestDir, generateCompose, testDir } from "../../testUtils.js";
 import {
   defaultComposeFileName,
   defaultManifestFormat
-} from "../../../src/params";
+} from "../../../src/params.js";
 import {
   Manifest,
   writeCompose,
   readCompose,
   writeManifest,
   readManifest
-} from "../../../src/files";
+} from "../../../src/files/index.js";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

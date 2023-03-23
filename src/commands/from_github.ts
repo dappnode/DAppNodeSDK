@@ -11,13 +11,16 @@ import {
   getLegacyImagePath,
   releaseFiles,
   releaseFilesDefaultNames
-} from "../params";
-import { getInstallDnpLink } from "../utils/getLinks";
-import { githubGetReleases, GithubRelease } from "../utils/githubGetReleases";
-import { ipfsAddDirFromUrls } from "../releaseUploader/ipfsNode/addDirFromUrls";
-import { verifyIpfsConnection } from "../releaseUploader/ipfsNode/verifyConnection";
-import { defaultArch, Manifest } from "../files";
-import { CliGlobalOptions } from "../types";
+} from "../params.js";
+import { getInstallDnpLink } from "../utils/getLinks.js";
+import {
+  githubGetReleases,
+  GithubRelease
+} from "../utils/githubGetReleases.js";
+import { ipfsAddDirFromUrls } from "../releaseUploader/ipfsNode/addDirFromUrls.js";
+import { verifyIpfsConnection } from "../releaseUploader/ipfsNode/verifyConnection.js";
+import { defaultArch, Manifest } from "../files/index.js";
+import { CliGlobalOptions } from "../types.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   repoSlug: string;

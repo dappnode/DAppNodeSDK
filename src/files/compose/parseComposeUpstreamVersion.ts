@@ -1,7 +1,7 @@
-import { uniqBy } from "lodash";
-import { UPSTREAM_VERSION_VARNAME } from "../../params";
-import { toTitleCase } from "../../utils/format";
-import { Compose } from "./types";
+import { uniqBy } from "lodash-es";
+import { UPSTREAM_VERSION_VARNAME } from "../../params.js";
+import { toTitleCase } from "../../utils/format.js";
+import { Compose } from "./types.js";
 
 /**
  * Get the compose upstream verion if available

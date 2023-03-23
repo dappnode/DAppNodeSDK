@@ -1,10 +1,10 @@
-import { PackageImage } from "../../../src/types";
-import { upstreamImageLabel } from "../../../src/params";
+import { PackageImage } from "../../../src/types.js";
+import { upstreamImageLabel } from "../../../src/params.js";
 import {
   updateComposeImageTags,
   getComposePackageImages,
   Compose
-} from "../../../src/files";
+} from "../../../src/files/index.js";
 import { expect } from "chai";
 
 describe("files / compose / updateComposeImageTags", () => {

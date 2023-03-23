@@ -1,7 +1,7 @@
 // timestring does not have a @types package
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import timestring from "timestring";
+import timestring from "timestring/index.js";
 
 // Define build timeout (60 min)
 const defaultBuildTimeout = 60 * 60 * 1000;

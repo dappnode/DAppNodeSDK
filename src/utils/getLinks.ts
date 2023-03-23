@@ -1,7 +1,7 @@
 import querystring from "querystring";
 import { URL } from "url";
-import { publishTxAppUrl } from "../params";
-import { TxData } from "../types";
+import { publishTxAppUrl } from "../params.js";
+import { TxData } from "../types.js";
 
 const adminUiBaseUrl = "http://my.dappnode/#";
 

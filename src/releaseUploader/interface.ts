@@ -1,4 +1,4 @@
-import { PinataMetadata } from "./pinata/PinataSDK";
+import { PinataMetadata } from "./pinata/PinataSDK.js";
 
 export interface IReleaseUploader {
   /**

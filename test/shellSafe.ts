@@ -1,6 +1,6 @@
 import rimraf from "rimraf";
-import { promisify } from "util";
-import { shell } from "../src/utils/shell";
+import { promisify } from "util.js";
+import { shell } from "../src/utils/shell.js";
 
 /**
  * General purpose tool to make sure test files are gone without producing errors

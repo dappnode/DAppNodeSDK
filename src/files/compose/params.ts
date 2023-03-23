@@ -1,4 +1,4 @@
-import { ComposeService } from "./types";
+import { ComposeService } from "./types.js";
 
 export const params = {
   CONTAINER_NAME_PREFIX: "DAppNodePackage-",

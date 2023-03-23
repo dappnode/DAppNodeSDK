@@ -1,8 +1,8 @@
-import { fetchPinsGroupedByBranch } from "../../../pinStrategy";
-import { cliArgsToReleaseUploaderProvider } from "../../../releaseUploader";
-import { Github } from "../../../providers/github/Github";
-import { PinataPinManager } from "../../../providers/pinata/pinManager";
-import { readManifest } from "../../../files";
+import { fetchPinsGroupedByBranch } from "../../../pinStrategy/index.js";
+import { cliArgsToReleaseUploaderProvider } from "../../../releaseUploader/index.js";
+import { Github } from "../../../providers/github/Github.js";
+import { PinataPinManager } from "../../../providers/pinata/pinManager.js";
+import { readManifest } from "../../../files/index.js";
 
 /**
  * Removes all pins associated with a branch that no longer exists

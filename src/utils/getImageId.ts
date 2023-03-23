@@ -1,4 +1,4 @@
-import { shell } from "./shell";
+import { shell } from "./shell.js";
 
 /**
  * Returns the formated ID of a docker image

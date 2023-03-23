@@ -1,10 +1,10 @@
 import { ListrTask } from "listr";
 import semver from "semver";
-import { shell } from "../utils/shell";
-import { PackageImage, PackageImageLocal } from "../types";
-import { saveAndCompressImagesCached } from "./saveAndCompressImages";
-import { getDockerVersion } from "../utils/getDockerVersion";
-import { Architecture } from "../files";
+import { shell } from "../utils/shell.js";
+import { PackageImage, PackageImageLocal } from "../types.js";
+import { saveAndCompressImagesCached } from "./saveAndCompressImages.js";
+import { getDockerVersion } from "../utils/getDockerVersion.js";
+import { Architecture } from "../files/index.js";
 
 const minimumDockerVersion = "19.3.0";
 const buildxInstanceName = "dappnode-multiarch-builder";

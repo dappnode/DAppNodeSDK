@@ -1,7 +1,7 @@
 import fs from "fs";
 import rimraf from "rimraf";
-import { getImageTag } from "../src/params";
-import { Manifest, Compose } from "../src/files";
+import { getImageTag } from "../src/params.js";
+import { Manifest, Compose } from "../src/files/index.js";
 
 export const testDir = "test_files";
 export function cleanTestDir(): void {
