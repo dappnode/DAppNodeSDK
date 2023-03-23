@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { getImagePath, getLegacyImagePath } from "../src/params.js";
-import { Architecture } from "../src/files.js";
+import { Architecture } from "../src/files/index.js";
 
 describe("params", () => {
   const testCases: {

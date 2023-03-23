@@ -5,14 +5,14 @@ import { cleanTestDir, generateCompose, testDir } from "../../testUtils.js";
 import {
   defaultComposeFileName,
   defaultManifestFormat
-} from "../../../src/params";
+} from "../../../src/params.js";
 import {
   Manifest,
   writeCompose,
   readCompose,
   writeManifest,
   readManifest
-} from "../../../src/files";
+} from "../../../src/files/index.js";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

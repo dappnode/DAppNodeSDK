@@ -4,7 +4,7 @@ import {
   updateComposeImageTags,
   getComposePackageImages,
   Compose
-} from "../../../src/files";
+} from "../../../src/files/index.js";
 import { expect } from "chai";
 
 describe("files / compose / updateComposeImageTags", () => {

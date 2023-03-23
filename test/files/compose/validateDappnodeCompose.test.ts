@@ -3,7 +3,7 @@ import {
   Compose,
   Manifest,
   validateDappnodeCompose
-} from "../../../src/files.js";
+} from "../../../src/files/index.js";
 
 describe("files / compose / validateDappnodeCompose", () => {
   const manifest: Manifest = {
