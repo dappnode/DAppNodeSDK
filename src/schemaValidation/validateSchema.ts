@@ -8,7 +8,7 @@ import setupWizardSchema from "./schemas/setup-wizard.schema.json" assert { type
 import { Manifest, readSetupWizardIfExists } from "../files/index.js";
 import { shell } from "../utils/shell.js";
 
-const ajv = new Ajv({
+const ajv = new Ajv.default({
   logger: false,
   allErrors: true,
   coerceTypes: true,
@@ -16,7 +16,7 @@ const ajv = new Ajv({
   allowUnionTypes: true
 });
 
-ajvErrors(ajv);
+ajvErrors.default(ajv);
 
 /**
  * Validates manifest file with schema

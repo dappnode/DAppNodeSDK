@@ -8,7 +8,7 @@ export async function githubGetReleases(
   repoSlug: string
 ): Promise<GithubRelease[]> {
   const url = `https://api.github.com/repos/${repoSlug}/releases`;
-  return await got(url).json();
+  return await got.default(url).json();
 }
 
 export interface GithubRelease {

@@ -3,7 +3,7 @@ import {
   getPrBody,
   getUpstreamVersionTag,
   VersionToUpdate
-} from "../../../src/commands/githubActions/bumpUpstream/format";
+} from "../../../src/commands/githubActions/bumpUpstream/format.js";
 
 describe("command / gaBumpUpstream / format", () => {
   describe("single version", () => {
