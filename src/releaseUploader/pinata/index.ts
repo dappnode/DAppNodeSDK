@@ -42,7 +42,7 @@ export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
 
   async testConnection(): Promise<void> {
     try {
-      const res = await got.get({
+      const res = await got.default.get({
         prefixUrl: this.pinataUrl,
         url: "data/testAuthentication",
         headers: {

@@ -10,7 +10,8 @@
     "manifest": "./dist/files/manifest/index.js",
     "setupWizard": "./dist/files/setupWizard/index.js",
     "schemaValidation": "./dist/schemaValidation/index.js",
-    "params": "./dist/params.js"
+    "params": "./dist/params.js",
+    "types": "./dist/types.js"
   },
   "bin": {
     "dappnodesdk": "dist/dappnodesdk.js"

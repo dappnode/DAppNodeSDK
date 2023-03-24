@@ -1,3 +1,5 @@
+export * from "./files/types.js";
+
 // CLI types
 
 export interface CliGlobalOptions {

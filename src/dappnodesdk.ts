@@ -66,7 +66,7 @@ dappnodesdk.alias("v", "version");
 dappnodesdk.scriptName("");
 
 // Display ascii art, then help
-const welcomeMsg = chalk.bold.hex("#2FBCB2")(
+const welcomeMsg = chalk.default.bold.hex("#2FBCB2")(
   figlet.textSync("    dappnode sdk")
 );
 dappnodesdk.demandCommand(1, welcomeMsg);
@@ -94,7 +94,7 @@ dappnodesdk.fail((msg, err, yargs) => {
 
   if (err) {
     if (err instanceof CliError) {
-      console.error(` ${chalk.red("✖")} ${err.message}\n`);
+      console.error(` ${chalk.default.red("✖")} ${err.message}\n`);
       process.exit(1);
     }
     // If the error is a network error, show the full error with status code and info
@@ -107,7 +107,7 @@ dappnodesdk.fail((msg, err, yargs) => {
   } else if (msg) {
     console.error(`
 ${yargs.help()}
-${chalk.gray(`
+${chalk.default.gray(`
 ${"#".repeat(80)}
 ${"#".repeat(80)}
 `)}

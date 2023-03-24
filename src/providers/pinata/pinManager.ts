@@ -53,7 +53,10 @@ export class PinataPinManager {
 
     // Note: Results in rows will be limited to 1000, in case of needing more pagination should be implemented
     try {
-      const result: { count: number; rows: PinItem<PinKeyvalues>[] } = await got
+      const result: {
+        count: number;
+        rows: PinItem<PinKeyvalues>[];
+      } = await got.default
         .get({
           prefixUrl: this.pinataUrl,
           url: "data/pinList",
@@ -79,7 +82,7 @@ export class PinataPinManager {
    */
   async unpin(hashToUnpin: string): Promise<void> {
     try {
-      const res = await got.delete({
+      const res = await got.default.delete({
         prefixUrl: this.pinataUrl,
         url: `pinning/unpin/${hashToUnpin}`,
         headers: {

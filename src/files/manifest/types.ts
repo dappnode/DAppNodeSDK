@@ -3,7 +3,7 @@ import {
   SetupTarget,
   SetupUiJson,
   SetupWizard
-} from "../setupWizard/types";
+} from "../setupWizard/types.js";
 
 export interface Manifest {
   // Package metadata

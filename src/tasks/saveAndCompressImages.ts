@@ -8,7 +8,7 @@ import {
   ListrContextBuildAndPublish,
   PackageImage,
   PackageImageExternal
-} from "../types";
+} from "../types.js";
 import { shell } from "../utils/shell.js";
 import { Architecture } from "../files/index.js";
 
