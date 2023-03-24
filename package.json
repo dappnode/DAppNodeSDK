@@ -6,12 +6,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    "compose": "./dist/files/compose/index.js",
-    "manifest": "./dist/files/manifest/index.js",
-    "setupWizard": "./dist/files/setupWizard/index.js",
-    "schemaValidation": "./dist/schemaValidation/index.js",
-    "params": "./dist/params.js",
-    "types": "./dist/types.js"
+    "./compose": "./dist/files/compose/index.js",
+    "./manifest": "./dist/files/manifest/index.js",
+    "./setupWizard": "./dist/files/setupWizard/index.js",
+    "./schemaValidation": "./dist/schemaValidation/index.js",
+    "./params": "./dist/params.js",
+    "./types": "./dist/types.js"
   },
   "bin": {
     "dappnodesdk": "dist/dappnodesdk.js"
