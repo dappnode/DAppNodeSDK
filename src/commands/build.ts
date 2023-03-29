@@ -56,13 +56,11 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     const { releaseMultiHash } = await buildHandler(args);
 
     if (args.skipUpload) {
-      return console.log(
-        chalk.default.green("\nDNP (DAppNode Package) built\n")
-      );
+      return console.log(chalk.green("\nDNP (DAppNode Package) built\n"));
     }
 
     console.log(`
-  ${chalk.default.green("DNP (DAppNode Package) built and uploaded")} 
+  ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
   Release hash : ${releaseMultiHash}
   ${getInstallDnpLink(releaseMultiHash)}
 `);

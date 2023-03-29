@@ -86,7 +86,7 @@ export const init: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 
     const dir = args.dir || defaultDir;
     console.log(`
-    ${chalk.default.green("Your DAppNodePackage is ready")}: ${manifest.name}
+    ${chalk.green("Your DAppNodePackage is ready")}: ${manifest.name}
 
 To start, you can:
 

@@ -100,9 +100,9 @@ export async function fromGithubHandler({
   );
 
   if (manifestAsset) {
-    const { name, version }: Manifest = await got
-      .default(manifestAsset.browser_download_url)
-      .json();
+    const { name, version }: Manifest = await got(
+      manifestAsset.browser_download_url
+    ).json();
     const legacyImagePath = getLegacyImagePath(name, version);
     const legacyImageAsset = release.assets.find(
       asset => asset.name === legacyImagePath
@@ -145,9 +145,7 @@ export async function fromGithubHandler({
   multibarDnl.stop();
 
   console.log(
-    chalk.default.green(
-      `\nGithub release ${repoSlug} ${release.name} uploaded to IPFS`
-    )
+    chalk.green(`\nGithub release ${repoSlug} ${release.name} uploaded to IPFS`)
   );
 
   // Verify that the resulting release hash matches the one in Github
@@ -155,17 +153,11 @@ export async function fromGithubHandler({
     asset => asset.name === contentHashFile
   );
   if (contentHashAsset) {
-    const contentHash = await got
-      .default(contentHashAsset.browser_download_url)
-      .text();
+    const contentHash = await got(contentHashAsset.browser_download_url).text();
     if (contentHash.trim() === releaseMultiHash) {
-      console.log(
-        chalk.default.dim("✓ Release hash verified, matches Github's")
-      );
+      console.log(chalk.dim("✓ Release hash verified, matches Github's"));
     } else {
-      console.log(
-        `${chalk.default.red("WARNING!")} resulting hashes do not match`
-      );
+      console.log(`${chalk.red("WARNING!")} resulting hashes do not match`);
       console.log(`Github release: ${contentHash}`);
     }
   }

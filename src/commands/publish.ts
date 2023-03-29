@@ -106,21 +106,19 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       };
 
       console.log(`
-  ${chalk.default.green(
-    `DNP (DAppNode Package) published (version ${nextVersion})`
-  )} 
+  ${chalk.green(`DNP (DAppNode Package) published (version ${nextVersion})`)} 
   Release hash : ${releaseMultiHash}
   ${getInstallDnpLink(releaseMultiHash)}
   
   ${"You must execute this transaction in mainnet to publish a new version of this DNP."}
   
-  ${chalk.default.gray(
+  ${chalk.gray(
     printObject(txDataToPrint, (key, value) => `  ${key.padEnd(5)} : ${value}`)
   )}
   
   ${"You can also execute this transaction with Metamask by following this pre-filled link"}
   
-  ${chalk.default.cyan(getPublishTxLink(txData))}
+  ${chalk.cyan(getPublishTxLink(txData))}
   `);
     }
   }

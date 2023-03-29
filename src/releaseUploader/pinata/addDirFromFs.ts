@@ -36,27 +36,25 @@ export async function pinataAddFromFs({
     form.append("pinataOptions", JSON.stringify(pinataOptions));
 
   let lastPercent = -1;
-  const response = await got
-    .default({
-      prefixUrl: pinataUrl, // https://api.pinata.cloud
-      url: "pinning/pinFileToIPFS",
-      method: "POST",
-      headers: form.getHeaders({
-        pinata_api_key: credentials.apiKey,
-        pinata_secret_api_key: credentials.secretApiKey
-      }),
-      body: form,
-      responseType: "json"
-    })
-    .on("uploadProgress", progress => {
-      // Report upload progress, and throttle to one update per percent point
-      // { percent: 0.9995998225975282, transferred: 733675762, total: 733969480 }
-      const currentRoundPercent = Math.round(100 * progress.percent);
-      if (lastPercent !== currentRoundPercent) {
-        lastPercent = currentRoundPercent;
-        if (onProgress) onProgress(progress.percent);
-      }
-    });
+  const response = await got({
+    prefixUrl: pinataUrl, // https://api.pinata.cloud
+    url: "pinning/pinFileToIPFS",
+    method: "POST",
+    headers: form.getHeaders({
+      pinata_api_key: credentials.apiKey,
+      pinata_secret_api_key: credentials.secretApiKey
+    }),
+    body: form,
+    responseType: "json"
+  }).on("uploadProgress", progress => {
+    // Report upload progress, and throttle to one update per percent point
+    // { percent: 0.9995998225975282, transferred: 733675762, total: 733969480 }
+    const currentRoundPercent = Math.round(100 * progress.percent);
+    if (lastPercent !== currentRoundPercent) {
+      lastPercent = currentRoundPercent;
+      if (onProgress) onProgress(progress.percent);
+    }
+  });
 
   const uploadData = response.body as IpfsUploadResult;
   return `/ipfs/${uploadData.IpfsHash}`;
