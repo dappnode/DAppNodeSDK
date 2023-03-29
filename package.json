@@ -6,13 +6,27 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/exports.js",
-    "./compose": "./dist/files/compose/index.js",
-    "./manifest": "./dist/files/manifest/index.js",
-    "./setupWizard": "./dist/files/setupWizard/index.js",
-    "./schemaValidation": "./dist/schemaValidation/index.js",
-    "./params": "./dist/params.js",
-    "./types": "./dist/types.js"
+    ".": {
+      "import": "./dist/exports.js"
+    },
+    "./compose": {
+      "import": "./dist/files/compose/index.js"
+    },
+    "./manifest": {
+      "import": "./dist/files/manifest/index.js"
+    },
+    "./setupWizard": {
+      "import": "./dist/files/setupWizard/index.js"
+    },
+    "./schemaValidation": {
+      "import": "./dist/schemaValidation/index.js"
+    },
+    "./params": {
+      "import": "./dist/params.js"
+    },
+    "./types": {
+      "import": "./dist/types.js"
+    }
   },
   "bin": {
     "dappnodesdk": "dist/dappnodesdk.js"
