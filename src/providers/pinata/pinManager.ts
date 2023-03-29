@@ -56,7 +56,7 @@ export class PinataPinManager {
       const result: {
         count: number;
         rows: PinItem<PinKeyvalues>[];
-      } = await got.default
+      } = await got
         .get({
           prefixUrl: this.pinataUrl,
           url: "data/pinList",
@@ -82,7 +82,7 @@ export class PinataPinManager {
    */
   async unpin(hashToUnpin: string): Promise<void> {
     try {
-      const res = await got.default.delete({
+      const res = await got.delete({
         prefixUrl: this.pinataUrl,
         url: `pinning/unpin/${hashToUnpin}`,
         headers: {

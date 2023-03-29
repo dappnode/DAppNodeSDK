@@ -28,7 +28,7 @@ export async function ipfsAddDirFromUrls(
   }
 
   // Parse the ipfsProvider the a full base apiUrl
-  const res = await got.default({
+  const res = await got({
     prefixUrl: normalizeIpfsProvider(ipfsProvider),
     url: "api/v0/add",
     method: "POST",
