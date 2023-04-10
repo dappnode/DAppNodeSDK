@@ -5,29 +5,6 @@
   "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/exports.js"
-    },
-    "./compose": {
-      "import": "./dist/files/compose/index.js"
-    },
-    "./manifest": {
-      "import": "./dist/files/manifest/index.js"
-    },
-    "./setupWizard": {
-      "import": "./dist/files/setupWizard/index.js"
-    },
-    "./schemaValidation": {
-      "import": "./dist/schemaValidation/index.js"
-    },
-    "./params": {
-      "import": "./dist/params.js"
-    },
-    "./types": {
-      "import": "./dist/types.js"
-    }
-  },
   "bin": {
     "dappnodesdk": "dist/dappnodesdk.js"
   },

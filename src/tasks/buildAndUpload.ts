@@ -36,7 +36,7 @@ import {
   validateComposeSchema,
   validateManifestSchema,
   validateSetupWizardSchema
-} from "../schemaValidation/validateSchema.js";
+} from "../schemaValidation/index.js";
 import {
   getComposePath,
   readCompose,

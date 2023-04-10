@@ -1,15 +1,6 @@
-import { buildHandler } from "./commands/build.js";
-import { fromGithubHandler } from "./commands/from_github.js";
-import { increaseHandler } from "./commands/increase.js";
-import { initHandler } from "./commands/init.js";
-import { nextHandler } from "./commands/next.js";
-import { publishHanlder } from "./commands/publish.js";
-
-export const dappnodesdk = {
-  build: buildHandler,
-  fromGithub: fromGithubHandler,
-  increase: increaseHandler,
-  init: initHandler,
-  next: nextHandler,
-  publish: publishHanlder
-};
+export * from "./params.js";
+export * from "./types.js";
+export { validateManifestSchema } from "./schemaValidation/validateManifestSchema.js";
+export { validateDappnodeCompose } from "./files/compose/validateDappnodeCompose.js";
+// The setupWizard file is not mandatory and may not be present, rn is used the filesystem
+// module, so it cannot be imported in browser side apps
