@@ -4,7 +4,7 @@ import {
   validateComposeSchema,
   validateManifestSchema,
   validateSetupWizardSchema
-} from "../../src/schemaValidation/validateSchema.js";
+} from "../../src/schemaValidation/index.js";
 import fs from "fs";
 import path from "path";
 import { cleanTestDir, testDir } from "../testUtils.js";

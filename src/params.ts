@@ -1,5 +1,7 @@
 import { FileFormat, Architecture, ManifestFormat } from "./types.js";
 
+export * from "./files/compose/params.js";
+
 export class CliError extends Error {}
 export class YargsError extends Error {}
 
