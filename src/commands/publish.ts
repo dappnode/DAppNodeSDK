@@ -42,55 +42,53 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
   describe:
     "Publish a new version of the package in an Aragon Package Manager Repository",
 
-  builder: yargs =>
-    yargs
-      // Do not add `.require("type")`, it is verified below
-      .positional("type", {
-        description: `Semver update type. Can also be provided with env RELEASE_TYPE=[type] or via TRAVIS_TAG=release (patch), TRAVIS_TAG=release/[type]`,
-        choices: releaseTypes,
-        type: "string"
-      })
-      .option("provider", {
-        alias: "p",
-        description: `Specify a provider (overwrittes content_provider and eth_provider): "dappnode" (default), "infura", "http://localhost:8545"`,
-        // Must NOT add a default here, so options can overwrite each other in the handler
-        // default: "dappnode",
-        type: "string"
-      })
-      .option("eth_provider", {
-        description: `Specify an eth provider: "dappnode" (default), "infura", "localhost:8545"`,
-        default: "dappnode",
-        type: "string"
-      })
-      .option("content_provider", {
-        description: `Specify an ipfs provider: "dappnode" (default), "infura", "http://localhost:5001"`,
-        default: "dappnode",
-        type: "string"
-      })
-      .option("upload_to", {
-        description: `Specify where to upload the release`,
-        choices: ["ipfs", "swarm"],
-        default: "ipfs" as UploadTo
-      })
-      .option("developer_address", {
-        alias: "a",
-        description: `If there is no existing repo for this DNP the publish command needs a developer address. If it is not provided as an option a prompt will request it`,
-        type: "string"
-      })
-      .option("timeout", {
-        alias: "t",
-        description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
-        default: "60min",
-        type: "string"
-      })
-      .option("github_release", {
-        description: `Publish the release on the Github repo specified in the manifest. Requires a GITHUB_TOKEN ENV to authenticate`,
-        type: "boolean"
-      })
-      .option("dappnode_team_preset", {
-        description: `Specific set of options used for internal DAppNode releases. Caution: options may change without notice.`,
-        type: "boolean"
-      }),
+  builder: {
+    type: {
+      description: `Semver update type. Can also be provided with env RELEASE_TYPE=[type] or via TRAVIS_TAG=release (patch), TRAVIS_TAG=release/[type]`,
+      choices: releaseTypes,
+      type: "string"
+    },
+    provider: {
+      alias: "p",
+      description: `Specify a provider (overwrittes content_provider and eth_provider): "dappnode" (default), "infura", "http://localhost:8545"`,
+      // Must NOT add a default here, so options can overwrite each other in the handler
+      // default: "dappnode",
+      type: "string"
+    },
+    eth_provider: {
+      description: `Specify an eth provider: "dappnode" (default), "infura", "localhost:8545"`,
+      default: "dappnode",
+      type: "string"
+    },
+    content_provider: {
+      description: `Specify an ipfs provider: "dappnode" (default), "infura", "http://localhost:5001"`,
+      default: "dappnode",
+      type: "string"
+    },
+    upload_to: {
+      description: `Specify where to upload the release`,
+      choices: ["ipfs", "swarm"],
+      default: "ipfs" as UploadTo
+    },
+    developer_address: {
+      alias: "a",
+      description: `If there is no existing repo for this DNP the publish command needs a developer address. If it is not provided as an option a prompt will request it`,
+      type: "string"
+    },
+    timeout: {
+      alias: "t",
+      description: `Overrides default build timeout: "15h", "20min 15s", "5000". Specs npmjs.com/package/timestring`,
+      type: "string"
+    },
+    github_release: {
+      description: `Publish the release on the Github repo specified in the manifest. Requires a GITHUB_TOKEN ENV to authenticate`,
+      type: "boolean"
+    },
+    dappnode_team_preset: {
+      description: `Specific set of options used for internal DAppNode releases. Caution: options may change without notice.`,
+      type: "boolean"
+    }
+  },
 
   handler: async args => {
     const { txData, nextVersion, releaseMultiHash } = await publishHanlder(
