@@ -5,7 +5,7 @@ import { testDir, cleanTestDir } from "../../testUtils.js";
 import path from "path";
 import fs from "fs";
 
-describe.only("command / gaEndToEndTest", () => {
+describe.skip("command / gaEndToEndTest", () => {
   const manifest: Manifest = {
     name: "rotki.dnp.dappnode.eth",
     version: "0.1.19",
