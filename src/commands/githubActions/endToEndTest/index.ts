@@ -14,7 +14,7 @@ interface CliCommandOptions extends CliGlobalOptions {
   environmentByService?: string;
 }
 
-export const integrationTest: CommandModule<
+export const endToEndTest: CommandModule<
   CliGlobalOptions,
   CliCommandOptions
 > = {
