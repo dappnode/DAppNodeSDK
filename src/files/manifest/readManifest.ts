@@ -11,6 +11,8 @@ import { defaultDir, releaseFiles } from "../../params.js";
 export function readManifest(
   paths?: ManifestPaths
 ): { manifest: Manifest; format: ManifestFormat } {
+  // print paths
+  console.log(paths);
   // Figure out the path and format
   const manifestPath = findManifestPath(paths);
   const format = parseFormat(manifestPath);
@@ -35,6 +37,7 @@ export function readManifest(
  */
 function findManifestPath(paths?: ManifestPaths): string {
   const dirPath = paths?.dir || defaultDir;
+  // print dirPath
   if (paths?.manifestFileName) {
     return path.join(dirPath, paths?.manifestFileName);
   } else {

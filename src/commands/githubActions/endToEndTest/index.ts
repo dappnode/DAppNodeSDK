@@ -40,11 +40,11 @@ export const endToEndTest: CommandModule<
       default: "{}"
     }
   },
-  handler: async (args): Promise<void> => await gaTestIntegrationHandler(args)
+  handler: async (args): Promise<void> => await gaTestEndToEndHandler(args)
 };
 
-async function gaTestIntegrationHandler({
-  dir = defaultDir,
+export async function gaTestEndToEndHandler({
+  dir,
   healthCheckUrl,
   errorLogsTimeout,
   environmentByService
@@ -52,8 +52,8 @@ async function gaTestIntegrationHandler({
   const dappmanagerTestApi = new DappmanagerTestApi(localDappmanagerTestApiUrl);
 
   try {
-    const compose = readCompose();
-    const { manifest } = readManifest();
+    const compose = readCompose({ dir });
+    const { manifest } = readManifest({ dir });
     const environmentByServiceParsed = environmentByService
       ? JSON.parse(environmentByService)
       : {};
