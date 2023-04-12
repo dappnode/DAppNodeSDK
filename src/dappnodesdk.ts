@@ -19,7 +19,7 @@ import { CliError, defaultDir, YargsError } from "./params.js";
 dotenv.config();
 
 // Set up commands
-const dappnodesdk = yargs
+const dappnodesdk = yargs()
   .usage(`Usage: dappnodesdk <command> [options]`)
   .options({
     // Set global options
