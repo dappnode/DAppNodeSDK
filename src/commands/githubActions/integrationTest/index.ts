@@ -2,15 +2,15 @@ import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
 import { defaultDir } from "../../../params.js";
 import { ensureDappnodeEnvironment } from "./ensureDappnodeEnvironment.js";
-import { packageInstallTest } from "./packageInstallTest.js";
-import { packageUpdateTest } from "./packageUpdateTest.js";
 import { readCompose, readManifest } from "../../../files/index.js";
 import { buildHandler } from "../../build.js";
-import { localIpfsApiUrl } from "./params.js";
+import { localDappmanagerTestApiUrl, localIpfsApiUrl } from "./params.js";
+import { executeTests } from "./executeTests.js";
+import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   healthCheckUrl?: string;
-  errorLogsTimeout?: number;
+  errorLogsTimeout: number;
   environmentByService?: string;
 }
 
@@ -49,9 +49,14 @@ async function gaTestIntegrationHandler({
   errorLogsTimeout,
   environmentByService
 }: CliCommandOptions): Promise<void> {
+  const dappmanagerTestApi = new DappmanagerTestApi(localDappmanagerTestApiUrl);
+
   try {
     const compose = readCompose();
     const { manifest } = readManifest();
+    const environmentByServiceParsed = environmentByService
+      ? JSON.parse(environmentByService)
+      : {};
 
     // Build and upload
     const { releaseMultiHash } = await buildHandler({
@@ -60,31 +65,22 @@ async function gaTestIntegrationHandler({
       verbose: true
     });
 
-    // TEST: Install package
-    await packageInstallTest({
-      dnpName: manifest.name,
-      releaseMultiHash,
-      compose,
-      errorLogsTimeout,
-      healthCheckUrl
-    }).catch(e => {
-      throw Error(`Error on packageInstall: ${e.stack}`);
-    });
+    // Ensure test-integration environment is clean
+    await ensureDappnodeEnvironment({ dappmanagerTestApi });
 
-    // TEST: Update package
-    await packageUpdateTest({
-      dnpName: manifest.name,
+    await executeTests({
+      dappmanagerTestApi,
       releaseMultiHash,
+      manifest,
       compose,
+      healthCheckUrl,
       errorLogsTimeout,
-      healthCheckUrl
-    }).catch(e => {
-      throw Error(`Error on packageUpdate: ${e.stack}`);
+      environmentByService: environmentByServiceParsed
     });
   } catch (e) {
     throw Error(`Error on test-integration: ${e.stack}`);
   } finally {
     // Ensure test-integration environment is cleaned
-    await ensureDappnodeEnvironment();
+    await ensureDappnodeEnvironment({ dappmanagerTestApi });
   }
 }
