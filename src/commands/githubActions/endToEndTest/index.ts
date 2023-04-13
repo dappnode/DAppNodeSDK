@@ -1,6 +1,5 @@
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
-import { defaultDir } from "../../../params.js";
 import { ensureDappnodeEnvironment } from "./ensureDappnodeEnvironment.js";
 import { readCompose, readManifest } from "../../../files/index.js";
 import { buildHandler } from "../../build.js";
@@ -60,10 +59,13 @@ export async function gaTestEndToEndHandler({
 
     // Build and upload
     const { releaseMultiHash } = await buildHandler({
+      dir,
       provider: localIpfsApiUrl,
       upload_to: "ipfs",
-      verbose: true
+      verbose: false
     });
+    // print the releaseMultiHash to be used by the next step
+    console.log(`release multi hash ${releaseMultiHash}`);
 
     // Ensure test-integration environment is clean
     await ensureDappnodeEnvironment({ dappmanagerTestApi });
@@ -78,7 +80,7 @@ export async function gaTestEndToEndHandler({
       environmentByService: environmentByServiceParsed
     });
   } catch (e) {
-    throw Error(`Error on test-integration: ${e.stack}`);
+    throw Error(`Error on test-integration: ${e}`);
   } finally {
     // Ensure test-integration environment is cleaned
     await ensureDappnodeEnvironment({ dappmanagerTestApi });

@@ -4,6 +4,7 @@ import { getContainerName } from "../../../params.js";
 import { Manifest } from "../../../types.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import Docker from "dockerode";
+import chalk from "chalk";
 
 /**
  * Execute the tests for the integration test workflow. These tests require
@@ -30,6 +31,8 @@ export async function executeTests({
   healthCheckUrl?: string;
   environmentByService?: Pick<ComposeService, "environment">;
 }): Promise<void> {
+  console.log(chalk.blue("Executing github action tests..."));
+
   // TEST: Install package
   await packageInstallTest({
     dappmanagerTestApi,
@@ -38,9 +41,12 @@ export async function executeTests({
     compose,
     errorLogsTimeout,
     healthCheckUrl
-  }).catch(e => {
-    throw Error(`Error on packageInstallTest: ${e.stack}`);
-  });
+  })
+    .then(() => console.log(chalk.green("Suceed on packageInstallTest")))
+    .catch(e => {
+      console.error(chalk.red("Error on packageInstallTest:"));
+      throw e;
+    });
 
   // TEST: Update package
   await packageUpdateTest({
@@ -50,9 +56,12 @@ export async function executeTests({
     compose,
     errorLogsTimeout,
     healthCheckUrl
-  }).catch(e => {
-    throw Error(`Error on packageUpdateTest: ${e.stack}`);
-  });
+  })
+    .then(() => console.log(chalk.green("Suceed on packageUpdateTest")))
+    .catch(e => {
+      console.error(chalk.red("Error on packageUpdateTest:"));
+      throw e;
+    });
 }
 
 /**
@@ -74,16 +83,11 @@ async function packageInstallTest({
   errorLogsTimeout: number;
   healthCheckUrl?: string;
 }): Promise<void> {
-  // Check if the package is already installed and if so, remove it
+  // Remove package if installedand bypass error if any
   await dappmanagerTestApi
-    .packageGet(dnpName)
-    .then(
-      async () =>
-        await dappmanagerTestApi.packageRemove({ dnpName, deleteVolumes: true })
-    )
-    .catch(e => {
-      console.log(`Package ${dnpName} is not installed`);
-      console.log(e);
+    .packageRemove({ dnpName, deleteVolumes: true })
+    .catch(() => {
+      // Bypass error
     });
 
   // Install package from scratch
@@ -120,16 +124,11 @@ async function packageUpdateTest({
   errorLogsTimeout: number;
   healthCheckUrl?: string;
 }): Promise<void> {
-  // Check if the package is already installed and if so, remove it
+  //  Remove package if installed and bypass error if any
   await dappmanagerTestApi
-    .packageGet(dnpName)
-    .then(
-      async () =>
-        await dappmanagerTestApi.packageRemove({ dnpName, deleteVolumes: true })
-    )
-    .catch(e => {
-      console.log(`Package ${dnpName} is not installed`);
-      console.log(e);
+    .packageRemove({ dnpName, deleteVolumes: true })
+    .catch(() => {
+      // Bypass error
     });
 
   // Install package from scratch
@@ -183,14 +182,14 @@ async function ensureContainerStatus(
   const container = await docker.getContainer(containerName).inspect();
   if (!container.State.Running)
     throw Error(`Container ${containerName} is not running`);
-  console.log(`Container ${containerName} is running`);
+  console.log(chalk.green(`Container ${containerName} is running`));
 }
 
 async function ensureHealthCheck(healthCheckUrl: string): Promise<void> {
   const res = await got(healthCheckUrl);
   if (res.statusCode !== 200)
     throw Error(`Healthcheck endpoint returned ${res.statusCode}`);
-  console.log(`Healthcheck endpoint returned 200`);
+  console.log(chalk.green(`Healthcheck endpoint returned 200`));
 }
 
 async function ensureNoErrorLogs(
@@ -224,8 +223,7 @@ async function ensureNoErrorLogs(
     .filter(log => log.includes("ERROR"))
     .join("");
 
-  if (errorLogs.length > 0) {
-    console.log(`Error logs found in ${containerName}: ${errorLogs}`);
-    throw Error(`Error logs found in ${containerName}`);
-  }
+  if (errorLogs.length > 0)
+    throw Error(`Error logs found in ${containerName}: ${errorLogs}`);
+  else console.log(chalk.green(`No error logs found in ${containerName}`));
 }
