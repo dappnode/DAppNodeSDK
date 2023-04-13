@@ -17,8 +17,8 @@ export const endToEndTest: CommandModule<
   CliGlobalOptions,
   CliCommandOptions
 > = {
-  command: "test-integration",
-  describe: "Run integration tests (Install from scratch and update)",
+  command: "test-end-to-end",
+  describe: "Run end to end tests (Install from scratch and update)",
   builder: {
     healthCheckUrl: {
       type: "string",

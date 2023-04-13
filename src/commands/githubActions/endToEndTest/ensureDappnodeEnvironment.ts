@@ -1,5 +1,5 @@
-import { shell } from "../../../utils/shell";
-import { DappmanagerTestApi } from "./dappmanagerTestApi";
+import { shell } from "../../../utils/shell.js";
+import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 
 /**
  * Ensure that the DAppNode environment is ready to run the integration tests
