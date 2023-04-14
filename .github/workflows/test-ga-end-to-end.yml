@@ -1,0 +1,21 @@
+name: Test GA tests end to end
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: packages
+    steps:
+      - uses: actions/checkout@v2
+      - run: yarn install
+      - run: yarn build
+
+      # Clone a dappnode package (that is published in the Directory SC) repository https://github.com/dappnode/DAppNodePackage-rotki.git
+    - name: Clone DAppNodePackage-rotki Repository
+      run: |
+        git clone https://github.com/dappnode/DAppNodePackage-rotki.git
+
+      # Run end to end tests
+    - name: Run end to end tests
+      run: node dist/dappnodesdk.js test-end-to-end --dir DAppNodePackage-rotki --healthCheckUrl http://rotki.dappnode --errorLogsTimeout 60
