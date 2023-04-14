@@ -1,5 +1,5 @@
-import got from "got/dist/source/index.js";
-import { Compose, ComposeService } from "../../../files/compose/types.js";
+import got from "got";
+import { Compose } from "../../../files/compose/types.js";
 import { getContainerName } from "../../../params.js";
 import { Manifest } from "../../../types.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
@@ -14,7 +14,7 @@ import chalk from "chalk";
  * - No error logs after a timeout
  * - Healthcheck endpoint returns 200
  */
-export async function executeTests({
+export async function executePackageInstallAndUpdateTest({
   dappmanagerTestApi,
   releaseMultiHash,
   manifest,
@@ -29,121 +29,32 @@ export async function executeTests({
   compose: Compose;
   errorLogsTimeout: number;
   healthCheckUrl?: string;
-  environmentByService?: Pick<ComposeService, "environment">;
+  environmentByService?: Record<string, string>;
 }): Promise<void> {
-  console.log(chalk.blue("Executing github action tests..."));
+  console.log(chalk.blue("\nExecuting github action end to end tests...\n"));
 
-  // TEST: Install package
-  await packageInstallTest({
-    dappmanagerTestApi,
-    dnpName: manifest.name,
-    releaseMultiHash,
-    compose,
-    errorLogsTimeout,
-    healthCheckUrl
-  })
-    .then(() => console.log(chalk.green("Suceed on packageInstallTest")))
-    .catch(e => {
-      console.error(chalk.red("Error on packageInstallTest:"));
-      throw e;
-    });
-
-  // TEST: Update package
-  await packageUpdateTest({
-    dappmanagerTestApi,
-    dnpName: manifest.name,
-    releaseMultiHash,
-    compose,
-    errorLogsTimeout,
-    healthCheckUrl
-  })
-    .then(() => console.log(chalk.green("Suceed on packageUpdateTest")))
-    .catch(e => {
-      console.error(chalk.red("Error on packageUpdateTest:"));
-      throw e;
-    });
-}
-
-/**
- * Installs from scratch a package with a given hash.
- * If the package is already installed, it will be removed first.
- */
-async function packageInstallTest({
-  dappmanagerTestApi,
-  dnpName,
-  releaseMultiHash,
-  compose,
-  errorLogsTimeout,
-  healthCheckUrl
-}: {
-  dappmanagerTestApi: DappmanagerTestApi;
-  dnpName: string;
-  releaseMultiHash: string;
-  compose: Compose;
-  errorLogsTimeout: number;
-  healthCheckUrl?: string;
-}): Promise<void> {
-  // Remove package if installedand bypass error if any
-  await dappmanagerTestApi
-    .packageRemove({ dnpName, deleteVolumes: true })
-    .catch(() => {
-      // Bypass error
-    });
-
-  // Install package from scratch
+  // Test Install package from scratch
+  console.log(chalk.blue("\nTEST: Installing package from scratch...\n"));
   await dappmanagerTestApi.packageInstall({
-    name: dnpName,
-    version: releaseMultiHash
+    name: manifest.name,
+    userSettings: { environment: environmentByService }
   });
-
   await executeTestCheckers({
-    dnpName,
+    dnpName: manifest.name,
     compose,
     errorLogsTimeout,
     healthCheckUrl
-  });
-}
-
-/**
- * Installs the latest published version of a package
- * then updates it with the given hash. If the package is already installed,
- * it will be removed first.
- */
-async function packageUpdateTest({
-  dappmanagerTestApi,
-  dnpName,
-  releaseMultiHash,
-  compose,
-  errorLogsTimeout,
-  healthCheckUrl
-}: {
-  dappmanagerTestApi: DappmanagerTestApi;
-  dnpName: string;
-  releaseMultiHash: string;
-  compose: Compose;
-  errorLogsTimeout: number;
-  healthCheckUrl?: string;
-}): Promise<void> {
-  //  Remove package if installed and bypass error if any
-  await dappmanagerTestApi
-    .packageRemove({ dnpName, deleteVolumes: true })
-    .catch(() => {
-      // Bypass error
-    });
-
-  // Install package from scratch
-  await dappmanagerTestApi.packageInstall({
-    name: dnpName
   });
 
   // Update package to the given hash
+  console.log(chalk.blue("\nTEST: Updating package ...\n"));
   await dappmanagerTestApi.packageInstall({
-    name: dnpName,
-    version: releaseMultiHash
+    name: manifest.name,
+    version: releaseMultiHash,
+    userSettings: { environment: environmentByService }
   });
-
   await executeTestCheckers({
-    dnpName,
+    dnpName: manifest.name,
     compose,
     errorLogsTimeout,
     healthCheckUrl
@@ -168,11 +79,17 @@ async function executeTestCheckers({
       serviceName: service,
       isCore: false
     });
-    await ensureContainerStatus(containerName, docker);
-    await ensureNoErrorLogs(containerName, docker, errorLogsTimeout);
+    await ensureContainerStatus(containerName, docker).then(() =>
+      console.log(chalk.green(`- Container ${containerName} is running\n`))
+    );
+    await ensureNoErrorLogs(containerName, docker, errorLogsTimeout).then(() =>
+      console.log(chalk.green(`- No error logs found in ${containerName}\n`))
+    );
   }
-
-  if (healthCheckUrl) await ensureHealthCheck(healthCheckUrl);
+  if (healthCheckUrl)
+    await ensureHealthCheck(healthCheckUrl).then(() =>
+      console.log(chalk.green(`- Healthcheck endpoint returned 200\n`))
+    );
 }
 
 async function ensureContainerStatus(
@@ -182,14 +99,14 @@ async function ensureContainerStatus(
   const container = await docker.getContainer(containerName).inspect();
   if (!container.State.Running)
     throw Error(`Container ${containerName} is not running`);
-  console.log(chalk.green(`Container ${containerName} is running`));
 }
 
 async function ensureHealthCheck(healthCheckUrl: string): Promise<void> {
   const res = await got(healthCheckUrl);
-  if (res.statusCode !== 200)
-    throw Error(`Healthcheck endpoint returned ${res.statusCode}`);
-  console.log(chalk.green(`Healthcheck endpoint returned 200`));
+  if (res.statusCode < 200 || res.statusCode > 299)
+    throw Error(
+      `HTTP code !== 2XX. Healthcheck endpoint returned ${res.statusCode}`
+    );
 }
 
 async function ensureNoErrorLogs(
@@ -206,7 +123,7 @@ async function ensureNoErrorLogs(
   // create a time instance to then check the logs
   const time = new Date().toISOString();
 
-  const logs = await docker
+  const logs = docker
     .getContainer(containerName)
     .logs({
       follow: false,
@@ -225,5 +142,4 @@ async function ensureNoErrorLogs(
 
   if (errorLogs.length > 0)
     throw Error(`Error logs found in ${containerName}: ${errorLogs}`);
-  else console.log(chalk.green(`No error logs found in ${containerName}`));
 }

@@ -3,10 +3,11 @@ import { CliGlobalOptions } from "../../../types.js";
 import { ensureDappnodeEnvironment } from "./ensureDappnodeEnvironment.js";
 import { readCompose, readManifest } from "../../../files/index.js";
 import { buildHandler } from "../../build.js";
-import { localDappmanagerTestApiUrl, localIpfsApiUrl } from "./params.js";
-import { executeTests } from "./executeTests.js";
+import { executePackageInstallAndUpdateTest } from "./executeTests.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 
+const localIpfsApiUrl = `http://172.33.1.5:5001`;
+const localDappmanagerTestApiUrl = `http://172.33.1.7:7000`;
 interface CliCommandOptions extends CliGlobalOptions {
   healthCheckUrl?: string;
   errorLogsTimeout: number;
@@ -29,7 +30,7 @@ export const endToEndTest: CommandModule<
       describe:
         "Timeout in seconds to wait for error logs to appear. If error logs appear after the timeout, the test will fail",
       type: "number",
-      default: 5
+      default: 30
     },
     environmentByService: {
       describe:
@@ -49,14 +50,14 @@ export async function gaTestEndToEndHandler({
   environmentByService
 }: CliCommandOptions): Promise<void> {
   const dappmanagerTestApi = new DappmanagerTestApi(localDappmanagerTestApiUrl);
+  const compose = readCompose({ dir });
+  const { manifest } = readManifest({ dir });
+  const environmentByServiceParsed: Record<
+    string,
+    string
+  > = environmentByService ? JSON.parse(environmentByService) : {};
 
   try {
-    const compose = readCompose({ dir });
-    const { manifest } = readManifest({ dir });
-    const environmentByServiceParsed = environmentByService
-      ? JSON.parse(environmentByService)
-      : {};
-
     // Build and upload
     const { releaseMultiHash } = await buildHandler({
       dir,
@@ -64,13 +65,14 @@ export async function gaTestEndToEndHandler({
       upload_to: "ipfs",
       verbose: false
     });
-    // print the releaseMultiHash to be used by the next step
-    console.log(`release multi hash ${releaseMultiHash}`);
 
     // Ensure test-integration environment is clean
-    await ensureDappnodeEnvironment({ dappmanagerTestApi });
+    await ensureDappnodeEnvironment({
+      dappmanagerTestApi,
+      dnpName: manifest.name
+    });
 
-    await executeTests({
+    await executePackageInstallAndUpdateTest({
       dappmanagerTestApi,
       releaseMultiHash,
       manifest,
@@ -83,6 +85,9 @@ export async function gaTestEndToEndHandler({
     throw Error(`Error on test-integration: ${e}`);
   } finally {
     // Ensure test-integration environment is cleaned
-    await ensureDappnodeEnvironment({ dappmanagerTestApi });
+    await ensureDappnodeEnvironment({
+      dappmanagerTestApi,
+      dnpName: manifest.name
+    });
   }
 }

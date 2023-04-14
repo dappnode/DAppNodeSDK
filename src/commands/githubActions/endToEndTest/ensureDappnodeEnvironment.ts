@@ -5,14 +5,22 @@ import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
  * Ensure that the DAppNode environment is ready to run the integration tests
  */
 export async function ensureDappnodeEnvironment({
-  dappmanagerTestApi
+  dappmanagerTestApi,
+  dnpName
 }: {
   dappmanagerTestApi: DappmanagerTestApi;
+  dnpName: string;
 }): Promise<void> {
+  await setBindContainerIp();
+  //  Remove package if installed and bypass error if any
   // Check dappmanager is running
   await dappmanagerTestApi.healthCheck();
   // Make sure that the /etc/resolv.conf file has the Bind container IP address so container aliases can be resolved from the host
-  await setBindContainerIp();
+  await dappmanagerTestApi
+    .packageRemove({ dnpName, deleteVolumes: true })
+    .catch(() => {
+      console.log("No package to remove");
+    });
 }
 
 /**
