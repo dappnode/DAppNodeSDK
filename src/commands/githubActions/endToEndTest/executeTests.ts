@@ -5,6 +5,13 @@ import { Manifest } from "../../../types.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import Docker from "dockerode";
 import chalk from "chalk";
+import {
+  packagesToKeep,
+  stakerGnosisConfig,
+  stakerMainnetConfig,
+  stakerPraterConfig
+} from "./params.js";
+import { getStakerPkgNetwork } from "./utils.js";
 
 /**
  * Execute the tests for the integration test workflow. These tests require
@@ -35,10 +42,23 @@ export async function executePackageInstallAndUpdateTest({
 
   // Test Install package from scratch
   console.log(chalk.blue("\nTEST: Installing package from scratch...\n"));
-  await dappmanagerTestApi.packageInstall({
-    name: manifest.name,
-    userSettings: { environment: environmentByService }
-  });
+  await dappmanagerTestApi
+    .packageInstall({
+      dnpName: manifest.name,
+      version: manifest.version,
+      userSettings: { environment: environmentByService }
+    })
+    .then(() => {
+      // If its a staker pkg then the stakerConfigSet must be called
+      if (packagesToKeep.includes(manifest.name)) {
+        const network = getStakerPkgNetwork(manifest.name);
+        network === "mainnet"
+          ? dappmanagerTestApi.stakerConfigSet(stakerMainnetConfig)
+          : network === "gnosis"
+          ? dappmanagerTestApi.stakerConfigSet(stakerGnosisConfig)
+          : dappmanagerTestApi.stakerConfigSet(stakerPraterConfig);
+      }
+    });
   await executeTestCheckers({
     dnpName: manifest.name,
     compose,
@@ -49,7 +69,7 @@ export async function executePackageInstallAndUpdateTest({
   // Update package to the given hash
   console.log(chalk.blue("\nTEST: Updating package ...\n"));
   await dappmanagerTestApi.packageInstall({
-    name: manifest.name,
+    dnpName: manifest.name,
     version: releaseMultiHash,
     userSettings: { environment: environmentByService }
   });

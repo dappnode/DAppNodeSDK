@@ -5,9 +5,8 @@ import { readCompose, readManifest } from "../../../files/index.js";
 import { buildHandler } from "../../build.js";
 import { executePackageInstallAndUpdateTest } from "./executeTests.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
+import { localDappmanagerTestApiUrl, localIpfsApiUrl } from "./params.js";
 
-const localIpfsApiUrl = `http://172.33.1.5:5001`;
-const localDappmanagerTestApiUrl = `http://172.33.1.7:7000`;
 interface CliCommandOptions extends CliGlobalOptions {
   healthCheckUrl?: string;
   errorLogsTimeout: number;
@@ -30,7 +29,7 @@ export const endToEndTest: CommandModule<
       describe:
         "Timeout in seconds to wait for error logs to appear. If error logs appear after the timeout, the test will fail",
       type: "number",
-      default: 30
+      default: 30,
     },
     environmentByService: {
       describe:
@@ -68,8 +67,7 @@ export async function gaTestEndToEndHandler({
 
     // Ensure test-integration environment is clean
     await ensureDappnodeEnvironment({
-      dappmanagerTestApi,
-      dnpName: manifest.name
+      dappmanagerTestApi
     });
 
     await executePackageInstallAndUpdateTest({
@@ -86,8 +84,7 @@ export async function gaTestEndToEndHandler({
   } finally {
     // Ensure test-integration environment is cleaned
     await ensureDappnodeEnvironment({
-      dappmanagerTestApi,
-      dnpName: manifest.name
+      dappmanagerTestApi
     });
   }
 }

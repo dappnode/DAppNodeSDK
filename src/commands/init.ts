@@ -43,11 +43,12 @@ const avatarData = defaultAvatar;
 
 // Dockerfile
 const dockerfilePath = "Dockerfile";
-const dockerfileData = `FROM node:lts-alpine
+const dockerfileData = `FROM busybox
 
-EXPOSE 3000
+WORKDIR /usr/src/app
 
-ENTRYPOINT node -e 'require("http").createServer((req, res) => {res.writeHead(200, {"Content-Type": "text/plain"}); res.end("ok");}).listen(3000, () => {console.log("Server running on port 3000");})'
+ENTRYPOINT echo "happy build $USERNAME!"
+
 `;
 
 // .gitignore

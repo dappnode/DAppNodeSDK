@@ -115,10 +115,10 @@ export interface StakerConfigGet<T extends Network> {
 export interface StakerConfigSet<T extends Network> {
   network: T;
   feeRecipient: string;
-  executionClient?: StakerItemOk<T, "execution">;
-  consensusClient?: StakerItemOk<T, "consensus">;
+  executionClient: StakerItemOk<T, "execution">; // Modify original type to be mandatory
+  consensusClient: StakerItemOk<T, "consensus">; // Modify original type to be mandatory
   mevBoost?: StakerItemOk<T, "mev-boost">;
-  enableWeb3signer?: boolean;
+  enableWeb3signer: boolean; // Modify original type to be mandatory
 }
 
 export interface PackageRelease {
@@ -332,6 +332,16 @@ export interface InstalledPackageDetailData extends InstalledPackageData {
   packageSentData: Record<string, string>;
 }
 
+export interface PackageToInstall {
+  dnpName: string;
+  version: string;
+  userSettings?: {
+    environment?: Record<string, string>;
+    ports?: Record<string, number>;
+    volumes?: Record<string, string>;
+  };
+}
+
 export interface UserSettings {
   environment?: {
     [serviceName: string]: {
@@ -378,4 +388,15 @@ export interface UserSettings {
       [volumeName: string]: string;
     };
   };
+}
+
+// IPFS
+
+export enum IpfsClientTarget {
+  local = "local",
+  remote = "remote"
+}
+export interface IpfsRepository {
+  ipfsClientTarget: IpfsClientTarget;
+  ipfsGateway: string;
 }

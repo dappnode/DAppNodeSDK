@@ -4,7 +4,9 @@ import {
   StakerConfigGet,
   Network,
   InstalledPackageDetailData,
-  InstalledPackageDataApiReturn
+  InstalledPackageDataApiReturn,
+  PackageToInstall,
+  IpfsRepository
 } from "./types.js";
 
 export class DappmanagerTestApi {
@@ -43,7 +45,9 @@ export class DappmanagerTestApi {
   async packageGet(dnpName: string): Promise<InstalledPackageDetailData> {
     return (
       await this.ensureSuccess(
-        await got(`${this.url}/packageGet?dnpName=${dnpName}`)
+        await got.post(`${this.url}/packageGet`, {
+          json: { dnpName }
+        })
       )
     ).body as InstalledPackageDetailData;
   }
@@ -51,24 +55,16 @@ export class DappmanagerTestApi {
   /**
    * Installs a package
    *
-   * @param name name of the package. It may be an ipfs hash or a dnpName
+   * @param dnpName name of the package. It may be an ipfs hash or a dnpName
    * @param version version of the package
    * @param userSettings user settings for the package
    * @throws Error if request fails
    */
   async packageInstall({
-    name,
+    dnpName,
     version,
     userSettings
-  }: {
-    name: string;
-    version?: string;
-    userSettings?: {
-      environment?: Record<string, string>;
-      ports?: Record<string, number>;
-      volumes?: Record<string, string>;
-    };
-  }): Promise<void> {
+  }: PackageToInstall): Promise<void> {
     const options = {
       BYPASS_RESOLVER: true,
       BYPASS_CORE_RESTRICTION: true,
@@ -76,13 +72,14 @@ export class DappmanagerTestApi {
     };
 
     await this.ensureSuccess(
-      await got(
-        `${
-          this.url
-        }/packageInstall?name=${name}&version=${version}&options=${JSON.stringify(
-          options
-        )}&userSettings=${JSON.stringify(userSettings)}`
-      )
+      await got.post(`${this.url}/packageInstall`, {
+        json: {
+          name: dnpName,
+          version,
+          options,
+          userSettings
+        }
+      })
     );
   }
 
@@ -101,9 +98,9 @@ export class DappmanagerTestApi {
     deleteVolumes?: boolean;
   }): Promise<void> {
     await this.ensureSuccess(
-      await got(
-        `${this.url}/packageRemove?dnpName=${dnpName}&deleteVolumes=${deleteVolumes}`
-      )
+      await got.post(`${this.url}/packageRemove`, {
+        json: { dnpName, deleteVolumes }
+      })
     );
   }
 
@@ -117,8 +114,7 @@ export class DappmanagerTestApi {
     stakerConfig: StakerConfigSet<T>
   ): Promise<void> {
     await this.ensureSuccess(
-      await got(`${this.url}/stakerConfigSet`, {
-        method: "POST",
+      await got.post(`${this.url}/stakerConfigSet`, {
         json: stakerConfig
       })
     );
@@ -139,6 +135,40 @@ export class DappmanagerTestApi {
         await got(`${this.url}/stakerConfigGet?network=${network}`)
       )
     ).body as StakerConfigGet<T>;
+  }
+
+  /**
+   * Get the IPFS client target
+   *
+   * @returns IPFS client target
+   * @throws Error if request fails
+   */
+  async ipfsClientTargetGet(): Promise<IpfsRepository> {
+    return (
+      await this.ensureSuccess(await got(`${this.url}/ipfsClientTargetGet`))
+    ).body as IpfsRepository;
+  }
+
+  /**
+   * Set the IPFS client target
+   *
+   * @param ipfsRepository IPFS repository
+   * @param deleteLocalIpfsClient delete local IPFS client
+   *
+   * @throws Error if request fails
+   */
+  async ipfsClientTargetSet({
+    ipfsRepository,
+    deleteLocalIpfsClient
+  }: {
+    ipfsRepository: IpfsRepository;
+    deleteLocalIpfsClient?: boolean;
+  }): Promise<void> {
+    await this.ensureSuccess(
+      await got.post(`${this.url}/ipfsClientTargetSet`, {
+        json: { ipfsRepository, deleteLocalIpfsClient }
+      })
+    );
   }
 
   /**
