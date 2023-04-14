@@ -1,4 +1,11 @@
 import got, { Response } from "got";
+import {
+  StakerConfigSet,
+  StakerConfigGet,
+  Network,
+  InstalledPackageDetailData,
+  InstalledPackageDataApiReturn
+} from "./types.js";
 
 export class DappmanagerTestApi {
   url: string;
@@ -21,9 +28,9 @@ export class DappmanagerTestApi {
    * @returns list of packages
    * @throws Error if request fails
    */
-  async packagesGet(): Promise<any> {
+  async packagesGet(): Promise<InstalledPackageDataApiReturn[]> {
     return (await this.ensureSuccess(await got(`${this.url}/packagesGet`)))
-      .body;
+      .body as InstalledPackageDataApiReturn[];
   }
 
   /**
@@ -33,12 +40,12 @@ export class DappmanagerTestApi {
    * @returns package object
    * @throws Error if package not found
    */
-  async packageGet(dnpName: string): Promise<any> {
+  async packageGet(dnpName: string): Promise<InstalledPackageDetailData> {
     return (
       await this.ensureSuccess(
         await got(`${this.url}/packageGet?dnpName=${dnpName}`)
       )
-    ).body;
+    ).body as InstalledPackageDetailData;
   }
 
   /**
@@ -98,6 +105,40 @@ export class DappmanagerTestApi {
         `${this.url}/packageRemove?dnpName=${dnpName}&deleteVolumes=${deleteVolumes}`
       )
     );
+  }
+
+  /**
+   * Sets staker config
+   *
+   * @param stakerConfig staker config
+   * @throws Error if request fails
+   */
+  async stakerConfigSet<T extends Network>(
+    stakerConfig: StakerConfigSet<T>
+  ): Promise<void> {
+    await this.ensureSuccess(
+      await got(`${this.url}/stakerConfigSet`, {
+        method: "POST",
+        json: stakerConfig
+      })
+    );
+  }
+
+  /**
+   * Gets staker config
+   *
+   * @param network network to get the staker config
+   * @returns staker config
+   * @throws Error if request fails
+   */
+  async stakerConfigGet<T extends Network>(
+    network: T
+  ): Promise<StakerConfigGet<T>> {
+    return (
+      await this.ensureSuccess(
+        await got(`${this.url}/stakerConfigGet?network=${network}`)
+      )
+    ).body as StakerConfigGet<T>;
   }
 
   /**
