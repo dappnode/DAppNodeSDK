@@ -64,6 +64,9 @@ export async function executePackageInstallAndUpdateTest({
     healthCheckUrl
   });
 
+  // Skip update test if running in test environment, dappnodesdk package name is not published
+  if (process.env.ENVIRONMENT === "TEST") return;
+
   // Remove package
   await dappmanagerTestApi.packageRemove({ dnpName: manifest.name });
 
