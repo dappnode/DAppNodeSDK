@@ -21,6 +21,8 @@ export const upstreamImageLabel = "dappnode.dnp.upstreamImage";
 export const PINATA_URL = "https://api.pinata.cloud";
 // The build_sdk.env file is used by "slaves" DAppNode packages to define the UPSTREAM_PROJECT and UPSTREAM_VERSION used in the gha
 export const buildSdkEnvFileName = "build_sdk.env";
+const containerNamePrefix = "DAppNodePackage-";
+const containerCoreNamePrefix = "DAppNodeCore-";
 
 /**
  * Plain text file with should contain the IPFS hash of the release
@@ -175,3 +177,18 @@ export const getImageTag = ({
   serviceName: string;
   version: string;
 }): string => [getContainerDomain({ dnpName, serviceName }), version].join(":");
+
+export const getContainerName = ({
+  dnpName,
+  serviceName,
+  isCore
+}: {
+  dnpName: string;
+  serviceName: string;
+  isCore: boolean;
+}): string =>
+  // Note: _PREFIX variables already end with the character "-"
+  [
+    isCore ? containerCoreNamePrefix : containerNamePrefix,
+    getContainerDomain({ dnpName, serviceName })
+  ].join("");

@@ -47,7 +47,8 @@ const dockerfileData = `FROM busybox
 
 WORKDIR /usr/src/app
 
-ENTRYPOINT echo "happy buidl $USERNAME!"
+ENTRYPOINT while true; do echo "happy build $USERNAME!"; sleep 1; done
+
 `;
 
 // .gitignore

@@ -13,7 +13,7 @@ const contentProvider = "http://ipfs.dappnode.io:5001";
 // and output it to the console and to ./dnp_0.0.0/deploy.txt
 
 describe("Init and build", function () {
-  this.timeout(60 * 1000);
+  this.timeout(120 * 1000);
 
   before("Clean testDir", () => cleanTestDir());
   after("Clean testDir", () => cleanTestDir());

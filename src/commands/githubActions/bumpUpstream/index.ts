@@ -20,18 +20,16 @@ import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv.js";
 
 // This action should be run periodically
 
-export const gaBumpUpstream: CommandModule<
-  CliGlobalOptions,
-  CliGlobalOptions
-> = {
-  command: "bump-upstream",
-  describe:
-    "Check if upstream repo has released a new version and open a PR with version bump",
-  builder: {},
-  handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
-};
+export const gaBumpUpstream: CommandModule<CliGlobalOptions, CliGlobalOptions> =
+  {
+    command: "bump-upstream",
+    describe:
+      "Check if upstream repo has released a new version and open a PR with version bump",
+    builder: {},
+    handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
+  };
 
-export async function gaBumpUpstreamHandler({
+async function gaBumpUpstreamHandler({
   dir = defaultDir
 }: CliGlobalOptions): Promise<void> {
   // Check if buildSdkEnvFileName file exists

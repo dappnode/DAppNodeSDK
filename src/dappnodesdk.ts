@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 import chalk from "chalk";
 import figlet from "figlet";
 import dotenv from "dotenv";
@@ -18,46 +19,47 @@ import "source-map-support/register.js";
 import { CliError, defaultDir, YargsError } from "./params.js";
 dotenv.config();
 
+const dappnodesdk = yargs();
+
 // Set up commands
-const dappnodesdk = yargs
-  .usage(`Usage: dappnodesdk <command> [options]`)
-  .options({
-    // Set global options
-    dir: {
-      alias: "directory",
-      description: "Change the base directory",
-      default: defaultDir,
-      type: "string"
+dappnodesdk.usage(`Usage: dappnodesdk <command> [options]`);
+dappnodesdk.options({
+  // Set global options
+  dir: {
+    alias: "directory",
+    description: "Change the base directory",
+    default: defaultDir,
+    type: "string"
+  },
+  compose_file_name: {
+    description: `Compose file for docker-compose`,
+    default: "docker-compose.yml",
+    type: "string"
+  },
+  silent: {
+    description: "Silence output to terminal",
+    type: "boolean"
+  },
+  verbose: {
+    description: "Show more output to terminal",
+    alias: "debug",
+    coerce: debug => {
+      if (debug || process.env.DEBUG) {
+        // @ts-ignore
+        global.DEBUG_MODE = true;
+        return true;
+      }
     },
-    compose_file_name: {
-      description: `Compose file for docker-compose`,
-      default: "docker-compose.yml",
-      type: "string"
-    },
-    silent: {
-      description: "Silence output to terminal",
-      type: "boolean"
-    },
-    verbose: {
-      description: "Show more output to terminal",
-      alias: "debug",
-      coerce: debug => {
-        if (debug || process.env.DEBUG) {
-          // @ts-ignore
-          global.DEBUG_MODE = true;
-          return true;
-        }
-      },
-      type: "boolean"
-    }
-  })
-  .command(build)
-  .command(fromGithub)
-  .command(increase)
-  .command(init)
-  .command(next)
-  .command(publish)
-  .command(githubActions);
+    type: "boolean"
+  }
+});
+dappnodesdk.command(build);
+dappnodesdk.command(fromGithub);
+dappnodesdk.command(increase);
+dappnodesdk.command(init);
+dappnodesdk.command(next);
+dappnodesdk.command(publish);
+dappnodesdk.command(githubActions);
 
 dappnodesdk.alias("h", "help");
 dappnodesdk.alias("v", "version");
@@ -120,4 +122,4 @@ ${msg}
 });
 
 // Run CLI
-dappnodesdk.parse();
+dappnodesdk.parse(hideBin(process.argv));
