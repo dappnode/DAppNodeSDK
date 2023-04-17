@@ -3,10 +3,10 @@ import { shell } from "../../../utils/shell.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import {
   nonStakerPackagesSetup,
-  packagesToKeep,
   stakerGnosisConfig,
   stakerMainnetConfig,
-  stakerPraterConfig
+  stakerPraterConfig,
+  packagesToKeep
 } from "./params.js";
 import { IpfsClientTarget } from "./types.js";
 
@@ -18,24 +18,17 @@ export async function ensureDappnodeEnvironment({
 }: {
   dappmanagerTestApi: DappmanagerTestApi;
 }): Promise<void> {
-  console.log(chalk.blue("\nEnsuring DAppNode environment...\n"));
-
-  console.log(
-    "Make sure that the /etc/resolv.conf file has the Bind container IP address so container aliases can be resolved from the host"
-  );
+  // Check the Bind container IP address is in the /etc/resolv.conf file
   await setBindContainerIp();
   // Check dappmanager is running
-  console.log("Check dappmanager test API is running");
   await dappmanagerTestApi.healthCheck();
   // Make sure extra pkgs are removed
-  console.log("Make sure extra pkgs are removed");
-  await ensureOnlyDefaultSetupPkgsAreInstalled(dappmanagerTestApi);
+  await ensureOnlyDefaultPkgsInstalled(dappmanagerTestApi);
   // Ensure that the Staker configurations are persisted
-  console.log("Ensure that the Staker configurations are persisted");
   await persistStakerConfigs(dappmanagerTestApi);
-  console.log("Ensure the non Staker packages needed are also installed");
+  // Ensure that the Staker packages are installed
   await ensureNonStakerPkgsAreInstalled(dappmanagerTestApi);
-  console.log("Ensure IPFS repository is in local mode");
+  // Ensure IPFS is running and IPFS repository is in local mode
   await ensureIpfsInLocalMode(dappmanagerTestApi);
 }
 
@@ -46,13 +39,18 @@ async function setBindContainerIp(): Promise<void> {
   const bindContainerIp = "172.33.1.2";
   const resolvConfPath = "/etc/resolv.conf";
 
-  const isBindContainerIpSet = await shell(
-    `grep -q ${bindContainerIp} ${resolvConfPath}`
-  );
-  if (!isBindContainerIpSet)
+  try {
+    await shell(`grep -q "nameserver ${bindContainerIp}" ${resolvConfPath}`);
+  } catch (e) {
+    console.log(
+      chalk.dim(
+        `  - The /etc/resolv.conf file does not have the Bind container IP address. Adding it...`
+      )
+    );
     await shell(
       `echo "nameserver ${bindContainerIp}" | sudo tee -a ${resolvConfPath}`
     );
+  }
 }
 
 /**
@@ -69,13 +67,18 @@ async function persistStakerConfigs(
 /**
  * Ensure only required packages are installed (Staker configs from prater mainnet and gnosis)
  */
-async function ensureOnlyDefaultSetupPkgsAreInstalled(
+async function ensureOnlyDefaultPkgsInstalled(
   dappmanagerTestApi: DappmanagerTestApi
 ): Promise<void> {
   const installedPackages = await dappmanagerTestApi.packagesGet();
 
   for (const installedPackage of installedPackages) {
     if (!packagesToKeep.includes(installedPackage.dnpName)) {
+      console.log(
+        chalk.dim(
+          `  - Removing package ${installedPackage.dnpName} from the DAppNode environment`
+        )
+      );
       await dappmanagerTestApi.packageRemove({
         dnpName: installedPackage.dnpName,
         deleteVolumes: true
@@ -93,8 +96,14 @@ async function ensureNonStakerPkgsAreInstalled(
   const installedPackages = await dappmanagerTestApi.packagesGet();
 
   for (const pkg of nonStakerPackagesSetup)
-    if (!installedPackages.some(({ dnpName }) => dnpName === pkg.dnpName)) {
-      await dappmanagerTestApi.packageInstall(pkg);
+    if (!installedPackages.some(({ dnpName }) => dnpName === pkg)) {
+      console.log(
+        chalk.dim(`  - Installing package ${pkg} in the DAppNode environment`)
+      );
+      await dappmanagerTestApi.packageInstall({
+        dnpName: pkg,
+        version: "latest"
+      });
     }
 }
 
@@ -107,7 +116,9 @@ async function ensureIpfsInLocalMode(
   const ipfsMode = await dappmanagerTestApi.ipfsClientTargetGet();
 
   if (ipfsMode.ipfsClientTarget !== "local") {
-    console.log("IPFS is not in local mode. Switching to local mode...");
+    console.log(
+      chalk.dim("  - IPFS is not in local mode. Switching to local mode...")
+    );
     ipfsMode.ipfsClientTarget = IpfsClientTarget.local;
 
     await dappmanagerTestApi.ipfsClientTargetSet({

@@ -14,8 +14,8 @@ describe.skip("command / gaEndToEndTest", function () {
   it("should execute end to end tests on a real dappnode environment", async () => {
     await gaTestEndToEndHandler({
       dir: testDir,
-      healthCheckUrl: "http://dappnodesdk.public.dappnode:3000",
-      errorLogsTimeout: 10
+      // healthCheckUrl: "http://dappnodesdk.public.dappnode",
+      errorLogsTimeout: 30
     });
     expect(true).to.equal(true);
   });

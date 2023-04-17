@@ -6,6 +6,7 @@ import { buildHandler } from "../../build.js";
 import { executePackageInstallAndUpdateTest } from "./executeTests.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import { localDappmanagerTestApiUrl, localIpfsApiUrl } from "./params.js";
+import chalk from "chalk";
 
 interface CliCommandOptions extends CliGlobalOptions {
   healthCheckUrl?: string;
@@ -29,7 +30,7 @@ export const endToEndTest: CommandModule<
       describe:
         "Timeout in seconds to wait for error logs to appear. If error logs appear after the timeout, the test will fail",
       type: "number",
-      default: 30,
+      default: 30
     },
     environmentByService: {
       describe:
@@ -58,6 +59,7 @@ export async function gaTestEndToEndHandler({
 
   try {
     // Build and upload
+    console.log(chalk.dim("\nBuilding and uploading package..."));
     const { releaseMultiHash } = await buildHandler({
       dir,
       provider: localIpfsApiUrl,
@@ -66,6 +68,9 @@ export async function gaTestEndToEndHandler({
     });
 
     // Ensure test-integration environment is clean
+    console.log(
+      chalk.dim("\nCleaning test-integration environment before starting")
+    );
     await ensureDappnodeEnvironment({
       dappmanagerTestApi
     });
@@ -83,6 +88,9 @@ export async function gaTestEndToEndHandler({
     throw Error(`Error on test-integration: ${e}`);
   } finally {
     // Ensure test-integration environment is cleaned
+    console.log(
+      chalk.dim("\nCleaning test-integration environment before exiting")
+    );
     await ensureDappnodeEnvironment({
       dappmanagerTestApi
     });

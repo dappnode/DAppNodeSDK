@@ -31,8 +31,10 @@ export class DappmanagerTestApi {
    * @throws Error if request fails
    */
   async packagesGet(): Promise<InstalledPackageDataApiReturn[]> {
-    return (await this.ensureSuccess(await got(`${this.url}/packagesGet`)))
-      .body as InstalledPackageDataApiReturn[];
+    return JSON.parse(
+      (await (await this.ensureSuccess(await got(`${this.url}/packagesGet`)))
+        .body) as string
+    ) as InstalledPackageDataApiReturn[];
   }
 
   /**
@@ -43,13 +45,13 @@ export class DappmanagerTestApi {
    * @throws Error if package not found
    */
   async packageGet(dnpName: string): Promise<InstalledPackageDetailData> {
-    return (
-      await this.ensureSuccess(
-        await got.post(`${this.url}/packageGet`, {
-          json: { dnpName }
-        })
-      )
-    ).body as InstalledPackageDetailData;
+    return JSON.parse(
+      (await (
+        await this.ensureSuccess(
+          await got(`${this.url}/packageGet`, { json: { dnpName } })
+        )
+      ).body) as string
+    ) as InstalledPackageDetailData;
   }
 
   /**
@@ -115,7 +117,7 @@ export class DappmanagerTestApi {
   ): Promise<void> {
     await this.ensureSuccess(
       await got.post(`${this.url}/stakerConfigSet`, {
-        json: stakerConfig
+        json: { stakerConfig: stakerConfig }
       })
     );
   }
@@ -130,11 +132,13 @@ export class DappmanagerTestApi {
   async stakerConfigGet<T extends Network>(
     network: T
   ): Promise<StakerConfigGet<T>> {
-    return (
-      await this.ensureSuccess(
-        await got(`${this.url}/stakerConfigGet?network=${network}`)
-      )
-    ).body as StakerConfigGet<T>;
+    return JSON.parse(
+      (await (
+        await this.ensureSuccess(
+          await got.post(`${this.url}/stakerConfigGet`, { json: { network } })
+        )
+      ).body) as string
+    ) as StakerConfigGet<T>;
   }
 
   /**
@@ -144,9 +148,11 @@ export class DappmanagerTestApi {
    * @throws Error if request fails
    */
   async ipfsClientTargetGet(): Promise<IpfsRepository> {
-    return (
-      await this.ensureSuccess(await got(`${this.url}/ipfsClientTargetGet`))
-    ).body as IpfsRepository;
+    return JSON.parse(
+      (await (
+        await this.ensureSuccess(await got(`${this.url}/ipfsClientTargetGet`))
+      ).body) as string
+    ) as IpfsRepository;
   }
 
   /**

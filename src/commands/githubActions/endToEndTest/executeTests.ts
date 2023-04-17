@@ -6,7 +6,7 @@ import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import Docker from "dockerode";
 import chalk from "chalk";
 import {
-  packagesToKeep,
+  stakerPkgsToKeep,
   stakerGnosisConfig,
   stakerMainnetConfig,
   stakerPraterConfig
@@ -38,19 +38,17 @@ export async function executePackageInstallAndUpdateTest({
   healthCheckUrl?: string;
   environmentByService?: Record<string, string>;
 }): Promise<void> {
-  console.log(chalk.blue("\nExecuting github action end to end tests...\n"));
-
   // Test Install package from scratch
-  console.log(chalk.blue("\nTEST: Installing package from scratch...\n"));
+  console.log(chalk.dim("\nTEST: Installing pkg from scratch..."));
   await dappmanagerTestApi
     .packageInstall({
       dnpName: manifest.name,
-      version: manifest.version,
-      userSettings: { environment: environmentByService }
+      version: releaseMultiHash,
+      userSettings: { environment: environmentByService || {} }
     })
     .then(() => {
       // If its a staker pkg then the stakerConfigSet must be called
-      if (packagesToKeep.includes(manifest.name)) {
+      if (stakerPkgsToKeep.includes(manifest.name)) {
         const network = getStakerPkgNetwork(manifest.name);
         network === "mainnet"
           ? dappmanagerTestApi.stakerConfigSet(stakerMainnetConfig)
@@ -66,8 +64,16 @@ export async function executePackageInstallAndUpdateTest({
     healthCheckUrl
   });
 
+  // Remove package
+  await dappmanagerTestApi.packageRemove({ dnpName: manifest.name });
+
   // Update package to the given hash
-  console.log(chalk.blue("\nTEST: Updating package ...\n"));
+  console.log(chalk.dim("\nTEST: Install production pkg and update"));
+  await dappmanagerTestApi.packageInstall({
+    dnpName: manifest.name,
+    version: manifest.name,
+    userSettings: { environment: environmentByService }
+  });
   await dappmanagerTestApi.packageInstall({
     dnpName: manifest.name,
     version: releaseMultiHash,
@@ -100,15 +106,15 @@ async function executeTestCheckers({
       isCore: false
     });
     await ensureContainerStatus(containerName, docker).then(() =>
-      console.log(chalk.green(`- Container ${containerName} is running\n`))
+      console.log(chalk.green(`  ✓ Container ${containerName} is running`))
     );
     await ensureNoErrorLogs(containerName, docker, errorLogsTimeout).then(() =>
-      console.log(chalk.green(`- No error logs found in ${containerName}\n`))
+      console.log(chalk.green(`  ✓ No error logs found in ${containerName}`))
     );
   }
   if (healthCheckUrl)
     await ensureHealthCheck(healthCheckUrl).then(() =>
-      console.log(chalk.green(`- Healthcheck endpoint returned 200\n`))
+      console.log(chalk.green(`  ✓ Healthcheck endpoint returned 200`))
     );
 }
 
@@ -116,17 +122,24 @@ async function ensureContainerStatus(
   containerName: string,
   docker: Docker
 ): Promise<void> {
-  const container = await docker.getContainer(containerName).inspect();
-  if (!container.State.Running)
-    throw Error(`Container ${containerName} is not running`);
+  for (let i = 0; i < 10; i++) {
+    const container = await docker.getContainer(containerName).inspect();
+    if (container.State.Status !== "running") {
+      const errorMessage = `Container ${containerName} is not running. Status: ${container.State.Status}`;
+      console.error(chalk.red(`  x ${errorMessage}`));
+      throw Error(errorMessage);
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
 }
 
 async function ensureHealthCheck(healthCheckUrl: string): Promise<void> {
   const res = await got(healthCheckUrl);
-  if (res.statusCode < 200 || res.statusCode > 299)
-    throw Error(
-      `HTTP code !== 2XX. Healthcheck endpoint returned ${res.statusCode}`
-    );
+  if (res.statusCode < 200 || res.statusCode > 299) {
+    const errorMessage = `HTTP code !== 2XX. Healthcheck endpoint returned ${res.statusCode}`;
+    console.error(chalk.red(`x ${errorMessage}`));
+    throw Error(errorMessage);
+  }
 }
 
 async function ensureNoErrorLogs(
@@ -138,28 +151,25 @@ async function ensureNoErrorLogs(
   errorLogsTimeout > 120 && (errorLogsTimeout = 120);
 
   // Wait the timeout to ensure that no error logs are produced
-  await new Promise(resolve => setTimeout(resolve, errorLogsTimeout));
+  await new Promise(resolve => setTimeout(resolve, errorLogsTimeout * 1000));
 
-  // create a time instance to then check the logs
-  const time = new Date().toISOString();
-
-  const logs = docker
-    .getContainer(containerName)
-    .logs({
+  const logs = (
+    await docker.getContainer(containerName).logs({
       follow: false,
       stdout: true,
       stderr: true,
-      timestamps: true,
-      since: time
+      timestamps: true
     })
-    .toString();
+  ).toString();
 
-  // collect all the error logs print them and throw an error
-  const errorLogs = logs
-    .split("")
-    .filter(log => log.includes("ERROR"))
-    .join("");
+  // collect all the error logs print them and throw an error if any
+  const errorRegex = /.*\s+error.*/gi;
+  const errorLogs = logs.match(errorRegex);
 
-  if (errorLogs.length > 0)
-    throw Error(`Error logs found in ${containerName}: ${errorLogs}`);
+  if (errorLogs) {
+    const errorMessage = `Error logs found in ${containerName}`;
+    console.error(chalk.red(`  x ${errorMessage}`));
+    errorLogs.forEach(errorLog => console.error(chalk.red(`    ${errorLog}`)));
+    throw Error(errorMessage);
+  }
 }
