@@ -1,6 +1,6 @@
 {
   "name": "@dappnode/dappnodesdk",
-  "version": "0.2.85",
+  "version": "0.2.87",
   "type": "module",
   "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
   "main": "dist/index.js",
@@ -13,7 +13,6 @@
     "lint": "eslint . --ext .ts --fix",
     "build": "tsc",
     "prepublish": "npm run build",
-    "tag-and-publish": "VERSION=$(npm version patch) && git tag $VERSION && git tag $VERSION && git push origin $VERSION",
     "pre-commit": "npm run lint && npm run test"
   },
   "repository": {

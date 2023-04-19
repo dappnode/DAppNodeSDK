@@ -1,50 +1,19 @@
-name: Release
+name: Manual Release
 
 on:
-  push:
+  workflow_dispatch:
     branches:
       - "master"
+    inputs:
+      bump_type:
+        description: "Type of version bump. Choose from: patch, minor, major"
+        required: true
+        default: "patch"
 
 jobs:
-  tag:
-    name: Get latest tag
-    runs-on: ubuntu-latest
-    outputs:
-      latest_version: ${{ steps.npm-version.outputs.latest_version }}
-      latest_git_tag: ${{ steps.get-latest-git-tag.outputs.tag }}
-      is_update: ${{ steps.is-update.outputs.is_update }}
-
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
-        with:
-          node-version: "14.x"
-          registry-url: https://registry.npmjs.org/
-
-      - name: Get latest version from NPM
-        id: npm-version
-        run: echo "::set-output name=latest_version::$(npx -y run @dappnode/dappnodesdk --version)"
-
-      - name: Get latest tag from git
-        id: get-latest-git-tag
-        uses: actions-ecosystem/action-get-latest-tag@v1
-        with:
-          with_initial_version: false
-
-      - name: Check if latest tag is greater than the one published in npm
-        id: is-update
-        run: |
-          if [ "v${{ steps.npm-version.outputs.latest_version }}" != "${{ steps.get-latest-git-tag.outputs.tag }}" ]; then
-            echo "::set-output name=is_update::true"
-          else
-            echo "::set-output name=is_update::false"
-          fi
-
   release:
     name: Publish
     runs-on: ubuntu-latest
-    needs: tag
-    if: needs.tag.outputs.is_update == 'true'
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
@@ -54,14 +23,27 @@ jobs:
       - run: yarn install
       - run: yarn build
 
+      - name: Determine version bump
+        id: bump_version
+        run: echo "::set-output name=bump_type::${{ github.event.inputs.bump_type }}"
+
+      - name: Bump version
+        id: version-bump
+        uses: anothrNick/github-tag-action@v1.11.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: ${{ steps.bump_version.outputs.bump_type }}
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.tag.outputs.latest_git_tag }}
-          release_name: Release ${{ needs.tag.outputs.latest_git_tag }}
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Release ${{ github.ref }}
 
       - name: Publish to npm registry
         run: npm publish --access public
@@ -74,7 +56,7 @@ jobs:
         uses: author/action-rollback@stable
         with:
           release_id: ${{ steps.create_release.outputs.id }}
-          tag: ${{ needs.tag.outputs.latest_git_tag }}
+          tag: ${{ github.ref }}
           delete_orphan_tag: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
