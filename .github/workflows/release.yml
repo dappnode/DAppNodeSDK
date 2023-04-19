@@ -56,5 +56,7 @@ jobs:
       - name: Push commit and tag
         if: ${{ success() }}
         run: |
-          git push origin HEAD:refs/heads/${{ github.ref }}
+          BRANCH_NAME=${{ github.ref }}
+          BRANCH_NAME=${BRANCH_NAME/refs\/heads\//}
+          git push origin HEAD:$BRANCH_NAME
           git push origin ${{ steps.create_release.outputs.tag }}
