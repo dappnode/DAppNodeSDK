@@ -21,8 +21,8 @@ jobs:
 
       - name: Install and build dependencies
         run: |
-          yarn
-          yarn run build
+          npm ci
+          npm run build
 
       - name: Bump version and create release
         id: create_release
@@ -33,7 +33,6 @@ jobs:
           git commit -am "Release ${{ github.event.inputs.bump }}"
           TAG_NAME="v$(cat package.json | jq -r .version)"
           git tag $TAG_NAME
-          git push origin $TAG_NAME
           echo "::set-output name=tag::$TAG_NAME"
           echo "::set-output name=release_name::Release $TAG_NAME"
         env:
@@ -48,8 +47,13 @@ jobs:
           tag_name: ${{ steps.create_release.outputs.tag }}
           release_name: ${{ steps.create_release.outputs.release_name }}
 
-      - name: Publish to NPM registry
-        id: npm_publish
-        run: npm publish
+      - name: Publish to npm registry
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Push commit and tag
+        if: ${{ success() }}
+        run: |
+          git push origin HEAD:refs/heads/${{ github.ref }}
+          git push origin ${{ steps.create_release.outputs.tag }}
