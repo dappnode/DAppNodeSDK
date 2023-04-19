@@ -1,5 +1,4 @@
 import chalk from "chalk";
-import { shell } from "../../../utils/shell.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import {
   nonStakerPackagesSetup,
@@ -9,6 +8,7 @@ import {
   packagesToKeep
 } from "./params.js";
 import { IpfsClientTarget } from "./types.js";
+import got from "got";
 
 /**
  * Ensure that the DAppNode environment is ready to run the integration tests
@@ -19,7 +19,7 @@ export async function ensureDappnodeEnvironment({
   dappmanagerTestApi: DappmanagerTestApi;
 }): Promise<void> {
   // Check the Bind container IP address is in the /etc/resolv.conf file
-  await setBindContainerIp();
+  await ensureDockerAliasesResolveFromHost();
   // Check dappmanager is running
   await dappmanagerTestApi.healthCheck();
   // Make sure extra pkgs are removed
@@ -33,23 +33,16 @@ export async function ensureDappnodeEnvironment({
 }
 
 /**
- * Checks the /etc/resolv.conf file has the Bind container IP address so container aliases can be resolved from the host
+ * Checks dappmanager alias request resolves from host to an HTTP 200
  */
-async function setBindContainerIp(): Promise<void> {
-  const bindContainerIp = "172.33.1.2";
-  const resolvConfPath = "/etc/resolv.conf";
-
+async function ensureDockerAliasesResolveFromHost(): Promise<void> {
+  const dappmanagerAlias = "dappmanager.dappnode";
   try {
-    await shell(`grep -q "nameserver ${bindContainerIp}" ${resolvConfPath}`);
+    const response = await got(`http://${dappmanagerAlias}`);
+    if (response.statusCode < 200 || response.statusCode >= 300)
+      throw Error(`Response status code is ${response.statusCode}`);
   } catch (e) {
-    console.log(
-      chalk.dim(
-        `  - The /etc/resolv.conf file does not have the Bind container IP address. Adding it...`
-      )
-    );
-    await shell(
-      `echo "nameserver ${bindContainerIp}" | sudo tee -a ${resolvConfPath}`
-    );
+    throw Error(`Could not resolve ${dappmanagerAlias} from host: ${e}`);
   }
 }
 
