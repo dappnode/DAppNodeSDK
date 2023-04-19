@@ -1,62 +1,51 @@
-name: Manual Release
+name: NPM Package Release
 
 on:
   workflow_dispatch:
-    branches:
-      - "master"
     inputs:
-      bump_type:
-        description: "Type of version bump. Choose from: patch, minor, major"
+      bump:
+        description: "Bump version (patch, minor, major)"
         required: true
-        default: "patch"
 
 jobs:
   release:
-    name: Publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js 16.x
+        uses: actions/setup-node@v2
         with:
-          node-version: "16.x"
-          registry-url: https://registry.npmjs.org/
-      - run: yarn install
-      - run: yarn build
+          node-version: 16.x
 
-      - name: Determine version bump
-        id: bump_version
-        run: echo "::set-output name=bump_type::${{ github.event.inputs.bump_type }}"
+      - name: Install and build dependencies
+        run: |
+          yarn
+          yarn run build
 
-      - name: Bump version
-        id: version-bump
-        uses: anothrNick/github-tag-action@1.61.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          default_bump: ${{ steps.bump_version.outputs.bump_type }}
-
-      - name: Create Release
+      - name: Bump version and create release
         id: create_release
+        run: |
+          npm version ${{ github.event.inputs.bump }} --no-git-tag-version
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -am "Release ${{ github.event.inputs.bump }}"
+          git tag "v$(cat package.json | jq -r .version)"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub release
+        id: gh_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            Release ${{ github.ref }}
+          tag_name: ${{ steps.create_release.outputs.tag }}
+          release_name: Release ${{ steps.create_release.outputs.tag }}
 
-      - name: Publish to npm registry
-        run: npm publish --access public
+      - name: Publish to NPM registry
+        id: npm_publish
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # In case of failure
-      - name: Rollback on failure
-        if: failure()
-        uses: author/action-rollback@stable
-        with:
-          release_id: ${{ steps.create_release.outputs.id }}
-          tag: ${{ github.ref }}
-          delete_orphan_tag: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
