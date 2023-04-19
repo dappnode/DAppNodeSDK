@@ -13,7 +13,7 @@
     "lint": "eslint . --ext .ts --fix",
     "build": "tsc",
     "prepublish": "npm run build",
-    "tag-and-publish": "npm version patch && git push origin master && git push --tags",
+    "tag-and-publish": "VERSION=$(npm version patch) && git tag $VERSION && git tag $VERSION && git push origin $VERSION",
     "pre-commit": "npm run lint && npm run test"
   },
   "repository": {
