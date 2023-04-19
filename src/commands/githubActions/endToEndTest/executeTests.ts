@@ -74,7 +74,7 @@ export async function executePackageInstallAndUpdateTest({
   console.log(chalk.dim("\nTEST: Install production pkg and update"));
   await dappmanagerTestApi.packageInstall({
     dnpName: manifest.name,
-    version: manifest.name,
+    version: "latest", // Install production version
     userSettings: { environment: environmentByService }
   });
   await dappmanagerTestApi.packageInstall({
