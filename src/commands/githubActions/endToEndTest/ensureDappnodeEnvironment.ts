@@ -52,8 +52,8 @@ async function ensureDockerAliasesResolveFromHost(): Promise<void> {
 async function persistStakerConfigs(
   dappmanagerTestApi: DappmanagerTestApi
 ): Promise<void> {
-  await dappmanagerTestApi.stakerConfigSet(stakerMainnetConfig);
-  await dappmanagerTestApi.stakerConfigSet(stakerGnosisConfig);
+  //await dappmanagerTestApi.stakerConfigSet(stakerMainnetConfig);
+  //await dappmanagerTestApi.stakerConfigSet(stakerGnosisConfig);
   await dappmanagerTestApi.stakerConfigSet(stakerPraterConfig);
 }
 
