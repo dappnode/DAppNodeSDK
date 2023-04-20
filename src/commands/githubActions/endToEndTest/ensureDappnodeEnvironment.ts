@@ -53,7 +53,7 @@ async function persistStakerConfigs(
   dappmanagerTestApi: DappmanagerTestApi,
   network: Network
 ): Promise<void> {
-  console.log(`  - Persisting gnosis staker configuration`);
+  console.log(`  - Persisting ${network} staker configuration`);
   const stakerConfig = getStakerConfigByNetwork(network);
   await dappmanagerTestApi.stakerConfigSet(stakerConfig);
 }
