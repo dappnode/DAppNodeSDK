@@ -5,13 +5,23 @@ import { Manifest } from "../../../types.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import Docker from "dockerode";
 import chalk from "chalk";
+import { getStakerConfigByNetwork } from "./params.js";
+import { getIsStakerPkg } from "./utils.js";
 import {
-  stakerPkgsToKeep,
-  stakerGnosisConfig,
-  stakerMainnetConfig,
-  stakerPraterConfig
-} from "./params.js";
-import { getStakerPkgNetwork } from "./utils.js";
+  ConsensusClientGnosis,
+  ConsensusClientMainnet,
+  ConsensusClientPrater,
+  ExecutionClientGnosis,
+  ExecutionClientMainnet,
+  ExecutionClientPrater,
+  Network,
+  consensusClientsGnosis,
+  consensusClientsMainnet,
+  consensusClientsPrater,
+  executionClientsGnosis,
+  executionClientsMainnet,
+  executionClientsPrater
+} from "./types.js";
 
 /**
  * Execute the tests for the integration test workflow. These tests require
@@ -28,7 +38,8 @@ export async function executePackageInstallAndUpdateTest({
   compose,
   errorLogsTimeout,
   healthCheckUrl,
-  environmentByService
+  environmentByService,
+  network
 }: {
   dappmanagerTestApi: DappmanagerTestApi;
   releaseMultiHash: string;
@@ -37,26 +48,25 @@ export async function executePackageInstallAndUpdateTest({
   errorLogsTimeout: number;
   healthCheckUrl?: string;
   environmentByService?: Record<string, string>;
+  network?: Network;
 }): Promise<void> {
-  // Test Install package from scratch
-  console.log(chalk.dim("\nTEST: Installing pkg from scratch..."));
+  const { name } = manifest;
+  const isStakerPkg = getIsStakerPkg(name);
+
+  // TEST: Install package from scratch
+  console.log(chalk.dim("\nTEST: Installing pkg from scratch"));
+  // Remove package, if not found it will throw an error but it's ok
   await dappmanagerTestApi
-    .packageInstall({
-      dnpName: manifest.name,
-      version: releaseMultiHash,
-      userSettings: { environment: environmentByService || {} }
-    })
-    .then(() => {
-      // If its a staker pkg then the stakerConfigSet must be called
-      if (stakerPkgsToKeep.includes(manifest.name)) {
-        const network = getStakerPkgNetwork(manifest.name);
-        network === "mainnet"
-          ? dappmanagerTestApi.stakerConfigSet(stakerMainnetConfig)
-          : network === "gnosis"
-          ? dappmanagerTestApi.stakerConfigSet(stakerGnosisConfig)
-          : dappmanagerTestApi.stakerConfigSet(stakerPraterConfig);
-      }
-    });
+    .packageRemove({ dnpName: name })
+    .catch(() => console.log("Package already removed"));
+  await dappmanagerTestApi.packageInstall({
+    dnpName: name,
+    version: releaseMultiHash,
+    userSettings: { environment: environmentByService || {} }
+  });
+  // Set staker config if staker package
+  if (isStakerPkg && network)
+    await setStakerConfig(name, dappmanagerTestApi, network);
   await executeTestCheckers({
     dnpName: manifest.name,
     compose,
@@ -67,11 +77,10 @@ export async function executePackageInstallAndUpdateTest({
   // Skip update test if running in test environment, dappnodesdk package name is not published
   if (process.env.ENVIRONMENT === "TEST") return;
 
-  // Remove package
-  await dappmanagerTestApi.packageRemove({ dnpName: manifest.name });
-
   // Update package to the given hash
   console.log(chalk.dim("\nTEST: Install production pkg and update"));
+  // Remove package, if not found it will throw an error but it's ok
+  await dappmanagerTestApi.packageRemove({ dnpName: manifest.name });
   await dappmanagerTestApi.packageInstall({
     dnpName: manifest.name,
     version: "latest", // Install production version
@@ -79,9 +88,12 @@ export async function executePackageInstallAndUpdateTest({
   });
   await dappmanagerTestApi.packageInstall({
     dnpName: manifest.name,
-    version: releaseMultiHash,
+    version: releaseMultiHash, // Install test version
     userSettings: { environment: environmentByService }
   });
+  // Set staker config if staker package
+  if (isStakerPkg && network)
+    await setStakerConfig(name, dappmanagerTestApi, network);
   await executeTestCheckers({
     dnpName: manifest.name,
     compose,
@@ -94,12 +106,14 @@ async function executeTestCheckers({
   dnpName,
   compose,
   errorLogsTimeout,
-  healthCheckUrl
+  healthCheckUrl,
+  network
 }: {
   dnpName: string;
   compose: Compose;
   errorLogsTimeout: number;
   healthCheckUrl?: string;
+  network?: Network;
 }): Promise<void> {
   const docker = new Docker();
   for (const service of Object.keys(compose.services)) {
@@ -118,6 +132,10 @@ async function executeTestCheckers({
   if (healthCheckUrl)
     await ensureHealthCheck(healthCheckUrl).then(() =>
       console.log(chalk.green(`  ✓ Healthcheck endpoint returned 200`))
+    );
+  if (network)
+    await attestanceProof(network).then(() =>
+      console.log(chalk.green(`  ✓ Attestation proof`))
     );
 }
 
@@ -175,4 +193,48 @@ async function ensureNoErrorLogs(
     errorLogs.forEach(errorLog => console.error(chalk.red(`    ${errorLog}`)));
     throw Error(errorMessage);
   }
+}
+
+/**
+ * Test that the validators are attesting after a peri
+ */
+async function attestanceProof(network: Network): Promise<void> {
+  if (network === "mainnet") return;
+  // TODO
+  return;
+}
+
+async function setStakerConfig(
+  dnpName: string,
+  dappmanagerTestApi: DappmanagerTestApi,
+  network: Network
+): Promise<void> {
+  const stakerConfig = getStakerConfigByNetwork(network);
+  switch (network) {
+    case "mainnet":
+      if (executionClientsMainnet.includes(dnpName as any))
+        stakerConfig.executionClient.dnpName = dnpName as ExecutionClientMainnet;
+      else if (consensusClientsMainnet.includes(dnpName as any))
+        stakerConfig.consensusClient.dnpName = dnpName as ConsensusClientMainnet;
+
+      break;
+    case "gnosis":
+      if (executionClientsGnosis.includes(dnpName as any))
+        stakerConfig.executionClient.dnpName = dnpName as ExecutionClientGnosis;
+      else if (consensusClientsGnosis.includes(dnpName as any))
+        stakerConfig.consensusClient.dnpName = dnpName as ConsensusClientGnosis;
+      await dappmanagerTestApi.stakerConfigSet(stakerConfig);
+      break;
+    case "prater":
+      if (executionClientsPrater.includes(dnpName as any))
+        stakerConfig.executionClient.dnpName = dnpName as ExecutionClientPrater;
+      else if (consensusClientsPrater.includes(dnpName as any))
+        stakerConfig.consensusClient.dnpName = dnpName as ConsensusClientPrater;
+      await dappmanagerTestApi.stakerConfigSet(stakerConfig);
+      break;
+
+    default:
+      throw Error("unknown network");
+  }
+  await dappmanagerTestApi.stakerConfigSet(stakerConfig);
 }
