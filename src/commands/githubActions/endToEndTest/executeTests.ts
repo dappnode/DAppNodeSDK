@@ -58,7 +58,7 @@ export async function executePackageInstallAndUpdateTest({
   // Remove package, if not found it will throw an error but it's ok
   await dappmanagerTestApi
     .packageRemove({ dnpName: name })
-    .catch(e => console.log(e));
+    .catch(() => console.log("Package already removed"));
   await dappmanagerTestApi.packageInstall({
     dnpName: name,
     version: releaseMultiHash,
