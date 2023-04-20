@@ -13,7 +13,24 @@ import {
 // STAKERS
 
 export type Network = "mainnet" | "prater" | "gnosis";
+export const stakerPkgs = [
+  ...executionClientsMainnet,
+  ...consensusClientsMainnet,
+  ...signerMainnet,
+  ...mevBoostMainnet,
+  ...executionClientsPrater,
+  ...consensusClientsPrater,
+  ...signerPrater,
+  ...mevBoostPrater,
+  ...executionClientsGnosis,
+  ...consensusClientsGnosis,
+  ...signerGnosis,
+  ...mevBoostGnosis
+];
+
+// MAINNET
 export declare const consensusClientsMainnet: readonly [
+  "lodestar.dnp.dappnode.eth",
   "prysm.dnp.dappnode.eth",
   "lighthouse.dnp.dappnode.eth",
   "teku.dnp.dappnode.eth",
@@ -30,33 +47,67 @@ export declare const executionClientsMainnet: readonly [
   ""
 ];
 export type ExecutionClientMainnet = typeof executionClientsMainnet[number];
-export type SignerMainnet = "web3signer.dnp.dappnode.eth" | "";
-export type MevBoostMainnet = "mev-boost.dnp.dappnode.eth" | "";
-export type ConsensusClientPrater =
-  | "prysm-prater.dnp.dappnode.eth"
-  | "lighthouse-prater.dnp.dappnode.eth"
-  | "teku-prater.dnp.dappnode.eth"
-  | "nimbus-prater.dnp.dappnode.eth"
-  | "lodestar-prater.dnp.dappnode.eth"
-  | "";
-export type ExecutionClientPrater =
-  | "goerli-geth.dnp.dappnode.eth"
-  | "goerli-erigon.dnp.dappnode.eth"
-  | "goerli-nethermind.dnp.dappnode.eth"
-  | "goerli-besu.dnp.dappnode.eth"
-  | "";
-export type SignerPrater = "web3signer-prater.dnp.dappnode.eth" | "";
-export type MevBoostPrater = "mev-boost-goerli.dnp.dappnode.eth" | "";
-export type ConsensusClientGnosis =
-  | "gnosis-beacon-chain-prysm.dnp.dappnode.eth"
-  | "lighthouse-gnosis.dnp.dappnode.eth"
-  | "teku-gnosis.dnp.dappnode.eth"
-  | "nimbus-gnosis.dnp.dappnode.eth"
-  | "lodestar-gnosis.dnp.dappnode.eth"
-  | "";
-export type ExecutionClientGnosis = "nethermind-xdai.dnp.dappnode.eth" | "";
-export type SignerGnosis = "web3signer-gnosis.dnp.dappnode.eth";
-export type MevBoostGnosis = "mev-boost-gnosis.dnp.dappnode.eth" | "";
+export declare const signerMainnet: readonly [
+  "web3signer.dnp.dappnode.eth" | ""
+];
+export type SignerMainnet = typeof signerMainnet[number];
+export declare const mevBoostMainnet: readonly [
+  "mev-boost.dnp.dappnode.eth" | ""
+];
+export type MevBoostMainnet = typeof mevBoostMainnet[number];
+
+// PRATER
+export declare const consensusClientsPrater: readonly [
+  "prysm-prater.dnp.dappnode.eth",
+  "lighthouse-prater.dnp.dappnode.eth",
+  "teku-prater.dnp.dappnode.eth",
+  "nimbus-prater.dnp.dappnode.eth",
+  "lodestar-prater.dnp.dappnode.eth",
+  ""
+];
+export type ConsensusClientPrater = typeof consensusClientsPrater[number];
+export declare const executionClientsPrater: readonly [
+  "goerli-geth.dnp.dappnode.eth",
+  "goerli-erigon.dnp.dappnode.eth",
+  "goerli-nethermind.dnp.dappnode.eth",
+  "goerli-besu.dnp.dappnode.eth",
+  ""
+];
+export type ExecutionClientPrater = typeof executionClientsPrater[number];
+export declare const signerPrater: readonly [
+  "web3signer-prater.dnp.dappnode.eth" | ""
+];
+export type SignerPrater = typeof signerPrater[number];
+export declare const mevBoostPrater: readonly [
+  "mev-boost-goerli.dnp.dappnode.eth" | ""
+];
+export type MevBoostPrater = typeof mevBoostPrater[number];
+
+// GNOSIS
+export declare const consensusClientsGnosis: readonly [
+  "gnosis-beacon-chain-prysm.dnp.dappnode.eth",
+  "lighthouse-gnosis.dnp.dappnode.eth",
+  "teku-gnosis.dnp.dappnode.eth",
+  "nimbus-gnosis.dnp.dappnode.eth",
+  "lodestar-gnosis.dnp.dappnode.eth",
+  ""
+];
+export type ConsensusClientGnosis = typeof consensusClientsGnosis[number];
+export declare const executionClientsGnosis: readonly [
+  "nethermind-xdai.dnp.dappnode.eth",
+  ""
+];
+export type ExecutionClientGnosis = typeof executionClientsGnosis[number];
+export declare const signerGnosis: readonly [
+  "web3signer-Gnosis.dnp.dappnode.eth" | ""
+];
+export type SignerGnosis = typeof signerGnosis[number];
+export declare const mevBoostGnosis: readonly [
+  "mev-boost-gnosis.dnp.dappnode.eth" | ""
+];
+export type MevBoostGnosis = typeof mevBoostGnosis[number];
+
+// stakers items
 export type StakerType = "execution" | "consensus" | "signer" | "mev-boost";
 export type ExecutionClient<T extends Network> = T extends "mainnet"
   ? ExecutionClientMainnet

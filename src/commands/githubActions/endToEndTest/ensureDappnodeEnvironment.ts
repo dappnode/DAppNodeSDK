@@ -2,12 +2,10 @@ import chalk from "chalk";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import {
   nonStakerPackagesSetup,
-  stakerGnosisConfig,
-  stakerMainnetConfig,
-  stakerPraterConfig,
+  getStakerConfigByNetwork,
   packagesToKeep
 } from "./params.js";
-import { IpfsClientTarget } from "./types.js";
+import { IpfsClientTarget, Network } from "./types.js";
 import got from "got";
 
 /**
@@ -18,18 +16,35 @@ export async function ensureDappnodeEnvironment({
 }: {
   dappmanagerTestApi: DappmanagerTestApi;
 }): Promise<void> {
+  // Get the network from the runner labels
+  const network = getNetworkFromGithubLabels();
   // Check the Bind container IP address is in the /etc/resolv.conf file
   await ensureDockerAliasesResolveFromHost();
   // Check dappmanager is running
   await dappmanagerTestApi.healthCheck();
   // Make sure extra pkgs are removed
-  await ensureOnlyDefaultPkgsInstalled(dappmanagerTestApi);
+  await ensureOnlyDefaultPkgsInstalled(dappmanagerTestApi, network);
   // Ensure that the Staker configurations are persisted
-  await persistStakerConfigs(dappmanagerTestApi);
+  if (network) await persistStakerConfigs(dappmanagerTestApi, network);
   // Ensure that the Staker packages are installed
   await ensureNonStakerPkgsAreInstalled(dappmanagerTestApi);
   // Ensure IPFS is running and IPFS repository is in local mode
   await ensureIpfsInLocalMode(dappmanagerTestApi);
+}
+
+/**
+ * Get the labels of the current runner
+ */
+function getNetworkFromGithubLabels(): Network | undefined {
+  const labels = process.env["RUNNER_LABELS"];
+  if (!labels) throw Error("RUNNER_LABELS env var not found");
+  return labels.includes("mainnet")
+    ? "mainnet"
+    : labels.includes("gnosis")
+    ? "gnosis"
+    : labels.includes("prater")
+    ? "prater"
+    : undefined;
 }
 
 /**
@@ -50,23 +65,33 @@ async function ensureDockerAliasesResolveFromHost(): Promise<void> {
  * Ensure that the Staker configurations are persisted
  */
 async function persistStakerConfigs(
-  dappmanagerTestApi: DappmanagerTestApi
+  dappmanagerTestApi: DappmanagerTestApi,
+  network: Network
 ): Promise<void> {
-  //await dappmanagerTestApi.stakerConfigSet(stakerMainnetConfig);
-  //await dappmanagerTestApi.stakerConfigSet(stakerGnosisConfig);
-  await dappmanagerTestApi.stakerConfigSet(stakerPraterConfig);
+  const stakerConfig = getStakerConfigByNetwork(network);
+  if (network === "prater") {
+    console.log("persisting prater staker configuration");
+    await dappmanagerTestApi.stakerConfigSet(stakerConfig);
+  } else if (network === "mainnet") {
+    console.log("persisting mainnet staker configuration");
+    await dappmanagerTestApi.stakerConfigSet(stakerConfig);
+  } else if (network === "gnosis") {
+    console.log("persisting gnosis staker configuration");
+    await dappmanagerTestApi.stakerConfigSet(stakerConfig);
+  }
 }
 
 /**
  * Ensure only required packages are installed (Staker configs from prater mainnet and gnosis)
  */
 async function ensureOnlyDefaultPkgsInstalled(
-  dappmanagerTestApi: DappmanagerTestApi
+  dappmanagerTestApi: DappmanagerTestApi,
+  network?: Network
 ): Promise<void> {
   const installedPackages = await dappmanagerTestApi.packagesGet();
 
   for (const installedPackage of installedPackages) {
-    if (!packagesToKeep.includes(installedPackage.dnpName)) {
+    if (!packagesToKeep(network).includes(installedPackage.dnpName)) {
       console.log(
         chalk.dim(
           `  - Removing package ${installedPackage.dnpName} from the DAppNode environment`

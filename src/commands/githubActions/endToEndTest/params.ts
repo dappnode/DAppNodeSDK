@@ -1,9 +1,19 @@
-import { StakerConfigSet } from "./types.js";
+import { Network, StakerConfigSet } from "./types.js";
 
 export const localIpfsApiUrl = `http://172.33.1.5:5001`;
 export const localDappmanagerTestApiUrl = `http://172.33.1.7:7000`;
 
-export const stakerMainnetConfig: StakerConfigSet<"mainnet"> = {
+export const getStakerConfigByNetwork = (
+  network: Network
+): StakerConfigSet<Network> => {
+  return network === "mainnet"
+    ? stakerMainnetConfig
+    : network === "gnosis"
+    ? stakerGnosisConfig
+    : stakerPraterConfig;
+};
+
+const stakerMainnetConfig: StakerConfigSet<"mainnet"> = {
   network: "mainnet",
   feeRecipient: "0x0000000000000000000000000000000000000001",
   executionClient: {
@@ -48,7 +58,7 @@ export const stakerMainnetConfig: StakerConfigSet<"mainnet"> = {
   }
 };
 
-export const stakerPraterConfig: StakerConfigSet<"prater"> = {
+const stakerPraterConfig: StakerConfigSet<"prater"> = {
   network: "prater",
   feeRecipient: "0x0000000000000000000000000000000000000001",
   executionClient: {
@@ -89,7 +99,7 @@ export const stakerPraterConfig: StakerConfigSet<"prater"> = {
   }
 };
 
-export const stakerGnosisConfig: StakerConfigSet<"gnosis"> = {
+const stakerGnosisConfig: StakerConfigSet<"gnosis"> = {
   network: "gnosis",
   feeRecipient: "0x0000000000000000000000000000000000000001",
   executionClient: {
@@ -130,22 +140,29 @@ export const nonStakerPackagesSetup = [
   "dappnode-exporter.dnp.dappnode.eth"
 ];
 
-export const stakerPkgsToKeep = [
-  stakerMainnetConfig.executionClient.dnpName,
-  stakerGnosisConfig.executionClient.dnpName,
-  stakerPraterConfig.executionClient.dnpName,
-  stakerMainnetConfig.consensusClient.dnpName,
-  stakerGnosisConfig.consensusClient.dnpName,
-  stakerPraterConfig.consensusClient.dnpName,
-  "mev-boost.dnp.dappnode.eth",
-  "mev-boost-goerli.dnp.dappnode.eth",
-  "web3signer.dnp.dappnode.eth",
-  "web3signer-gnosis.dnp.dappnode.eth",
-  "web3signer-prater.dnp.dappnode.eth"
-];
+export const stakerPkgsToKeep = (network: Network): string[] => {
+  return network === "mainnet"
+    ? [
+        stakerMainnetConfig.executionClient.dnpName,
+        stakerMainnetConfig.consensusClient.dnpName,
+        "mev-boost.dnp.dappnode.eth",
+        "web3signer.dnp.dappnode.eth"
+      ]
+    : network === "gnosis"
+    ? [
+        stakerGnosisConfig.executionClient.dnpName,
+        stakerGnosisConfig.consensusClient.dnpName,
+        "web3signer-gnosis.dnp.dappnode.eth"
+      ]
+    : [
+        stakerPraterConfig.executionClient.dnpName,
+        stakerPraterConfig.consensusClient.dnpName,
+        "mev-boost-goerli.dnp.dappnode.eth",
+        "web3signer-prater.dnp.dappnode.eth"
+      ];
+};
 
-export const packagesToKeep = [
-  ...corePackages,
-  ...stakerPkgsToKeep,
-  ...nonStakerPackagesSetup
-];
+export const packagesToKeep = (network: Network | undefined): string[] =>
+  network
+    ? [...corePackages, ...nonStakerPackagesSetup, ...stakerPkgsToKeep(network)]
+    : [...corePackages, ...nonStakerPackagesSetup];
