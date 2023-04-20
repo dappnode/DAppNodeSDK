@@ -69,6 +69,7 @@ async function ensureOnlyDefaultPkgsInstalled(
 
   for (const installedPackage of installedPackages) {
     if (!packagesToKeep(network).includes(installedPackage.dnpName)) {
+      console.log(packagesToKeep(network));
       console.log(
         chalk.dim(
           `  - Removing package ${installedPackage.dnpName} from the DAppNode environment`
