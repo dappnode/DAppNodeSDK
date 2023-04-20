@@ -111,7 +111,8 @@ export async function gaTestEndToEndHandler({
       chalk.dim("\nCleaning test-integration environment before exiting")
     );
     await ensureDappnodeEnvironment({
-      dappmanagerTestApi
+      dappmanagerTestApi,
+      network: network as Network
     });
   }
 }

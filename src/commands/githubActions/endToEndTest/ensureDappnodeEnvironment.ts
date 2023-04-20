@@ -53,17 +53,9 @@ async function persistStakerConfigs(
   dappmanagerTestApi: DappmanagerTestApi,
   network: Network
 ): Promise<void> {
+  console.log(`  - Persisting gnosis staker configuration`);
   const stakerConfig = getStakerConfigByNetwork(network);
-  if (network === "prater") {
-    console.log("persisting prater staker configuration");
-    await dappmanagerTestApi.stakerConfigSet(stakerConfig);
-  } else if (network === "mainnet") {
-    console.log("persisting mainnet staker configuration");
-    await dappmanagerTestApi.stakerConfigSet(stakerConfig);
-  } else if (network === "gnosis") {
-    console.log("persisting gnosis staker configuration");
-    await dappmanagerTestApi.stakerConfigSet(stakerConfig);
-  }
+  await dappmanagerTestApi.stakerConfigSet(stakerConfig);
 }
 
 /**
