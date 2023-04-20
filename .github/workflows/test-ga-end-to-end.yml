@@ -21,4 +21,4 @@ jobs:
 
         # Run end to end tests
       - name: Run end to end tests
-        run: node dist/dappnodesdk.js github-action test-end-to-end --errorLogsTimeout 30
+        run: node dist/dappnodesdk.js github-action test-end-to-end --errorLogsTimeout 30 --prater
