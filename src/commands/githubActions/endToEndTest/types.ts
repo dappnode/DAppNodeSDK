@@ -13,6 +13,80 @@ import {
 // STAKERS
 
 export type Network = "mainnet" | "prater" | "gnosis";
+
+// MAINNET
+export const consensusClientsMainnet = [
+  "lodestar.dnp.dappnode.eth",
+  "prysm.dnp.dappnode.eth",
+  "lighthouse.dnp.dappnode.eth",
+  "teku.dnp.dappnode.eth",
+  "nimbus.dnp.dappnode.eth",
+  "lodestar.dnp.dappnode.eth",
+  ""
+] as const;
+export type ConsensusClientMainnet = typeof consensusClientsMainnet[number];
+export const executionClientsMainnet = [
+  "geth.dnp.dappnode.eth",
+  "besu.public.dappnode.eth",
+  "erigon.dnp.dappnode.eth",
+  "nethermind.public.dappnode.eth",
+  ""
+] as const;
+export type ExecutionClientMainnet = typeof executionClientsMainnet[number];
+export const signerMainnet = ["web3signer.dnp.dappnode.eth", ""] as const;
+export type SignerMainnet = typeof signerMainnet[number];
+export const mevBoostMainnet = ["mev-boost.dnp.dappnode.eth", ""] as const;
+export type MevBoostMainnet = typeof mevBoostMainnet[number];
+
+// PRATER
+export const consensusClientsPrater = [
+  "prysm-prater.dnp.dappnode.eth",
+  "lighthouse-prater.dnp.dappnode.eth",
+  "teku-prater.dnp.dappnode.eth",
+  "nimbus-prater.dnp.dappnode.eth",
+  "lodestar-prater.dnp.dappnode.eth",
+  ""
+] as const;
+export type ConsensusClientPrater = typeof consensusClientsPrater[number];
+export const executionClientsPrater = [
+  "goerli-geth.dnp.dappnode.eth",
+  "goerli-erigon.dnp.dappnode.eth",
+  "goerli-nethermind.dnp.dappnode.eth",
+  "goerli-besu.dnp.dappnode.eth",
+  ""
+] as const;
+export type ExecutionClientPrater = typeof executionClientsPrater[number];
+export const signerPrater = ["web3signer-prater.dnp.dappnode.eth", ""] as const;
+export type SignerPrater = typeof signerPrater[number];
+export const mevBoostPrater = [
+  "mev-boost-goerli.dnp.dappnode.eth",
+  ""
+] as const;
+export type MevBoostPrater = typeof mevBoostPrater[number];
+
+// GNOSIS
+export const consensusClientsGnosis = [
+  "gnosis-beacon-chain-prysm.dnp.dappnode.eth",
+  "lighthouse-gnosis.dnp.dappnode.eth",
+  "teku-gnosis.dnp.dappnode.eth",
+  "nimbus-gnosis.dnp.dappnode.eth",
+  "lodestar-gnosis.dnp.dappnode.eth",
+  ""
+] as const;
+export type ConsensusClientGnosis = typeof consensusClientsGnosis[number];
+export const executionClientsGnosis = [
+  "nethermind-xdai.dnp.dappnode.eth",
+  ""
+] as const;
+export type ExecutionClientGnosis = typeof executionClientsGnosis[number];
+export const signerGnosis = ["web3signer-Gnosis.dnp.dappnode.eth", ""] as const;
+export type SignerGnosis = typeof signerGnosis[number];
+export const mevBoostGnosis = [
+  "mev-boost-gnosis.dnp.dappnode.eth",
+  ""
+] as const;
+export type MevBoostGnosis = typeof mevBoostGnosis[number];
+
 export const stakerPkgs = [
   ...executionClientsMainnet,
   ...consensusClientsMainnet,
@@ -27,85 +101,6 @@ export const stakerPkgs = [
   ...signerGnosis,
   ...mevBoostGnosis
 ];
-
-// MAINNET
-export declare const consensusClientsMainnet: readonly [
-  "lodestar.dnp.dappnode.eth",
-  "prysm.dnp.dappnode.eth",
-  "lighthouse.dnp.dappnode.eth",
-  "teku.dnp.dappnode.eth",
-  "nimbus.dnp.dappnode.eth",
-  "lodestar.dnp.dappnode.eth",
-  ""
-];
-export type ConsensusClientMainnet = typeof consensusClientsMainnet[number];
-export declare const executionClientsMainnet: readonly [
-  "geth.dnp.dappnode.eth",
-  "besu.public.dappnode.eth",
-  "erigon.dnp.dappnode.eth",
-  "nethermind.public.dappnode.eth",
-  ""
-];
-export type ExecutionClientMainnet = typeof executionClientsMainnet[number];
-export declare const signerMainnet: readonly [
-  "web3signer.dnp.dappnode.eth" | ""
-];
-export type SignerMainnet = typeof signerMainnet[number];
-export declare const mevBoostMainnet: readonly [
-  "mev-boost.dnp.dappnode.eth" | ""
-];
-export type MevBoostMainnet = typeof mevBoostMainnet[number];
-
-// PRATER
-export declare const consensusClientsPrater: readonly [
-  "prysm-prater.dnp.dappnode.eth",
-  "lighthouse-prater.dnp.dappnode.eth",
-  "teku-prater.dnp.dappnode.eth",
-  "nimbus-prater.dnp.dappnode.eth",
-  "lodestar-prater.dnp.dappnode.eth",
-  ""
-];
-export type ConsensusClientPrater = typeof consensusClientsPrater[number];
-export declare const executionClientsPrater: readonly [
-  "goerli-geth.dnp.dappnode.eth",
-  "goerli-erigon.dnp.dappnode.eth",
-  "goerli-nethermind.dnp.dappnode.eth",
-  "goerli-besu.dnp.dappnode.eth",
-  ""
-];
-export type ExecutionClientPrater = typeof executionClientsPrater[number];
-export declare const signerPrater: readonly [
-  "web3signer-prater.dnp.dappnode.eth" | ""
-];
-export type SignerPrater = typeof signerPrater[number];
-export declare const mevBoostPrater: readonly [
-  "mev-boost-goerli.dnp.dappnode.eth" | ""
-];
-export type MevBoostPrater = typeof mevBoostPrater[number];
-
-// GNOSIS
-export declare const consensusClientsGnosis: readonly [
-  "gnosis-beacon-chain-prysm.dnp.dappnode.eth",
-  "lighthouse-gnosis.dnp.dappnode.eth",
-  "teku-gnosis.dnp.dappnode.eth",
-  "nimbus-gnosis.dnp.dappnode.eth",
-  "lodestar-gnosis.dnp.dappnode.eth",
-  ""
-];
-export type ConsensusClientGnosis = typeof consensusClientsGnosis[number];
-export declare const executionClientsGnosis: readonly [
-  "nethermind-xdai.dnp.dappnode.eth",
-  ""
-];
-export type ExecutionClientGnosis = typeof executionClientsGnosis[number];
-export declare const signerGnosis: readonly [
-  "web3signer-Gnosis.dnp.dappnode.eth" | ""
-];
-export type SignerGnosis = typeof signerGnosis[number];
-export declare const mevBoostGnosis: readonly [
-  "mev-boost-gnosis.dnp.dappnode.eth" | ""
-];
-export type MevBoostGnosis = typeof mevBoostGnosis[number];
 
 // stakers items
 export type StakerType = "execution" | "consensus" | "signer" | "mev-boost";
