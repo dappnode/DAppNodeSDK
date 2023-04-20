@@ -12,12 +12,12 @@ import got from "got";
  * Ensure that the DAppNode environment is ready to run the integration tests
  */
 export async function ensureDappnodeEnvironment({
-  dappmanagerTestApi
+  dappmanagerTestApi,
+  network
 }: {
   dappmanagerTestApi: DappmanagerTestApi;
+  network?: Network;
 }): Promise<void> {
-  // Get the network from the runner labels
-  const network = getNetworkFromGithubLabels();
   // Check the Bind container IP address is in the /etc/resolv.conf file
   await ensureDockerAliasesResolveFromHost();
   // Check dappmanager is running
@@ -30,21 +30,6 @@ export async function ensureDappnodeEnvironment({
   await ensureNonStakerPkgsAreInstalled(dappmanagerTestApi);
   // Ensure IPFS is running and IPFS repository is in local mode
   await ensureIpfsInLocalMode(dappmanagerTestApi);
-}
-
-/**
- * Get the labels of the current runner
- */
-function getNetworkFromGithubLabels(): Network | undefined {
-  const labels = process.env["RUNNER_LABELS"];
-  if (!labels) throw Error("RUNNER_LABELS env var not found");
-  return labels.includes("mainnet")
-    ? "mainnet"
-    : labels.includes("gnosis")
-    ? "gnosis"
-    : labels.includes("prater")
-    ? "prater"
-    : undefined;
 }
 
 /**
