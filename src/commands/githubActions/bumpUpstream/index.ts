@@ -203,11 +203,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
     e.message = `Error getting next version from apm: ${e.message}`;
     e.message += `\nManifest version could not be updated`;
 
-    if (process.env.ENVIRONMENT !== "TEST") {
-      throw e;
-    } else {
-      console.log(e.message);
-    }
+    throw e;
   }
 
   writeManifest(manifest, format, { dir });
