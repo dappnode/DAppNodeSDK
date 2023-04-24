@@ -1,4 +1,4 @@
-import { verifyEthConnection } from "./verifyEthConnection";
+import { verifyEthConnection } from "./verifyEthConnection.js";
 
 /**
  * Tries to connect to Ethereum providers in the order they appear in the input array.
