@@ -5,6 +5,7 @@ on:
 
 env:
   ENVIRONMENT: TEST
+  INITIAL_VERSION: "0.1.0"
 
 jobs:
   test:
@@ -22,9 +23,9 @@ jobs:
         run: |
           cat <<EOT > ./template/dappnode_package.json
           {
-            "name": "dappnodesdk.public.dappnode.eth",
-            "version": "0.1.0",
-            "description": "dappnodesdk.public.dappnode.eth description",
+            "name": "ipfs.dnp.dappnode.eth",
+            "version": "${{ env.INITIAL_VERSION }}",
+            "description": "ipfs.dnp.dappnode.eth",
             "type": "service",
             "author": "runner",
             "categories": ["Developer tools"],
@@ -43,12 +44,12 @@ jobs:
           cat <<EOT > ./template/docker-compose.yml
           version: "3.5"
           services:
-            sdk.public.dappnode.eth:
+            ipfs.dnp.dappnode.eth:
               build:
                 context: .
                 args:
                   UPSTREAM_VERSION: v0.4.0
-              image: "sdk.public.dappnode.eth:0.1.0"
+              image: "ipfs.dnp.dappnode.eth:${{ env.INITIAL_VERSION }}"
               restart: unless-stopped
           EOT
 
