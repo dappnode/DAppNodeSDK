@@ -191,14 +191,15 @@ Compose - ${JSON.stringify(compose, null, 2)}
     providers: ethProviders
   });
 
+  if (!ethProviderAvailable)
+    throw Error(`No eth provider available. Tried: ${ethProviders.join(", ")}`);
+
   try {
-    if (ethProviderAvailable) {
-      manifest.version = await getNextVersionFromApm({
-        type: "patch",
-        ethProvider: ethProviderAvailable,
-        dir
-      });
-    }
+    manifest.version = await getNextVersionFromApm({
+      type: "patch",
+      ethProvider: ethProviderAvailable,
+      dir
+    });
   } catch (e) {
     e.message = `Error getting next version from apm: ${e.message}`;
     e.message += `\nManifest version could not be updated`;
