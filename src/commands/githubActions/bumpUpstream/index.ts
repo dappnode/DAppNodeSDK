@@ -17,17 +17,21 @@ import {
   writeCompose
 } from "../../../files/index.js";
 import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv.js";
+import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
+import { tryEthProviders } from "../../../utils/tryEthProviders.js";
 
 // This action should be run periodically
 
-export const gaBumpUpstream: CommandModule<CliGlobalOptions, CliGlobalOptions> =
-  {
-    command: "bump-upstream",
-    describe:
-      "Check if upstream repo has released a new version and open a PR with version bump",
-    builder: {},
-    handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
-  };
+export const gaBumpUpstream: CommandModule<
+  CliGlobalOptions,
+  CliGlobalOptions
+> = {
+  command: "bump-upstream",
+  describe:
+    "Check if upstream repo has released a new version and open a PR with version bump",
+  builder: {},
+  handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
+};
 
 async function gaBumpUpstreamHandler({
   dir = defaultDir
@@ -153,6 +157,24 @@ Compose - ${JSON.stringify(compose, null, 2)}
 
   const versionsToUpdate = Array.from(versionsToUpdateMap.values());
   manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
+
+  const ethProvider = await tryEthProviders({
+    providers: ["dappnode", "infura"]
+  });
+
+  try {
+    if (ethProvider) {
+      manifest.version = await getNextVersionFromApm({
+        type: "patch",
+        ethProvider,
+        dir
+      });
+    }
+  } catch (e) {
+    console.log(`Error getting next version from apm: ${e.message}`);
+    console.log(`Manifest version could not be updated`);
+  }
+
   writeManifest(manifest, format, { dir });
   writeCompose(compose, { dir });
 
