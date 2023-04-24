@@ -29,7 +29,7 @@ import { executeTestCheckers } from "./testCheckers.js";
  * - No error logs after a timeout
  * - Healthcheck endpoint returns 200
  */
-export async function executePackageInstallAndUpdateTest({
+export async function executeEndToEndTests({
   dappmanagerTestApi,
   releaseMultiHash,
   manifest,
@@ -52,6 +52,8 @@ export async function executePackageInstallAndUpdateTest({
   const { name } = manifest;
   const isStakerPkg = getIsStakerPkg(name);
 
+  printPackageMetadata(manifest, releaseMultiHash);
+
   // TEST: Install package from scratch
   console.log(chalk.dim("\nTEST: Installing pkg from scratch"));
   await testPackageInstallFromScratch(
@@ -64,9 +66,7 @@ export async function executePackageInstallAndUpdateTest({
     healthCheckUrl,
     network,
     environmentByService
-  ).catch(e => {
-    errors.push(e);
-  });
+  ).catch(e => errors.push(e));
 
   // Skip update test if running in test environment, dappnodesdk package name is not published
   if (process.env.ENVIRONMENT !== "TEST") {
@@ -82,13 +82,27 @@ export async function executePackageInstallAndUpdateTest({
       healthCheckUrl,
       network,
       environmentByService
-    ).catch(e => {
-      errors.push(e);
-    });
+    ).catch(e => errors.push(e));
   }
 
   // Throw aggregated error if any
   if (errors.length > 0) throw AggregateError(errors);
+}
+
+function printPackageMetadata(
+  manifest: Manifest,
+  releaseMultiHash: string
+): void {
+  console.log(
+    chalk.dim(
+      `
+  Package: ${manifest.name}
+  Version: ${manifest.version}
+  Upstream version: ${manifest.upstreamVersion ?? "N/A"}
+  Release: ${releaseMultiHash}
+  `
+    )
+  );
 }
 
 async function testPackageInstallAndUpdate(

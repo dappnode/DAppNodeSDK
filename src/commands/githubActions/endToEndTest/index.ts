@@ -3,7 +3,7 @@ import { CliGlobalOptions } from "../../../types.js";
 import { ensureDappnodeEnvironment } from "./ensureDappnodeEnvironment.js";
 import { readCompose, readManifest } from "../../../files/index.js";
 import { buildHandler } from "../../build.js";
-import { executePackageInstallAndUpdateTest } from "./executeTests.js";
+import { executeEndToEndTests } from "./executeTests.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import { localDappmanagerTestApiUrl, localIpfsApiUrl } from "./params.js";
 import chalk from "chalk";
@@ -93,7 +93,7 @@ export async function gaTestEndToEndHandler({
       network: network as Network
     });
 
-    await executePackageInstallAndUpdateTest({
+    await executeEndToEndTests({
       dappmanagerTestApi,
       releaseMultiHash,
       manifest,
