@@ -55,7 +55,7 @@ export async function executeEndToEndTests({
   printPackageMetadata(manifest, releaseMultiHash);
 
   // TEST: Install package from scratch
-  console.log(chalk.dim("\nTEST: Installing pkg from scratch"));
+  console.log(chalk.dim("\nTEST: Install pkg from scratch"));
   await testPackageInstallFromScratch(
     dappmanagerTestApi,
     releaseMultiHash,
@@ -99,10 +99,11 @@ function printPackageMetadata(
   console.log(
     chalk.dim(
       `
-  Package: ${manifest.name}
-  Version: ${manifest.version}
-  Upstream version: ${manifest.upstreamVersion ?? "N/A"}
-  Release: ${releaseMultiHash}
+Package metadata:
+  - Package: ${manifest.name}
+  - Version: ${manifest.version}
+  - Upstream version: ${manifest.upstreamVersion ?? "N/A"}
+  - Release: ${releaseMultiHash}
   `
     )
   );
@@ -122,7 +123,7 @@ async function testPackageInstallAndUpdate(
   // Remove package, if not found it will throw an error but it's ok
   await dappmanagerTestApi
     .packageRemove({ dnpName })
-    .catch(() => console.log("Package already removed"));
+    .catch(() => console.log("  - Package already removed"));
   await dappmanagerTestApi.packageInstall({
     dnpName,
     version: "latest", // Install production version
@@ -158,7 +159,7 @@ async function testPackageInstallFromScratch(
   // Remove package, if not found it will throw an error but it's ok
   await dappmanagerTestApi
     .packageRemove({ dnpName })
-    .catch(() => console.log("Package already removed"));
+    .catch(() => console.log("  - Package already removed"));
   await dappmanagerTestApi.packageInstall({
     dnpName,
     version: releaseMultiHash,

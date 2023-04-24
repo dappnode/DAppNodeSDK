@@ -66,9 +66,15 @@ async function ensureOnlyDefaultPkgsInstalled(
   network?: Network
 ): Promise<void> {
   const installedPackages = await dappmanagerTestApi.packagesGet();
+  const _packagesToKeep = packagesToKeep(network);
+  console.log(
+    chalk.dim(
+      `  - Packages to keep in dappnode environment:  ${_packagesToKeep}`
+    )
+  );
 
   for (const installedPackage of installedPackages) {
-    if (!packagesToKeep(network).includes(installedPackage.dnpName)) {
+    if (!_packagesToKeep.includes(installedPackage.dnpName)) {
       console.log(
         chalk.dim(
           `  - Removing package ${installedPackage.dnpName} from the DAppNode environment`
