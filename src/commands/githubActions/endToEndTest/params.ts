@@ -140,23 +140,23 @@ export const nonStakerPackagesSetup = [
   "dappnode-exporter.dnp.dappnode.eth"
 ];
 
-export const stakerPkgsToKeep = (network: Network): string[] => {
+const stakerPkgsToKeep = (network: Network): string[] => {
   return network === "mainnet"
     ? [
-        stakerMainnetConfig.executionClient.dnpName,
-        stakerMainnetConfig.consensusClient.dnpName,
+        "geth.dnp.dappnode.eth",
+        "prysm.dnp.dappnode.eth",
         "mev-boost.dnp.dappnode.eth",
         "web3signer.dnp.dappnode.eth"
       ]
     : network === "gnosis"
     ? [
-        stakerGnosisConfig.executionClient.dnpName,
-        stakerGnosisConfig.consensusClient.dnpName,
+        "nethermind-xdai.dnp.dappnode.eth",
+        "teku-gnosis.dnp.dappnode.eth",
         "web3signer-gnosis.dnp.dappnode.eth"
       ]
     : [
-        stakerPraterConfig.executionClient.dnpName,
-        stakerPraterConfig.consensusClient.dnpName,
+        "goerli-besu.dnp.dappnode.eth",
+        "lighthouse-prater.dnp.dappnode.eth",
         "mev-boost-goerli.dnp.dappnode.eth",
         "web3signer-prater.dnp.dappnode.eth"
       ];
