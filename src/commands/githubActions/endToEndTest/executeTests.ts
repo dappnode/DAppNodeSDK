@@ -86,7 +86,10 @@ export async function executeEndToEndTests({
   }
 
   // Throw aggregated error if any
-  if (errors.length > 0) throw AggregateError(errors);
+  if (errors.length > 0) {
+    const errorMessages = errors.map(e => e.message).join("\n");
+    throw Error(errorMessages);
+  }
 }
 
 function printPackageMetadata(
