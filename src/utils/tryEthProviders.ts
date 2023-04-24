@@ -11,7 +11,7 @@ export async function tryEthProviders({
   providers
 }: {
   providers: string[];
-}): Promise<string> {
+}): Promise<string | undefined> {
   for (const provider of providers) {
     try {
       await verifyEthConnection(provider);
@@ -21,5 +21,5 @@ export async function tryEthProviders({
     }
   }
 
-  return "";
+  return undefined;
 }
