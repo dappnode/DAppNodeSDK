@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import Docker from "dockerode";
-import got from "got/dist/source";
+import got from "got";
 import { Network } from "./types.js";
 import { getContainerName } from "../../../params.js";
 import { Compose } from "../../../types.js";
