@@ -171,8 +171,14 @@ Compose - ${JSON.stringify(compose, null, 2)}
       });
     }
   } catch (e) {
-    console.log(`Error getting next version from apm: ${e.message}`);
-    console.log(`Manifest version could not be updated`);
+    e.message = `Error getting next version from apm: ${e.message}`;
+    e.message += `\nManifest version could not be updated`;
+
+    if (process.env.ENVIRONMENT !== "TEST") {
+      throw e;
+    } else {
+      console.log(e.message);
+    }
   }
 
   writeManifest(manifest, format, { dir });
