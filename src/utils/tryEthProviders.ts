@@ -15,6 +15,7 @@ export async function tryEthProviders({
   for (const provider of providers) {
     try {
       await verifyEthConnection(provider);
+      console.log(`Connected to ${provider} eth provider`);
       return provider;
     } catch (e) {
       console.log(`Error connecting to ${provider} ethProvider: ${e.message}`);
