@@ -18,7 +18,7 @@ import {
 } from "../../../files/index.js";
 import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
-import { tryEthProviders } from "../../../utils/tryEthProviders.js";
+import { getFirstAvailableEthProvider } from "../../../utils/tryEthProviders.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
@@ -187,7 +187,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
   const versionsToUpdate = Array.from(versionsToUpdateMap.values());
   manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
 
-  const ethProviderAvailable = await tryEthProviders({
+  const ethProviderAvailable = await getFirstAvailableEthProvider({
     providers: ethProviders
   });
 

@@ -7,7 +7,7 @@ import { verifyEthConnection } from "./verifyEthConnection.js";
  * @returns {Promise<string>} A promise that resolves to the first successfully connected provider's name
  * or an empty string if none of the providers could be connected.
  */
-export async function tryEthProviders({
+export async function getFirstAvailableEthProvider({
   providers
 }: {
   providers: string[];
