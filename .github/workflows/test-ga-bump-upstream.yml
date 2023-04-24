@@ -62,7 +62,7 @@ jobs:
       - name: Bump upstream version
         run: |
           cd template
-          node ../dist/dappnodesdk.js github-action bump-upstream
+          node ../dist/dappnodesdk.js github-action bump-upstream -f
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
