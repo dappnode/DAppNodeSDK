@@ -17,21 +17,47 @@ import {
   writeCompose
 } from "../../../files/index.js";
 import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv.js";
+import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
+import { getFirstAvailableEthProvider } from "../../../utils/tryEthProviders.js";
+
+interface CliCommandOptions extends CliGlobalOptions {
+  eth_provider: string;
+  use_fallback: boolean;
+}
 
 // This action should be run periodically
 
-export const gaBumpUpstream: CommandModule<CliGlobalOptions, CliGlobalOptions> =
-  {
-    command: "bump-upstream",
-    describe:
-      "Check if upstream repo has released a new version and open a PR with version bump",
-    builder: {},
-    handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
-  };
+export const gaBumpUpstream: CommandModule<
+  CliGlobalOptions,
+  CliCommandOptions
+> = {
+  command: "bump-upstream",
+  describe:
+    "Check if upstream repo has released a new version and open a PR with version bump",
+  builder: {
+    eth_provider: {
+      alias: "p",
+      description:
+        "Specify the eth provider to use: 'dappnode' (default), 'infura', 'localhost:5002'",
+      default: "dappnode",
+      type: "string"
+    },
+    use_fallback: {
+      alias: "f",
+      description:
+        "Use fallback eth provider if main provider fails: false (default), true. If main provider fails, it will try to use 'dappnode' first and then 'infura'",
+      default: false,
+      type: "boolean"
+    }
+  },
+  handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
+};
 
 async function gaBumpUpstreamHandler({
-  dir = defaultDir
-}: CliGlobalOptions): Promise<void> {
+  dir = defaultDir,
+  eth_provider,
+  use_fallback
+}: CliCommandOptions): Promise<void> {
   // Check if buildSdkEnvFileName file exists
   const templateArgs = readBuildSdkEnvFileNotThrow(dir);
 
@@ -48,6 +74,13 @@ async function gaBumpUpstreamHandler({
   const githubActor = process.env.GITHUB_ACTOR || "bot";
   const userName = githubActor;
   const userEmail = `${userName}@users.noreply.github.com`;
+
+  const defaultEthProviders = ["dappnode", "infura"];
+  const ethProvider = eth_provider;
+
+  const ethProviders = use_fallback
+    ? [ethProvider, ...defaultEthProviders.filter(p => p !== ethProvider)]
+    : [ethProvider];
 
   console.log(`
 Arguments - ${JSON.stringify({
@@ -153,6 +186,27 @@ Compose - ${JSON.stringify(compose, null, 2)}
 
   const versionsToUpdate = Array.from(versionsToUpdateMap.values());
   manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
+
+  const ethProviderAvailable = await getFirstAvailableEthProvider({
+    providers: ethProviders
+  });
+
+  if (!ethProviderAvailable)
+    throw Error(`No eth provider available. Tried: ${ethProviders.join(", ")}`);
+
+  try {
+    manifest.version = await getNextVersionFromApm({
+      type: "patch",
+      ethProvider: ethProviderAvailable,
+      dir
+    });
+  } catch (e) {
+    e.message = `Error getting next version from apm: ${e.message}`;
+    e.message += `\nManifest version could not be updated`;
+
+    throw e;
+  }
+
   writeManifest(manifest, format, { dir });
   writeCompose(compose, { dir });
 
