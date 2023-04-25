@@ -3,13 +3,6 @@ import { Network, StakerConfigSet } from "./types.js";
 export const localIpfsApiUrl = `http://172.33.1.5:5001`;
 export const localDappmanagerTestApiUrl = `http://172.33.1.7:7000`;
 
-const defaultExecutionMainnet = "geth.dnp.dappnode.eth";
-const defaultExecutionPrater = "goerli-besu.dnp.dappnode.eth";
-const defaultExecutionGnosis = "nethermind-xdai.dnp.dappnode.eth";
-const defaultConsensusMainnet = "prysm.dnp.dappnode.eth";
-const defaultConsensusPrater = "lighthouse-prater.dnp.dappnode.eth";
-const defaultConsensusGnosis = "teku-gnosis.dnp.dappnode.eth";
-
 export const getStakerConfigByNetwork = (
   network: Network
 ): StakerConfigSet<Network> => {
@@ -24,7 +17,7 @@ const stakerMainnetConfig: StakerConfigSet<"mainnet"> = {
   network: "mainnet",
   feeRecipient: "0x0000000000000000000000000000000000000001",
   executionClient: {
-    dnpName: defaultExecutionMainnet,
+    dnpName: "geth.dnp.dappnode.eth",
     status: "ok",
     avatarUrl: "",
     isInstalled: true,
@@ -33,7 +26,7 @@ const stakerMainnetConfig: StakerConfigSet<"mainnet"> = {
     isUpdated: true
   },
   consensusClient: {
-    dnpName: defaultConsensusMainnet,
+    dnpName: "prysm.dnp.dappnode.eth",
     useCheckpointSync: true,
     status: "ok",
     avatarUrl: "",
@@ -69,7 +62,7 @@ const stakerPraterConfig: StakerConfigSet<"prater"> = {
   network: "prater",
   feeRecipient: "0x0000000000000000000000000000000000000001",
   executionClient: {
-    dnpName: defaultExecutionPrater,
+    dnpName: "goerli-besu.dnp.dappnode.eth",
     status: "ok",
     avatarUrl: "",
     isInstalled: true,
@@ -78,7 +71,7 @@ const stakerPraterConfig: StakerConfigSet<"prater"> = {
     isUpdated: true
   },
   consensusClient: {
-    dnpName: defaultConsensusPrater,
+    dnpName: "lighthouse-prater.dnp.dappnode.eth",
     useCheckpointSync: true,
     status: "ok",
     avatarUrl: "",
@@ -110,7 +103,7 @@ const stakerGnosisConfig: StakerConfigSet<"gnosis"> = {
   network: "gnosis",
   feeRecipient: "0x0000000000000000000000000000000000000001",
   executionClient: {
-    dnpName: defaultExecutionGnosis,
+    dnpName: "nethermind-xdai.dnp.dappnode.eth",
     status: "ok",
     avatarUrl: "",
     isInstalled: true,
@@ -119,7 +112,7 @@ const stakerGnosisConfig: StakerConfigSet<"gnosis"> = {
     isUpdated: true
   },
   consensusClient: {
-    dnpName: defaultConsensusGnosis,
+    dnpName: "teku-gnosis.dnp.dappnode.eth",
     useCheckpointSync: true,
     status: "ok",
     avatarUrl: "",
@@ -150,20 +143,20 @@ export const nonStakerPackagesSetup = [
 const stakerPkgsToKeep = (network: Network): string[] => {
   return network === "mainnet"
     ? [
-        defaultExecutionMainnet,
-        defaultConsensusMainnet,
+        "geth.dnp.dappnode.eth",
+        "prysm.dnp.dappnode.eth",
         "mev-boost.dnp.dappnode.eth",
         "web3signer.dnp.dappnode.eth"
       ]
     : network === "gnosis"
     ? [
-        defaultExecutionGnosis,
-        defaultConsensusGnosis,
+        "nethermind-xdai.dnp.dappnode.eth",
+        "teku-gnosis.dnp.dappnode.eth",
         "web3signer-gnosis.dnp.dappnode.eth"
       ]
     : [
-        defaultExecutionPrater,
-        defaultConsensusPrater,
+        "goerli-besu.dnp.dappnode.eth",
+        "lighthouse-prater.dnp.dappnode.eth",
         "mev-boost-goerli.dnp.dappnode.eth",
         "web3signer-prater.dnp.dappnode.eth"
       ];
