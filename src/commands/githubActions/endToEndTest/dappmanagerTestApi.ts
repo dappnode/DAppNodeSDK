@@ -94,7 +94,7 @@ export class DappmanagerTestApi {
    */
   async packageRemove({
     dnpName,
-    deleteVolumes = false
+    deleteVolumes = true
   }: {
     dnpName: string;
     deleteVolumes?: boolean;
