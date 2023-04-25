@@ -73,12 +73,12 @@ async function ensureContainerStatus(
 async function ensureHealthCheck(healthCheckUrl: string): Promise<void> {
   const res = await got(healthCheckUrl).catch(e => {
     const errorMessage = `Healthcheck endpoint returned ${e.message}`;
-    console.error(chalk.red(`x ${errorMessage}`));
+    console.error(chalk.red(`  x ${errorMessage}`));
     throw Error(errorMessage);
   });
   if (res.statusCode < 200 || res.statusCode > 299) {
     const errorMessage = `HTTP code !== 2XX. Healthcheck endpoint returned ${res.statusCode}`;
-    console.error(chalk.red(`x ${errorMessage}`));
+    console.error(chalk.red(`  x ${errorMessage}`));
     throw Error(errorMessage);
   }
 }
