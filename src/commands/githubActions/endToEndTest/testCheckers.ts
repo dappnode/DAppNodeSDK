@@ -18,6 +18,7 @@ export async function executeTestCheckers({
   healthCheckUrl?: string;
   network?: Network;
 }): Promise<void> {
+  const errors: Error[] = [];
   const docker = new Docker();
   for (const service of Object.keys(compose.services)) {
     const containerName = getContainerName({
@@ -25,21 +26,33 @@ export async function executeTestCheckers({
       serviceName: service,
       isCore: false
     });
-    await ensureContainerStatus(containerName, docker).then(() =>
-      console.log(chalk.green(`  ✓ Container ${containerName} is running`))
-    );
-    await ensureNoErrorLogs(containerName, docker, errorLogsTimeout).then(() =>
-      console.log(chalk.green(`  ✓ No error logs found in ${containerName}`))
-    );
+    await ensureContainerStatus(containerName, docker)
+      .then(() =>
+        console.log(chalk.green(`  ✓ Container ${containerName} is running`))
+      )
+      .catch(e => errors.push(e));
+    await ensureNoErrorLogs(containerName, docker, errorLogsTimeout)
+      .then(() =>
+        console.log(chalk.green(`  ✓ No error logs found in ${containerName}`))
+      )
+      .catch(e => errors.push(e));
   }
   if (healthCheckUrl)
-    await ensureHealthCheck(healthCheckUrl).then(() =>
-      console.log(chalk.green(`  ✓ Healthcheck endpoint returned 200`))
-    );
+    await ensureHealthCheck(healthCheckUrl)
+      .then(() =>
+        console.log(chalk.green(`  ✓ Healthcheck endpoint returned 200`))
+      )
+      .catch(e => errors.push(e));
   if (network)
-    await attestanceProof(network).then(() =>
-      console.log(chalk.green(`  ✓ Attestation proof`))
-    );
+    await attestanceProof(network)
+      .then(() => console.log(chalk.green(`  ✓ Attestation proof`)))
+      .catch(e => errors.push(e));
+
+  // Throw aggregated error if any
+  if (errors.length > 0) {
+    const errorMessages = errors.map(e => e.message).join("\n");
+    throw Error(errorMessages);
+  }
 }
 
 async function ensureContainerStatus(
