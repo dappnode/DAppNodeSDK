@@ -141,7 +141,8 @@ async function testPackageInstallAndUpdate(
     dnpName,
     compose,
     errorLogsTimeout,
-    healthCheckUrl
+    healthCheckUrl,
+    network
   });
 }
 
@@ -172,7 +173,8 @@ async function testPackageInstallFromScratch(
     dnpName,
     compose,
     errorLogsTimeout,
-    healthCheckUrl
+    healthCheckUrl,
+    network
   });
 }
 
