@@ -38,14 +38,14 @@ export const gaBumpUpstream: CommandModule<
     eth_provider: {
       alias: "p",
       description:
-        "Specify the eth provider to use: 'dappnode' (default), 'infura', 'localhost:5002'",
-      default: "dappnode",
+        "Specify the eth provider to use: 'remote' (default), 'infura', 'localhost:5002'",
+      default: "remote",
       type: "string"
     },
     use_fallback: {
       alias: "f",
       description:
-        "Use fallback eth provider if main provider fails: false (default), true. If main provider fails, it will try to use 'dappnode' first and then 'infura'",
+        "Use fallback eth provider if main provider fails: false (default), true. If main provider fails, it will try to use 'remote' first and then 'infura'",
       default: true,
       type: "boolean"
     }
@@ -75,7 +75,7 @@ async function gaBumpUpstreamHandler({
   const userName = githubActor;
   const userEmail = `${userName}@users.noreply.github.com`;
 
-  const defaultEthProviders = ["dappnode", "infura"];
+  const defaultEthProviders = ["remote", "infura"];
   const ethProvider = eth_provider;
 
   const ethProviders = use_fallback
