@@ -46,7 +46,7 @@ export const gaBumpUpstream: CommandModule<
       alias: "f",
       description:
         "Use fallback eth provider if main provider fails: false (default), true. If main provider fails, it will try to use 'dappnode' first and then 'infura'",
-      default: false,
+      default: true,
       type: "boolean"
     }
   },
