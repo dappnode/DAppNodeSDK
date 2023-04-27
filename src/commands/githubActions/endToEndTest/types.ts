@@ -446,3 +446,10 @@ export interface IpfsRepository {
   ipfsClientTarget: IpfsClientTarget;
   ipfsGateway: string;
 }
+
+export interface ValidatorData {
+  status: string;
+  data: {
+    status: string;
+  }
+}
