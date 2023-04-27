@@ -133,9 +133,10 @@ export async function attestanceProof(network: Network): Promise<void> {
   // Check if the network is mainnet or prater
   if (network === "mainnet") return;
   else if (network === "prater") {
-    let iterationCount = 0;
+    let iterationCount = 1;
     console.log(chalk.yellow(`  - Checking if validator is active`));
-    while (true) {
+
+    while (iterationCount <= 10) {
       await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000)); // Wait for 2 minutes before each iteration
       const response = await got(`https://prater.beaconcha.in/api/v1/validator/${process.env.VAL_INDEX}`, {
       headers: {
@@ -150,14 +151,14 @@ export async function attestanceProof(network: Network): Promise<void> {
         console.log(chalk.green(`  ✓ Validator is active`));
         break; // Exit the loop if the validator is active
       } else {
-        iterationCount++;
-        if (iterationCount >= 8) { // Throw an error if the validator is not active after 16 minutes (8 iterations of 2 minutes)
-          const errorMessage = `Validator is not active after 16 minutes`;
-          console.error(chalk.red(`  x ${errorMessage}`));
-          throw Error(errorMessage);
-        }
         console.log(chalk.yellow(`  - Validator is not active yet. Retrying (minutes passed: ${iterationCount*2})`));
       }
+      iterationCount++;
+    }
+    if (iterationCount === 10) {
+      const errorMessage = `Validator is not active after 20 minutes`;
+      console.error(chalk.red(`  x ${errorMessage}`));
+      throw Error(errorMessage);
     }
   }
   return;

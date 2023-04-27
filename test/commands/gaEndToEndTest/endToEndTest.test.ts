@@ -22,7 +22,7 @@ describe("command / gaEndToEndTest", function () {
     expect(true).to.equal(true);
   });
 
-  it.only("should execute end to end tests on a real dappnode environment", async () => {
+  it("validator shouldnt return any errors while trying to attest", async () => {
     expect(await attestanceProof("prater")).to.not.throw;
   }); 
 });
