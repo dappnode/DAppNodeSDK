@@ -4,6 +4,7 @@ import got from "got";
 import { Network } from "./types.js";
 import { getContainerName } from "../../../params.js";
 import { Compose } from "../../../types.js";
+import dotenv from 'dotenv';
 
 export async function executeTestCheckers({
   dnpName,
@@ -116,10 +117,48 @@ async function ensureNoErrorLogs(
 }
 
 /**
- * Test that the validators are attesting after a peri
+ * Test that the validators are attesting after 16 minutes
+ * 
  */
-async function attestanceProof(network: Network): Promise<void> {
+export async function attestanceProof(network: Network): Promise<void> {
+
+  // Interface for the response from beaconcha.in
+  interface ValidatorData {
+    status: string;
+    data: {
+      status: string;
+    }
+  }
+  dotenv.config();
+  // Check if the network is mainnet or prater
   if (network === "mainnet") return;
-  // TODO
+  else if (network === "prater") {
+    let iterationCount = 0;
+    console.log(chalk.yellow(`  - Checking if validator is active`));
+    while (true) {
+      await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000)); // Wait for 2 minutes before each iteration
+      const response = await got(`https://prater.beaconcha.in/api/v1/validator/${process.env.VAL_INDEX}`, {
+      headers: {
+        Accept: 'application/json'
+      },
+      responseType: 'json',
+      throwHttpErrors: false
+      });
+      if (response.statusCode !== 200) throw Error(`Error while fetching validator data. Beaconcha.in returned ${response.statusCode}`);
+      const data = response.body as ValidatorData
+      if (data.data.status === "active_online") {
+        console.log(chalk.green(`  ✓ Validator is active`));
+        break; // Exit the loop if the validator is active
+      } else {
+        iterationCount++;
+        if (iterationCount >= 8) { // Throw an error if the validator is not active after 16 minutes (8 iterations of 2 minutes)
+          const errorMessage = `Validator is not active after 16 minutes`;
+          console.error(chalk.red(`  x ${errorMessage}`));
+          throw Error(errorMessage);
+        }
+        console.log(chalk.yellow(`  - Validator is not active yet. Retrying (minutes passed: ${iterationCount*2})`));
+      }
+    }
+  }
   return;
 }

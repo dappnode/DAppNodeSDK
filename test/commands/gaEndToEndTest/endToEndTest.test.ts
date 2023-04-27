@@ -1,10 +1,12 @@
 import { expect } from "chai";
 import { gaTestEndToEndHandler } from "../../../src/commands/githubActions/endToEndTest/index.js";
+import { attestanceProof } from "../../../src/commands/githubActions/endToEndTest/testCheckers.js";
 import { testDir, cleanTestDir } from "../../testUtils.js";
 import { initHandler } from "../../../src/commands/init.js";
 
-describe.skip("command / gaEndToEndTest", function () {
-  this.timeout(120 * 1000);
+describe("command / gaEndToEndTest", function () {
+  // tests could take a while, set timeout to 20 minutes
+  this.timeout(1200 * 1000);
 
   before(async () => {
     cleanTestDir();
@@ -19,4 +21,8 @@ describe.skip("command / gaEndToEndTest", function () {
     });
     expect(true).to.equal(true);
   });
+
+  it.only("should execute end to end tests on a real dappnode environment", async () => {
+    expect(await attestanceProof("prater")).to.not.throw;
+  }); 
 });
