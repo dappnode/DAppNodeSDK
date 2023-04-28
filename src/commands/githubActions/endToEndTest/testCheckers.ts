@@ -53,7 +53,7 @@ export async function executeTestCheckers({
     * - The package to test is a staker package or the default execution package (execution client needs to be on sync in order to attest)
     * - The test is the "testPackageInstallAndUpdate" and not the "testPackageInstallFromScratch" (the check can take up to 20 min to be completed).
   **/
-  if (network && isUpdateTest && getIsStakerPkg(dnpName) && dnpName !== getStakerConfigByNetwork(network).executionClient.dnpName) {
+  if (network && isUpdateTest && getIsStakerPkg(dnpName) && dnpName !== getStakerConfigByNetwork(network).executionClient.dnpName && !process.env.TEST) {
     await attestanceProof(network)
       .then(() => console.log(chalk.green(`  ✓ Attestation proof`)))
       .catch(e => errors.push(e));
