@@ -91,7 +91,7 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
   },
 
   handler: async args => {
-    const { txData, nextVersion, releaseMultiHash } = await publishHanlder(
+    const { txData, nextVersion, releaseMultiHash } = await publishHandler(
       args
     );
 
@@ -125,7 +125,7 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 /**
  * Common handler for CLI and programatic usage
  */
-export async function publishHanlder({
+export async function publishHandler({
   type,
   provider,
   eth_provider,
@@ -169,7 +169,7 @@ export async function publishHanlder({
   if (dappnode_team_preset) {
     if (isCi) {
       ethProvider = "infura";
-      contentProvider = "http://ipfs.dappnode.io:5001";
+      contentProvider = "http://api.ipfs.dappnode.io:5001";
       uploadTo = "ipfs";
       // Activate verbose to see logs easier afterwards
       verbose = true;
