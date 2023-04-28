@@ -3,20 +3,24 @@ import Docker from "dockerode";
 import got from "got";
 import { Network, ValidatorData } from "./types.js";
 import { getContainerName } from "../../../params.js";
+import { getStakerConfigByNetwork } from "./params.js";
 import { Compose } from "../../../types.js";
+import { getIsStakerPkg } from "./utils.js";
 
 export async function executeTestCheckers({
   dnpName,
   compose,
   errorLogsTimeout,
   healthCheckUrl,
-  network
+  network,
+  isUpdateTest
 }: {
   dnpName: string;
   compose: Compose;
   errorLogsTimeout: number;
   healthCheckUrl?: string;
   network?: Network;
+  isUpdateTest: boolean;
 }): Promise<void> {
   const errors: Error[] = [];
   const docker = new Docker();
@@ -43,10 +47,17 @@ export async function executeTestCheckers({
         console.log(chalk.green(`  ✓ Healthcheck endpoint returned 200`))
       )
       .catch(e => errors.push(e));
-  if (network)
+
+  /** 
+    * The attestation check will only be performed when a few requeriments are met:
+    * - The package to test is a staker package or the default execution package (execution client needs to be on sync in order to attest)
+    * - The test is the "testPackageInstallAndUpdate" and not the "testPackageInstallFromScratch" (the check can take up to 20 min to be completed).
+  **/
+  if (network && isUpdateTest && getIsStakerPkg(dnpName) && dnpName !== getStakerConfigByNetwork(network).executionClient.dnpName) {
     await attestanceProof(network)
       .then(() => console.log(chalk.green(`  ✓ Attestation proof`)))
       .catch(e => errors.push(e));
+  }
 
   // Throw aggregated error if any
   if (errors.length > 0) {
@@ -120,15 +131,17 @@ async function ensureNoErrorLogs(
  * 
  */
 export async function attestanceProof(network: Network): Promise<void> {
+  // Wait for doppleganger protection to end, set to 15 min
+  await new Promise(resolve => setTimeout(resolve, 15 * 60 * 1000));
   // Check if the network is mainnet or prater
   if (network === "mainnet") {
     // TODO
     return;
   } else if (network === "prater") {
-    let iterationCount = 1;
+    let i = 1;
     console.log(chalk.grey(`  - Checking if validator is active`));
 
-    while (iterationCount <= 9) {
+    while (i <= 9) {
       await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000)); // Wait for 2 minutes before each iteration
       const response = await got(`https://prater.beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`, {
       headers: {
@@ -138,20 +151,20 @@ export async function attestanceProof(network: Network): Promise<void> {
       throwHttpErrors: false
       });
 
-      if (response.statusCode !== 200) throw Error(`Error while fetching validator data. Beaconcha.in returned ${response.statusCode}`);
+      if (response.statusCode !== 200) throw new Error(`Error while fetching validator data. Beaconcha.in returned ${response.statusCode}`);
 
       const data = response.body as ValidatorData
       if (data.data.status === "active_online") {
         console.log(chalk.green(`  ✓ Validator is active`));
         return; // Exit the loop if the validator is active
       } else {
-        console.log(chalk.yellow(`  - Validator is not active yet. Retrying (minutes passed: ${iterationCount*2})`));
+        console.log(chalk.yellow(`  - Validator is not active yet. Retrying (minutes passed: ${i*2})`));
       }
-      iterationCount++;
+      i++;
     }
     const errorMessage = `Validator is not active after 20 minutes`;
     console.error(chalk.red(`  x ${errorMessage}`));
-    throw Error(errorMessage);
+    throw new Error(errorMessage);
   }
   return;
 }

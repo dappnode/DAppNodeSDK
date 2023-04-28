@@ -142,7 +142,8 @@ async function testPackageInstallAndUpdate(
     compose,
     errorLogsTimeout,
     healthCheckUrl,
-    network
+    network,
+    isUpdateTest: true
   });
 }
 
@@ -174,7 +175,8 @@ async function testPackageInstallFromScratch(
     compose,
     errorLogsTimeout,
     healthCheckUrl,
-    network
+    network,
+    isUpdateTest: false
   });
 }
 
