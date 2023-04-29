@@ -143,7 +143,7 @@ export async function attestanceProof(network: Network): Promise<void> {
 
     while (i <= 9) {
       await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000)); // Wait for 2 minutes before each iteration
-      const response = await got(`https://prater.beaconcha.in/api/v1/validator/${process.env.PRATER_VALIDATOR_INDEX}`, {
+      const response = await got(`https://prater.beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`, {
       headers: {
         Accept: 'application/json'
       },
