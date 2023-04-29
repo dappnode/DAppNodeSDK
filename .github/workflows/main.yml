@@ -23,5 +23,5 @@ jobs:
       - run: yarn install
       - run: yarn lint
       - run: yarn test
-      env:
+        env:
           VALIDATOR_INDEX: ${{ secrets.PRATER_VALIDATOR_INDEX }}
