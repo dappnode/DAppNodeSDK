@@ -127,44 +127,52 @@ async function ensureNoErrorLogs(
 }
 
 /**
- * Test that the validators are attesting after 16 minutes
- * 
+ * Test that the validators are attesting after doppelganger protection + 18 minutes max.
  */
 export async function attestanceProof(network: Network): Promise<void> {
   // Wait for doppleganger protection to end, set to 15 min
+  console.log(chalk.grey(`  - Waiting for doppleganger protection to end`));
   await new Promise(resolve => setTimeout(resolve, 15 * 60 * 1000));
-  // Check if the network is mainnet or prater
+
+  let response = undefined; // Define response and give it an initial value of undefined
+  let endpoint = "";
+
   if (network === "mainnet") {
-    // TODO
-    return;
+    // TODO: Add mainnet endpoint
+    // endpoint = `https://beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`;
   } else if (network === "prater") {
-    let i = 1;
-    console.log(chalk.grey(`  - Checking if validator is active`));
-
-    while (i <= 9) {
-      await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000)); // Wait for 2 minutes before each iteration
-      const response = await got(`https://prater.beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`, {
-      headers: {
-        Accept: 'application/json'
-      },
-      responseType: 'json',
-      throwHttpErrors: false
-      });
-
-      if (response.statusCode !== 200) throw new Error(`Error while fetching validator data. Beaconcha.in returned ${response.statusCode}`);
-
-      const data = response.body as ValidatorData
-      if (data.data.status === "active_online") {
-        console.log(chalk.green(`  ✓ Validator is active`));
-        return; // Exit the loop if the validator is active
-      } else {
-        console.log(chalk.yellow(`  - Validator is not active yet. Retrying (minutes passed: ${i*2})`));
-      }
-      i++;
-    }
-    const errorMessage = `Validator is not active after 20 minutes`;
-    console.error(chalk.red(`  x ${errorMessage}`));
-    throw new Error(errorMessage);
+    endpoint = `https://prater.beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`;
   }
-  return;
+
+  let i = 1;
+  console.log(chalk.grey(`  - Checking if validator is active`));
+
+  while (i <= 9) {
+   await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000)); // Wait for 2 minutes before each iteration
+    try {
+      response = await got(endpoint, {
+        headers: {
+          Accept: 'application/json'
+        },
+        responseType: 'json'
+      });
+    } catch (err) {
+      throw new Error(`Error while calling beaconcha.in endpoint ${err}`);
+    }
+
+    if (response.statusCode !== 200) throw new Error(`Error while fetching validator data. Beaconcha.in returned ${response.statusCode}`);
+
+    const data = response.body as ValidatorData
+    if (data.data.status === "active_online") {
+      console.log(chalk.green(`  ✓ Validator is active`));
+      return; // Exit the loop if the validator is active
+    } else {
+      console.log(chalk.yellow(`  - Validator is not active yet. Retrying (minutes passed: ${i*2})`));
+    }
+    i++;
+  }
+  // This will only be reached if the validator is not active after 20 minutes
+  const errorMessage = `Validator is not active after 20 minutes`;
+  console.error(chalk.red(`  x ${errorMessage}`));
+  throw new Error(errorMessage);
 }
