@@ -102,6 +102,12 @@ export const stakerPkgs = [
   ...mevBoostGnosis
 ];
 
+export const executionPkgs = [
+  ...executionClientsMainnet,
+  ...executionClientsPrater,
+  ...executionClientsGnosis,
+];
+
 // stakers items
 export type StakerType = "execution" | "consensus" | "signer" | "mev-boost";
 export type ExecutionClient<T extends Network> = T extends "mainnet"

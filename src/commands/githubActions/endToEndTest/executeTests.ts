@@ -3,7 +3,7 @@ import { Manifest } from "../../../types.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import chalk from "chalk";
 import { getStakerConfigByNetwork } from "./params.js";
-import { getIsStakerPkg } from "./utils.js";
+import { getIsStakerPkg, getIsExecutionClient } from "./utils.js";
 import {
   ConsensusClientGnosis,
   ConsensusClientMainnet,
@@ -143,7 +143,8 @@ async function testPackageInstallAndUpdate(
     errorLogsTimeout,
     healthCheckUrl,
     network,
-    isUpdateTest: true
+    // We may execute proof of attestation if test is testPackageInstallAndUpdate
+    executeProofOfAttestation: getExecuteProofOfAttestation({network, dnpName})
   });
 }
 
@@ -176,7 +177,7 @@ async function testPackageInstallFromScratch(
     errorLogsTimeout,
     healthCheckUrl,
     network,
-    isUpdateTest: false
+    executeProofOfAttestation: false  // never execute proof of attestation on install from scratch
   });
 }
 
@@ -211,4 +212,26 @@ async function setStakerConfig(
       throw Error("unknown network");
   }
   await dappmanagerTestApi.stakerConfigSet(stakerConfig);
+}
+
+function getExecuteProofOfAttestation({
+  network, 
+  dnpName,
+  }: {
+    network?: Network;
+    dnpName: string;
+  }): boolean {
+
+  const isStakerPkg = getIsStakerPkg(dnpName);
+  const isExecutionPkg = getIsExecutionClient(dnpName);
+
+  // Skip proof of attestation if:
+  // - network is undefined
+  // - running in test environment
+  // - im not a staker package
+  // - im an execution package but not the one specified in the staker config
+  if (!network || process.env.TEST || !isStakerPkg || (isExecutionPkg && dnpName !== getStakerConfigByNetwork(network).executionClient.dnpName)) {
+    return false
+  }
+  return true
 }

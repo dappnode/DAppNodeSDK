@@ -3,9 +3,7 @@ import Docker from "dockerode";
 import got from "got";
 import { Network, ValidatorData } from "./types.js";
 import { getContainerName } from "../../../params.js";
-import { getStakerConfigByNetwork } from "./params.js";
 import { Compose } from "../../../types.js";
-import { getIsStakerPkg } from "./utils.js";
 
 export async function executeTestCheckers({
   dnpName,
@@ -13,14 +11,14 @@ export async function executeTestCheckers({
   errorLogsTimeout,
   healthCheckUrl,
   network,
-  isUpdateTest
+  executeProofOfAttestation
 }: {
   dnpName: string;
   compose: Compose;
   errorLogsTimeout: number;
   healthCheckUrl?: string;
   network?: Network;
-  isUpdateTest: boolean;
+  executeProofOfAttestation: boolean;
 }): Promise<void> {
   const errors: Error[] = [];
   const docker = new Docker();
@@ -48,14 +46,9 @@ export async function executeTestCheckers({
       )
       .catch(e => errors.push(e));
 
-  /** 
-    * The attestation check will only be performed when a few requeriments are met:
-    * - The package to test is a staker package or the default execution package (execution client needs to be on sync in order to attest)
-    * - The test is the "testPackageInstallAndUpdate" and not the "testPackageInstallFromScratch" (the check can take up to 20 min to be completed).
-  **/
-  if (network && isUpdateTest && getIsStakerPkg(dnpName) && dnpName !== getStakerConfigByNetwork(network).executionClient.dnpName && !process.env.TEST) {
+  if (executeProofOfAttestation) {
     await attestanceProof(network)
-      .then(() => console.log(chalk.green(`  ✓ Attestation proof`)))
+      .then(() => console.log(chalk.green(`  ✓ Executing attestation proof`)))
       .catch(e => errors.push(e));
   }
 
@@ -129,47 +122,46 @@ async function ensureNoErrorLogs(
 /**
  * Test that the validators are attesting after doppelganger protection + 18 minutes max.
  */
-export async function attestanceProof(network: Network): Promise<void> {
+export async function attestanceProof(network?: Network): Promise<void> {
+  if (process.env.VALIDATOR_INDEX === undefined) {
+    throw new Error(`Validator index is undefined`);
+  } else if (network === undefined) {
+    throw new Error(`Network is undefined`);
+  }
   // Wait for doppleganger protection to end, set to 15 min
   console.log(chalk.grey(`  - Waiting for doppleganger protection to end`));
   await new Promise(resolve => setTimeout(resolve, 15 * 60 * 1000));
-
   let response = undefined; // Define response and give it an initial value of undefined
-  let endpoint = "";
+  const endpoint =
+    network === "prater"
+      ? `https://prater.beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`
+      : network === "gnosis"
+      ? "TODO"
+      : `https://beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`;
 
-  if (network === "mainnet") {
-    // TODO: Add mainnet endpoint
-    // endpoint = `https://beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`;
-  } else if (network === "prater") {
-    endpoint = `https://prater.beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`;
-  }
-
-  let i = 1;
   console.log(chalk.grey(`  - Checking if validator is active`));
 
-  while (i <= 9) {
-   await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000)); // Wait for 2 minutes before each iteration
-    try {
-      response = await got(endpoint, {
-        headers: {
-          Accept: 'application/json'
-        },
-        responseType: 'json'
-      });
-    } catch (err) {
-      throw new Error(`Error while calling beaconcha.in endpoint ${err}`);
+  for (let i = 1; i <= 9; i++) {
+    response = await got(endpoint, {
+      headers: {
+        Accept: "application/json"
+      },
+      responseType: "json"
+    });
+
+    // Check if the response is valid
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw new Error(`Error while fetching validator data. Beaconcha.in returned ${response.statusCode}`);
     }
 
-    if (response.statusCode !== 200) throw new Error(`Error while fetching validator data. Beaconcha.in returned ${response.statusCode}`);
-
-    const data = response.body as ValidatorData
+    const data = response.body as ValidatorData;
     if (data.data.status === "active_online") {
       console.log(chalk.green(`  ✓ Validator is active`));
       return; // Exit the loop if the validator is active
     } else {
       console.log(chalk.yellow(`  - Validator is not active yet. Retrying (minutes passed: ${i*2})`));
     }
-    i++;
+    await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000)); // Wait for 2 minutes after each iteration
   }
   // This will only be reached if the validator is not active after 20 minutes
   const errorMessage = `Validator is not active after 20 minutes`;
