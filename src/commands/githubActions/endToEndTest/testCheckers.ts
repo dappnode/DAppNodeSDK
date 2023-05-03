@@ -123,10 +123,10 @@ async function ensureNoErrorLogs(
  * Test that the validators are attesting after doppelganger protection + 18 minutes max.
  */
 export async function attestanceProof(network?: Network): Promise<void> {
-  if (process.env.VALIDATOR_INDEX === undefined) {
-    throw new Error(`Validator index is undefined`);
-  } else if (network === undefined) {
-    throw new Error(`Network is undefined`);
+  if (!process.env.VALIDATOR_INDEX) {
+    throw new Error(`Validator index is nullish`);
+  } else if (!network) { 
+    throw new Error(`Network is nullish`);
   }
   // Wait for doppleganger protection to end, set to 15 min
   console.log(chalk.grey(`  - Waiting for doppleganger protection to end`));
@@ -136,7 +136,7 @@ export async function attestanceProof(network?: Network): Promise<void> {
     network === "prater"
       ? `https://prater.beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`
       : network === "gnosis"
-      ? "TODO"
+      ? `https://beacon.gnosischain.com/api/v1/validator/${process.env.VALIDATOR_INDEX}`
       : `https://beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`;
 
   console.log(chalk.grey(`  - Checking if validator is active`));
