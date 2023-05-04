@@ -2,7 +2,7 @@ import { Compose } from "../../../files/compose/types.js";
 import { Manifest } from "../../../types.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import chalk from "chalk";
-import { getStakerConfigByNetwork } from "./params.js";
+import { getDefaultExecClient, getStakerConfigByNetwork } from "./params.js";
 import { getIsStakerPkg, getIsExecutionClient } from "./utils.js";
 import {
   ConsensusClientGnosis,
@@ -224,13 +224,13 @@ function getExecuteProofOfAttestation({
 
   const isStakerPkg = getIsStakerPkg(dnpName);
   const isExecutionPkg = getIsExecutionClient(dnpName);
-
+  
   // Skip proof of attestation if:
   // - network is undefined
   // - running in test environment
   // - im not a staker package
   // - im an execution package but not the one specified in the staker config
-  if (!network || process.env.TEST || !isStakerPkg || (isExecutionPkg && dnpName !== getStakerConfigByNetwork(network).executionClient.dnpName)) {
+  if (!network || process.env.TEST || !isStakerPkg || (isExecutionPkg && dnpName !== getDefaultExecClient(network))) {
     return false
   }
   return true
