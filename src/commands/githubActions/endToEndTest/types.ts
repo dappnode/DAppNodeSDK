@@ -12,7 +12,8 @@ import {
 
 // STAKERS
 
-export type Network = "mainnet" | "prater" | "gnosis";
+export const networks = ["mainnet", "prater", "gnosis"] as const;
+export type Network = typeof networks[number];
 
 // MAINNET
 export const consensusClientsMainnet = [
@@ -105,8 +106,16 @@ export const stakerPkgs = [
 export const executionPkgs = [
   ...executionClientsMainnet,
   ...executionClientsPrater,
-  ...executionClientsGnosis,
+  ...executionClientsGnosis
 ] as const;
+export type ExecutionPkg = typeof executionPkgs[number];
+
+export const consensusPkgs = [
+  ...consensusClientsMainnet,
+  ...consensusClientsPrater,
+  ...consensusClientsGnosis
+] as const;
+export type ConsensusPkg = typeof consensusPkgs[number];
 
 // stakers items
 export type StakerType = "execution" | "consensus" | "signer" | "mev-boost";
@@ -457,5 +466,5 @@ export interface ValidatorData {
   status: string;
   data: {
     status: string;
-  }
+  };
 }

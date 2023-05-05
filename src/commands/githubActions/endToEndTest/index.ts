@@ -7,7 +7,7 @@ import { executeEndToEndTests } from "./executeTests.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import { localDappmanagerTestApiUrl, localIpfsApiUrl } from "./params.js";
 import chalk from "chalk";
-import { Network } from "./types.js";
+import { Network, networks } from "./types.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   healthCheckUrl?: string;
@@ -57,15 +57,8 @@ export async function gaTestEndToEndHandler({
   environmentByService,
   network
 }: CliCommandOptions): Promise<void> {
-  if (
-    network &&
-    network !== "mainnet" &&
-    network !== "prater" &&
-    network !== "gnosis"
-  )
-    throw Error(
-      `Invalid network ${network}. Available values are mainnet, prater, gnosis`
-    );
+  if (network && !networks.includes(network as Network))
+    throw Error(`Invalid network ${network}. Available values are ${networks}`);
   const dappmanagerTestApi = new DappmanagerTestApi(localDappmanagerTestApiUrl);
   const compose = readCompose({ dir });
   const { manifest } = readManifest({ dir });
