@@ -102,6 +102,7 @@ export function getExecuteProofOfAttestation({
   const isExecutionPkg = executionPkgs.includes(dnpName as any);
   if (
     !network ||
+    network === "mainnet" ||
     process.env.TEST ||
     !isStakerPkg ||
     (isExecutionPkg && dnpName !== getDefaultExecClient(network))
