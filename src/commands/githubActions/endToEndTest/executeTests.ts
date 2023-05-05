@@ -3,7 +3,7 @@ import { Manifest } from "../../../types.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import chalk from "chalk";
 import { getDefaultExecClient, getStakerConfigByNetwork } from "./params.js";
-import { getIsStakerPkg, getIsExecutionClient } from "./utils.js";
+import { getIsStakerPkg } from "./utils.js";
 import {
   ConsensusClientGnosis,
   ConsensusClientMainnet,
@@ -17,7 +17,8 @@ import {
   consensusClientsPrater,
   executionClientsGnosis,
   executionClientsMainnet,
-  executionClientsPrater
+  executionClientsPrater,
+  executionPkgs
 } from "./types.js";
 import { executeTestCheckers } from "./testCheckers.js";
 
@@ -144,7 +145,11 @@ async function testPackageInstallAndUpdate(
     healthCheckUrl,
     network,
     // We may execute proof of attestation if test is testPackageInstallAndUpdate
-    executeProofOfAttestation: getExecuteProofOfAttestation({network, dnpName})
+    executeProofOfAttestation: getExecuteProofOfAttestation({
+      network,
+      dnpName,
+      isStakerPkg
+    })
   });
 }
 
@@ -177,7 +182,7 @@ async function testPackageInstallFromScratch(
     errorLogsTimeout,
     healthCheckUrl,
     network,
-    executeProofOfAttestation: false  // never execute proof of attestation on install from scratch
+    executeProofOfAttestation: false // never execute proof of attestation on install from scratch
   });
 }
 
@@ -214,24 +219,34 @@ async function setStakerConfig(
   await dappmanagerTestApi.stakerConfigSet(stakerConfig);
 }
 
+/**
+ * Get should executes proof of attestation
+ * Skip proof of attestation if:
+ *  - network is undefined
+ *  - running in test environment
+ *  - im not a staker package
+ *  - im an execution package but not the one specified in the staker config
+ * @param param0
+ * @returns
+ */
 function getExecuteProofOfAttestation({
-  network, 
+  network,
   dnpName,
-  }: {
-    network?: Network;
-    dnpName: string;
-  }): boolean {
+  isStakerPkg
+}: {
+  network?: Network;
+  dnpName: string;
+  isStakerPkg: boolean;
+}): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isExecutionPkg = executionPkgs.includes(dnpName as any);
+  if (
+    !network ||
+    process.env.TEST ||
+    !isStakerPkg ||
+    (isExecutionPkg && dnpName !== getDefaultExecClient(network))
+  )
+    return false;
 
-  const isStakerPkg = getIsStakerPkg(dnpName);
-  const isExecutionPkg = getIsExecutionClient(dnpName);
-  
-  // Skip proof of attestation if:
-  // - network is undefined
-  // - running in test environment
-  // - im not a staker package
-  // - im an execution package but not the one specified in the staker config
-  if (!network || process.env.TEST || !isStakerPkg || (isExecutionPkg && dnpName !== getDefaultExecClient(network))) {
-    return false
-  }
-  return true
+  return true;
 }

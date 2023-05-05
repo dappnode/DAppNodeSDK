@@ -123,15 +123,13 @@ async function ensureNoErrorLogs(
  * Test that the validators are attesting after doppelganger protection + 18 minutes max.
  */
 export async function attestanceProof(network?: Network): Promise<void> {
-  if (!process.env.VALIDATOR_INDEX) {
+  if (!process.env.VALIDATOR_INDEX)
     throw new Error(`Validator index is nullish`);
-  } else if (!network) { 
-    throw new Error(`Network is nullish`);
-  }
+  else if (!network) throw new Error(`Network is nullish`);
+
   // Wait for doppleganger protection to end, set to 15 min
   console.log(chalk.grey(`  - Waiting for doppleganger protection to end`));
   await new Promise(resolve => setTimeout(resolve, 15 * 60 * 1000));
-  let response = undefined; // Define response and give it an initial value of undefined
   const endpoint =
     network === "prater"
       ? `https://prater.beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`
@@ -139,10 +137,9 @@ export async function attestanceProof(network?: Network): Promise<void> {
       ? `https://beacon.gnosischain.com/api/v1/validator/${process.env.VALIDATOR_INDEX}`
       : `https://beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`;
 
-  console.log(chalk.grey(`  - Checking if validator is active`));
-
   for (let i = 1; i <= 9; i++) {
-    response = await got(endpoint, {
+    console.log(chalk.grey(`  - Checking if validator is active #${i}`));
+    const response = await got(endpoint, {
       headers: {
         Accept: "application/json"
       },
@@ -150,16 +147,21 @@ export async function attestanceProof(network?: Network): Promise<void> {
     });
 
     // Check if the response is valid
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw new Error(`Error while fetching validator data. Beaconcha.in returned ${response.statusCode}`);
-    }
+    if (response.statusCode < 200 || response.statusCode >= 300)
+      throw new Error(
+        `Error while fetching validator data. Beaconcha.in returned ${response.statusCode}`
+      );
 
     const data = response.body as ValidatorData;
     if (data.data.status === "active_online") {
       console.log(chalk.green(`  ✓ Validator is active`));
       return; // Exit the loop if the validator is active
     } else {
-      console.log(chalk.yellow(`  - Validator is not active yet. Retrying (minutes passed: ${i*2})`));
+      console.log(
+        chalk.yellow(
+          `  - Validator is not active yet. Retrying (minutes passed: ${i * 2})`
+        )
+      );
     }
     await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000)); // Wait for 2 minutes after each iteration
   }

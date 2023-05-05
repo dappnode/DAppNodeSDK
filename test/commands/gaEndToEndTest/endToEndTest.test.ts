@@ -4,7 +4,8 @@ import { attestanceProof } from "../../../src/commands/githubActions/endToEndTes
 import { testDir, cleanTestDir } from "../../testUtils.js";
 import { initHandler } from "../../../src/commands/init.js";
 
-describe("command / gaEndToEndTest", function () {
+// This test must be run in a dappnode environment otherwise it will fail
+describe.skip("command / gaEndToEndTest", function () {
   // tests could take a while, set timeout to 20 minutes
   this.timeout(1200 * 1000);
 
@@ -24,5 +25,5 @@ describe("command / gaEndToEndTest", function () {
 
   it("validator shouldnt return any errors while trying to attest", async () => {
     expect(await attestanceProof("prater")).to.not.throw;
-  }); 
+  });
 });
