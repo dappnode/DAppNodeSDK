@@ -3,6 +3,11 @@ import { Network, StakerConfigSet } from "./types.js";
 export const localIpfsApiUrl = `http://172.33.1.5:5001`;
 export const localDappmanagerTestApiUrl = `http://172.33.1.7:7000`;
 
+/**
+ * Get the staker config for the network∫
+ * @param network
+ * @returns freezen object with the staker config for the network
+ */
 export const getStakerConfigByNetwork = (
   network: Network
 ): StakerConfigSet<Network> => {
@@ -13,20 +18,18 @@ export const getStakerConfigByNetwork = (
     : stakerPraterConfig;
 };
 
-export const getDefaultExecClient = (
-  network: Network
-): string => {
+export const getDefaultExecClient = (network: Network): string => {
   return network === "mainnet"
     ? "geth.dnp.dappnode.eth"
     : network === "gnosis"
     ? "nethermind-xdai.dnp.dappnode.eth"
     : "goerli-besu.dnp.dappnode.eth";
-}
+};
 
-const stakerMainnetConfig: StakerConfigSet<"mainnet"> = {
+const stakerMainnetConfig: StakerConfigSet<"mainnet"> = Object.freeze({
   network: "mainnet",
   feeRecipient: "0x0000000000000000000000000000000000000001",
-  executionClient: {
+  executionClient: Object.freeze({
     dnpName: "geth.dnp.dappnode.eth",
     status: "ok",
     avatarUrl: "",
@@ -34,8 +37,8 @@ const stakerMainnetConfig: StakerConfigSet<"mainnet"> = {
     isRunning: true,
     isSelected: true,
     isUpdated: true
-  },
-  consensusClient: {
+  }),
+  consensusClient: Object.freeze({
     dnpName: "prysm.dnp.dappnode.eth",
     useCheckpointSync: true,
     status: "ok",
@@ -44,9 +47,9 @@ const stakerMainnetConfig: StakerConfigSet<"mainnet"> = {
     isRunning: true,
     isSelected: true,
     isUpdated: true
-  },
+  }),
   enableWeb3signer: true,
-  mevBoost: {
+  mevBoost: Object.freeze({
     dnpName: "mev-boost.dnp.dappnode.eth",
     status: "ok",
     avatarUrl: "",
@@ -65,13 +68,13 @@ const stakerMainnetConfig: StakerConfigSet<"mainnet"> = {
       "https://0xb3ee7afcf27f1f1259ac1787876318c6584ee353097a50ed84f51a1f21a323b3736f271a895c7ce918c038e4265918be@relay.edennetwork.io",
       "https://0x84e78cb2ad883861c9eeeb7d1b22a8e02332637448f84144e245d20dff1eb97d7abdde96d4e7f80934e5554e11915c56@relayooor.wtf"
     ]
-  }
-};
+  })
+});
 
-const stakerPraterConfig: StakerConfigSet<"prater"> = {
+const stakerPraterConfig: StakerConfigSet<"prater"> = Object.freeze({
   network: "prater",
   feeRecipient: "0x0000000000000000000000000000000000000001",
-  executionClient: {
+  executionClient: Object.freeze({
     dnpName: "goerli-besu.dnp.dappnode.eth",
     status: "ok",
     avatarUrl: "",
@@ -79,8 +82,8 @@ const stakerPraterConfig: StakerConfigSet<"prater"> = {
     isRunning: true,
     isSelected: true,
     isUpdated: true
-  },
-  consensusClient: {
+  }),
+  consensusClient: Object.freeze({
     dnpName: "lighthouse-prater.dnp.dappnode.eth",
     useCheckpointSync: true,
     status: "ok",
@@ -89,9 +92,9 @@ const stakerPraterConfig: StakerConfigSet<"prater"> = {
     isRunning: true,
     isSelected: true,
     isUpdated: true
-  },
+  }),
   enableWeb3signer: true,
-  mevBoost: {
+  mevBoost: Object.freeze({
     dnpName: "mev-boost-goerli.dnp.dappnode.eth",
     status: "ok",
     avatarUrl: "",
@@ -106,13 +109,13 @@ const stakerPraterConfig: StakerConfigSet<"prater"> = {
       "https://0xb1d229d9c21298a87846c7022ebeef277dfc321fe674fa45312e20b5b6c400bfde9383f801848d7837ed5fc449083a12@relay-goerli.edennetwork.io",
       "https://0x8a72a5ec3e2909fff931c8b42c9e0e6c6e660ac48a98016777fc63a73316b3ffb5c622495106277f8dbcc17a06e92ca3@goerli-relay.securerpc.com/"
     ]
-  }
-};
+  })
+});
 
-const stakerGnosisConfig: StakerConfigSet<"gnosis"> = {
+const stakerGnosisConfig: StakerConfigSet<"gnosis"> = Object.freeze({
   network: "gnosis",
   feeRecipient: "0x0000000000000000000000000000000000000001",
-  executionClient: {
+  executionClient: Object.freeze({
     dnpName: "nethermind-xdai.dnp.dappnode.eth",
     status: "ok",
     avatarUrl: "",
@@ -120,8 +123,8 @@ const stakerGnosisConfig: StakerConfigSet<"gnosis"> = {
     isRunning: true,
     isSelected: true,
     isUpdated: true
-  },
-  consensusClient: {
+  }),
+  consensusClient: Object.freeze({
     dnpName: "teku-gnosis.dnp.dappnode.eth",
     useCheckpointSync: true,
     status: "ok",
@@ -130,9 +133,9 @@ const stakerGnosisConfig: StakerConfigSet<"gnosis"> = {
     isRunning: true,
     isSelected: true,
     isUpdated: true
-  },
+  }),
   enableWeb3signer: true
-};
+});
 
 const corePackages = [
   "dappmanager.dnp.dappnode.eth",
@@ -143,12 +146,12 @@ const corePackages = [
   "https.dnp.dappnode.eth",
   "wifi.dnp.dappnode.eth",
   "wireguard.dnp.dappnode.eth"
-];
+] as const;
 
 export const nonStakerPackagesSetup = [
   "dms.dnp.dappnode.eth",
   "dappnode-exporter.dnp.dappnode.eth"
-];
+] as const;
 
 const stakerPkgsToKeep = (network: Network): string[] => {
   return network === "mainnet"

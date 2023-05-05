@@ -2,30 +2,22 @@ import { Compose } from "../../../files/compose/types.js";
 import { Manifest } from "../../../types.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import chalk from "chalk";
-import { getDefaultExecClient, getStakerConfigByNetwork } from "./params.js";
-import { getIsStakerPkg } from "./utils.js";
 import {
-  ConsensusClientGnosis,
-  ConsensusClientMainnet,
-  ConsensusClientPrater,
-  ExecutionClientGnosis,
-  ExecutionClientMainnet,
-  ExecutionClientPrater,
-  Network,
-  consensusClientsGnosis,
-  consensusClientsMainnet,
-  consensusClientsPrater,
-  executionClientsGnosis,
-  executionClientsMainnet,
-  executionClientsPrater,
-  executionPkgs
-} from "./types.js";
+  getIsStakerPkg,
+  printPackageMetadata,
+  setStakerConfig,
+  getExecuteProofOfAttestation
+} from "./utils.js";
+import { Network } from "./types.js";
 import { executeTestCheckers } from "./testCheckers.js";
 
 /**
  * Execute the tests for the integration test workflow. These tests require
  * a previous setup of the environment.
  * Tests to execute:
+ * - Install package from scratch
+ * - Update package to the given hash from production
+ * For each test, the following checks are performed:
  * - Container status (running, healthy)
  * - No error logs after a timeout
  * - Healthcheck endpoint returns 200
@@ -87,27 +79,7 @@ export async function executeEndToEndTests({
   }
 
   // Throw aggregated error if any
-  if (errors.length > 0) {
-    const errorMessages = errors.map(e => e.message).join("\n");
-    throw Error(errorMessages);
-  }
-}
-
-function printPackageMetadata(
-  manifest: Manifest,
-  releaseMultiHash: string
-): void {
-  console.log(
-    chalk.dim(
-      `
-Package metadata:
-  - Package: ${manifest.name}
-  - Version: ${manifest.version}
-  - Upstream version: ${manifest.upstreamVersion ?? "N/A"}
-  - Release: ${releaseMultiHash}
-  `
-    )
-  );
+  if (errors.length > 0) throw Error(errors.map(e => e.message).join("\n"));
 }
 
 async function testPackageInstallAndUpdate(
@@ -184,69 +156,4 @@ async function testPackageInstallFromScratch(
     network,
     executeProofOfAttestation: false // never execute proof of attestation on install from scratch
   });
-}
-
-async function setStakerConfig(
-  dnpName: string,
-  dappmanagerTestApi: DappmanagerTestApi,
-  network: Network
-): Promise<void> {
-  const stakerConfig = getStakerConfigByNetwork(network);
-  switch (network) {
-    case "mainnet":
-      if (executionClientsMainnet.includes(dnpName as any))
-        stakerConfig.executionClient.dnpName = dnpName as ExecutionClientMainnet;
-      else if (consensusClientsMainnet.includes(dnpName as any))
-        stakerConfig.consensusClient.dnpName = dnpName as ConsensusClientMainnet;
-      break;
-    case "gnosis":
-      if (executionClientsGnosis.includes(dnpName as any))
-        stakerConfig.executionClient.dnpName = dnpName as ExecutionClientGnosis;
-      else if (consensusClientsGnosis.includes(dnpName as any))
-        stakerConfig.consensusClient.dnpName = dnpName as ConsensusClientGnosis;
-      await dappmanagerTestApi.stakerConfigSet(stakerConfig);
-      break;
-    case "prater":
-      if (executionClientsPrater.includes(dnpName as any))
-        stakerConfig.executionClient.dnpName = dnpName as ExecutionClientPrater;
-      else if (consensusClientsPrater.includes(dnpName as any))
-        stakerConfig.consensusClient.dnpName = dnpName as ConsensusClientPrater;
-      await dappmanagerTestApi.stakerConfigSet(stakerConfig);
-      break;
-    default:
-      throw Error("unknown network");
-  }
-  await dappmanagerTestApi.stakerConfigSet(stakerConfig);
-}
-
-/**
- * Get should executes proof of attestation
- * Skip proof of attestation if:
- *  - network is undefined
- *  - running in test environment
- *  - im not a staker package
- *  - im an execution package but not the one specified in the staker config
- * @param param0
- * @returns
- */
-function getExecuteProofOfAttestation({
-  network,
-  dnpName,
-  isStakerPkg
-}: {
-  network?: Network;
-  dnpName: string;
-  isStakerPkg: boolean;
-}): boolean {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const isExecutionPkg = executionPkgs.includes(dnpName as any);
-  if (
-    !network ||
-    process.env.TEST ||
-    !isStakerPkg ||
-    (isExecutionPkg && dnpName !== getDefaultExecClient(network))
-  )
-    return false;
-
-  return true;
 }
