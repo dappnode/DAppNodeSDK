@@ -1,10 +1,13 @@
 import { expect } from "chai";
 import { gaTestEndToEndHandler } from "../../../src/commands/githubActions/endToEndTest/index.js";
+import { attestanceProof } from "../../../src/commands/githubActions/endToEndTest/testCheckers.js";
 import { testDir, cleanTestDir } from "../../testUtils.js";
 import { initHandler } from "../../../src/commands/init.js";
 
+// This test must be run in a dappnode environment otherwise it will fail
 describe.skip("command / gaEndToEndTest", function () {
-  this.timeout(120 * 1000);
+  // tests could take a while, set timeout to 20 minutes
+  this.timeout(1200 * 1000);
 
   before(async () => {
     cleanTestDir();
@@ -18,5 +21,9 @@ describe.skip("command / gaEndToEndTest", function () {
       errorLogsTimeout: 30
     });
     expect(true).to.equal(true);
+  });
+
+  it("validator shouldnt return any errors while trying to attest", async () => {
+    expect(await attestanceProof("prater")).to.not.throw;
   });
 });

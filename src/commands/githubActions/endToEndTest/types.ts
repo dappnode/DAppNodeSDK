@@ -100,7 +100,13 @@ export const stakerPkgs = [
   ...consensusClientsGnosis,
   ...signerGnosis,
   ...mevBoostGnosis
-];
+] as const;
+
+export const executionPkgs = [
+  ...executionClientsMainnet,
+  ...executionClientsPrater,
+  ...executionClientsGnosis,
+] as const;
 
 // stakers items
 export type StakerType = "execution" | "consensus" | "signer" | "mev-boost";
@@ -445,4 +451,11 @@ export enum IpfsClientTarget {
 export interface IpfsRepository {
   ipfsClientTarget: IpfsClientTarget;
   ipfsGateway: string;
+}
+
+export interface ValidatorData {
+  status: string;
+  data: {
+    status: string;
+  }
 }

@@ -13,6 +13,16 @@ export const getStakerConfigByNetwork = (
     : stakerPraterConfig;
 };
 
+export const getDefaultExecClient = (
+  network: Network
+): string => {
+  return network === "mainnet"
+    ? "geth.dnp.dappnode.eth"
+    : network === "gnosis"
+    ? "nethermind-xdai.dnp.dappnode.eth"
+    : "goerli-besu.dnp.dappnode.eth";
+}
+
 const stakerMainnetConfig: StakerConfigSet<"mainnet"> = {
   network: "mainnet",
   feeRecipient: "0x0000000000000000000000000000000000000001",

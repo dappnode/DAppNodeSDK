@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import Docker from "dockerode";
 import got from "got";
-import { Network } from "./types.js";
+import { Network, ValidatorData } from "./types.js";
 import { getContainerName } from "../../../params.js";
 import { Compose } from "../../../types.js";
 
@@ -10,13 +10,15 @@ export async function executeTestCheckers({
   compose,
   errorLogsTimeout,
   healthCheckUrl,
-  network
+  network,
+  executeProofOfAttestation
 }: {
   dnpName: string;
   compose: Compose;
   errorLogsTimeout: number;
   healthCheckUrl?: string;
   network?: Network;
+  executeProofOfAttestation: boolean;
 }): Promise<void> {
   const errors: Error[] = [];
   const docker = new Docker();
@@ -43,10 +45,12 @@ export async function executeTestCheckers({
         console.log(chalk.green(`  ✓ Healthcheck endpoint returned 200`))
       )
       .catch(e => errors.push(e));
-  if (network)
+
+  if (executeProofOfAttestation) {
     await attestanceProof(network)
-      .then(() => console.log(chalk.green(`  ✓ Attestation proof`)))
+      .then(() => console.log(chalk.green(`  ✓ Executing attestation proof`)))
       .catch(e => errors.push(e));
+  }
 
   // Throw aggregated error if any
   if (errors.length > 0) {
@@ -116,10 +120,53 @@ async function ensureNoErrorLogs(
 }
 
 /**
- * Test that the validators are attesting after a peri
+ * Test that the validators are attesting after doppelganger protection + 18 minutes max.
  */
-async function attestanceProof(network: Network): Promise<void> {
-  if (network === "mainnet") return;
-  // TODO
-  return;
+export async function attestanceProof(network?: Network): Promise<void> {
+  if (!process.env.VALIDATOR_INDEX)
+    throw new Error(`Validator index is nullish`);
+  else if (!network) throw new Error(`Network is nullish`);
+
+  // Wait for doppleganger protection to end, set to 15 min
+  console.log(chalk.grey(`  - Waiting for doppleganger protection to end`));
+  await new Promise(resolve => setTimeout(resolve, 15 * 60 * 1000));
+  const endpoint =
+    network === "prater"
+      ? `https://prater.beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`
+      : network === "gnosis"
+      ? `https://beacon.gnosischain.com/api/v1/validator/${process.env.VALIDATOR_INDEX}`
+      : `https://beaconcha.in/api/v1/validator/${process.env.VALIDATOR_INDEX}`;
+
+  for (let i = 1; i <= 9; i++) {
+    console.log(chalk.grey(`  - Checking if validator is active #${i}`));
+    const response = await got(endpoint, {
+      headers: {
+        Accept: "application/json"
+      },
+      responseType: "json"
+    });
+
+    // Check if the response is valid
+    if (response.statusCode < 200 || response.statusCode >= 300)
+      throw new Error(
+        `Error while fetching validator data. Beaconcha.in returned ${response.statusCode}`
+      );
+
+    const data = response.body as ValidatorData;
+    if (data.data.status === "active_online") {
+      console.log(chalk.green(`  ✓ Validator is active`));
+      return; // Exit the loop if the validator is active
+    } else {
+      console.log(
+        chalk.yellow(
+          `  - Validator is not active yet. Retrying (minutes passed: ${i * 2})`
+        )
+      );
+    }
+    await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000)); // Wait for 2 minutes after each iteration
+  }
+  // This will only be reached if the validator is not active after 20 minutes
+  const errorMessage = `Validator is not active after 20 minutes`;
+  console.error(chalk.red(`  x ${errorMessage}`));
+  throw new Error(errorMessage);
 }
