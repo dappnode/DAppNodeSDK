@@ -1,20 +1,19 @@
 import chalk from "chalk";
-import { Manifest } from "../../../types.js";
 import {
   Network,
-  StakerConfigSet,
   consensusClientsGnosis,
   consensusClientsMainnet,
   consensusClientsPrater,
   executionClientsGnosis,
   executionClientsMainnet,
   executionClientsPrater,
-  executionPkgs,
   stakerPkgs
-} from "./types.js";
+} from "@dappnode/types";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import { getDefaultExecClient, getStakerConfigByNetwork } from "./params.js";
 import { cloneDeep } from "lodash-es";
+import { Manifest } from "@dappnode/types";
+import { StakerConfigSet, executionPkgs } from "./types.js";
 
 export function printPackageMetadata(
   manifest: Manifest,

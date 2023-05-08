@@ -35,6 +35,7 @@
   },
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
+    "@dappnode/types": "^0.1.4",
     "@octokit/rest": "^18.0.12",
     "ajv": "^8.11.0",
     "ajv-errors": "^3.0.0",
@@ -93,6 +94,6 @@
     "typescript": "^4.7.3"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=18.0.0"
   }
 }

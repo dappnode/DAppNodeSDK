@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import {
-  Compose,
   composeDeleteBuildProperties,
   readCompose,
   writeCompose
 } from "../../../src/files/index.js";
 import { cleanTestDir, testDir } from "../../testUtils.js";
+import { Compose } from "@dappnode/types";
 
 describe("files / compose / composeDeleteBuildProperties", () => {
   after(() => {

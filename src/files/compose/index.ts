@@ -7,4 +7,3 @@ export { updateComposeImageTags } from "./updateComposeImageTags.js";
 export { writeCompose } from "./writeCompose.js";
 export { validateDappnodeCompose } from "./validateDappnodeCompose.js";
 export { params, composeSafeKeys } from "./params.js";
-export * from "./types.js";

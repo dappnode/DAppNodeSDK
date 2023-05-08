@@ -1,5 +1,3 @@
-import { Compose } from "../../../files/compose/types.js";
-import { Manifest } from "../../../types.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import chalk from "chalk";
 import {
@@ -8,8 +6,8 @@ import {
   setStakerConfig,
   getExecuteProofOfAttestation
 } from "./utils.js";
-import { Network } from "./types.js";
 import { executeTestCheckers } from "./testCheckers.js";
+import { Manifest, Compose, Network } from "@dappnode/types";
 
 /**
  * Execute the tests for the integration test workflow. These tests require

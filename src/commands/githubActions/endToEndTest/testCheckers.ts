@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import Docker from "dockerode";
 import got from "got";
-import { Network, ValidatorData } from "./types.js";
+import { ValidatorData } from "./types.js";
 import { getContainerName } from "../../../params.js";
-import { Compose } from "../../../types.js";
+import { Compose, Network } from "@dappnode/types";
 
 export async function executeTestCheckers({
   dnpName,

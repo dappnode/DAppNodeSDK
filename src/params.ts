@@ -1,4 +1,4 @@
-import { FileFormat, Architecture, ManifestFormat } from "./types.js";
+import { Architecture, FileFormat, ManifestFormat } from "@dappnode/types";
 
 export * from "./files/compose/params.js";
 

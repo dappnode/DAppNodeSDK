@@ -5,8 +5,9 @@ import {
   getStakerConfigByNetwork,
   packagesToKeep
 } from "./params.js";
-import { IpfsClientTarget, Network } from "./types.js";
+import { IpfsClientTarget } from "./types.js";
 import got from "got";
+import { Network } from "@dappnode/types";
 
 /**
  * Ensure that the DAppNode environment is ready to run the integration tests

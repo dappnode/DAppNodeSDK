@@ -1,4 +1,4 @@
-import { Manifest } from "../files/index.js";
+import { Manifest } from "@dappnode/types";
 import { GitHead } from "./git.js";
 
 export function toTitleCase(str: string): string {

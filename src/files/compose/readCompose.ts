@@ -1,7 +1,7 @@
 import yaml from "js-yaml";
 import { readFile } from "../../utils/file.js";
 import { getComposePath } from "./getComposePath.js";
-import { ComposePaths, Compose } from "./types.js";
+import { ComposePaths, Compose } from "@dappnode/types";
 
 /**
  * Read a compose parsed data

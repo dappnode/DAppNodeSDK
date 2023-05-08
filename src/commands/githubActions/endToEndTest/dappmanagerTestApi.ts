@@ -2,12 +2,12 @@ import got, { Response } from "got";
 import {
   StakerConfigSet,
   StakerConfigGet,
-  Network,
   InstalledPackageDetailData,
   InstalledPackageDataApiReturn,
   PackageToInstall,
   IpfsRepository
 } from "./types.js";
+import { Network } from "@dappnode/types";
 
 export class DappmanagerTestApi {
   url: string;

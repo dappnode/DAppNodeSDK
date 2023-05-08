@@ -7,8 +7,6 @@ import inquirer from "inquirer";
 import {
   writeCompose,
   getComposePath,
-  Manifest,
-  Compose,
   getManifestPath,
   writeManifest
 } from "../files/index.js";
@@ -25,6 +23,7 @@ import {
   YargsError
 } from "../params.js";
 import { CliGlobalOptions } from "../types.js";
+import { Manifest, Compose } from "@dappnode/types";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",

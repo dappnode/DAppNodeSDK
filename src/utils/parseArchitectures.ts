@@ -1,4 +1,4 @@
-import { Architecture, architectures } from "../files/index.js";
+import { Architecture, architectures } from "@dappnode/types";
 
 const architecturesList = architectures.join(" ");
 

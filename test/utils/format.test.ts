@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { GitHead } from "../../src/utils/git.js";
 import { prettyPinataPinName } from "../../src/utils/format.js";
-import { Manifest } from "../../src/files/index.js";
+import { Manifest } from "@dappnode/types";
 
 describe("utils / format", () => {
   describe("prettyPinataPinName", () => {

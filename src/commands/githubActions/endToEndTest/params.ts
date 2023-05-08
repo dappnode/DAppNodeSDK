@@ -1,4 +1,5 @@
-import { Network, StakerConfigSet } from "./types.js";
+import { Network } from "@dappnode/types";
+import { StakerConfigSet } from "./types.js";
 
 export const localIpfsApiUrl = `http://172.33.1.5:5001`;
 export const localDappmanagerTestApiUrl = `http://172.33.1.7:7000`;

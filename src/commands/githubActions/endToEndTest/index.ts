@@ -7,7 +7,7 @@ import { executeEndToEndTests } from "./executeTests.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import { localDappmanagerTestApiUrl, localIpfsApiUrl } from "./params.js";
 import chalk from "chalk";
-import { Network, networks } from "./types.js";
+import { Network, networks } from "@dappnode/types";
 
 interface CliCommandOptions extends CliGlobalOptions {
   healthCheckUrl?: string;

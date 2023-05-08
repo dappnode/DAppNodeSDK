@@ -1,5 +1,4 @@
 import { expect } from "chai";
-import { Manifest } from "../../src/files/index.js";
 import {
   validateComposeSchema,
   validateManifestSchema,
@@ -8,6 +7,7 @@ import {
 import fs from "fs";
 import path from "path";
 import { cleanTestDir, testDir } from "../testUtils.js";
+import { Manifest } from "@dappnode/types";
 
 describe("schemaValidation", () => {
   describe("manifest", () => {

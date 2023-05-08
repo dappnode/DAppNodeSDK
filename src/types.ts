@@ -1,5 +1,3 @@
-export * from "./files/types.js";
-
 // CLI types
 
 export interface CliGlobalOptions {
@@ -19,12 +17,6 @@ export interface ListrContextBuildAndPublish {
 }
 
 // Interal types
-
-export enum FileFormat {
-  JSON = "JSON",
-  YAML = "YAML",
-  TEXT = "TEXT"
-}
 
 export type ReleaseType = "major" | "minor" | "patch";
 export const releaseTypes: ReleaseType[] = ["major", "minor", "patch"];

@@ -1,8 +1,7 @@
 import semver from "semver";
-import { Manifest } from "../manifest/types.js";
-import { Compose, ComposeService } from "./types.js";
 import { getIsCore } from "../../utils/getIsCore.js";
 import { composeSafeKeys, params } from "./params.js";
+import { Compose, Manifest, ComposeService } from "@dappnode/types";
 
 let aggregatedError: string[];
 
