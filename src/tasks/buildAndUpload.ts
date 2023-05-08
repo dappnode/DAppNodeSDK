@@ -35,7 +35,8 @@ import {
 import {
   validateComposeSchema,
   validateManifestSchema,
-  validateSetupWizardSchema
+  validateSetupWizardSchema,
+  validateDappnodeCompose
 } from "@dappnode/schemas";
 import {
   getComposePath,
@@ -47,7 +48,6 @@ import {
   composeDeleteBuildProperties,
   readManifest,
   writeManifest,
-  validateDappnodeCompose,
   readSetupWizardIfExists
 } from "../files/index.js";
 
