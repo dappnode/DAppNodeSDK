@@ -1,0 +1,191 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "DAppNode Setup Wizard",
+  "required": ["version", "fields"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "title": "Setup wizard version",
+      "enum": ["2"]
+    },
+    "fields": {
+      "type": "array",
+      "title": "Setup wizard fields",
+      "description": "Fields to show in the setup wizard form UI",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "description"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Property ID",
+            "description": "Required ID for internal form parsing when using the `if` block",
+            "examples": ["payoutAddress"]
+          },
+          "target": {
+            "title": "The Target Schema",
+            "oneOf": [
+              {
+                "type": "object",
+                "title": "Environment",
+                "description": "Target environment variable",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["environment"]
+                  },
+                  "name": {
+                    "type": "string",
+                    "title": "Environment variable name",
+                    "description": "Name of the environment variable in the docker-compose",
+                    "example": ["PAYOUT_ADDRESS"]
+                  },
+                  "service": {
+                    "type": ["string", "array"],
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "title": "Service to target",
+                    "description": "In multi-service package, which service should be targeted",
+                    "example": ["service1", "service2"]
+                  }
+                },
+                "required": ["type", "name"]
+              },
+              {
+                "type": "object",
+                "title": "Port mapping",
+                "description": "Target a port mapping",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["portMapping"]
+                  },
+                  "containerPort": {
+                    "type": "string",
+                    "title": "Container port",
+                    "description": "Exposed container port to map to",
+                    "example": ["9554", "9554/TCP"]
+                  },
+                  "service": {
+                    "type": "string",
+                    "title": "Service to target",
+                    "description": "In multi-service package, which service should be targeted",
+                    "example": ["service1", "service2"]
+                  }
+                },
+                "required": ["type", "containerPort"]
+              },
+              {
+                "type": "object",
+                "title": "Named volume mountpoint",
+                "description": "Target named volume mountpoint",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["namedVolumeMountpoint"]
+                  },
+                  "volumeName": {
+                    "type": "string",
+                    "title": "Volume name",
+                    "description": "Name of the docker volume to allow the user to change its mountpoint",
+                    "example": ["data", "blockchain_data"]
+                  }
+                },
+                "required": ["type", "volumeName"]
+              },
+              {
+                "type": "object",
+                "title": "All named volume mountpoints",
+                "description": "Target all named volume mountpoints at once. Use this option if your package has multiple heavy volumes which mountpoint should be changed at once.",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["allNamedVolumesMountpoint"]
+                  }
+                },
+                "required": ["type"]
+              },
+              {
+                "type": "object",
+                "title": "File upload",
+                "description": "Upload a file to a given path during the installation",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["fileUpload"]
+                  },
+                  "path": {
+                    "type": "string",
+                    "title": "Destination file path",
+                    "description": "Path to upload the file to. Must be a valid absolute path in the container.",
+                    "example": ["/usr/src/config.json", "/app/keystore"]
+                  },
+                  "service": {
+                    "type": "string",
+                    "title": "Service to target",
+                    "description": "In multi-service package, which service should be targeted",
+                    "example": ["service1", "service2"]
+                  }
+                },
+                "required": ["type", "path"]
+              }
+            ]
+          },
+          "title": {
+            "type": "string",
+            "title": "The Title Schema",
+            "default": "",
+            "examples": ["RTL password"]
+          },
+          "description": {
+            "type": "string",
+            "title": "The Description Schema",
+            "default": "",
+            "examples": ["Password to protect RTL"]
+          },
+          "secret": {
+            "type": "boolean",
+            "title": "The Secret Schema",
+            "default": false,
+            "examples": [true]
+          },
+          "pattern": {
+            "type": "string",
+            "title": "Pattern",
+            "description": "Enforce this property to satisfy a regex before continuing",
+            "examples": ["^0x[a-fA-F0-9]{40}$"]
+          },
+          "patternErrorMessage": {
+            "type": "string",
+            "title": "Error to show if the regex pattern validation fails",
+            "examples": [
+              "Must be a valid address (0x1fd16a...)",
+              "Must be at least 8 characters long"
+            ]
+          },
+          "enum": {
+            "type": "array",
+            "title": "Enum",
+            "description": "List valid options. Will automatically display the input as a select menu",
+            "items": {
+              "type": "string"
+            }
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "description": "Enforce this property to be provided before continuing"
+          },
+          "if": {
+            "type": "object",
+            "title": "If schema",
+            "description": "Only display this property if the `if` schema is valid against the current form data provided by the user. The form data is an object with the structure `{ [field.id]: value }`."
+          }
+        }
+      }
+    }
+  }
+}

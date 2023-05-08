@@ -2,7 +2,7 @@ import { ajv } from "./ajv.js";
 import { readSetupWizardIfExists } from "../files/index.js";
 import { CliError } from "../params.js";
 import { processError } from "./utils.js";
-import setupWizardSchema from "@dappnode/types" assert { type: "json" };
+import setupWizardSchema from "./schemas/setup-wizard.schema.json" assert { type: "json" };
 
 /**
  * Validates setupWizard file with schema

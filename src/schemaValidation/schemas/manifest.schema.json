@@ -1,0 +1,526 @@
+{
+  "meta:license": ["GNU General Public License v3.0"],
+  "meta:status": "Stable",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/dappnode/DAppNode/raw/schema/manifest.schema.json",
+  "type": "object",
+  "title": "DAppNode Package (DNP) manifest",
+  "required": ["name", "version", "description", "type", "license"],
+  "description": "The DAppNode Package manifest defines all the necessary information for a DAppNode to understand this package:\n - IPFS of BZZ hashes to download its docker image \n - Docker related data to configure and run its container \n - Metadata to control how the package is shown in the admin UI.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "DAppNode Package ENS name.",
+      "examples": ["ipfs.dnp.dappnode.eth"]
+    },
+    "version": {
+      "type": "string",
+      "description": "DAppNode Package semantic version (semver).",
+      "examples": ["0.2.0"],
+      "pattern": "^((([0-9]+).([0-9]+).([0-9]+)))$",
+      "errorMessage": "should be a semantic version in the format x.y.z"
+    },
+    "upstreamVersion": {
+      "type": "string",
+      "description": "For DAppNode Packages that only wrap existing software (i.e. Bitcoin node, Ethereum node), the underlying software version can be specified here. It will be shown in the admin UI alongside the field `version`.",
+      "examples": ["2.6.0-beta", "any-text"]
+    },
+    "shortDescription": {
+      "type": "string",
+      "description": "Short DAppNode Package description, 6-8 words sentence briefly describing the purpose of this DAppNode Package. The purpose is to quickly grab users' attention and clearly define its purpose. Markdown is discouraged as it will NOT be rendered on the DAppNode Package store view.",
+      "examples": ["Distributed file system for storing and accessing data."]
+    },
+    "description": {
+      "type": "string",
+      "description": "DAppNode Package description. Markdown and links are allowed and ecouraged to give users the option to read more information about this DAppNode Package.",
+      "examples": [
+        "Welcome! IPFS is a distributed system for storing and accessing files, websites, applications, and data. If you’re new to IPFS, check our [introductory page](https://ipfs.io/#why) for an easy overview. \n\nWith this node you can upload and download files from IPFS using it own fancy web console at [http://ipfs.dappnode:5001/webui](http://ipfs.dappnode:5001/webui). Other DAppNode Packages and external applications can use its API at the endpoint `http://ipfs.dappnode:5001/api`. Go to the [IPFS HTTP API full reference](https://docs.ipfs.io/reference/api/http/) to check all the features of the API."
+      ]
+    },
+    "type": {
+      "type": "string",
+      "description": "Type of this DAppNode Package. It is used to trigger some special features such as core functionality.",
+      "default": "service",
+      "examples": ["service", "dncore"],
+      "enum": ["service", "library", "dncore"],
+      "enumDescriptions": {
+        "service": "Can have ENVs a depend on library DAppNode Packages",
+        "library": "Should not have ENVs and cannot depend on service DAppNode Packages",
+        "dncore": "DAppNode Packages that are part of the DAppNode core and have special permissions"
+      }
+    },
+    "chain": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ethereum",
+            "ethereum-beacon-chain",
+            "ethereum2-beacon-chain-prysm",
+            "bitcoin",
+            "monero"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "driver": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "ethereum",
+                "ethereum-beacon-chain",
+                "ethereum2-beacon-chain-prysm",
+                "monero"
+              ],
+              "description": "The blockchain driver used by this DAppNode Package",
+              "examples": ["ethereum", "bitcoin"]
+            },
+            "serviceName": {
+              "type": "string",
+              "description": "The name of the blockchain service used by this DAppNode Package"
+            },
+            "portNumber": {
+              "type": "integer",
+              "description": "The port number of the blockchain service used by this DAppNode Package"
+            }
+          },
+          "required": ["driver"]
+        }
+      ],
+      "description": "Indicate that this DAppNode Package is a blockchain node so the admin UI shows its syncing status",
+      "examples": [
+        "ethereum",
+        "ethereum2-beacon-chain-prysm",
+        "bitcoin",
+        "monero",
+        {
+          "driver": "ethereum-beacon-chain",
+          "serviceName": "beacon-chain",
+          "portNumber": 3500
+        }
+      ],
+      "enumDescriptions": {
+        "ethereum": "Must have an Ethereum JSON RPC exposed internally at port 8545",
+        "bitcoin": "Must have a standard Bitcoin JSON API exposed at the default port (8332). Uses the NPM package `bitcoin-core`",
+        "monero": "Must have a Monero API exposed internally at port 18081. Uses the NPM package `monero-rpc`"
+      }
+    },
+    "mainService": {
+      "type": "string",
+      "description": "For multi-service packages, indicate which service is the main one. The root ENS domain of this package will be mapped to this service IP.",
+      "examples": ["webserver", "backend", "service1"]
+    },
+    "dockerTimeout": {
+      "type": "string",
+      "description": "Modify the default Docker timeout of 10 seconds. It affects package updates, removals, container restarts, start and stop, updating config environments and port mappings. You can either pass a numerical value in seconds or a string representation parsed with [timestring](http://npmjs.com/package/timestring). Available from DAPPMANAGER v0.2.36",
+      "examples": ["5min", "60"]
+    },
+    "dependencies": {
+      "type": "object",
+      "description": "DAppNode Package dependencies. Must be an object where the keys are the DAppNode Package's ENS. The values must be a semantic range, i.e. `'0.2.0'`, `'^0.2.1'`, `'*'`, `'latest'`, `'/ipfs/QmWwMb3XhuCH6JnCF6m6EQzA4mW9pHHtg7rqAfhDr2ofi8'`.",
+      "examples": [
+        {
+          "bitcoin.dnp.dappnode.eth": "^0.1.2",
+          "swarm.dnp.dappnode.eth": "latest"
+        },
+        {
+          "only-for-dev-1.dappnode.eth": "/ipfs/QmYjtig7VJQ6XsnUjqqJvj7QaMcCAwtrgNdahSiFofrE7o",
+          "only-for-dev-2.dappnode.eth": "/ipfs/zdj7WWeQ43G6JJvLWQWZpyHuAMq6uYWRjkBXFad11vE2LHhQ7"
+        }
+      ],
+      "patternProperties": {
+        "^(.*)$": {
+          "type": "string",
+          "description": "Semantic version range or IPFS / BZZ hash."
+        }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "description": "Specify requirements to be met before allowing users to install this DAppNode Package.",
+      "properties": {
+        "minimumDappnodeVersion": {
+          "type": "string",
+          "description": "Minimum DAppNode version that includes all the features necessary to run this DAppNode Package.",
+          "examples": ["0.2.0"],
+          "pattern": "^((([0-9]+).([0-9]+).([0-9]+)))$",
+          "errorMessage": "should be a semantic version in the format x.y.z"
+        }
+      }
+    },
+    "globalEnvs": {
+      "type": "array",
+      "description": "Request the DAPPMANAGER to inject the selected global ENVs to this package's containers",
+      "items": {
+        "type": "object",
+        "properties": {
+          "envs": {
+            "type": "array",
+            "description": "The list of envs to inject to the defined services",
+            "items": {
+              "type": "string",
+              "examples": [
+                "_DAPPNODE_GLOBAL_NO_NAT_LOOPBACK",
+                "_DAPPNODE_GLOBAL_PUBLIC_IP"
+              ]
+            },
+            "services": {
+              "type": "array",
+              "description": "The services to inject the global ENVs to",
+              "items": {
+                "type": "string",
+                "examples": ["webserver", "backend", "service1"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "architectures": {
+      "type": "array",
+      "description": "Build and distribute this package in multiple architectures using [Docker's buildx plugin](https://docs.docker.com/buildx/working-with-buildx/)",
+      "examples": [["linux/amd64", "linux/arm64"]],
+      "items": {
+        "type": "string",
+        "examples": ["linux/amd64", "linux/arm64"],
+        "enum": ["linux/amd64", "linux/arm64"],
+        "enumDescriptions": {
+          "linux/amd64": "Default architecture, x86-64",
+          "linux/arm64": "ARM architecture"
+        }
+      }
+    },
+    "backup": {
+      "type": "array",
+      "description": "Allows users to download and restore a backup of key files of this package. If this property is non-empty array, a new view will be available in the admin UI for this DAppNode Package. The files or directories specified in the array will be bundled in a tarball. As long as the name properties stay the same, their associated paths can change in future versions. Then, when restoring an old backup, the new paths will be associated to files stored under the same name keys. **Note:** it is recommended to only backup lightweight files such as configs, keys or passwords.",
+      "items": {
+        "type": "object",
+        "required": ["name", "path"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "A key identifier of this file or directory. Its purpose is to allow the path to change in the future.",
+            "examples": ["keystore", "config", "keys"],
+            "minLength": 1,
+            "errorMessage": "should be an non-empty string"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path to the file or directory to backup. It **MUST** be an absolute path (do not use the `~` character) for the backup tool to work correctly.",
+            "examples": [
+              "/root/.raiden/secret/keystore",
+              "/usr/src/app/config.json"
+            ],
+            "minLength": 1,
+            "errorMessage": "should be an non-empty string"
+          },
+          "service": {
+            "type": "string",
+            "description": "Service to which the path belongs to. Must be equal to the name used in the docker-compose services object",
+            "examples": ["validator", "service1"],
+            "minLength": 1,
+            "errorMessage": "should be an non-empty string"
+          }
+        }
+      }
+    },
+    "changelog": {
+      "type": "string",
+      "description": "Description of relevant changes of this specific version. Supports markdown and links.",
+      "examples": [
+        "Brief summary of the most relevant changes that the user must known before installing"
+      ]
+    },
+    "warnings": {
+      "type": "object",
+      "description": "Very relevant information that MUST be shown to the user BEFORE executing a specific action in the DAppNode Package's lifecycle.",
+      "properties": {
+        "onInstall": {
+          "type": "string",
+          "description": "Will be shown before installing the DAppNode Package.",
+          "examples": [
+            "You must set the PASSWORD ENV before installing the DAppNode Package in order for the setup to work correctly."
+          ]
+        },
+        "onPatchUpdate": {
+          "type": "string",
+          "description": "Will be shown before performing a patch in the DAppNode Package, not in the first installation.",
+          "examples": [
+            "Your VPN connection will be lost when the VPN finalizes updating. Leave 1-2 minutes after executing the update and then reconnect and refresh this site."
+          ]
+        },
+        "onMinorUpdate": {
+          "type": "string",
+          "description": "Will be shown before performing a minor in the DAppNode Package, not in the first installation.",
+          "examples": [
+            "This is a minor update in wireguard, your credentials will be lost and you will need to recreate them."
+          ]
+        },
+        "onMajorUpdate": {
+          "type": "string",
+          "description": "Will be shown before performing a major update in the DAppNode Package, not in the first installation.",
+          "examples": [
+            "This is a major update of Prysm, it will start validating using the web3signer."
+          ]
+        },
+        "onReset": {
+          "type": "string",
+          "description": "Will be shown before resetting the DAppNode Package.",
+          "examples": [
+            "You MUST properly close your open channels before resetting this DAppNode Package or you may lose your funds."
+          ]
+        },
+        "onRemove": {
+          "type": "string",
+          "description": "Will be shown before removing the DAppNode Package.",
+          "examples": [
+            "You MUST properly close your open channels before removing this DAppNode Package or you may lose your funds."
+          ]
+        }
+      }
+    },
+    "updateAlerts": {
+      "type": "array",
+      "description": "Alerts targeted to a specific update jump.",
+      "items": {
+        "type": "object",
+        "description": "Specific update jump alert.",
+        "required": ["from", "message"],
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Semver range, show this message when a user updates this DAppNode Package FROM a version that satisfies this range.",
+            "examples": ["0.1.x", "^0.2.0"],
+            "minLength": 1,
+            "errorMessage": "should be an non-empty string"
+          },
+          "to": {
+            "type": "string",
+            "description": "Semver range, show this message when a user updates this DAppNode Package TO a version that satisfies this range.",
+            "default": "*",
+            "examples": ["0.1.x", "^0.2.0", "*"],
+            "minLength": 1,
+            "errorMessage": "should be an non-empty string"
+          },
+          "message": {
+            "type": "string",
+            "description": "Alert message to be shown when `from` and `to` ranges are satisfied.",
+            "examples": [
+              "Major update to OpenVPN: This update breaks compatibility with the last VPN version. Please read the migration guide: https://migration020.dappnode.io"
+            ],
+            "minLength": 1,
+            "errorMessage": "should be an non-empty string"
+          }
+        }
+      }
+    },
+    "disclaimer": {
+      "type": "object",
+      "description": "Disclaimer to be shown to the user on install, and will require the user to approve it.",
+      "required": ["message"],
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "The message shown in the pop-up. Markdown and links are allowed.",
+          "examples": [
+            "This software is experimental, presented “as is” and inherently carries risks."
+          ]
+        }
+      }
+    },
+    "style": {
+      "type": "object",
+      "description": "Graphic information to control the appearance of DAppNode Package related items in the admin UI.",
+      "properties": {
+        "featuredBackground": {
+          "type": "string",
+          "description": "CSS background property to be applied to the DAppNode Package card in the DAppNode Package store if featured. Go to the [Mozilla CSS background reference](https://developer.mozilla.org/docs/Web/CSS/background) for valid values.",
+          "examples": ["linear-gradient(to right, #323131, #395353)", "black"]
+        },
+        "featuredColor": {
+          "type": "string",
+          "description": "CSS color property to be applied to the DAppNode Package card in the DAppNode Package store if featured. Go to the [Mozilla CSS color reference](https://developer.mozilla.org/docs/Web/CSS/color) for valid values.",
+          "examples": ["white", "#fff"]
+        },
+        "featuredAvatarFilter": {
+          "type": "string",
+          "description": "CSS filter property to be applied to `<img>` component (avatar) of the DAppNode Package card in the DAppNode Package store if featured. Go to the [Mozilla CSS filter reference](https://developer.mozilla.org/docs/Web/CSS/filter) for valid values.",
+          "examples": ["invert(1)", "grayscale(80%);"]
+        }
+      }
+    },
+    "exposable": {
+      "type": "array",
+      "description": "Exposable services safe to be in the public internet",
+      "items": {
+        "type": "object",
+        "description": "Single exposable service item",
+        "required": ["name", "port"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Short human readable name of this exposable service",
+            "examples": ["Geth JSON RPC"],
+            "minLength": 1,
+            "errorMessage": "should be an non-empty string"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of this exposable service",
+            "examples": ["JSON RPC endpoint for Geth mainnet"]
+          },
+          "serviceName": {
+            "type": "string",
+            "description": "Docker compose service this exposable service belongs to. Defaults to the first service.",
+            "examples": ["beacon_chain"],
+            "minLength": 1,
+            "errorMessage": "should be an non-empty string"
+          },
+          "port": {
+            "type": "number",
+            "description": "Port this exposable service listens to",
+            "examples": [80, 5001, 8545]
+          },
+          "exposeByDefault": {
+            "type": "boolean",
+            "description": "Whether this HTTPS port should be exposed by default on installation",
+            "examples": [true, false]
+          }
+        }
+      }
+    },
+    "author": {
+      "type": "string",
+      "description": "Main author of this DAppNode Package. Must follow the structure `${name} <${email}> (${githubUserLink})`.",
+      "examples": [
+        "DAppNode Association <admin@dappnode.io> (https://github.com/dappnode)"
+      ],
+      "minLength": 1,
+      "errorMessage": "should be an non-empty string"
+    },
+    "contributors": {
+      "type": "array",
+      "description": "Contributing authors of this DAppNode Package.",
+      "examples": [
+        [
+          "Michael First <developerHanlder@project.io> (https://github.com/developerHanlder)",
+          "Michael Second <developerHanlder@project.io> (https://github.com/developerHanlder)"
+        ]
+      ],
+      "items": {
+        "type": "string",
+        "description": "Contributor author. Must follow the structure `${name} <${email}> (${githubUserLink})`.",
+        "minLength": 1,
+        "errorMessage": "should be an non-empty string"
+      }
+    },
+    "categories": {
+      "type": "array",
+      "description": "Categories to organize and group DAppNode Packages in the DAppNode Package store. Only one or two categories maximum should be specified per package. If you feel that any of the current categories represent the nature of your package, please open an issue requesting a new category https://github.com/dappnode/dnp-manifest/issues/new",
+      "examples": [["Developer tools", "Blockchain"]],
+      "items": {
+        "type": "string",
+        "examples": ["Developer tools", "Blockchain", "Economic incentive"],
+        "enum": [
+          "Blockchain",
+          "Communications",
+          "Developer tools",
+          "ETH2.0",
+          "Economic incentive",
+          "Monitoring",
+          "Payment channels",
+          "Storage"
+        ],
+        "enumDescriptions": {
+          "Blockchain": "Blockchain nodes, i.e. Bitcoin, Monero",
+          "Communications": "Decentralized networking or chat solutions, i.e. Swarm",
+          "Developer tools": "Packages that their main purpose is to aid in developing, i.e. testnets",
+          "ETH2.0": "Packages to participate or use the Eth2.0 network",
+          "Economic incentive": "Packages that offer an economic incentive or reward to the admin that runs it, i.e. Lightning Network",
+          "Monitoring": "Packages that track metrics",
+          "Payment channels": "Packages whose main purpose is to manage or control payment channels, i.e. Raiden",
+          "Storage": "Decentralized storage solutions, i.e. Swarm"
+        }
+      }
+    },
+    "keywords": {
+      "type": "array",
+      "description": "Keywords, relevant and descriptive of this DAppNode Package. They will be shown in the admin UI DAppNode Package store.",
+      "items": {
+        "type": "string",
+        "description": "Single keyword.",
+        "examples": ["DAppNodeCore", "IPFS", "File sharing"],
+        "minLength": 1,
+        "errorMessage": "should be an non-empty string"
+      }
+    },
+    "links": {
+      "type": "object",
+      "description": "Various links (URLs) useful for the user of this package. All links will be shown in the dedicated view of this package in the admin UI. The predefined links properties below will be shown with concept related icons. Other links will be shown as well but with their plain name instead of an icon.",
+      "properties": {
+        "homepage": {
+          "type": "string",
+          "description": "Url to an informative homepage for this DAppNode Package. Should be a README or landing website.",
+          "examples": ["https://github.com/dappnode/DNP_IPFS#readme"]
+        },
+        "ui": {
+          "type": "string",
+          "description": "Url to this DNP's DAppNode local UI.",
+          "examples": ["http://ipfs.dappnode:5001/webui"]
+        },
+        "api": {
+          "type": "string",
+          "description": "Url to this DNP's DAppNode local HTTP API endpoint.",
+          "examples": ["http://ipfs.dappnode:5001/api/v0"]
+        },
+        "gateway": {
+          "type": "string",
+          "description": "Url to this DNP's DAppNode local gateway.",
+          "examples": ["http://ipfs.dappnode:8080/ipfs"]
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "description": "DAppNode Package's repository. Must be a publicly available url that can be handed directly to a VCS program.",
+      "required": ["type", "url"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "examples": ["git"],
+          "minLength": 1,
+          "errorMessage": "should be an non-empty string"
+        },
+        "url": {
+          "type": "string",
+          "examples": ["https://github.com/dappnode/DNP_IPFS.git"],
+          "minLength": 1,
+          "errorMessage": "should be an non-empty string"
+        },
+        "directory": {
+          "type": "string",
+          "examples": ["packages/react-dom"]
+        }
+      }
+    },
+    "bugs": {
+      "type": "object",
+      "description": "Url to your project’s issue tracker.",
+      "required": ["url"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "examples": ["https://github.com/dappnode/DNP_IPFS/issues"]
+        }
+      }
+    },
+    "license": {
+      "type": "string",
+      "description": "DAppNode Package's License.",
+      "examples": ["GPL-3.0"],
+      "minLength": 1,
+      "errorMessage": "should be an non-empty string"
+    }
+  }
+}
