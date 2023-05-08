@@ -1,6 +1,6 @@
+import { Compose } from "@dappnode/types";
 import { getImageTag } from "../../params.js";
 import { PackageImage } from "../../types.js";
-import { Compose } from "./types.js";
 
 /**
  * Get the package images and classify them in local and external

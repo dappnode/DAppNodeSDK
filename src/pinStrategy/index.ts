@@ -4,7 +4,7 @@ import { GitHead } from "../utils/git.js";
 import { prettyPinataPinName } from "../utils/format.js";
 import { DnpPinMetadata, PinDataSummary, PinsByBranch } from "./types.js";
 import { groupPinsByBranch } from "./utils.js";
-import { Manifest } from "../files/index.js";
+import { Manifest } from "@dappnode/types";
 
 // This file has all logic for the pin strategy of DAppNode packages
 // In development, builds will be uploaded on each push on a PR

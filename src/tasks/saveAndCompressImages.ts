@@ -10,7 +10,7 @@ import {
   PackageImageExternal
 } from "../types.js";
 import { shell } from "../utils/shell.js";
-import { Architecture } from "../files/index.js";
+import { Architecture } from "@dappnode/types";
 
 /**
  * Save docker image

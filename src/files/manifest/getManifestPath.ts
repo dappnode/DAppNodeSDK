@@ -1,6 +1,6 @@
 import path from "path";
 import { defaultDir } from "../../params.js";
-import { ManifestFormat, ManifestPaths } from "./types.js";
+import { ManifestFormat, ManifestPaths } from "@dappnode/types";
 
 /**
  * Get manifest path. Without arguments defaults to './dappnode_package.json'

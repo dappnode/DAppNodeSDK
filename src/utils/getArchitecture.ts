@@ -1,5 +1,5 @@
 import os from "os";
-import { Architecture } from "../files/index.js";
+import { Architecture } from "@dappnode/types";
 
 /**
  * Returns the architecture of the host machine doing the build

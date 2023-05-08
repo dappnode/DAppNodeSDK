@@ -1,8 +1,6 @@
 import { expect } from "chai";
-import {
-  Compose,
-  parseComposeUpstreamVersion
-} from "../../../src/files/index.js";
+import { parseComposeUpstreamVersion } from "../../../src/files/index.js";
+import { Compose } from "@dappnode/types";
 
 describe("files / compose / parseComposeUpstreamVersion", () => {
   it("Should parse multiple upstream versions", () => {

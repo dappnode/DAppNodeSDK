@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
 import { releaseFiles } from "../../params.js";
-import { SetupWizard } from "../setupWizard/types.js";
+import { SetupWizard } from "@dappnode/types";
 import { readManifest } from "./readManifest.js";
 import { writeManifest } from "./writeManifest.js";
 

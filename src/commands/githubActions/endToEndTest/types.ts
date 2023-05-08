@@ -1,107 +1,25 @@
 import {
-  Compose,
   Manifest,
+  Compose,
+  SetupWizard,
   PackageBackup,
-  SetupWizard
-} from "../../../index.js";
-
-/**
- * Important: These types must be in sync with the types from the dappmanager
- * TODO: find a workaraound to avoid duplicating types, move types to new repo toolkit
- */
-
-// STAKERS
-
-export const networks = ["mainnet", "prater", "gnosis"] as const;
-export type Network = typeof networks[number];
-
-// MAINNET
-export const consensusClientsMainnet = [
-  "lodestar.dnp.dappnode.eth",
-  "prysm.dnp.dappnode.eth",
-  "lighthouse.dnp.dappnode.eth",
-  "teku.dnp.dappnode.eth",
-  "nimbus.dnp.dappnode.eth",
-  "lodestar.dnp.dappnode.eth",
-  ""
-] as const;
-export type ConsensusClientMainnet = typeof consensusClientsMainnet[number];
-export const executionClientsMainnet = [
-  "geth.dnp.dappnode.eth",
-  "besu.public.dappnode.eth",
-  "erigon.dnp.dappnode.eth",
-  "nethermind.public.dappnode.eth",
-  ""
-] as const;
-export type ExecutionClientMainnet = typeof executionClientsMainnet[number];
-export const signerMainnet = ["web3signer.dnp.dappnode.eth", ""] as const;
-export type SignerMainnet = typeof signerMainnet[number];
-export const mevBoostMainnet = ["mev-boost.dnp.dappnode.eth", ""] as const;
-export type MevBoostMainnet = typeof mevBoostMainnet[number];
-
-// PRATER
-export const consensusClientsPrater = [
-  "prysm-prater.dnp.dappnode.eth",
-  "lighthouse-prater.dnp.dappnode.eth",
-  "teku-prater.dnp.dappnode.eth",
-  "nimbus-prater.dnp.dappnode.eth",
-  "lodestar-prater.dnp.dappnode.eth",
-  ""
-] as const;
-export type ConsensusClientPrater = typeof consensusClientsPrater[number];
-export const executionClientsPrater = [
-  "goerli-geth.dnp.dappnode.eth",
-  "goerli-erigon.dnp.dappnode.eth",
-  "goerli-nethermind.dnp.dappnode.eth",
-  "goerli-besu.dnp.dappnode.eth",
-  ""
-] as const;
-export type ExecutionClientPrater = typeof executionClientsPrater[number];
-export const signerPrater = ["web3signer-prater.dnp.dappnode.eth", ""] as const;
-export type SignerPrater = typeof signerPrater[number];
-export const mevBoostPrater = [
-  "mev-boost-goerli.dnp.dappnode.eth",
-  ""
-] as const;
-export type MevBoostPrater = typeof mevBoostPrater[number];
-
-// GNOSIS
-export const consensusClientsGnosis = [
-  "gnosis-beacon-chain-prysm.dnp.dappnode.eth",
-  "lighthouse-gnosis.dnp.dappnode.eth",
-  "teku-gnosis.dnp.dappnode.eth",
-  "nimbus-gnosis.dnp.dappnode.eth",
-  "lodestar-gnosis.dnp.dappnode.eth",
-  ""
-] as const;
-export type ConsensusClientGnosis = typeof consensusClientsGnosis[number];
-export const executionClientsGnosis = [
-  "nethermind-xdai.dnp.dappnode.eth",
-  ""
-] as const;
-export type ExecutionClientGnosis = typeof executionClientsGnosis[number];
-export const signerGnosis = ["web3signer-Gnosis.dnp.dappnode.eth", ""] as const;
-export type SignerGnosis = typeof signerGnosis[number];
-export const mevBoostGnosis = [
-  "mev-boost-gnosis.dnp.dappnode.eth",
-  ""
-] as const;
-export type MevBoostGnosis = typeof mevBoostGnosis[number];
-
-export const stakerPkgs = [
-  ...executionClientsMainnet,
-  ...consensusClientsMainnet,
-  ...signerMainnet,
-  ...mevBoostMainnet,
-  ...executionClientsPrater,
-  ...consensusClientsPrater,
-  ...signerPrater,
-  ...mevBoostPrater,
-  ...executionClientsGnosis,
-  ...consensusClientsGnosis,
-  ...signerGnosis,
-  ...mevBoostGnosis
-] as const;
+  ConsensusClientMainnet,
+  executionClientsMainnet,
+  executionClientsPrater,
+  executionClientsGnosis,
+  ConsensusClientGnosis,
+  ConsensusClientPrater,
+  ExecutionClientGnosis,
+  ExecutionClientMainnet,
+  ExecutionClientPrater,
+  MevBoostGnosis,
+  MevBoostMainnet,
+  MevBoostPrater,
+  SignerGnosis,
+  SignerMainnet,
+  SignerPrater,
+  Network
+} from "@dappnode/types";
 
 export const executionPkgs = [
   ...executionClientsMainnet,
@@ -110,12 +28,7 @@ export const executionPkgs = [
 ] as const;
 export type ExecutionPkg = typeof executionPkgs[number];
 
-export const consensusPkgs = [
-  ...consensusClientsMainnet,
-  ...consensusClientsPrater,
-  ...consensusClientsGnosis
-] as const;
-export type ConsensusPkg = typeof consensusPkgs[number];
+// TODO: below types are duplicated from dappmanager
 
 // stakers items
 export type StakerType = "execution" | "consensus" | "signer" | "mev-boost";

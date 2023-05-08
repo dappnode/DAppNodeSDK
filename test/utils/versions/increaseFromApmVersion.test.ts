@@ -7,12 +7,12 @@ import {
   defaultManifestFormat
 } from "../../../src/params.js";
 import {
-  Manifest,
   writeCompose,
   readCompose,
   writeManifest,
   readManifest
 } from "../../../src/files/index.js";
+import { Manifest } from "@dappnode/types";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

@@ -2,10 +2,10 @@ import { PackageImage } from "../../../src/types.js";
 import { upstreamImageLabel } from "../../../src/params.js";
 import {
   updateComposeImageTags,
-  getComposePackageImages,
-  Compose
+  getComposePackageImages
 } from "../../../src/files/index.js";
 import { expect } from "chai";
+import { Compose } from "@dappnode/types";
 
 describe("files / compose / updateComposeImageTags", () => {
   const manifest = {

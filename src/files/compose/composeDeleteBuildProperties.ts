@@ -1,5 +1,5 @@
+import { ComposePaths } from "@dappnode/types";
 import { readCompose } from "./readCompose.js";
-import { ComposePaths } from "./types.js";
 import { writeCompose } from "./writeCompose.js";
 
 /**

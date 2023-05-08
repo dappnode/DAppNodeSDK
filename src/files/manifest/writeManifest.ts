@@ -1,7 +1,7 @@
 import fs from "fs";
 import { getManifestPath } from "./getManifestPath.js";
 import { stringifyJson } from "./stringifyJson.js";
-import { Manifest, ManifestFormat, ManifestPaths } from "./types.js";
+import { Manifest, ManifestFormat, ManifestPaths } from "@dappnode/types";
 
 /**
  * Writes a manifest. Without arguments defaults to write the manifest at './dappnode_package.json'

@@ -1,8 +1,8 @@
 import fs from "fs";
 import prettier from "prettier";
 import yaml from "js-yaml";
-import { Compose, ComposePaths } from "./types.js";
 import { getComposePath } from "./getComposePath.js";
+import { Compose, ComposePaths } from "@dappnode/types";
 
 /**
  * Writes the docker-compose.

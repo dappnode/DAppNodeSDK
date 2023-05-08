@@ -1,7 +1,7 @@
 import fs from "fs";
 import rimraf from "rimraf";
 import { getImageTag } from "../src/params.js";
-import { Manifest, Compose } from "../src/files/index.js";
+import { Compose, Manifest } from "@dappnode/types";
 
 export const testDir = "test_files";
 export function cleanTestDir(): void {
