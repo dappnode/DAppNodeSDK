@@ -36,7 +36,7 @@ import {
   validateComposeSchema,
   validateManifestSchema,
   validateSetupWizardSchema
-} from "../schemaValidation/index.js";
+} from "@dappnode/schemas";
 import {
   getComposePath,
   readCompose,
@@ -47,7 +47,8 @@ import {
   composeDeleteBuildProperties,
   readManifest,
   writeManifest,
-  validateDappnodeCompose
+  validateDappnodeCompose,
+  readSetupWizardIfExists
 } from "../files/index.js";
 
 // Pretty percent uploaded reporting
@@ -181,10 +182,11 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
     {
       title: "Validate files",
       task: async () => {
+        const setupWizard = readSetupWizardIfExists(dir);
         for (const [fileId] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
             case "setupWizard":
-              validateSetupWizardSchema();
+              setupWizard && validateSetupWizardSchema(setupWizard);
               break;
             case "manifest":
               validateManifestSchema(manifest);
