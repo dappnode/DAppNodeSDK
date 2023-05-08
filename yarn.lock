@@ -35,10 +35,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@dappnode/types@^0.1.4":
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.4.tgz#10dffc29850b73825ba89f531f2c13ce1af9f1e7"
-  integrity sha512-MiiMBhlUk0Xgpm25tm7Edpl6J5aSaViE3oSMKDNHf2LiDvXctX7NiygoRH6uHz43XRx5IFUpeFwLTjAyu3fH2w==
+"@dappnode/types@^0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.5.tgz#30dfa5338d822a1466abbf8ac832b6ff9fd5d3a2"
+  integrity sha512-w330fSVV3ugpAeKwcX+sByZID2GTZG4dpmwM2t/TEug2iPHbO5ACuMO3JIqBDvhYORNww4F3DVX+50rJS7zaRg==
 
 "@ethersproject/abi@5.7.0", "@ethersproject/abi@^5.7.0":
   version "5.7.0"
