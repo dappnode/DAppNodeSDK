@@ -35,10 +35,9 @@
   },
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
-    "@dappnode/types": "^0.1.8",
+    "@dappnode/schemas": "^0.1.6",
+    "@dappnode/types": "^0.1.9",
     "@octokit/rest": "^18.0.12",
-    "ajv": "^8.11.0",
-    "ajv-errors": "^3.0.0",
     "async-retry": "^1.2.3",
     "chalk": "^2.4.2",
     "cli-progress": "^3.8.2",
@@ -65,8 +64,6 @@
     "yargs": "^17.7.1"
   },
   "devDependencies": {
-    "@types/ajv": "^1.0.0",
-    "@types/ajv-errors": "^2.0.1",
     "@types/async-retry": "^1.4.2",
     "@types/chai": "^4.3.4",
     "@types/cli-progress": "^3.7.0",
