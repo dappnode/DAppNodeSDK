@@ -1,6 +1,6 @@
 {
   "name": "@dappnode/dappnodesdk",
-  "version": "0.2.98",
+  "version": "0.2.99",
   "type": "module",
   "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
   "main": "dist/index.js",
@@ -9,6 +9,7 @@
     "dappnodesdk": "dist/dappnodesdk.js"
   },
   "scripts": {
+    "tag-and-publish": "npm version patch && git push --follow-tags",
     "test": "mocha \"./{,!(node_modules)/**}/*.test.ts\"",
     "lint": "eslint . --ext .ts --fix",
     "build": "tsc",
