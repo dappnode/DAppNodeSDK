@@ -23,6 +23,15 @@ jobs:
       - name: Install dependencies
         run: yarn
 
+      - name: Compare versions
+        run: |
+          current_version=$(node -p "require('./package.json').version")
+          published_version=$(npm view @dappnode/dappnodesdk version)
+          if [ "$(printf '%s\n' "$published_version" "$current_version" | sort -V | head -n1)" != "$published_version" ]; then
+            echo "No release required"
+            exit 0
+          fi
+
       - name: Lint
         run: yarn lint
 
