@@ -4,18 +4,16 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
-    branches:
-      - master
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Node.js 18.x
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.x
           registry-url: https://registry.npmjs.org/
@@ -26,36 +24,45 @@ jobs:
       - name: Compare versions
         run: |
           current_version=$(node -p "require('./package.json').version")
-          published_version=$(npm view @dappnode/dappnodesdk version)
+          published_version=$(npm view @dappnode/schemas version)
           if [ "$(printf '%s\n' "$published_version" "$current_version" | sort -V | head -n1)" != "$published_version" ]; then
             echo "No release required"
-            exit 0
+            echo "SHOULD_CONTINUE=false" >> $GITHUB_ENV
+          else
+            echo "SHOULD_CONTINUE=true" >> $GITHUB_ENV
           fi
+        shell: bash
 
       - name: Lint
+        if: env.SHOULD_CONTINUE == 'true'
         run: yarn lint
 
       - name: Test
+        if: env.SHOULD_CONTINUE == 'true'
         run: yarn test
 
       - name: Build
+        if: env.SHOULD_CONTINUE == 'true'
         run: yarn build
 
-      - name: Get the tag name
-        id: get_tag_name
-        run: |
-          echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Get tag name
+        if: env.SHOULD_CONTINUE == 'true'
+        run: echo "TAG_NAME=v$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
       - name: Create GitHub release
-        id: gh_release
+        if: env.SHOULD_CONTINUE == 'true'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.TAG_NAME }}
-          release_name: Release ${{ env.TAG_NAME }}
+          release_name: ${{ env.TAG_NAME }}
 
       - name: Publish to npm registry
-        run: npm publish --access public
+        if: env.SHOULD_CONTINUE == 'true'
+        run: |
+          npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          token: ${{ secrets.NPM_TOKEN }}
