@@ -45,6 +45,11 @@
     ajv-errors "^3.0.0"
     semver "^7.5.0"
 
+"@dappnode/types@^0.1.11":
+  version "0.1.11"
+  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.11.tgz#ef0d7e30ff1a03691c2f5be7bc6ee422ec4c7ff1"
+  integrity sha512-6n8YU2D0FRBkuG4QGXSbh4iv6xZ6z+oKIkZypznBpT83+hYNbAV9n/1qWwzQ+f4IhKqWTvmMTndwrwlNsOXBTg==
+
 "@dappnode/types@^0.1.9":
   version "0.1.9"
   resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.9.tgz#23d13181ab077b33e23b929bd32cc6b2b618ec4a"

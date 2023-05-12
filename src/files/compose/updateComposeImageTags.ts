@@ -1,6 +1,6 @@
 import { mapValues } from "lodash-es";
 import { upstreamImageLabel } from "../../params.js";
-import { Compose, getImageTag } from "@dappnode/types";
+import { Compose, getImageTag, getIsMonoService } from "@dappnode/types";
 
 /**
  * Update service image tag to current version
@@ -14,7 +14,12 @@ export function updateComposeImageTags(
   return {
     ...compose,
     services: mapValues(compose.services, (service, serviceName) => {
-      const newImageTag = getImageTag({ dnpName, serviceName, version });
+      const newImageTag = getImageTag({
+        dnpName,
+        serviceName,
+        version,
+        isMonoService: getIsMonoService(compose)
+      });
       return service.build
         ? {
             ...service,

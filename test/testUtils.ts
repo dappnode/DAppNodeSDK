@@ -11,13 +11,14 @@ export function cleanTestDir(): void {
 export function generateCompose(manifest: Manifest): Compose {
   const dnpName = manifest.name,
     serviceName = manifest.name,
-    version = manifest.version;
+    version = manifest.version,
+    isMonoService = true;
   return {
     version: "3.4",
     services: {
       [serviceName]: {
         build: ".", // Dockerfile is in root dir
-        image: getImageTag({ dnpName, serviceName, version }),
+        image: getImageTag({ dnpName, serviceName, version, isMonoService }),
         restart: "unless-stopped"
       }
     }
