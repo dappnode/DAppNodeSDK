@@ -1,5 +1,4 @@
-import { Compose } from "@dappnode/types";
-import { getImageTag } from "../../params.js";
+import { Compose, getImageTag } from "@dappnode/types";
 import { PackageImage } from "../../types.js";
 
 /**

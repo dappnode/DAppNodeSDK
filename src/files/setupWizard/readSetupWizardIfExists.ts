@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import { defaultDir, releaseFiles } from "../../params.js";
+import { defaultDir } from "../../params.js";
 import { readFile } from "../../utils/file.js";
-import { SetupWizard } from "@dappnode/types";
+import { SetupWizard, releaseFiles } from "@dappnode/types";
 
 export function readSetupWizardIfExists(dir?: string): SetupWizard | null {
   const dirPath = dir || defaultDir;

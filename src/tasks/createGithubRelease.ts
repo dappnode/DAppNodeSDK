@@ -7,13 +7,14 @@ import {
   compactManifestIfCore,
   composeDeleteBuildProperties
 } from "../files/index.js";
-import { contentHashFile, defaultDir } from "../params.js";
+import { defaultDir } from "../params.js";
 import {
   TxData,
   CliGlobalOptions,
   ListrContextBuildAndPublish
 } from "../types.js";
 import { Github } from "../providers/github/Github.js";
+import { contentHashFile } from "@dappnode/types";
 
 /**
  * Create (or edit) a Github release, then upload all assets

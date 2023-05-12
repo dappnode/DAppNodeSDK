@@ -18,12 +18,10 @@ import {
   defaultDir,
   defaultManifestFileName,
   defaultManifestFormat,
-  getImageTag,
-  releaseFiles,
   YargsError
 } from "../params.js";
 import { CliGlobalOptions } from "../types.js";
-import { Manifest, Compose } from "@dappnode/types";
+import { Manifest, Compose, getImageTag, releaseFiles } from "@dappnode/types";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",

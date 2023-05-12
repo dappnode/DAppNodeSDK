@@ -1,6 +1,6 @@
 import { mapValues } from "lodash-es";
-import { getImageTag, upstreamImageLabel } from "../../params.js";
-import { Compose } from "@dappnode/types";
+import { upstreamImageLabel } from "../../params.js";
+import { Compose, getImageTag } from "@dappnode/types";
 
 /**
  * Update service image tag to current version

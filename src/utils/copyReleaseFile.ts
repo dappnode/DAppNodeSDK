@@ -1,6 +1,6 @@
+import { releaseFilesDefaultNames } from "@dappnode/types";
 import fs from "fs";
 import path from "path";
-import { releaseFilesDefaultNames } from "../params.js";
 
 interface FileConfig {
   regex: RegExp;
