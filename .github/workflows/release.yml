@@ -25,11 +25,13 @@ jobs:
         run: |
           current_version=$(node -p "require('./package.json').version")
           published_version=$(npm view @dappnode/schemas version)
-          if [ "$(printf '%s\n' "$published_version" "$current_version" | sort -V | head -n1)" != "$published_version" ]; then
+
+          if [ "$(printf '%s\n' "$published_version" "$current_version" | sort -V | tail -n1)" != "$published_version" ]; then
+            echo "Release required"
+            echo "SHOULD_CONTINUE=true" >> $GITHUB_ENV
+          else
             echo "No release required"
             echo "SHOULD_CONTINUE=false" >> $GITHUB_ENV
-          else
-            echo "SHOULD_CONTINUE=true" >> $GITHUB_ENV
           fi
         shell: bash
 
