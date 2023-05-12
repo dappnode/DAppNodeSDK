@@ -24,7 +24,7 @@ jobs:
       - name: Compare versions
         run: |
           current_version=$(node -p "require('./package.json').version")
-          published_version=$(npm view @dappnode/schemas version)
+          published_version=$(npm view @dappnode/dappnodesdk version)
 
           if [ "$(printf '%s\n' "$published_version" "$current_version" | sort -V | tail -n1)" != "$published_version" ]; then
             echo "Release required"
