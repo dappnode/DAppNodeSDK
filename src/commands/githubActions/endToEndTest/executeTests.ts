@@ -105,9 +105,9 @@ async function testPackageInstallAndUpdate(
     version: releaseMultiHash, // Install test version
     userSettings: { environment: environmentByService }
   });
-  // Set staker config if staker package
+  // Set staker config if staker package (Volumes not removed to simulate a real update)
   if (isStakerPkg && network)
-    await setStakerConfig(dnpName, dappmanagerTestApi, network);
+    await setStakerConfig(dnpName, dappmanagerTestApi, network, false);
   await executeTestCheckers({
     dnpName,
     compose,
@@ -143,9 +143,9 @@ async function testPackageInstallFromScratch(
     version: releaseMultiHash,
     userSettings: { environment: environmentByService || {} }
   });
-  // Set staker config if staker package
+  // Set staker config if staker package (Volumes removed to simulate a real install)
   if (isStakerPkg && network)
-    await setStakerConfig(dnpName, dappmanagerTestApi, network);
+    await setStakerConfig(dnpName, dappmanagerTestApi, network, true);
   await executeTestCheckers({
     dnpName,
     compose,

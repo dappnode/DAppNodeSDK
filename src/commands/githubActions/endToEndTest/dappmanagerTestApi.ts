@@ -177,6 +177,14 @@ export class DappmanagerTestApi {
     );
   }
 
+  async packageRestartVolumes({ dnpName }: { dnpName: string }): Promise<void> {
+    await this.ensureSuccess(
+      await got.post(`${this.url}/packageRestartVolumes`, {
+        json: { dnpName }
+      })
+    );
+  }
+
   /**
    * Middleware: throw error if http code !==2xx
    */
