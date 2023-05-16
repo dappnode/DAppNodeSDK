@@ -28,7 +28,7 @@ function getEthereumProviderUrl(provider = "dappnode"): string {
  * @return apm instance
  */
 export class Apm {
-  provider: ethers.providers.JsonRpcProvider;
+  provider: ethers.JsonRpcProvider;
 
   constructor(providerId: string) {
     // Initialize ens and web3 instances
@@ -36,7 +36,7 @@ export class Apm {
     // This application does not need subscriptions and performs very few requests per use
     const providerUrl = getEthereumProviderUrl(providerId);
 
-    this.provider = new ethers.providers.JsonRpcProvider(providerUrl);
+    this.provider = new ethers.JsonRpcProvider(providerUrl);
   }
 
   // Ens throws if a node is not found
@@ -136,7 +136,7 @@ export function encodeNewVersionCall({
   contractAddress: string;
   contentURI: string;
 }): string {
-  const repo = new ethers.utils.Interface(repoAbi);
+  const repo = ethers.Interface.from(repoAbi)
   return repo.encodeFunctionData("newVersion", [
     semverToArray(version), // uint16[3] _newSemanticVersion
     contractAddress, // address _contractAddress
@@ -166,7 +166,7 @@ export function encodeNewRepoWithVersionCall({
   contractAddress: string;
   contentURI: string;
 }): string {
-  const registry = new ethers.utils.Interface(registryAbi);
+  const registry = ethers.Interface.from(registryAbi)
   return registry.encodeFunctionData("newRepoWithVersion", [
     name, // string _name
     developerAddress, // address _dev
