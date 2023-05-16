@@ -41,7 +41,8 @@ export function getIsStakerPkg(dnpName: string): boolean {
 export async function setStakerConfig(
   dnpName: string,
   dappmanagerTestApi: DappmanagerTestApi,
-  network: Network
+  network: Network,
+  removeConsensusVolumes?: boolean
 ): Promise<void> {
   const mutableStakerConfig: StakerConfigSet<Network> = cloneDeep(
     getStakerConfigByNetwork(network)
@@ -74,6 +75,11 @@ export async function setStakerConfig(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   else if (consensus.includes(dnpName as any))
     mutableStakerConfig.consensusClient.dnpName = dnpName as typeof consensus[number];
+
+  if (removeConsensusVolumes)
+    await dappmanagerTestApi.packageRestartVolumes({
+      dnpName: mutableStakerConfig.consensusClient.dnpName
+    });
 
   await dappmanagerTestApi.stakerConfigSet(mutableStakerConfig);
 }
