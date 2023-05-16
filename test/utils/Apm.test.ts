@@ -12,8 +12,8 @@ describe("Apm constructor", function () {
     const registry = await apm.getRegistryContract(dnpName);
 
     if (!registry) throw Error("no registry");
-    expect(registry.address).to.be.a("string", "Contract instance changed");
-    expect(registry.address.toLowerCase()).to.equal(
+    expect(await registry.getAddress()).to.be.a("string", "Contract instance changed");
+    expect((await registry.getAddress()).toLowerCase()).to.equal(
       "0x266BFdb2124A68beB6769dC887BD655f78778923".toLowerCase()
     );
   });
@@ -23,8 +23,8 @@ describe("Apm constructor", function () {
     const repo = await apm.getRepoContract(dnpName);
 
     if (!repo) throw Error("no repo");
-    expect(repo.address).to.be.a("string", "Contract instance changed");
-    expect(repo.address.toLowerCase()).to.equal(
+    expect(await repo.getAddress()).to.be.a("string", "Contract instance changed");
+    expect((await repo.getAddress()).toLowerCase()).to.equal(
       "0xEe66C4765696C922078e8670aA9E6d4F6fFcc455".toLowerCase()
     );
   });

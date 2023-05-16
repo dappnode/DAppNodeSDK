@@ -58,7 +58,7 @@ export function generatePublishTx({
           const repository = await apm.getRepoContract(ensName);
           if (repository) {
             ctx.txData = {
-              to: repository.address,
+              to: await repository.getAddress(),
               value: 0,
               data: encodeNewVersionCall({
                 version: currentVersion,
@@ -81,7 +81,7 @@ export function generatePublishTx({
             // A developer address must be provided by the option -a or --developer_address.
             if (
               !developerAddress ||
-              !ethers.utils.isAddress(developerAddress) ||
+              !ethers.isAddress(developerAddress) ||
               isZeroAddress(developerAddress)
             ) {
               throw new YargsError(
@@ -100,7 +100,7 @@ with command option:
             }
 
             ctx.txData = {
-              to: registry.address,
+              to: await registry.getAddress(),
               value: 0,
               data: encodeNewRepoWithVersionCall({
                 name: shortName,
