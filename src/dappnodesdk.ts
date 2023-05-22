@@ -87,6 +87,7 @@ dappnodesdk.epilogue(
  * - #### TODO, track known errors and show them nicely
  */
 dappnodesdk.fail((msg, err, yargs) => {
+  throw err;
   // Rebrand custom errors as yargs native errors, to display help
   if (err instanceof YargsError) {
     msg = err.message;
