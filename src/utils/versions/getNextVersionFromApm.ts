@@ -1,8 +1,9 @@
 import semver from "semver";
-import { Apm } from "../Apm.js";
+import { getEthersProvider } from "../Apm.js";
 import { checkSemverType } from "../checkSemverType.js";
 import { ReleaseType } from "../../types.js";
 import { readManifest } from "../../files/index.js";
+import { ApmRepository } from "@dappnode/toolkit";
 
 export async function getNextVersionFromApm({
   type,
@@ -17,14 +18,16 @@ export async function getNextVersionFromApm({
   checkSemverType(type);
 
   // Init APM instance
-  const apm = new Apm(ethProvider);
+  const apm = new ApmRepository(getEthersProvider(ethProvider));
 
   // Load manifest
   const { manifest } = readManifest({ dir });
   const ensName = manifest.name.toLowerCase();
 
   // Fetch the latest version from APM
-  const currentVersion = await apm.getLatestVersion(ensName);
+  const { version: currentVersion } = await apm.getVersionAndIpfsHash({
+    dnpName: ensName
+  });
 
   // Increase the version and log it
   const nextVersion = semver.inc(currentVersion, type);

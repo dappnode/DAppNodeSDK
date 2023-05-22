@@ -1,4 +1,4 @@
-import { Apm } from "./Apm.js";
+import { getEthersProvider } from "./Apm.js";
 import { CliError } from "../params.js";
 
 /**
@@ -9,11 +9,12 @@ import { CliError } from "../params.js";
 export async function verifyEthConnection(ethProvider: string): Promise<void> {
   if (!ethProvider) throw Error("No ethProvider provided");
 
-  const apm = new Apm(ethProvider);
+  const provider = getEthersProvider(ethProvider);
+
   try {
-    const isListening = await apm.provider.send("net_listening", []);
-    if (isListening === false) {
-      throw new CliError(`Eth provider ${ethProvider} is not listening`);
+    const network = await provider.getNetwork();
+    if (!network) {
+      throw new CliError(`Could not reach ETH provider at ${ethProvider}`);
     }
   } catch (e) {
     if (ethProvider === "dappnode") {
