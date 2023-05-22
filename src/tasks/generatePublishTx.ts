@@ -2,12 +2,17 @@ import Listr from "listr";
 import { ethers } from "ethers";
 import {
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 
   getEthereumUrl
 } from "../utils/getEthereumUrl.js";
 =======
   //Apm,
+=======
+  isValidENSName,
+  getEthereumProviderUrl,
+>>>>>>> refactor APM usage
   encodeNewVersionCall,
   encodeNewRepoWithVersionCall
 } from "../utils/Apm.js";
@@ -21,9 +26,6 @@ import { ApmRepository } from "@dappnode/toolkit";
 import registryAbi from "../contracts/ApmRegistryAbi.json" assert { type: "json" };
 import { semverToArray } from "../utils/semverToArray.js";
 import repoAbi from "../contracts/RepoAbi.json" assert { type: "json" };
-
-import { ApmRepository } from "@dappnode/toolkit";
-import { getEthereumProviderUrl } from "../utils/Apm.js";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
@@ -50,6 +52,7 @@ export function generatePublishTx({
   developerAddress?: string;
   ethProvider: string;
 } & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
+<<<<<<< HEAD
   // Init APM instance
 <<<<<<< HEAD
   const ethereumUrl = getEthereumUrl(ethProvider);
@@ -61,6 +64,11 @@ export function generatePublishTx({
   // Init APM instance
   const apm2 = new ApmRepository(parsedProvider);
 >>>>>>> integrate toolkit v1
+=======
+
+  //
+  const provider = new ethers.JsonRpcProvider(getEthereumProviderUrl(ethProvider))
+>>>>>>> refactor APM usage
 
   // Load manifest ##### Verify manifest object
   const { manifest } = readManifest({ dir });
@@ -79,10 +87,15 @@ export function generatePublishTx({
         title: "Generate transaction",
         task: async ctx => {
 <<<<<<< HEAD
+<<<<<<< HEAD
           try {
             const repository = await apm.getRepoContract(ensName);
 =======
           const repository = await parsedProvider.resolveName(ensName);
+=======
+          isValidENSName(ensName);
+          const repository = await provider.resolveName(ensName);
+>>>>>>> refactor APM usage
           if (repository) {
 >>>>>>> integrate toolkit v1
             ctx.txData = {
@@ -119,8 +132,7 @@ export function generatePublishTx({
                     `A new Aragon Package Manager Repo for ${ensName} must be created. 
 =======
           } else {
-            //const registry = await apm.getRegistryContract(ensName);
-            const registry = await parsedProvider.resolveName(ensName.split(".").slice(1).join("."));
+            const registry = await provider.resolveName(ensName.split(".").slice(1).join("."));
             if (!registry)
               throw Error(
                 `There must exist a registry for DNP name ${ensName}`
