@@ -45,7 +45,7 @@ jobs:
 
       - name: Build
         if: env.SHOULD_CONTINUE == 'true'
-        run: yarn build
+        run: yarn build:webpack
 
       - name: Get tag name
         if: env.SHOULD_CONTINUE == 'true'
