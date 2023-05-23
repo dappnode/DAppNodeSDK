@@ -1,1 +1,1 @@
-export * from "./dappnodesdk";
+export * from "./dappnodesdk.js";
