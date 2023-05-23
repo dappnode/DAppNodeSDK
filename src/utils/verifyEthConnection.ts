@@ -1,5 +1,6 @@
-import { getEthersProvider } from "./Apm.js";
+import { getEthereumUrl } from "./getEthereumUrl.js";
 import { CliError } from "../params.js";
+import { ethers } from "ethers";
 
 /**
  * Verify the eth connection outside of the eth library to ensure
@@ -9,7 +10,7 @@ import { CliError } from "../params.js";
 export async function verifyEthConnection(ethProvider: string): Promise<void> {
   if (!ethProvider) throw Error("No ethProvider provided");
 
-  const provider = getEthersProvider(ethProvider);
+  const provider = new ethers.JsonRpcProvider(getEthereumUrl(ethProvider));
 
   try {
     const network = await provider.getNetwork();

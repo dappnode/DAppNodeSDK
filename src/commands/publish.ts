@@ -168,13 +168,12 @@ export async function publishHandler({
    */
   if (dappnode_team_preset) {
     if (isCi) {
-      ethProvider = "infura";
       contentProvider = "http://api.ipfs.dappnode.io:5001";
       uploadTo = "ipfs";
       // Activate verbose to see logs easier afterwards
       verbose = true;
     }
-
+    ethProvider = "infura";
     githubRelease = true;
   }
 
