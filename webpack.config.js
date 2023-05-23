@@ -13,7 +13,7 @@ export default {
     library: {
       type: "module"
     },
-    chunkFormat: "commonjs" // specify chunkFormat as commonjs
+    chunkFormat: "module"
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js"],
