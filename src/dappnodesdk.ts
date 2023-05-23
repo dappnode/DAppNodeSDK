@@ -19,7 +19,21 @@ import "source-map-support/register.js";
 import { defaultDir } from "./params.js";
 dotenv.config();
 
-const dappnodesdk = yargs();
+process.on("uncaughtException", err => {
+  console.error(` ${chalk.red("✖")} Uncaught exception ${err}`);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error(
+    ` ${chalk.red(
+      "✖"
+    )} Unhandled promise rejection at ${promise}, reason: ${reason}`
+  );
+  process.exit(1);
+});
+
+const dappnodesdk = yargs(hideBin(process.argv));
 
 // Set up commands
 dappnodesdk.usage(`Usage: dappnodesdk <command> [options]`);
@@ -78,13 +92,7 @@ dappnodesdk.epilogue(
 );
 
 /**
- * Handle errors:
- * - yargs parsing errors will come from the `msg` variable.
- *   In that case show the commands help and a message
- * - If there is no command, show the welcome message
- * - Otherwise, `err` will contain an error on unexpected errors.
- *   Just show the error with the stack
- * - #### TODO, track known errors and show them nicely
+ * Handle errors
  */
 dappnodesdk.fail((msg, err, yargs) => {
   if (err) {
@@ -99,4 +107,4 @@ dappnodesdk.fail((msg, err, yargs) => {
 });
 
 // Run CLI
-dappnodesdk.parse(hideBin(process.argv));
+dappnodesdk.parse();
