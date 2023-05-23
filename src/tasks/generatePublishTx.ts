@@ -1,16 +1,19 @@
 import Listr from "listr";
 import { ethers } from "ethers";
 import {
-  encodeNewVersionCall,
-  encodeNewRepoWithVersionCall,
-  getEthersProvider
-} from "../utils/Apm.js";
+
+
+  getEthereumUrl
+} from "../utils/getEthereumUrl.js";
 import { getPublishTxLink } from "../utils/getLinks.js";
 import { addReleaseTx } from "../utils/releaseRecord.js";
 import { defaultDir, YargsError } from "../params.js";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types.js";
 import { readManifest } from "../files/index.js";
 import { ApmRepository } from "@dappnode/toolkit";
+import registryAbi from "../contracts/ApmRegistryAbi.json" assert { type: "json" };
+import { semverToArray } from "../utils/semverToArray.js";
+import repoAbi from "../contracts/RepoAbi.json" assert { type: "json" };
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
@@ -38,8 +41,8 @@ export function generatePublishTx({
   ethProvider: string;
 } & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
   // Init APM instance
-  const provider = getEthersProvider(ethProvider);
-  const apm = new ApmRepository(provider);
+  const ethereumUrl = getEthereumUrl(ethProvider);
+  const apm = new ApmRepository(ethereumUrl);
 
   // Load manifest ##### Verify manifest object
   const { manifest } = readManifest({ dir });
@@ -75,9 +78,9 @@ export function generatePublishTx({
           } catch (e) {
             if (e.message.includes("Could not resolve name")) {
               try {
-                const registryAddress = await provider.resolveName(
-                  ensName.split(".").slice(1).join(".")
-                );
+                const registryAddress = await new ethers.JsonRpcProvider(
+                  ethereumUrl
+                ).resolveName(ensName.split(".").slice(1).join("."));
                 if (!registryAddress)
                   throw new Error("Registry not found for " + ensName);
 
@@ -140,4 +143,63 @@ with command option:
     ],
     { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
   );
+}
+
+// Utils
+
+
+/**
+ * newVersion(
+ *   uint16[3] _newSemanticVersion,
+ *   address _contractAddress,
+ *   bytes _contentURI
+ * )
+ */
+export function encodeNewVersionCall({
+  version,
+  contractAddress,
+  contentURI
+}: {
+  version: string;
+  contractAddress: string;
+  contentURI: string;
+}): string {
+  const repo = ethers.Interface.from(repoAbi)
+  return repo.encodeFunctionData("newVersion", [
+    semverToArray(version), // uint16[3] _newSemanticVersion
+    contractAddress, // address _contractAddress
+    contentURI // bytes _contentURI
+  ]);
+}
+
+/**
+ * newRepoWithVersion(
+ *   string _name,
+ *   address _dev,
+ *   uint16[3] _initialSemanticVersion,
+ *   address _contractAddress,
+ *   bytes _contentURI
+ * )
+ */
+export function encodeNewRepoWithVersionCall({
+  name,
+  developerAddress,
+  version,
+  contractAddress,
+  contentURI
+}: {
+  name: string;
+  developerAddress: string;
+  version: string;
+  contractAddress: string;
+  contentURI: string;
+}): string {
+  const registry = ethers.Interface.from(registryAbi)
+  return registry.encodeFunctionData("newRepoWithVersion", [
+    name, // string _name
+    developerAddress, // address _dev
+    semverToArray(version), // uint16[3] _initialSemanticVersion
+    contractAddress, // address _contractAddress
+    contentURI // bytes _contentURI
+  ]);
 }

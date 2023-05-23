@@ -1,5 +1,5 @@
 import semver from "semver";
-import { getEthersProvider } from "../Apm.js";
+import { getEthereumUrl } from "../getEthereumUrl.js";
 import { checkSemverType } from "../checkSemverType.js";
 import { ReleaseType } from "../../types.js";
 import { readManifest } from "../../files/index.js";
@@ -18,13 +18,14 @@ export async function getNextVersionFromApm({
   checkSemverType(type);
 
   // Init APM instance
-  const apm = new ApmRepository(getEthersProvider(ethProvider));
+  const apm = new ApmRepository(getEthereumUrl(ethProvider));
 
   // Load manifest
   const { manifest } = readManifest({ dir });
   const ensName = manifest.name.toLowerCase();
 
   // Fetch the latest version from APM
+  console.log("ensName: ", ensName);
   const { version: currentVersion } = await apm.getVersionAndIpfsHash({
     dnpName: ensName
   });

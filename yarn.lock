@@ -61,10 +61,10 @@
     ajv-errors "^3.0.0"
     semver "^7.5.0"
 
-"@dappnode/toolkit@^0.1.15":
-  version "0.1.15"
-  resolved "https://registry.yarnpkg.com/@dappnode/toolkit/-/toolkit-0.1.15.tgz#b520dced4f0d7b6841390f1e38a1f6013d93beba"
-  integrity sha512-kSRDQFWHT3nBQsgqPNZ/aofy+0Z5XgZATTDQVEfXVY3ZBOPyZXwNCp/BuE2vcYBFITwXfDmbfDbUtZc2T0yNmA==
+"@dappnode/toolkit@^0.1.16":
+  version "0.1.16"
+  resolved "https://registry.yarnpkg.com/@dappnode/toolkit/-/toolkit-0.1.16.tgz#3dacc4e1b58d58fcbfe02db32cb15c972695c418"
+  integrity sha512-hPAGYKmcJewvFUJkpZ4frlmL3a2JTNzrW07NGl8o9+wH6u+6zTk7y40oGRlNmOlnBRKw2SCzBCgSBZNHEbHhhg==
   dependencies:
     "@dappnode/types" "^0.1.12"
     "@ipld/car" "^5.1.1"
@@ -1677,7 +1677,7 @@ esutils@^2.0.2:
   resolved "https://registry.npmjs.org/esutils/-/esutils-2.0.3.tgz"
   integrity sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==
 
-ethers@^6.3.0, ethers@^6.4.0:
+ethers@^6.4.0:
   version "6.4.0"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.4.0.tgz#82c230a3a018a2627593d24ec4b9c20e9681c341"
   integrity sha512-nksaMCwX+BOdV2NQ1/57OehSD2JtujbhrdC2+Fb9VpvBO0WO6h+WWwu3oMMw7aUiTa5lvQcWX1vl4aOy7Q3CTg==
