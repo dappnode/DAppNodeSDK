@@ -9,7 +9,7 @@ export default {
   target: "node",
   output: {
     path: path.resolve(path.dirname(currentModulePath), "dist"),
-    filename: "index.js",
+    filename: "dappnodesdk.js",
     library: {
       type: "module"
     },
