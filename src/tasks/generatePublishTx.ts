@@ -1,15 +1,16 @@
 import Listr from "listr";
 import { ethers } from "ethers";
 import {
-  Apm,
   encodeNewVersionCall,
-  encodeNewRepoWithVersionCall
+  encodeNewRepoWithVersionCall,
+  getEthersProvider
 } from "../utils/Apm.js";
 import { getPublishTxLink } from "../utils/getLinks.js";
 import { addReleaseTx } from "../utils/releaseRecord.js";
 import { defaultDir, YargsError } from "../params.js";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types.js";
 import { readManifest } from "../files/index.js";
+import { ApmRepository } from "@dappnode/toolkit";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
@@ -37,7 +38,8 @@ export function generatePublishTx({
   ethProvider: string;
 } & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
   // Init APM instance
-  const apm = new Apm(ethProvider);
+  const provider = getEthersProvider(ethProvider);
+  const apm = new ApmRepository(provider);
 
   // Load manifest ##### Verify manifest object
   const { manifest } = readManifest({ dir });
@@ -55,8 +57,8 @@ export function generatePublishTx({
       {
         title: "Generate transaction",
         task: async ctx => {
-          const repository = await apm.getRepoContract(ensName);
-          if (repository) {
+          try {
+            const repository = await apm.getRepoContract(ensName);
             ctx.txData = {
               to: await repository.getAddress(),
               value: 0,
@@ -70,22 +72,24 @@ export function generatePublishTx({
               currentVersion,
               releaseMultiHash
             };
-          } else {
-            const registry = await apm.getRegistryContract(ensName);
-            if (!registry)
-              throw Error(
-                `There must exist a registry for DNP name ${ensName}`
-              );
+          } catch (e) {
+            if (e.message.includes("Could not resolve name")) {
+              try {
+                const registryAddress = await provider.resolveName(
+                  ensName.split(".").slice(1).join(".")
+                );
+                if (!registryAddress)
+                  throw new Error("Registry not found for " + ensName);
 
-            // If repo does not exist, create a new repo and push version
-            // A developer address must be provided by the option -a or --developer_address.
-            if (
-              !developerAddress ||
-              !ethers.isAddress(developerAddress) ||
-              isZeroAddress(developerAddress)
-            ) {
-              throw new YargsError(
-                `A new Aragon Package Manager Repo for ${ensName} must be created. 
+                // If repo does not exist, create a new repo and push version
+                // A developer address must be provided by the option -a or --developer_address.
+                if (
+                  !developerAddress ||
+                  !ethers.isAddress(developerAddress) ||
+                  isZeroAddress(developerAddress)
+                ) {
+                  throw new YargsError(
+                    `A new Aragon Package Manager Repo for ${ensName} must be created. 
 You must specify the developer address that will control it
 
 with ENV:
@@ -96,25 +100,31 @@ with command option:
 
   dappnodesdk publish [type] --developer_address 0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B
 `
-              );
-            }
+                  );
+                }
 
-            ctx.txData = {
-              to: await registry.getAddress(),
-              value: 0,
-              data: encodeNewRepoWithVersionCall({
-                name: shortName,
-                developerAddress,
-                version: currentVersion,
-                contractAddress,
-                contentURI
-              }),
-              gasLimit: 1100000,
-              ensName,
-              currentVersion,
-              releaseMultiHash,
-              developerAddress
-            };
+                ctx.txData = {
+                  to: registryAddress,
+                  value: 0,
+                  data: encodeNewRepoWithVersionCall({
+                    name: shortName,
+                    developerAddress,
+                    version: currentVersion,
+                    contractAddress,
+                    contentURI
+                  }),
+                  gasLimit: 1100000,
+                  ensName,
+                  currentVersion,
+                  releaseMultiHash,
+                  developerAddress
+                };
+              } catch (e) {
+                throw Error(
+                  `There must exist a registry for DNP name ${ensName}`
+                );
+              }
+            } else throw e;
           }
 
           /**

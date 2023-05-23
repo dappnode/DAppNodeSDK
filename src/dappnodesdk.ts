@@ -16,7 +16,7 @@ import { githubActions } from "./commands/githubActions/index.js";
 
 // "source-map-support" MUST be imported for stack traces to work properly after Typescript transpile -
 import "source-map-support/register.js";
-import { CliError, defaultDir, YargsError } from "./params.js";
+import { defaultDir } from "./params.js";
 dotenv.config();
 
 const dappnodesdk = yargs();
@@ -87,38 +87,15 @@ dappnodesdk.epilogue(
  * - #### TODO, track known errors and show them nicely
  */
 dappnodesdk.fail((msg, err, yargs) => {
-  // Rebrand custom errors as yargs native errors, to display help
-  if (err instanceof YargsError) {
-    msg = err.message;
-    // @ts-ignore
-    err = undefined;
-  }
-
   if (err) {
-    if (err instanceof CliError) {
-      console.error(` ${chalk.red("✖")} ${err.message}\n`);
-      process.exit(1);
-    }
-    // If the error is a network error, show the full error with status code and info
-    if (err.name === "HttpError") console.error(err);
-    console.error(err.stack);
-    process.exit(1);
-  } else if (msg === welcomeMsg) {
-    console.log(welcomeMsg + "\n");
-    yargs.showHelp();
-  } else if (msg) {
-    console.error(`
-${yargs.help()}
-${chalk.gray(`
-${"#".repeat(80)}
-${"#".repeat(80)}
-`)}
-${msg}
-`);
+    console.error(` ${chalk.red("✖")} ${err.message}\n`);
+    throw err;
   } else {
-    console.error("Unknown error");
+    // If no specific error object is passed, use the message
+    console.error(` ${chalk.red("✖")} ${msg}\n`);
+    // Displaying the help
+    console.log(yargs.help());
   }
-  process.exit(1);
 });
 
 // Run CLI
