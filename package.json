@@ -36,6 +36,7 @@
   },
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
+    "@adraffy/ens-normalize": "^1.9.0",
     "@dappnode/schemas": "^0.1.6",
     "@dappnode/toolkit": "^0.1.16",
     "@dappnode/types": "^0.1.12",
