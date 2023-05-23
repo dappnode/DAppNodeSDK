@@ -1,5 +1,5 @@
 import fs from "fs";
-import rimraf from "rimraf";
+import { rimraf } from "rimraf";
 import { Compose, Manifest, getImageTag } from "@dappnode/types";
 
 export const testDir = "test_files";

@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import Listr, { ListrTask } from "listr/index.js";
-import rimraf from "rimraf";
+import { rimraf } from "rimraf";
 import { verifyAvatar } from "../utils/verifyAvatar.js";
 import { copyReleaseFile } from "../utils/copyReleaseFile.js";
 import { addReleaseRecord } from "../utils/releaseRecord.js";
