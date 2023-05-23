@@ -8,12 +8,14 @@
     "resolveJsonModule": true,
     "strictNullChecks": true,
     "allowJs": true,
+    "noImplicitAny": false,
     "strict": true,
     "types": ["mocha", "node"],
     "outDir": "dist",
     "sourceMap": true,
     "declaration": true,
     "useUnknownInCatchVariables": false,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true
   },
   "ts-node": {
