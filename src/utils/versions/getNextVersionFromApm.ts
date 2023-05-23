@@ -25,12 +25,10 @@ export async function getNextVersionFromApm({
   const ensName = manifest.name.toLowerCase();
 
   // Fetch the latest version from APM
-  console.log("1");
   console.log("ensName: ", ensName);
   const { version: currentVersion } = await apm.getVersionAndIpfsHash({
     dnpName: ensName
   });
-  console.log("2");
 
   // Increase the version and log it
   const nextVersion = semver.inc(currentVersion, type);
