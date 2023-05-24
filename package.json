@@ -37,7 +37,7 @@
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
     "@dappnode/schemas": "^0.1.6",
-    "@dappnode/toolkit": "^0.1.16",
+    "@dappnode/toolkit": "^0.1.18",
     "@dappnode/types": "^0.1.12",
     "@octokit/rest": "^18.0.12",
     "async-retry": "^1.2.3",
@@ -45,7 +45,7 @@
     "cli-progress": "^3.8.2",
     "dockerode": "^3.3.5",
     "dotenv": "^8.2.0",
-    "ethers": "^6.4.0",
+    "ethers": "6.3.0",
     "figlet": "^1.2.3",
     "form-data": "^3.0.0",
     "got": "^10.5.5",
