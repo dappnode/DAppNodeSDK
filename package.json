@@ -3,8 +3,8 @@
   "version": "0.3.5",
   "type": "module",
   "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/dappnodesdk.js",
+  "types": "dist/dappnodesdk.d.ts",
   "bin": {
     "dappnodesdk": "dist/dappnodesdk.js"
   },
@@ -62,6 +62,7 @@
     "prettier": "^2.1.2",
     "request": "^2.88.2",
     "rimraf": "^5.0.1",
+    "rxjs": "^7.8.1",
     "semver": "^5.6.0",
     "source-map-support": "^0.5.19",
     "tar-fs": "^2.0.0",
