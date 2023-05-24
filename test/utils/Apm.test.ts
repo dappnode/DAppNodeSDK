@@ -1,6 +1,6 @@
 import semver from "semver";
 import { expect } from "chai";
-import { getEthereumProviderUrl } from "../../src/utils/Apm.js";
+import { getEthereumUrl } from "../../src/utils/getEthereumUrl";
 import { ethers } from "ethers";
 import { ApmRepository } from "@dappnode/toolkit";
 describe("Apm constructor", function () {
@@ -9,7 +9,7 @@ describe("Apm constructor", function () {
   const dnpName = "admin.dnp.dappnode.eth";
 
   it("Should get the contract the registry contract of a DNP name", async () => {
-    const parsedProvider = new ethers.JsonRpcProvider(getEthereumProviderUrl("infura"))
+    const parsedProvider = new ethers.JsonRpcProvider(getEthereumUrl("infura"))
     const registry = await parsedProvider.resolveName(dnpName.split(".").slice(1).join("."))
 
     if (!registry) throw Error("no registry");
@@ -20,7 +20,7 @@ describe("Apm constructor", function () {
   });
 
   it("Should get the contract the repo contract of a DNP name", async () => {
-    const parsedProvider = new ethers.JsonRpcProvider(getEthereumProviderUrl("infura"))
+    const parsedProvider = new ethers.JsonRpcProvider(getEthereumUrl("infura"))
     const repo = await parsedProvider.resolveName(dnpName)
 
     if (!repo) throw Error("no repo");
@@ -31,8 +31,7 @@ describe("Apm constructor", function () {
   });
 
   it("Should get the latest of a DNP name", async () => {
-    const parsedProvider = new ethers.JsonRpcProvider(getEthereumProviderUrl("infura"))
-    const apm = new ApmRepository(parsedProvider)
+    const apm = new ApmRepository(getEthereumUrl("infura"))
     const latestVersion = await apm.getVersionAndIpfsHash({ dnpName })
 
     expect(latestVersion.version).to.be.a("string", "Contract instance changed");

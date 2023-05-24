@@ -1,31 +1,14 @@
 import Listr from "listr";
 import { ethers } from "ethers";
-import {
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-
-  getEthereumUrl
-} from "../utils/getEthereumUrl.js";
-=======
-  //Apm,
-=======
-  isValidENSName,
-  getEthereumProviderUrl,
->>>>>>> refactor APM usage
-  encodeNewVersionCall,
-  encodeNewRepoWithVersionCall
-} from "../utils/Apm.js";
->>>>>>> integrate toolkit v1
 import { getPublishTxLink } from "../utils/getLinks.js";
 import { addReleaseTx } from "../utils/releaseRecord.js";
 import { defaultDir, YargsError } from "../params.js";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types.js";
 import { readManifest } from "../files/index.js";
-import { ApmRepository } from "@dappnode/toolkit";
+import repoAbi from "../contracts/RepoAbi.json" assert { type: "json" };
 import registryAbi from "../contracts/ApmRegistryAbi.json" assert { type: "json" };
 import { semverToArray } from "../utils/semverToArray.js";
-import repoAbi from "../contracts/RepoAbi.json" assert { type: "json" };
+import { getEthereumUrl } from "../utils/getEthereumUrl.js";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
@@ -52,23 +35,9 @@ export function generatePublishTx({
   developerAddress?: string;
   ethProvider: string;
 } & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
-<<<<<<< HEAD
-  // Init APM instance
-<<<<<<< HEAD
-  const ethereumUrl = getEthereumUrl(ethProvider);
-  const apm = new ApmRepository(ethereumUrl);
-=======
-  //const apm = new Apm(ethProvider);
-
-  const parsedProvider = new ethers.JsonRpcProvider(getEthereumProviderUrl(ethProvider))
-  // Init APM instance
-  const apm2 = new ApmRepository(parsedProvider);
->>>>>>> integrate toolkit v1
-=======
 
   //
-  const provider = new ethers.JsonRpcProvider(getEthereumProviderUrl(ethProvider))
->>>>>>> refactor APM usage
+  const provider = new ethers.JsonRpcProvider(getEthereumUrl(ethProvider))
 
   // Load manifest ##### Verify manifest object
   const { manifest } = readManifest({ dir });
@@ -86,18 +55,9 @@ export function generatePublishTx({
       {
         title: "Generate transaction",
         task: async ctx => {
-<<<<<<< HEAD
-<<<<<<< HEAD
-          try {
-            const repository = await apm.getRepoContract(ensName);
-=======
-          const repository = await parsedProvider.resolveName(ensName);
-=======
           isValidENSName(ensName);
           const repository = await provider.resolveName(ensName);
->>>>>>> refactor APM usage
           if (repository) {
->>>>>>> integrate toolkit v1
             ctx.txData = {
               to: repository,
               value: 0,
@@ -111,29 +71,9 @@ export function generatePublishTx({
               currentVersion,
               releaseMultiHash
             };
-<<<<<<< HEAD
-          } catch (e) {
-            if (e.message.includes("Could not resolve name")) {
-              try {
-                const registryAddress = await new ethers.JsonRpcProvider(
-                  ethereumUrl
-                ).resolveName(ensName.split(".").slice(1).join("."));
-                if (!registryAddress)
-                  throw new Error("Registry not found for " + ensName);
-
-                // If repo does not exist, create a new repo and push version
-                // A developer address must be provided by the option -a or --developer_address.
-                if (
-                  !developerAddress ||
-                  !ethers.isAddress(developerAddress) ||
-                  isZeroAddress(developerAddress)
-                ) {
-                  throw new YargsError(
-                    `A new Aragon Package Manager Repo for ${ensName} must be created. 
-=======
           } else {
-            const registry = await provider.resolveName(ensName.split(".").slice(1).join("."));
-            if (!registry)
+            const registryAddress = await provider.resolveName(ensName.split(".").slice(1).join("."));
+            if (!registryAddress)
               throw Error(
                 `There must exist a registry for DNP name ${ensName}`
               );
@@ -147,7 +87,6 @@ export function generatePublishTx({
             ) {
               throw new YargsError(
                 `A new Aragon Package Manager Repo for ${ensName} must be created. 
->>>>>>> integrate toolkit v1
 You must specify the developer address that will control it
 
 with ENV:
@@ -158,37 +97,10 @@ with command option:
 
   dappnodesdk publish [type] --developer_address 0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B
 `
-<<<<<<< HEAD
-                  );
-                }
-
-                ctx.txData = {
-                  to: registryAddress,
-                  value: 0,
-                  data: encodeNewRepoWithVersionCall({
-                    name: shortName,
-                    developerAddress,
-                    version: currentVersion,
-                    contractAddress,
-                    contentURI
-                  }),
-                  gasLimit: 1100000,
-                  ensName,
-                  currentVersion,
-                  releaseMultiHash,
-                  developerAddress
-                };
-              } catch (e) {
-                throw Error(
-                  `There must exist a registry for DNP name ${ensName}`
-                );
-              }
-            } else throw e;
-=======
               );
             }
             ctx.txData = {
-              to: registry,
+              to: registryAddress,
               value: 0,
               data: encodeNewRepoWithVersionCall({
                 name: shortName,
@@ -203,7 +115,6 @@ with command option:
               releaseMultiHash,
               developerAddress
             };
->>>>>>> integrate toolkit v1
           }
 
           /**
@@ -221,9 +132,6 @@ with command option:
   );
 }
 
-// Utils
-
-
 /**
  * newVersion(
  *   uint16[3] _newSemanticVersion,
@@ -231,7 +139,7 @@ with command option:
  *   bytes _contentURI
  * )
  */
-export function encodeNewVersionCall({
+ export function encodeNewVersionCall({
   version,
   contractAddress,
   contentURI
@@ -278,4 +186,42 @@ export function encodeNewRepoWithVersionCall({
     contractAddress, // address _contractAddress
     contentURI // bytes _contentURI
   ]);
+}
+/**
+ *checks if the name is a valid ENS name. Returns all reasons why the name is not valid if it is not valid.
+ * - ENS name must be between 1 and 63 characters.
+ * - ENS name must contain only lowercase alphanumeric characters(a-z), hyphens(-) and dots(.).
+ * - Labels must not start or end with a hyphen.
+ * - Labels must not contain consecutive hyphens.
+ * - Last label must be ".eth".
+
+ */
+export function isValidENSName(name: string): void {
+  const invalidMessages: string[] = [];
+
+  // Length Check
+  if (name.length < 3 || name.length > 63) {
+    invalidMessages.push('Length must be between 3 and 63 characters.');
+  }
+
+  // Character Check
+  if (!/^[a-z0-9-.]+$/.test(name)) {
+    invalidMessages.push('Contains forbidden characters.');
+  }
+
+  // Hyphen Placement Check
+  if (name.startsWith("-") || name.endsWith("-") || name.includes("--")) {
+    invalidMessages.push('Hyphen placement is not allowed.');
+  }
+
+  const labels = name.split(".");
+  // Last Label Check
+  const tld = labels[labels.length - 1];
+  if (tld.toLowerCase() !== "eth") {
+    invalidMessages.push('Last label must be ".eth".');
+  }
+
+  if (invalidMessages.length > 0) {
+    throw new Error(`Invalid ENS name: ${invalidMessages.join(' ')}`);
+  }
 }
