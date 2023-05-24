@@ -5,9 +5,9 @@ import { addReleaseTx } from "../utils/releaseRecord.js";
 import { defaultDir, YargsError } from "../params.js";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types.js";
 import { readManifest } from "../files/index.js";
-import repoAbi from "../contracts/RepoAbi.json" assert { type: "json" };
 import registryAbi from "../contracts/ApmRegistryAbi.json" assert { type: "json" };
 import { semverToArray } from "../utils/semverToArray.js";
+import repoAbi from "../contracts/RepoAbi.json" assert { type: "json" };
 import { getEthereumUrl } from "../utils/getEthereumUrl.js";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
@@ -36,7 +36,6 @@ export function generatePublishTx({
   ethProvider: string;
 } & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
 
-  //
   const provider = new ethers.JsonRpcProvider(getEthereumUrl(ethProvider))
 
   // Load manifest ##### Verify manifest object

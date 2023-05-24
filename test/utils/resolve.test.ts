@@ -7,11 +7,10 @@ describe("Apm constructor", function () {
   this.timeout(60_000);
 
   const dnpName = "admin.dnp.dappnode.eth";
+  const parsedProvider = new ethers.JsonRpcProvider(getEthereumUrl("infura"))
 
   it("Should get the contract the registry contract of a DNP name", async () => {
-    const parsedProvider = new ethers.JsonRpcProvider(getEthereumUrl("infura"))
     const registry = await parsedProvider.resolveName(dnpName.split(".").slice(1).join("."))
-
     if (!registry) throw Error("no registry");
     expect(registry).to.be.a("string", "Contract instance changed");
     expect((registry).toLowerCase()).to.equal(
@@ -20,9 +19,7 @@ describe("Apm constructor", function () {
   });
 
   it("Should get the contract the repo contract of a DNP name", async () => {
-    const parsedProvider = new ethers.JsonRpcProvider(getEthereumUrl("infura"))
     const repo = await parsedProvider.resolveName(dnpName)
-
     if (!repo) throw Error("no repo");
     expect(repo).to.be.a("string", "Contract instance changed");
     expect(repo.toLowerCase()).to.equal(
