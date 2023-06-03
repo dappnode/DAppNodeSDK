@@ -1,6 +1,6 @@
 # DAppNodeSDK
 
-dappnodesdk is a tool to make as simple as possible the creation of new dappnode packages. It helps to initialize and publish an Aragon Package Manager Repo in the ethereum mainnet.
+The DappnodeSDK `dappnodesdk` is a tool that makes creating and publishing new Dappnode packages as simple as possible. It helps to initialize, build, test, and publish the new package/repo to an APM tracked on the Ethereum Mainnet.
 
 We have deployed a public APM (Aragon Package Manager) registry in which anyone can create their own APM repository: [public.dappnode.eth](https://etherscan.io/address/public.dappnode.eth)
 
@@ -16,11 +16,13 @@ $ npm install -g @dappnode/dappnodesdk
 
 ## Initialization
 
+This command runs you through a setup wizard to begin creating the basic files for a new Dappnode Package Repo.
+
 ```
 $ dappnodesdk init
 ```
 
-## build
+## Build
 
 Only generates the IPFS Hash to be able to install it without needing to create the APM Repo
 
@@ -34,20 +36,20 @@ It does the build of the image and shows the necessary transaction to be able to
 
 **To be able to update a repository you must be the authorized dev.**
 
-the script increases the current version of the repository based on the specified type (patch, minor, major), unless a version hasn't yet been published
+The script increases the current version of the repository based on the specified type (patch, minor, major), unless a version hasn't yet been published
 
-for more information about versioning check [semver](https://semver.org/)
+For more information about versioning check [semver](https://semver.org/)
 
 ```
 $ dappnodesdk publish < patch | minor | major >
 ```
 
-Please take in account that the package version is not the internal version of the package you want to upload.
-We use Aragon package manager, and it only lets starting with version 1 and increment one by one. Valid initial versions are `1.0.0`, `0.1.0` or `0.0.1`
+Please take in account that the _package version_ is not the _internal version_ of the package you want to upload.
+We use Aragon package manager, and it only allows starting with version 1 and incrementing it one by one. Valid initial versions are `1.0.0`, `0.1.0` or `0.0.1`.
 
-## Troubleshoot
+## Troubleshooting
 
-If your system does not find the binary `dappnodesdk`, please try these other methods
+If your system does not find the binary `dappnodesdk` when running the command, please try the following alternative methods
 
 - Run with `npx` which may handle better global NPM packages
 
@@ -65,9 +67,11 @@ npx @dappnode/dappnodesdk <command>
 
 ### `bump-upstream` action
 
-Github Action to open upstream version bumps on DAppNode Packages
+This Github Action automatically creates pull requests bumping the version to the latest released upstream version on DAppNode Packages. It then tests building the new bumped upstream version and automatically posts an IPFS hash if the build was successful so that the new version can be tested further with other Github Actions and by human testers.
 
-#### Sample usage
+_Note: This action also requires a Pinata account with an API Access Token and a Github Personal Access Token stored in the repo's, individual's, or organization's secrets in order to work properly._
+
+#### Sample Usage
 
 `.github/workflows/auto_check.yml`
 
@@ -80,17 +84,20 @@ on:
   push:
     branches:
       - "master"
+
 jobs:
-  bump-upstream:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: npx @dappnode/dappnodesdk github-action bump-upstream
-        with:
-          github_token: ${{ secrets.PERSONAL_TOKEN }}
+      - uses: actions/checkout@v3
+      - run: npx @dappnode/dappnodesdk github-action bump-upstream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
+          PINATA_SECRET_API_KEY: ${{ secrets.PINATA_SECRET_API_KEY }}
 ```
 
-You must specify in the package manifest what upstream Github repo the package is tracking. Also indicate what build variable in the docker-compose should be updated
+You must specify in the package manifest what upstream Github repo the package is tracking. Also indicate what build variable in the docker-compose file should be updated.
 
 `dappnode_package.json`
 
