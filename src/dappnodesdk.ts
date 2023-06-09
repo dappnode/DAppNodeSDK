@@ -19,20 +19,6 @@ import "source-map-support/register.js";
 import { defaultDir } from "./params.js";
 dotenv.config();
 
-process.on("uncaughtException", err => {
-  console.error(` ${chalk.red("✖")} Uncaught exception ${err}`);
-  process.exit(1);
-});
-
-process.on("unhandledRejection", (reason, promise) => {
-  console.error(
-    ` ${chalk.red(
-      "✖"
-    )} Unhandled promise rejection at ${promise}, reason: ${reason}`
-  );
-  process.exit(1);
-});
-
 const dappnodesdk = yargs(hideBin(process.argv));
 
 // Set up commands
