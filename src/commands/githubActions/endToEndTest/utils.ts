@@ -1,19 +1,16 @@
 import chalk from "chalk";
-import {
-  Network,
-  consensusClientsGnosis,
-  consensusClientsMainnet,
-  consensusClientsPrater,
-  executionClientsGnosis,
-  executionClientsMainnet,
-  executionClientsPrater,
-  stakerPkgs
-} from "@dappnode/types";
+import { Network, stakerPkgs } from "@dappnode/types";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import { getDefaultExecClient, getStakerConfigByNetwork } from "./params.js";
 import { cloneDeep } from "lodash-es";
 import { Manifest } from "@dappnode/types";
-import { StakerConfigSet, executionPkgs } from "./types.js";
+import {
+  ConsensusPkg,
+  ExecutionPkg,
+  StakerConfigSet,
+  consensusPkgs,
+  executionPkgs
+} from "./types.js";
 
 export function printPackageMetadata(
   manifest: Manifest,
@@ -48,31 +45,10 @@ export async function setStakerConfig(
     getStakerConfigByNetwork(network)
   );
 
-  const clientTypes = {
-    mainnet: {
-      execution: executionClientsMainnet,
-      consensus: consensusClientsMainnet
-    },
-    gnosis: {
-      execution: executionClientsGnosis,
-      consensus: consensusClientsGnosis
-    },
-    prater: {
-      execution: executionClientsPrater,
-      consensus: consensusClientsPrater
-    }
-  };
-
-  if (!(network in clientTypes)) {
-    throw Error("unknown network");
-  }
-
-  const { execution, consensus } = clientTypes[network];
-
-  if (execution.find(executionClient => executionClient === dnpName))
-    mutableStakerConfig.executionClient.dnpName = dnpName as typeof execution[number];
-  else if (consensus.find(consensusClient => consensusClient === dnpName))
-    mutableStakerConfig.consensusClient.dnpName = dnpName as typeof consensus[number];
+  if (executionPkgs.find(executionClient => executionClient === dnpName))
+    mutableStakerConfig.executionClient.dnpName = dnpName as ExecutionPkg;
+  else if (consensusPkgs.find(consensusClient => consensusClient === dnpName))
+    mutableStakerConfig.consensusClient.dnpName = dnpName as ConsensusPkg;
 
   if (removeConsensusVolumes)
     await dappmanagerTestApi.packageRestartVolumes({
