@@ -69,11 +69,9 @@ export async function setStakerConfig(
 
   const { execution, consensus } = clientTypes[network];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (execution.includes(dnpName as any))
+  if (execution.find(executionClient => executionClient === dnpName))
     mutableStakerConfig.executionClient.dnpName = dnpName as typeof execution[number];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  else if (consensus.includes(dnpName as any))
+  else if (consensus.find(consensusClient => consensusClient === dnpName))
     mutableStakerConfig.consensusClient.dnpName = dnpName as typeof consensus[number];
 
   if (removeConsensusVolumes)

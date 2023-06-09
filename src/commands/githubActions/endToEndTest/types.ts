@@ -12,7 +12,6 @@ import {
   ExecutionClientGnosis,
   ExecutionClientMainnet,
   ExecutionClientPrater,
-  MevBoostGnosis,
   MevBoostMainnet,
   MevBoostPrater,
   SignerGnosis,
@@ -55,8 +54,6 @@ export type Signer<T extends Network> = T extends "mainnet"
   : never;
 export type MevBoost<T extends Network> = T extends "mainnet"
   ? MevBoostMainnet
-  : T extends "gnosis"
-  ? MevBoostGnosis
   : T extends "prater"
   ? MevBoostPrater
   : never;
