@@ -12,13 +12,15 @@ import {
   ExecutionClientGnosis,
   ExecutionClientMainnet,
   ExecutionClientPrater,
-  MevBoostGnosis,
   MevBoostMainnet,
   MevBoostPrater,
   SignerGnosis,
   SignerMainnet,
   SignerPrater,
-  Network
+  Network,
+  consensusClientsMainnet,
+  consensusClientsGnosis,
+  consensusClientsPrater
 } from "@dappnode/types";
 
 export const executionPkgs = [
@@ -27,6 +29,13 @@ export const executionPkgs = [
   ...executionClientsGnosis
 ] as const;
 export type ExecutionPkg = typeof executionPkgs[number];
+
+export const consensusPkgs = [
+  ...consensusClientsMainnet,
+  ...consensusClientsPrater,
+  ...consensusClientsGnosis
+] as const;
+export type ConsensusPkg = typeof consensusPkgs[number];
 
 // TODO: below types are duplicated from dappmanager
 
@@ -55,8 +64,6 @@ export type Signer<T extends Network> = T extends "mainnet"
   : never;
 export type MevBoost<T extends Network> = T extends "mainnet"
   ? MevBoostMainnet
-  : T extends "gnosis"
-  ? MevBoostGnosis
   : T extends "prater"
   ? MevBoostPrater
   : never;
