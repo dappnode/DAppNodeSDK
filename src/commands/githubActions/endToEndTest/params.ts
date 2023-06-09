@@ -151,7 +151,8 @@ const corePackages = [
 
 export const nonStakerPackagesSetup = [
   "dms.dnp.dappnode.eth",
-  "dappnode-exporter.dnp.dappnode.eth"
+  "dappnode-exporter.dnp.dappnode.eth",
+  "ethical-metrics.dnp.dappnode.eth"
 ] as const;
 
 const stakerPkgsToKeep = (network: Network): string[] => {
