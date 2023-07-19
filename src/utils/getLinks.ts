@@ -3,7 +3,7 @@ import { URL } from "url";
 import { publishTxAppUrl } from "../params.js";
 import { TxData } from "../types.js";
 
-const adminUiBaseUrl = "http://my.dappnode/#";
+const adminUiBaseUrl = "http://my.dappnode";
 
 /**
  * Get link to publish a TX from a txData object
