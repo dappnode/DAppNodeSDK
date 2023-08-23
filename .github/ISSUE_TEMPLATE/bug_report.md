@@ -31,7 +31,7 @@ assignees:
 
 **DAppNode version:**
 
-<!--Print the DAppNode versions and info found in http://my.dappnode/#/support/report -->
+<!--Print the DAppNode versions and info found in http://my.dappnode/support/report -->
 
 - Package version: <!-- v0.1.14, upstream: prysm-1.0.0-beta -->
 - OS: <!-- Ubuntu, Debian, DAppNode Mini, DAppNode Advance -->
