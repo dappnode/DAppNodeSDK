@@ -202,9 +202,9 @@ Compose - ${JSON.stringify(compose, null, 2)}
     });
   } catch (e) {
     e.message = `Error getting next version from apm: ${e.message}`;
-    e.message += `\nManifest version could not be updated`;
+    e.message += `\nManifest version set to default 0.1.0`;
 
-    throw e;
+    manifest.version = "0.1.0";
   }
 
   writeManifest(manifest, format, { dir });
