@@ -201,10 +201,16 @@ Compose - ${JSON.stringify(compose, null, 2)}
       dir
     });
   } catch (e) {
-    e.message = `Error getting next version from apm: ${e.message}`;
-    e.message += `\nManifest version set to default 0.1.0`;
 
-    manifest.version = "0.1.0";
+    if (e.message.includes("NOREPO")) {
+      console.log("Package not found in APM (probably not published yet");
+      console.log("Manifest version set to default 0.1.0");
+      manifest.version = "0.1.0";
+    } else {
+      e.message = `Error getting next version from apm: ${e.message}`;
+      throw e;
+    }
+
   }
 
   writeManifest(manifest, format, { dir });
