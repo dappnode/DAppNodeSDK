@@ -57,10 +57,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@dappnode/schemas@^0.1.6":
-  version "0.1.6"
-  resolved "https://registry.yarnpkg.com/@dappnode/schemas/-/schemas-0.1.6.tgz#d299cc6b7a4aec663688dcbb3ea7ebc1f4963aef"
-  integrity sha512-deKlp0PBEszpYmZFSevMFs/RqJnxuTxkxWAVTNKs2vvHbcCP50kWw/agl0pHCIJPqg8S83rq5H88lpL3vtP5Rw==
+"@dappnode/schemas@^0.1.8":
+  version "0.1.8"
+  resolved "https://registry.yarnpkg.com/@dappnode/schemas/-/schemas-0.1.8.tgz#59f28648282abf5717eecc5510f260047e280831"
+  integrity sha512-hSQy4vyAKJe5RwTMy9GfP+Eb/EF5bmHGnkFKpFIcEecUrVN8yFieHWR9D9bmrHU4zNKyhEzDljbxqvHZ5Lz9Iw==
   dependencies:
     "@dappnode/types" "^0.1.9"
     ajv "^8.12.0"
