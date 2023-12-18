@@ -3,7 +3,7 @@ import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
 import { branchNameRoot, defaultDir } from "../../../params.js";
 import { Github } from "../../../providers/github/Github.js";
-import { isRealeaseCandidate, getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format.js";
+import { isUndesiredRealease, getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format.js";
 import { shell } from "../../../utils/shell.js";
 import { parseCsv } from "../../../utils/csv.js";
 import { getLocalBranchExists, getGitHead } from "../../../utils/git.js";
@@ -125,7 +125,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
     const argName = upstreamArgs[i];
     const newVersion = latestRelease.tag_name;
 
-    if (isRealeaseCandidate(newVersion)) throw Error(`This is a realease candidate`);
+    if (isUndesiredRealease(newVersion)) throw Error(`This is a realease candidate`);
     upstreamRepoVersions.set(argName, { repo, repoSlug, newVersion });
 
     console.log(`Fetch latest version(s) - ${repoSlug}: ${newVersion}`);

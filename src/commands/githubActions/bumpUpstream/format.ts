@@ -28,6 +28,7 @@ export function getUpstreamVersionTag(
         .join(", ");
 }
 
-export function isRealeaseCandidate(version:string ) :boolean{
-  return version.includes("-rc.");
+export function isUndesiredRealease(version:string ) :boolean{
+  const regexPattern = /-rc\.|-RC\.|nightly/;
+  return regexPattern.test(version);
 }

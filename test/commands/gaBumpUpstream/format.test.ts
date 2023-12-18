@@ -2,7 +2,7 @@ import { expect } from "chai";
 import {
   getPrBody,
   getUpstreamVersionTag,
-  isRealeaseCandidate,
+  isUndesiredRealease,
   VersionToUpdate
 } from "../../../src/commands/githubActions/bumpUpstream/format.js";
 
@@ -59,20 +59,50 @@ describe("command / gaBumpUpstream / format", () => {
     });
   });
 
-  describe("realeaseCandidate", () => {
+  describe("checkDesiredRealease", () => {
     const versionsToUpdate: VersionToUpdate[] = [
+      {
+        repoSlug: "sigp/lighthouse",
+        newVersion: "v0.1.5",
+        currentVersion: "v0.1.2"
+      },
       {
         repoSlug: "sigp/lighthouse",
         newVersion: "v0.1.4-rc.0",
         currentVersion: "v0.1.2"
+      },
+      {
+        repoSlug: "sigp/lighthouse",
+        newVersion: "v0.1.4-RC.0",
+        currentVersion: "v0.1.2"
+      },
+      {
+        repoSlug: "status-im/nimbus-eth2",
+        newVersion: "nightly",
+        currentVersion: "v23.3.2"
       }
+      
     ];
 
+    it("isDesiredRealease", () => {
+      expect(isUndesiredRealease(versionsToUpdate[0].newVersion)).equal(
+        false
+      );
+    });
     it("isRealeaseCandidate", () => {
-      expect(isRealeaseCandidate(versionsToUpdate[0].newVersion)).equal(
+      expect(isUndesiredRealease(versionsToUpdate[1].newVersion)).equal(
         true
       );
     });
-
+    it("isRealeaseCandidate", () => {
+      expect(isUndesiredRealease(versionsToUpdate[2].newVersion)).equal(
+        true
+      );
+    });
+    it("isNightlyRealease", () => {
+      expect(isUndesiredRealease(versionsToUpdate[3].newVersion)).equal(
+        true
+      );
+    });
   });
 });
