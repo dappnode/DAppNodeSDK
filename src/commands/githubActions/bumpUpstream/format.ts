@@ -27,3 +27,7 @@ export function getUpstreamVersionTag(
         .map(({ repoSlug, newVersion }) => `${repoSlug}@${newVersion}`)
         .join(", ");
 }
+
+export function isRealeaseCandidate(version:string ) :boolean{
+  return version.includes("-rc.");
+}

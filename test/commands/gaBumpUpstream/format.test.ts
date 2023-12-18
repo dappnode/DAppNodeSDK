@@ -2,6 +2,7 @@ import { expect } from "chai";
 import {
   getPrBody,
   getUpstreamVersionTag,
+  isRealeaseCandidate,
   VersionToUpdate
 } from "../../../src/commands/githubActions/bumpUpstream/format.js";
 
@@ -56,5 +57,22 @@ describe("command / gaBumpUpstream / format", () => {
 - [sigp/lighthouse](https://github.com/sigp/lighthouse) from v0.1.2 to [v0.1.4](https://github.com/sigp/lighthouse/releases/tag/v0.1.4)
 - [prysmaticlabs/prysm](https://github.com/prysmaticlabs/prysm) from v0.1.0-beta.28 to [v0.1.0-beta.29](https://github.com/prysmaticlabs/prysm/releases/tag/v0.1.0-beta.29)`);
     });
+  });
+
+  describe("realeaseCandidate", () => {
+    const versionsToUpdate: VersionToUpdate[] = [
+      {
+        repoSlug: "sigp/lighthouse",
+        newVersion: "v0.1.4-rc.0",
+        currentVersion: "v0.1.2"
+      }
+    ];
+
+    it("isRealeaseCandidate", () => {
+      expect(isRealeaseCandidate(versionsToUpdate[0].newVersion)).equal(
+        true
+      );
+    });
+
   });
 });
