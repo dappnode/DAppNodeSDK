@@ -81,28 +81,19 @@ describe("command / gaBumpUpstream / format", () => {
         newVersion: "nightly",
         currentVersion: "v23.3.2"
       }
-      
     ];
 
     it("isDesiredRealease", () => {
-      expect(isUndesiredRealease(versionsToUpdate[0].newVersion)).equal(
-        false
-      );
+      expect(isUndesiredRealease(versionsToUpdate[0].newVersion)).equal(false);
     });
     it("isRealeaseCandidate", () => {
-      expect(isUndesiredRealease(versionsToUpdate[1].newVersion)).equal(
-        true
-      );
+      expect(isUndesiredRealease(versionsToUpdate[1].newVersion)).equal(true);
     });
     it("isRealeaseCandidate", () => {
-      expect(isUndesiredRealease(versionsToUpdate[2].newVersion)).equal(
-        true
-      );
+      expect(isUndesiredRealease(versionsToUpdate[2].newVersion)).equal(true);
     });
     it("isNightlyRealease", () => {
-      expect(isUndesiredRealease(versionsToUpdate[3].newVersion)).equal(
-        true
-      );
+      expect(isUndesiredRealease(versionsToUpdate[3].newVersion)).equal(true);
     });
   });
 });
