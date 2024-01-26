@@ -1,9 +1,7 @@
 import { expect } from "chai";
-import {
-  Architecture,
-  getImagePath,
-  getLegacyImagePath
-} from "@dappnode/types";
+import { Architecture } from "@dappnode/types";
+import { getImagePath } from "../src/utils/getImagePath.js";
+import { getLegacyImagePath } from "../src/utils/getLegacyImagePath.js";
 
 describe("params", () => {
   const testCases: {

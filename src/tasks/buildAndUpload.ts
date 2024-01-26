@@ -5,7 +5,7 @@ import rimraf from "rimraf";
 import { verifyAvatar } from "../utils/verifyAvatar.js";
 import { copyReleaseFile } from "../utils/copyReleaseFile.js";
 import { addReleaseRecord } from "../utils/releaseRecord.js";
-import { CliError } from "../params.js";
+import { CliError, releaseFilesDefaultNames } from "../params.js";
 import { ListrContextBuildAndPublish } from "../types.js";
 import { parseTimeout } from "../utils/timeout.js";
 import { buildWithBuildx } from "./buildWithBuildx.js";
@@ -44,12 +44,9 @@ import {
   writeManifest,
   readSetupWizardIfExists
 } from "../files/index.js";
-import {
-  getImagePath,
-  getLegacyImagePath,
-  releaseFiles,
-  releaseFilesDefaultNames
-} from "@dappnode/types";
+import { releaseFiles } from "@dappnode/types";
+import { getImagePath } from "../utils/getImagePath.js";
+import { getLegacyImagePath } from "../utils/getLegacyImagePath.js";
 
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>

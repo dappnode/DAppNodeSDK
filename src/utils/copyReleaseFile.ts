@@ -1,4 +1,4 @@
-import { releaseFilesDefaultNames } from "@dappnode/types";
+import { releaseFilesDefaultNames } from "../params.js";
 import fs from "fs";
 import path from "path";
 

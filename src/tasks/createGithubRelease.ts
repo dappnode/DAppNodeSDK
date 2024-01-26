@@ -14,7 +14,7 @@ import {
   ListrContextBuildAndPublish
 } from "../types.js";
 import { Github } from "../providers/github/Github.js";
-import { contentHashFile } from "@dappnode/types";
+import { contentHashFile } from "../types.js";
 
 /**
  * Create (or edit) a Github release, then upload all assets
