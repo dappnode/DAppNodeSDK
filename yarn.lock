@@ -85,10 +85,10 @@
     semver "^7.5.0"
     yaml "^2.2.2"
 
-"@dappnode/types@0.1.17":
-  version "0.1.17"
-  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.17.tgz#b15fba7356acae7f2751f0cfe4db08eccb004993"
-  integrity sha512-XfMYmF/b/p9a24YB2b6D7LWS/wQzPMYEklTAvVRRmJbVgwklIE+j02O90Qhc9RXxqxL9gB+WnpPEiXie2EUhIw==
+"@dappnode/types@0.1.31":
+  version "0.1.31"
+  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.31.tgz#701abac8ebc917ddc1f9a4f9be743a130375523c"
+  integrity sha512-JMQhQdsv4coFbUirNdWukCWZmxvw3L8prlCjAyJgjePGWqCcnOrgT46eV8dbHkdWaAPkBoLelcVUupFB7hRetg==
 
 "@dappnode/types@^0.1.19":
   version "0.1.20"
