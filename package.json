@@ -36,9 +36,9 @@
   },
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
-    "@dappnode/schemas": "0.1.8",
-    "@dappnode/toolkit": "0.1.20",
-    "@dappnode/types": "^0.1.33",
+    "@dappnode/schemas": "^0.1.11",
+    "@dappnode/toolkit": "^0.1.21",
+    "@dappnode/types": "^0.1.34",
     "@octokit/rest": "^18.0.12",
     "async-retry": "^1.2.3",
     "chalk": "^2.4.2",

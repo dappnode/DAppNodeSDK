@@ -27,7 +27,7 @@ export async function getNextVersionFromApm({
   // Fetch the latest version from APM
   console.log("ensName: ", ensName);
   const { version: currentVersion } = await apm.getVersionAndIpfsHash({
-    dnpName: ensName
+    dnpNameOrHash: ensName
   });
 
   // Increase the version and log it

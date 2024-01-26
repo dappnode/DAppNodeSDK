@@ -2,15 +2,15 @@
 # yarn lockfile v1
 
 
+"@adraffy/ens-normalize@1.10.0":
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.10.0.tgz#d2a39395c587e092d77cbbc80acf956a54f38bf7"
+  integrity sha512-nA9XHtlAkYfJxY7bce8DcN7eKxWWCWkU+1GR9d+U6MbNpfwQp8TI7vqOsBsMcHoT4mBu2kypKoSKnghEzOOq5Q==
+
 "@adraffy/ens-normalize@1.9.0":
   version "1.9.0"
   resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.9.0.tgz#223572538f6bea336750039bb43a4016dcc8182d"
   integrity sha512-iowxq3U30sghZotgl4s/oJRci6WPBfNO5YYgk2cIOMCHr3LeGPcsZjCEr+33Q4N+oV3OABDAtA+pyvWjbvBifQ==
-
-"@adraffy/ens-normalize@1.9.2":
-  version "1.9.2"
-  resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.9.2.tgz#60111a5d9db45b2e5cbb6231b0bb8d97e8659316"
-  integrity sha512-0h+FrQDqe2Wn+IIGFkTCd4aAwTJ+7834Ek1COohCyV26AXhwQ7WQaz+4F/nLOeVl/3BtWHOHLPsq46V8YB46Eg==
 
 "@babel/code-frame@^7.0.0":
   version "7.10.4"
@@ -57,25 +57,24 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@dappnode/schemas@0.1.8":
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/@dappnode/schemas/-/schemas-0.1.8.tgz#59f28648282abf5717eecc5510f260047e280831"
-  integrity sha512-hSQy4vyAKJe5RwTMy9GfP+Eb/EF5bmHGnkFKpFIcEecUrVN8yFieHWR9D9bmrHU4zNKyhEzDljbxqvHZ5Lz9Iw==
+"@dappnode/schemas@^0.1.11":
+  version "0.1.11"
+  resolved "https://registry.yarnpkg.com/@dappnode/schemas/-/schemas-0.1.11.tgz#fc3e5b4b02598b6ce430c971f2b22ddee8948fe2"
+  integrity sha512-jKdJeyzCIMJnRBB+aXyECUfGTLGobLxz34ErHdEyBg+fOu+IBgUm1qFEIKDnFsorFb6dAOPsPj6O30lcg1VoVg==
   dependencies:
-    "@dappnode/types" "^0.1.9"
+    "@dappnode/types" "^0.1.34"
     ajv "^8.12.0"
-    ajv-errors "^3.0.0"
     semver "^7.5.0"
 
-"@dappnode/toolkit@0.1.20":
-  version "0.1.20"
-  resolved "https://registry.yarnpkg.com/@dappnode/toolkit/-/toolkit-0.1.20.tgz#d7015045d21f8b5c3735e9eeffac521f63985b7c"
-  integrity sha512-KjycdvcAH4V9bwrOFB5yvxgKZWKO0ChzDAGTrdH5YM0dHRlcPOKcFLCSYFG/1He7yEzvQhQpOVZ1EDyasFTqgg==
+"@dappnode/toolkit@^0.1.21":
+  version "0.1.21"
+  resolved "https://registry.yarnpkg.com/@dappnode/toolkit/-/toolkit-0.1.21.tgz#f5bc8158dcb86415dae0bec0f137690361a9db80"
+  integrity sha512-hbggqq9xPb6kzLTFduHkJFHgQEcBFoBwpmPsPCJZDf21hlRh7+sbcxRoU/pEW48cxXLQ/O6uMFH1v44j+cREVA==
   dependencies:
-    "@dappnode/types" "^0.1.19"
+    "@dappnode/types" "^0.1.34"
     "@ipld/car" "^5.1.1"
     esm "^3.2.25"
-    ethers "^6.5.1"
+    ethers "^6.9.0"
     graphql "^16.6.0"
     graphql-request "^6.0.0"
     ipfs-unixfs-exporter "^13.1.5"
@@ -85,20 +84,10 @@
     semver "^7.5.0"
     yaml "^2.2.2"
 
-"@dappnode/types@^0.1.19":
-  version "0.1.20"
-  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.20.tgz#7ac75c1fdf13b4eb85ec60c3794199755d14ac22"
-  integrity sha512-r8688eUOJzZAJzwWWTdijIJF3NrvPo6y8N4Akqtb+Ehi8mn+xg52RHo8CVSaIcx+z+W5UEQOjXhLdhZY5lwF4Q==
-
-"@dappnode/types@^0.1.33":
-  version "0.1.33"
-  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.33.tgz#0b054b4c527c7f0ffe122c42c6b986da4f38a620"
-  integrity sha512-wORHHoM1ep7oCdhQ5rHN7R0qvlecdNh9z+6Hde0kilzL/jo9OX/vl4CKCxZq0JlhsJixcQx42cd418UZ/AKzog==
-
-"@dappnode/types@^0.1.9":
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.9.tgz#23d13181ab077b33e23b929bd32cc6b2b618ec4a"
-  integrity sha512-F8gGpW25+ahLvINMo5ppAEK0F57sc/0zxATGjDPA+YOc1anawJejy3XwhGu8C9bZwrdEc7wuUtLFGD0zZveLqw==
+"@dappnode/types@^0.1.34":
+  version "0.1.34"
+  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.34.tgz#f84713687860b569e405884132a953e4ee4b8ade"
+  integrity sha512-07DEQVP6umDUDhDcX8m7EZMZtUUeyOeigupTWo8/oNsHuw7/V+UMCnUjYr1UsoNug2B3nRJ4V+iYQl0R/fhBEQ==
 
 "@graphql-typed-document-node/core@^3.2.0":
   version "3.2.0"
@@ -304,6 +293,13 @@
     multiformats "^11.0.0"
     murmurhash3js-revisited "^3.0.0"
 
+"@noble/curves@1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@noble/curves/-/curves-1.2.0.tgz#92d7e12e4e49b23105a2555c6984d41733d65c35"
+  integrity sha512-oYclrNgRaM9SsBUBVbb8M6DTV7ZHRTKugureoYEncY5c65HOmRzvSiTE3y5CYaPYJA/GVkrhXEoF0M3Ya9PMnw==
+  dependencies:
+    "@noble/hashes" "1.3.2"
+
 "@noble/ed25519@^1.6.0":
   version "1.7.3"
   resolved "https://registry.yarnpkg.com/@noble/ed25519/-/ed25519-1.7.3.tgz#57e1677bf6885354b466c38e2b620c62f45a7123"
@@ -313,6 +309,11 @@
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.1.2.tgz#e9e035b9b166ca0af657a7848eb2718f0f22f183"
   integrity sha512-KYRCASVTv6aeUi1tsF8/vpyR7zpfs3FUzy2Jqm+MU+LmUKhQ0y2FpfwqkCcxSg2ua4GALJd8k2R76WxwZGbQpA==
+
+"@noble/hashes@1.3.2":
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.3.2.tgz#6f26dbc8fbc7205873ce3cee2f690eba0d421b39"
+  integrity sha512-MVC8EAQp7MvEcm30KWENFjgR+Mkmf+D189XJTkFIlwohU5hcBbn1ZkKq7KVTi2Hme3PMGF390DaL52beVrIihQ==
 
 "@noble/secp256k1@1.7.1", "@noble/secp256k1@^1.5.4":
   version "1.7.1"
@@ -861,11 +862,6 @@ aes-js@4.0.0-beta.5:
   version "4.0.0-beta.5"
   resolved "https://registry.yarnpkg.com/aes-js/-/aes-js-4.0.0-beta.5.tgz#8d2452c52adedebc3a3e28465d858c11ca315873"
   integrity sha512-G965FqalsNyrPqgEGON7nIx1e/OVENSgiEIzyC63haUMuvNnwIgIjMs52hlTCKhkBny7A2ORNlfY9Zu+jmGk1Q==
-
-ajv-errors@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.npmjs.org/ajv-errors/-/ajv-errors-3.0.0.tgz"
-  integrity sha512-V3wD15YHfHz6y0KdhYFjyy9vWtEVALT9UrxfN3zqlI6dMioHnJrqOYfyPKol3oqrnCM9uwkcdCwkJ0WUcbLMTQ==
 
 ajv@^6.10.0, ajv@^6.10.2:
   version "6.12.6"
@@ -1742,14 +1738,14 @@ ethers@6.3.0:
     tslib "2.4.0"
     ws "8.5.0"
 
-ethers@^6.5.1:
-  version "6.5.1"
-  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.5.1.tgz#7beeeea2156dc4227da1176cb164007018b85c63"
-  integrity sha512-jDpCnUGcyn39hnRUEtrulDZOtJcIPEz4Whccl3N9qhwdLsn1ELuDM9TgGgGJq6ph0p8/Uri+Wezmo/r69E+xkA==
+ethers@^6.9.0:
+  version "6.10.0"
+  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.10.0.tgz#20f3c63c60d59a993f8090ad423d8a3854b3b1cd"
+  integrity sha512-nMNwYHzs6V1FR3Y4cdfxSQmNgZsRj1RiTU25JwvnJLmyzw9z3SKxNc2XKDuiXXo/v9ds5Mp9m6HBabgYQQ26tA==
   dependencies:
-    "@adraffy/ens-normalize" "1.9.2"
-    "@noble/hashes" "1.1.2"
-    "@noble/secp256k1" "1.7.1"
+    "@adraffy/ens-normalize" "1.10.0"
+    "@noble/curves" "1.2.0"
+    "@noble/hashes" "1.3.2"
     "@types/node" "18.15.13"
     aes-js "4.0.0-beta.5"
     tslib "2.4.0"
