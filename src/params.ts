@@ -1,4 +1,5 @@
-import { ManifestFormat } from "@dappnode/types";
+import { releaseFiles } from "@dappnode/types";
+import { ManifestFormat } from "./files/manifest/types.js";
 
 export * from "./files/compose/params.js";
 
@@ -21,3 +22,20 @@ export const upstreamImageLabel = "dappnode.dnp.upstreamImage";
 export const PINATA_URL = "https://api.pinata.cloud";
 // The build_sdk.env file is used by "slaves" DAppNode packages to define the UPSTREAM_PROJECT and UPSTREAM_VERSION used in the gha
 export const buildSdkEnvFileName = "build_sdk.env";
+
+export const releaseFilesDefaultNames: {
+  [P in keyof typeof releaseFiles]: string;
+} = Object.freeze({
+  manifest: "dappnode_package.json",
+  compose: "docker-compose.yml",
+  avatar: "avatar.png",
+  signature: "signature.json",
+  setupWizard: "setup-wizard.json",
+  setupSchema: "setup.schema.json",
+  setupTarget: "setup-target.json",
+  setupUiJson: "setup-ui.json",
+  disclaimer: "disclaimer.md",
+  gettingStarted: "getting-started.md",
+  grafanaDashboards: "grafana-dashboard.json",
+  prometheusTargets: "prometheus-targets.json"
+} as const);

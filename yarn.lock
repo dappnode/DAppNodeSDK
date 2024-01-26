@@ -85,15 +85,15 @@
     semver "^7.5.0"
     yaml "^2.2.2"
 
-"@dappnode/types@0.1.17":
-  version "0.1.17"
-  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.17.tgz#b15fba7356acae7f2751f0cfe4db08eccb004993"
-  integrity sha512-XfMYmF/b/p9a24YB2b6D7LWS/wQzPMYEklTAvVRRmJbVgwklIE+j02O90Qhc9RXxqxL9gB+WnpPEiXie2EUhIw==
-
 "@dappnode/types@^0.1.19":
   version "0.1.20"
   resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.20.tgz#7ac75c1fdf13b4eb85ec60c3794199755d14ac22"
   integrity sha512-r8688eUOJzZAJzwWWTdijIJF3NrvPo6y8N4Akqtb+Ehi8mn+xg52RHo8CVSaIcx+z+W5UEQOjXhLdhZY5lwF4Q==
+
+"@dappnode/types@^0.1.33":
+  version "0.1.33"
+  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.33.tgz#0b054b4c527c7f0ffe122c42c6b986da4f38a620"
+  integrity sha512-wORHHoM1ep7oCdhQ5rHN7R0qvlecdNh9z+6Hde0kilzL/jo9OX/vl4CKCxZq0JlhsJixcQx42cd418UZ/AKzog==
 
 "@dappnode/types@^0.1.9":
   version "0.1.9"

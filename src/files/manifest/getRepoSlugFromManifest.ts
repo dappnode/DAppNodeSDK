@@ -1,5 +1,5 @@
 import { readManifest } from "./readManifest.js";
-import { ManifestPaths } from "@dappnode/types";
+import { ManifestPaths } from "./types.js";
 
 /**
  * Gets the repo slug from a manifest, using the repository property

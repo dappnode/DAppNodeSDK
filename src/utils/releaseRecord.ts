@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { stringifyJson } from "../files/index.js";
-import { ManifestFormat } from "@dappnode/types";
+import { ManifestFormat } from "../files/manifest/types.js";
 
 interface ReleaseRecord {
   hash: string;

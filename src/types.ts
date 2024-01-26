@@ -49,3 +49,5 @@ export interface TxDataShortKeys {
   h: string; // hash
   d?: string; // developerAddress
 }
+
+export const contentHashFile = "content-hash" as const;

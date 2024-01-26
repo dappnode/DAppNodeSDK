@@ -3,12 +3,8 @@ import fs from "fs";
 import path from "path";
 import { readFile } from "../../utils/file.js";
 import { defaultDir } from "../../params.js";
-import {
-  ManifestPaths,
-  Manifest,
-  ManifestFormat,
-  releaseFiles
-} from "@dappnode/types";
+import { Manifest, releaseFiles } from "@dappnode/types";
+import { ManifestFormat, ManifestPaths } from "./types.js";
 
 /**
  * Reads a manifest. Without arguments defaults to read the manifest at './dappnode_package.json'
