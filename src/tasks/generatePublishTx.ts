@@ -12,8 +12,7 @@ import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types.js";
 import { readManifest } from "../files/index.js";
 import { ApmRepository } from "@dappnode/toolkit";
 import registryAbi from "../contracts/ApmRegistryAbi.json" assert { type: "json" };
-import { semverToArray } from "../utils/semverToArray.js";
-import repoAbi from "../contracts/RepoAbi.json" assert { type: "json" };
+import { semverToArrayOfBigNumberish } from "../utils/semverToArrayOfBigNumberish.js";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
@@ -62,14 +61,15 @@ export function generatePublishTx({
         task: async ctx => {
           try {
             const repository = await apm.getRepoContract(ensName);
+          
             ctx.txData = {
               to: await repository.getAddress(),
               value: 0,
-              data: encodeNewVersionCall({
-                version: currentVersion,
+              data: await repository.newVersion(
+                semverToArrayOfBigNumberish(currentVersion),
                 contractAddress,
                 contentURI
-              }),
+              ).then(tx => tx.data),
               gasLimit: 300000,
               ensName,
               currentVersion,
@@ -106,10 +106,12 @@ with command option:
                   );
                 }
 
+
                 ctx.txData = {
                   to: registryAddress,
                   value: 0,
-                  data: encodeNewRepoWithVersionCall({
+                  data: 
+                   encodeNewRepoWithVersionCall({
                     name: shortName,
                     developerAddress,
                     version: currentVersion,
@@ -145,33 +147,6 @@ with command option:
   );
 }
 
-// Utils
-
-
-/**
- * newVersion(
- *   uint16[3] _newSemanticVersion,
- *   address _contractAddress,
- *   bytes _contentURI
- * )
- */
-export function encodeNewVersionCall({
-  version,
-  contractAddress,
-  contentURI
-}: {
-  version: string;
-  contractAddress: string;
-  contentURI: string;
-}): string {
-  const repo = ethers.Interface.from(repoAbi)
-  return repo.encodeFunctionData("newVersion", [
-    semverToArray(version), // uint16[3] _newSemanticVersion
-    contractAddress, // address _contractAddress
-    contentURI // bytes _contentURI
-  ]);
-}
-
 /**
  * newRepoWithVersion(
  *   string _name,
@@ -198,7 +173,7 @@ export function encodeNewRepoWithVersionCall({
   return registry.encodeFunctionData("newRepoWithVersion", [
     name, // string _name
     developerAddress, // address _dev
-    semverToArray(version), // uint16[3] _initialSemanticVersion
+    semverToArrayOfBigNumberish(version), // uint16[3] _initialSemanticVersion
     contractAddress, // address _contractAddress
     contentURI // bytes _contentURI
   ]);
