@@ -121,6 +121,16 @@ services:
         UPSTREAM_VERSION: v1.0.0
 ```
 
+## Internal dependencies
+
+The dappnode SDK ueses the following internal dependencies to avoid code duplication across the `dappnodeSDK`, `DNP_DAPPMANAGER` and `sdk-publish` modules:
+
+- `@dappnode/types`
+- `@dappnode/toolkit`
+- `@dappnode/schemas`
+
+In order to have a better developing experience these modules lives inside the DNP_DAPPMANAGER repository
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details
