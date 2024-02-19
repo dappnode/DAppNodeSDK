@@ -51,7 +51,10 @@ export function buildWithBuildx({
         switch (architecture) {
           case "linux/arm64":
             await shell(
-              `docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64`
+              `docker run --privileged --rm tonistiigi/binfmt --uninstall qemu-*`
+            );
+            await shell(
+              `docker run --privileged --rm tonistiigi/binfmt --install all`
             );
             // Make sure QEMU is enabled
             // `cat /proc/sys/fs/binfmt_misc/qemu-aarch64`
