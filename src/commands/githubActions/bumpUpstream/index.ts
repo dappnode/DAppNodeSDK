@@ -3,7 +3,12 @@ import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
 import { branchNameRoot, defaultDir } from "../../../params.js";
 import { Github } from "../../../providers/github/Github.js";
-import { getPrBody, getUpstreamVersionTag, VersionToUpdate } from "./format.js";
+import {
+  isUndesiredRealease,
+  getPrBody,
+  getUpstreamVersionTag,
+  VersionToUpdate
+} from "./format.js";
 import { shell } from "../../../utils/shell.js";
 import { parseCsv } from "../../../utils/csv.js";
 import { getLocalBranchExists, getGitHead } from "../../../utils/git.js";
@@ -124,6 +129,9 @@ Compose - ${JSON.stringify(compose, null, 2)}
 
     const argName = upstreamArgs[i];
     const newVersion = latestRelease.tag_name;
+
+    if (isUndesiredRealease(newVersion))
+      throw Error(`This is a realease candidate`);
     upstreamRepoVersions.set(argName, { repo, repoSlug, newVersion });
 
     console.log(`Fetch latest version(s) - ${repoSlug}: ${newVersion}`);
@@ -201,7 +209,6 @@ Compose - ${JSON.stringify(compose, null, 2)}
       dir
     });
   } catch (e) {
-
     if (e.message.includes("NOREPO")) {
       console.log("Package not found in APM (probably not published yet");
       console.log("Manifest version set to default 0.1.0");
@@ -210,7 +217,6 @@ Compose - ${JSON.stringify(compose, null, 2)}
       e.message = `Error getting next version from apm: ${e.message}`;
       throw e;
     }
-
   }
 
   writeManifest(manifest, format, { dir });

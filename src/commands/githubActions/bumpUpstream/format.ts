@@ -27,3 +27,9 @@ export function getUpstreamVersionTag(
         .map(({ repoSlug, newVersion }) => `${repoSlug}@${newVersion}`)
         .join(", ");
 }
+
+//Checking if the proposed realease is nightly or realeaseCandidate
+export function isUndesiredRealease(version: string): boolean {
+  const regexPattern = /-rc\.|-RC\.|nightly/;
+  return regexPattern.test(version);
+}
