@@ -130,8 +130,10 @@ Compose - ${JSON.stringify(compose, null, 2)}
     const argName = upstreamArgs[i];
     const newVersion = latestRelease.tag_name;
 
-    if (isUndesiredRealease(newVersion))
-      throw Error(`This is a realease candidate`);
+    if (isUndesiredRealease(newVersion)) {
+      console.log(`This is a realease candidate - ${repoSlug}: ${newVersion}`);
+      return;
+    }
     upstreamRepoVersions.set(argName, { repo, repoSlug, newVersion });
 
     console.log(`Fetch latest version(s) - ${repoSlug}: ${newVersion}`);
