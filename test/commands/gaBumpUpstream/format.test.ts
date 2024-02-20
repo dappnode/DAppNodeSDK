@@ -72,6 +72,11 @@ describe("command / gaBumpUpstream / format", () => {
         currentVersion: "v0.1.2"
       },
       {
+        repoSlug: "ipfs/kubo",
+        newVersion: "v0.27.0-rc1",
+        currentVersion: "v0.1.2"
+      },
+      {
         repoSlug: "sigp/lighthouse",
         newVersion: "v0.1.4-RC.0",
         currentVersion: "v0.1.2"
@@ -92,8 +97,11 @@ describe("command / gaBumpUpstream / format", () => {
     it("isRealeaseCandidate", () => {
       expect(isUndesiredRealease(versionsToUpdate[2].newVersion)).equal(true);
     });
-    it("isNightlyRealease", () => {
+    it("isRealeaseCandidate", () => {
       expect(isUndesiredRealease(versionsToUpdate[3].newVersion)).equal(true);
+    });
+    it("isNightlyRealease", () => {
+      expect(isUndesiredRealease(versionsToUpdate[4].newVersion)).equal(true);
     });
   });
 });
