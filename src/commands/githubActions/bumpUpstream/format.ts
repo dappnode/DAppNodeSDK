@@ -1,3 +1,5 @@
+import semver from "semver";
+
 export interface VersionToUpdate {
   repoSlug: string;
   newVersion: string;
@@ -30,6 +32,6 @@ export function getUpstreamVersionTag(
 
 //Checking if the proposed realease is nightly or realeaseCandidate
 export function isUndesiredRealease(version: string): boolean {
-  const regexPattern = /-rc\.|-RC\.|nightly/;
-  return regexPattern.test(version);
+  if (semver.valid(version) && !semver.prerelease(version)) return false;
+  else return true;
 }
