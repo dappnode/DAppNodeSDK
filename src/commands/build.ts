@@ -8,7 +8,7 @@ import { BuildAndUploadOptions, buildAndUpload } from "../tasks/buildAndUpload.j
 // Utils
 import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion.js";
 import { getInstallDnpLink } from "../utils/getLinks.js";
-import { CliGlobalOptions } from "../types.js";
+import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types.js";
 import { UploadTo } from "../releaseUploader/index.js";
 import { defaultComposeFileName, defaultDir, defaultVariantsDir } from "../params.js";
 
@@ -71,20 +71,18 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 
   handler: async (args): Promise<void> => {
     //const { releaseMultiHash } = await buildHandler(args);
-    const releaseMultiHashes = await buildHandler(args);
+    const buildResults = await buildHandler(args);
 
     if (args.skipUpload) {
       return console.log(chalk.green("\nDNP (DAppNode Package) built\n"));
     }
 
-    // TODO: Say what package variants were built
-
-    for (const releaseMultiHash of releaseMultiHashes) {
-
+    for (const result of buildResults) {
       console.log(`
       ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
-      Release hash : ${releaseMultiHash}
-      ${getInstallDnpLink(releaseMultiHash)}
+      DNP name : ${result.dnpName}
+      Release hash : ${result.releaseMultiHash}
+      ${getInstallDnpLink(result.releaseMultiHash)}
     `);
     }
   }
@@ -109,7 +107,7 @@ export async function buildHandler({
   compose_file_name = defaultComposeFileName,
   silent,
   verbose
-}: CliCommandOptions): Promise<string[]> {
+}: CliCommandOptions): Promise<ListrContextBuildAndPublish[]> {
   // Parse options
   const contentProvider = provider;
   const uploadTo = upload_to;
@@ -128,13 +126,8 @@ export async function buildHandler({
       variants.split(",")
       : getAllDirectoryNamesInPath(packageVariantsDir);
 
-  console.log(`
-  ${chalk.dim("Building package...")}
-  ${chalk.dim(`template: ${template}`)}
-  ${chalk.dim(`variantsDir: ${variantsDir}`)}
-  ${chalk.dim(`variants: ${variants}`)}
-  ${chalk.dim(`variantNames: ${variantNames}`)}
-`);
+  if (template)
+    console.log(`${chalk.dim(`Building package from template for variants ${variants}...`)}`);
 
   const buildOptions: BuildAndUploadOptions = {
     dir,
@@ -159,9 +152,7 @@ export async function buildHandler({
       { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
     ));
 
-  const buildResults = await Promise.all(buildTasks.map((task) => task.run()));
-
-  return buildResults.map((buildResult) => buildResult.releaseMultiHash);
+  return await Promise.all(buildTasks.map((task) => task.run()));
 }
 
 /**

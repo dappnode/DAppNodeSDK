@@ -9,6 +9,7 @@ export interface CliGlobalOptions {
 
 export interface ListrContextBuildAndPublish {
   // Build and upload
+  dnpName: string;
   releaseHash: string;
   releaseMultiHash: string;
   packageVariant: string;

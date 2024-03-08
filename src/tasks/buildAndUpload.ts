@@ -339,6 +339,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         });
 
         // "return" result for next tasks
+        ctx.dnpName = manifest.name;
         ctx.releaseMultiHash = ctx.releaseHash;
 
         try {
