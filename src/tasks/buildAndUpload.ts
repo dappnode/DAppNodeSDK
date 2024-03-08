@@ -48,6 +48,21 @@ import { releaseFiles } from "@dappnode/types";
 import { getImagePath } from "../utils/getImagePath.js";
 import { getLegacyImagePath } from "../utils/getLegacyImagePath.js";
 
+export interface BuildAndUploadOptions {
+  buildDir: string;
+  contentProvider: string;
+  uploadTo: UploadTo;
+  userTimeout?: string;
+  skipSave?: boolean;
+  skipUpload?: boolean;
+  requireGitData?: boolean;
+  deleteOldPins?: boolean;
+  composeFileName: string;
+  dir: string;
+  packageVariantsDir: string;
+  variantName?: string; // If variant name is undefined we are not using template mode
+}
+
 // Pretty percent uploaded reporting
 const percentToMessage = (percent: number) =>
   `Uploading... ${(percent * 100).toFixed(2)}%`;
@@ -62,23 +77,14 @@ export function buildAndUpload({
   requireGitData,
   deleteOldPins,
   composeFileName,
-  dir
-}: {
-  buildDir: string;
-  contentProvider: string;
-  uploadTo: UploadTo;
-  userTimeout?: string;
-  skipSave?: boolean;
-  skipUpload?: boolean;
-  requireGitData?: boolean;
-  deleteOldPins?: boolean;
-  composeFileName: string;
-  dir: string;
-}): ListrTask<ListrContextBuildAndPublish>[] {
+  dir,
+  packageVariantsDir,
+  variantName
+}: BuildAndUploadOptions): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
-  const { manifest, format } = readManifest({ dir });
+  const { manifest, format } = readManifest({ dir, packageVariantsDir, variantName });
 
   // Make sure the release is of correct type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -245,31 +251,31 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
     // const imageEntry = files.find(file => /\.tar\.xz$/.test(file));
     ...(architectures
       ? architectures.map(
-          (architecture): ListrTask<ListrContextBuildAndPublish> => ({
-            title: `Build architecture ${architecture}`,
-            task: () =>
-              new Listr(
-                buildWithBuildx({
-                  architecture,
-                  images,
-                  composePath,
-                  buildTimeout,
-                  skipSave,
-                  destPath: path.join(
-                    buildDir,
-                    getImagePath(name, version, architecture)
-                  )
-                })
-              )
-          })
-        )
+        (architecture): ListrTask<ListrContextBuildAndPublish> => ({
+          title: `Build architecture ${architecture}`,
+          task: () =>
+            new Listr(
+              buildWithBuildx({
+                architecture,
+                images,
+                composePath,
+                buildTimeout,
+                skipSave,
+                destPath: path.join(
+                  buildDir,
+                  getImagePath(name, version, architecture)
+                )
+              })
+            )
+        })
+      )
       : buildWithCompose({
-          images,
-          composePath,
-          buildTimeout,
-          skipSave,
-          destPath: imagePathAmd
-        })),
+        images,
+        composePath,
+        buildTimeout,
+        skipSave,
+        destPath: imagePathAmd
+      })),
 
     {
       title: `Upload release to ${releaseUploader.networkName}`,

@@ -11,6 +11,7 @@ export interface ListrContextBuildAndPublish {
   // Build and upload
   releaseHash: string;
   releaseMultiHash: string;
+  packageVariant: string;
   // create Github release
   nextVersion: string;
   txData: TxData;

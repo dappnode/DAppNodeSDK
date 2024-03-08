@@ -3,7 +3,7 @@ import chalk from "chalk";
 import { CommandModule } from "yargs";
 import Listr from "listr";
 // Tasks
-import { buildAndUpload } from "../tasks/buildAndUpload.js";
+import { BuildAndUploadOptions, buildAndUpload } from "../tasks/buildAndUpload.js";
 // Utils
 import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion.js";
 import { getInstallDnpLink } from "../utils/getLinks.js";
@@ -19,6 +19,9 @@ interface CliCommandOptions extends CliGlobalOptions {
   skip_upload?: boolean;
   require_git_data?: boolean;
   delete_old_pins?: boolean;
+  template?: boolean;
+  variantsDir: string;
+  variants?: string;
 }
 
 export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
@@ -49,21 +52,40 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     skip_upload: {
       description: `For testing only: do not upload image from disk`,
       type: "boolean"
+    },
+    template: {
+      description: `Enables template mode. It will use the dappnode_package.json and docker-compose.yml files in the root of the project together with the specific ones defined for each package variant`,
+      type: "boolean"
+    },
+    variantsDir: {
+      description: `Path to the directory where the package variants are located`,
+      type: "string",
+      default: "package_variants"
+    },
+    variants: {
+      description: `Specify the package variants to build (only in template mode). Defined by comma-separated list of variant names. If not specified, all variants will be built. Example: "variant1,variant2"`,
+      type: "string"
     }
   },
 
   handler: async (args): Promise<void> => {
-    const { releaseMultiHash } = await buildHandler(args);
+    //const { releaseMultiHash } = await buildHandler(args);
+    const releaseMultiHashes = await buildHandler(args);
 
     if (args.skipUpload) {
       return console.log(chalk.green("\nDNP (DAppNode Package) built\n"));
     }
 
-    console.log(`
-  ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
-  Release hash : ${releaseMultiHash}
-  ${getInstallDnpLink(releaseMultiHash)}
-`);
+    // TODO: Say what package variants were built
+
+    for (const releaseMultiHash of releaseMultiHashes) {
+
+      console.log(`
+      ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
+      Release hash : ${releaseMultiHash}
+      ${getInstallDnpLink(releaseMultiHash)}
+    `);
+    }
   }
 };
 
@@ -78,12 +100,15 @@ export async function buildHandler({
   skip_upload,
   require_git_data,
   delete_old_pins,
+  template,
+  variantsDir,
+  variants,
   // Global options
   dir = defaultDir,
   compose_file_name = defaultComposeFileName,
   silent,
   verbose
-}: CliCommandOptions): Promise<{ releaseMultiHash: string }> {
+}: CliCommandOptions): Promise<string[]> {
   // Parse options
   const contentProvider = provider;
   const uploadTo = upload_to;
@@ -94,22 +119,39 @@ export async function buildHandler({
   const nextVersion = getCurrentLocalVersion({ dir });
   const buildDir = path.join(dir, `build_${nextVersion}`);
 
-  const buildTasks = new Listr(
-    buildAndUpload({
-      dir,
-      buildDir,
-      contentProvider,
-      uploadTo,
-      userTimeout,
-      skipSave,
-      skipUpload,
-      composeFileName,
-      requireGitData: require_git_data,
-      deleteOldPins: delete_old_pins
-    }),
-    { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
-  );
+  const packageVariantsDir = path.join(dir, variantsDir);
 
-  const { releaseMultiHash } = await buildTasks.run();
-  return { releaseMultiHash };
+  const variantNames = !template ?
+    []
+    : variants ?
+      variants.split(",")
+      // TODO: Read the package variants from the packageVariantsDir (read the directories in the packageVariantsDir and use them as the variant names)
+      : [];
+
+  const buildOptions: BuildAndUploadOptions = {
+    dir,
+    buildDir,
+    contentProvider,
+    uploadTo,
+    userTimeout,
+    skipSave,
+    skipUpload,
+    composeFileName,
+    requireGitData: require_git_data,
+    deleteOldPins: delete_old_pins,
+    packageVariantsDir,
+  };
+
+  const buildTasks = variantNames.length == 0 ? [new Listr(
+    buildAndUpload(buildOptions),
+    { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+  )] :
+    variantNames.map((variantName) => new Listr(
+      buildAndUpload({ ...buildOptions, variantName }),
+      { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+    ));
+
+  const buildResults = await Promise.all(buildTasks.map((task) => task.run()));
+
+  return buildResults.map((buildResult) => buildResult.releaseMultiHash);
 }
