@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 import chalk from "chalk";
 import { CommandModule } from "yargs";
@@ -125,8 +126,7 @@ export async function buildHandler({
     []
     : variants ?
       variants.split(",")
-      // TODO: Read the package variants from the packageVariantsDir (read the directories in the packageVariantsDir and use them as the variant names)
-      : [];
+      : getAllDirectoryNamesInPath(packageVariantsDir);
 
   console.log(`
   ${chalk.dim("Building package...")}
@@ -135,7 +135,6 @@ export async function buildHandler({
   ${chalk.dim(`variants: ${variants}`)}
   ${chalk.dim(`variantNames: ${variantNames}`)}
 `);
-
 
   const buildOptions: BuildAndUploadOptions = {
     dir,
@@ -163,4 +162,20 @@ export async function buildHandler({
   const buildResults = await Promise.all(buildTasks.map((task) => task.run()));
 
   return buildResults.map((buildResult) => buildResult.releaseMultiHash);
+}
+
+/**
+ * Reads all directory names within a given path.
+ * @param {string} packageVariantsPath The path where to look for directories.
+ * @returns {string[]} An array of directory names found in the given path.
+ */
+function getAllDirectoryNamesInPath(packageVariantsPath: string): string[] {
+  try {
+    const items = fs.readdirSync(packageVariantsPath, { withFileTypes: true });
+    const directories = items.filter(item => item.isDirectory()).map(dir => dir.name);
+    return directories;
+  } catch (error) {
+    console.error(`Error reading directory names in path: ${packageVariantsPath}`, error);
+    throw error; // Or return an empty array if you prefer not to throw an error
+  }
 }
