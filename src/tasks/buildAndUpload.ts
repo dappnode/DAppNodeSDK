@@ -83,8 +83,10 @@ export function buildAndUpload({
 }: BuildAndUploadOptions): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
+  const variantPaths = variantName ? { dir: path.join(packageVariantsDir, variantName) } : undefined;
+
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
-  const { manifest, format } = readManifest({ dir, packageVariantsDir, variantName });
+  const { manifest, format } = readManifest({ dir }, variantPaths);
 
   // Make sure the release is of correct type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,6 +110,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
   // Update compose
   const composePath = getComposePath({ dir, composeFileName });
+  const variantComposePath = getComposePath(variantPaths);
   const composeForDev = readCompose({ dir, composeFileName });
   const composeForBuild = updateComposeImageTags(composeForDev, manifest);
   const composeForRelease = updateComposeImageTags(composeForDev, manifest, {
@@ -259,6 +262,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
                 architecture,
                 images,
                 composePath,
+                variantComposePath,
                 buildTimeout,
                 skipSave,
                 destPath: path.join(
@@ -272,6 +276,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
       : buildWithCompose({
         images,
         composePath,
+        variantComposePath,
         buildTimeout,
         skipSave,
         destPath: imagePathAmd

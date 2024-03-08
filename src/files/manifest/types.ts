@@ -9,8 +9,4 @@ export interface ManifestPaths {
   dir?: string;
   /** 'manifest-admin.json', [optional] name of the manifest file */
   manifestFileName?: string;
-  /** './folder', [optional] directory to load the package variants from */
-  packageVariantsDir?: string;
-  /** 'variantName', [optional] name of the package variant */
-  variantName?: string;
 }

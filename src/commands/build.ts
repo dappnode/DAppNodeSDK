@@ -9,7 +9,7 @@ import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion
 import { getInstallDnpLink } from "../utils/getLinks.js";
 import { CliGlobalOptions } from "../types.js";
 import { UploadTo } from "../releaseUploader/index.js";
-import { defaultComposeFileName, defaultDir } from "../params.js";
+import { defaultComposeFileName, defaultDir, defaultVariantsDir } from "../params.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   provider: string;
@@ -60,7 +60,7 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
     variantsDir: {
       description: `Path to the directory where the package variants are located`,
       type: "string",
-      default: "package_variants"
+      default: defaultVariantsDir
     },
     variants: {
       description: `Specify the package variants to build (only in template mode). Defined by comma-separated list of variant names. If not specified, all variants will be built. Example: "variant1,variant2"`,

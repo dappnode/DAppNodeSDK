@@ -10,21 +10,42 @@ import { ManifestFormat, ManifestPaths } from "./types.js";
  * Reads a manifest. Without arguments defaults to read the manifest at './dappnode_package.json'
  */
 export function readManifest(
-  paths?: ManifestPaths
+  paths?: ManifestPaths,
+  variantPaths?: ManifestPaths
 ): { manifest: Manifest; format: ManifestFormat } {
   // Figure out the path and format
   const manifestPath = findManifestPath(paths);
   const format = parseFormat(manifestPath);
   const data = readFile(manifestPath);
 
-  // Parse manifest in try catch block to show a comprehensive error message
+  if (!variantPaths) {
+    // Parse manifest in try catch block to show a comprehensive error message
+    try {
+      return {
+        format,
+        manifest: yaml.load(data)
+      };
+    } catch (e) {
+      throw Error(`Error parsing manifest: ${e.message}`);
+    }
+  }
+
+  const variantManifestPath = findManifestPath(variantPaths);
+  const variantFormat = parseFormat(variantManifestPath);
+  const variantData = readFile(variantManifestPath);
+
+  if (format !== ManifestFormat.json || variantFormat !== ManifestFormat.json)
+    //TODO: Support other formats
+    throw Error(`Only JSON format is supported for template mode`);
+
   try {
     return {
       format,
-      manifest: yaml.load(data)
+      manifest: yaml.load({ ...JSON.parse(data), ...JSON.parse(variantData) })
     };
   } catch (e) {
-    throw Error(`Error parsing manifest: ${e.message}`);
+    throw Error(`Error parsing template manifest: ${e.message}`);
+
   }
 }
 
