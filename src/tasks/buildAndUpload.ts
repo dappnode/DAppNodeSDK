@@ -5,7 +5,7 @@ import rimraf from "rimraf";
 import { verifyAvatar } from "../utils/verifyAvatar.js";
 import { copyReleaseFile } from "../utils/copyReleaseFile.js";
 import { addReleaseRecord } from "../utils/releaseRecord.js";
-import { CliError, releaseFilesDefaultNames } from "../params.js";
+import { CliError, defaultVariantsDir, releaseFilesDefaultNames } from "../params.js";
 import { ListrContextBuildAndPublish } from "../types.js";
 import { parseTimeout } from "../utils/timeout.js";
 import { buildWithBuildx } from "./buildWithBuildx.js";
@@ -59,7 +59,7 @@ export interface BuildAndUploadOptions {
   deleteOldPins?: boolean;
   composeFileName: string;
   dir: string;
-  packageVariantsDir: string;
+  packageVariantsDir?: string;
   variantName?: string; // If variant name is undefined we are not using template mode
 }
 
@@ -78,7 +78,7 @@ export function buildAndUpload({
   deleteOldPins,
   composeFileName,
   dir,
-  packageVariantsDir,
+  packageVariantsDir = defaultVariantsDir,
   variantName
 }: BuildAndUploadOptions): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
@@ -111,7 +111,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
   // Update compose
   const composePath = getComposePath({ dir, composeFileName });
   const variantComposePath = getComposePath(variantPaths);
-  const composeForDev = readCompose({ dir, composeFileName });
+  const composeForDev = readCompose({ dir, composeFileName }, variantPaths);
   const composeForBuild = updateComposeImageTags(composeForDev, manifest);
   const composeForRelease = updateComposeImageTags(composeForDev, manifest, {
     editExternalImages: true

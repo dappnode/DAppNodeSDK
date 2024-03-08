@@ -96,7 +96,7 @@ export async function buildAndComment({
   // Connect to Github Octokit REST API and post or edit a comment on PR
   const github = Github.fromLocal(dir);
 
-  const { releaseMultiHash } = await buildHandler({
+  const releaseHashes = await buildHandler({
     provider: "pinata",
     upload_to: "ipfs",
     require_git_data: true,
@@ -104,7 +104,8 @@ export async function buildAndComment({
     verbose: true
   });
 
-  const body = getBuildBotComment({ commitSha, releaseMultiHash });
+  // TODO: Do this for every releaseHash obtained
+  const body = getBuildBotComment({ commitSha, releaseMultiHash: releaseHashes[0] });
   console.log(`Build bot comment: \n\n${body}`);
 
   const prs = await github.getOpenPrsFromBranch({ branch });

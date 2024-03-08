@@ -20,7 +20,7 @@ interface CliCommandOptions extends CliGlobalOptions {
   require_git_data?: boolean;
   delete_old_pins?: boolean;
   template?: boolean;
-  variantsDir: string;
+  variantsDir?: string;
   variants?: string;
 }
 
@@ -101,7 +101,7 @@ export async function buildHandler({
   require_git_data,
   delete_old_pins,
   template,
-  variantsDir,
+  variantsDir = defaultVariantsDir,
   variants,
   // Global options
   dir = defaultDir,
@@ -127,6 +127,15 @@ export async function buildHandler({
       variants.split(",")
       // TODO: Read the package variants from the packageVariantsDir (read the directories in the packageVariantsDir and use them as the variant names)
       : [];
+
+  console.log(`
+  ${chalk.dim("Building package...")}
+  ${chalk.dim(`template: ${template}`)}
+  ${chalk.dim(`variantsDir: ${variantsDir}`)}
+  ${chalk.dim(`variants: ${variants}`)}
+  ${chalk.dim(`variantNames: ${variantNames}`)}
+`);
+
 
   const buildOptions: BuildAndUploadOptions = {
     dir,
