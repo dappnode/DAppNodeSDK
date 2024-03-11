@@ -14,11 +14,11 @@ export function readCompose(paths?: ComposePaths, variantPaths?: ComposePaths): 
   try {
     const compose = loadCompose(paths);
 
-    if (!variantPaths) return compose as Compose;
+    if (!variantPaths) return compose;
 
     const variantCompose = loadCompose(variantPaths);
 
-    return merge({}, compose, variantCompose) as Compose;
+    return merge({}, compose, variantCompose);
   } catch (e) {
     throw Error(`Error parsing docker-compose: ${e.message}`);
   }

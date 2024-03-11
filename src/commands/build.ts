@@ -62,7 +62,7 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       type: "boolean"
     },
     variantsDir: {
-      description: `Path to the directory where the package variants are located`,
+      description: `Path to the directory where the package variants are located. By default, it is ${defaultVariantsDir}`,
       type: "string",
       default: defaultVariantsDir
     },
@@ -81,7 +81,7 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 
     for (const result of buildResults) {
       console.log(`
-      ${chalk.green("DNP (DAppNode Package) built and uploaded")} 
+      ${chalk.green(`Dappnode Package (${result.dnpName}) built and uploaded`)} 
       DNP name : ${result.dnpName}
       Release hash : ${result.releaseMultiHash}
       ${getInstallDnpLink(result.releaseMultiHash)}
@@ -147,7 +147,7 @@ function handleTemplateBuild({
 }
 ): Listr<ListrContextBuildAndPublish>[] {
   const variantsDirPath = path.join(buildOptions.dir, variantsDir);
-  const variantNames = getVariantNames({ variantsDirPath, variants, templateMode: true });
+  const variantNames = getVariantNames({ variantsDirPath, variants });
 
   console.log(`${chalk.dim(`Building package from template for variants ${variants}...`)}`);
 
@@ -180,20 +180,33 @@ function handleSinglePkgBuild({
  * @param {boolean} templateMode - Flag indicating if the template mode is enabled.
  * @returns {string[]} An array of valid variant names.
  */
-function getVariantNames({ variantsDirPath, variants, templateMode }: { variantsDirPath: string; variants?: string; templateMode: boolean; }): string[] {
-  if (!templateMode) return [];
+function getVariantNames({ variantsDirPath, variants }: { variantsDirPath: string; variants?: string }): string[] {
 
   const allVariantNames = getAllDirectoryNamesInPath(variantsDirPath);
-  if (!variants) return allVariantNames; // If no specific variants are provided, use all available directories.
 
-  const specifiedVariantNames = variants.split(",").map(name => name.trim()); // Split and trim the specified variants to ensure clean comparisons.
-  const validVariantNames = specifiedVariantNames.filter(name => allVariantNames.includes(name)); // Filter out invalid names.
-
-  if (validVariantNames.length !== specifiedVariantNames.length) {
-    console.warn(chalk.yellow(`Warning: Some specified variants are not valid and will be ignored. Check the variants: ${variants}`));
+  if (!variants) {
+    console.log(chalk.dim(`No variants specified. Building all available variants: ${allVariantNames.join(", ")}`));
+    return allVariantNames; // If no specific variants are provided, use all available directories.
   }
 
-  return validVariantNames;
+  const specifiedVariantNames = variants.split(",").map(name => name.trim()); // Split and trim the specified variants to ensure clean comparisons.
+
+  const { validVariants, invalidVariants } = specifiedVariantNames.reduce<{ validVariants: string[]; invalidVariants: string[] }>(
+    (acc, name) => {
+      if (allVariantNames.includes(name)) acc.validVariants.push(name);
+
+      else acc.invalidVariants.push(name);
+
+      return acc;
+    }, { validVariants: [], invalidVariants: [] });
+
+
+  if (invalidVariants.length > 0) {
+    console.error(chalk.red(`Warning: Some specified variants are not valid and will be ignored. Allowed variants: ${variants}`));
+    throw new Error(`Invalid variant names: ${invalidVariants.join(", ")}`);
+  }
+
+  return validVariants;
 }
 
 /**
