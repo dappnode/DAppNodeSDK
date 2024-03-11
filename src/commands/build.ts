@@ -115,8 +115,6 @@ export async function buildHandler({
   const skipSave = skip_save;
   const skipUpload = skip_save || skip_upload;
   const composeFileName = compose_file_name;
-  const nextVersion = getCurrentLocalVersion({ dir });
-  const buildDir = path.join(dir, `build_${nextVersion}`);
 
   const packageVariantsDir = path.join(dir, variantsDir);
 
@@ -131,7 +129,6 @@ export async function buildHandler({
 
   const buildOptions: BuildAndUploadOptions = {
     dir,
-    buildDir,
     contentProvider,
     uploadTo,
     userTimeout,

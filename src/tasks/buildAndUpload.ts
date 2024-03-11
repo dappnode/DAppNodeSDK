@@ -49,7 +49,6 @@ import { getImagePath } from "../utils/getImagePath.js";
 import { getLegacyImagePath } from "../utils/getLegacyImagePath.js";
 
 export interface BuildAndUploadOptions {
-  buildDir: string;
   contentProvider: string;
   uploadTo: UploadTo;
   userTimeout?: string;
@@ -68,7 +67,6 @@ const percentToMessage = (percent: number) =>
   `Uploading... ${(percent * 100).toFixed(2)}%`;
 
 export function buildAndUpload({
-  buildDir,
   contentProvider,
   uploadTo,
   userTimeout,
@@ -108,6 +106,8 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
   if (/[A-Z]/.test(name))
     throw new CliError("Package name in the manifest must be lowercase");
 
+  const buildDir = path.join(dir, `build_${name}_${version}`);
+
   // Update compose
   const composePath = getComposePath({ dir, composeFileName });
   const variantComposePath = getComposePath(variantPaths);
@@ -127,7 +127,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
   const hardwareArchitecture = getArchitecture();
 
   const imagePathAmd = path.join(
-    buildDir,
+    buildDir, // TODO: Modify buildDir
     getImagePath(name, version, hardwareArchitecture)
   );
 

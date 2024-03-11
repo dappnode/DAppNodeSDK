@@ -111,8 +111,8 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
   ${"You must execute this transaction in mainnet to publish a new version of this DNP."}
   
   ${chalk.gray(
-    printObject(txDataToPrint, (key, value) => `  ${key.padEnd(5)} : ${value}`)
-  )}
+        printObject(txDataToPrint, (key, value) => `  ${key.padEnd(5)} : ${value}`)
+      )}
   
   ${"You can also execute this transaction with Metamask by following this pre-filled link"}
   
@@ -227,12 +227,11 @@ export async function publishHandler({
       // 2. Build and upload
       {
         title: "Build and upload",
-        task: ctx =>
+        task: () =>
           new Listr(
             buildAndUpload({
               dir,
               composeFileName,
-              buildDir: ctx.buildDir,
               contentProvider,
               uploadTo,
               userTimeout,
