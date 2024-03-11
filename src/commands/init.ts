@@ -59,6 +59,7 @@ ${releasesRecordFileName}
 interface CliCommandOptions extends CliGlobalOptions {
   yes?: boolean;
   force?: boolean;
+  template?: boolean;
 }
 
 export const init: CommandModule<CliGlobalOptions, CliCommandOptions> = {
@@ -76,6 +77,11 @@ export const init: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       .option("force", {
         alias: "f",
         description: "Overwrite previous project if necessary",
+        type: "boolean"
+      })
+      .option("template", {
+        alias: "t",
+        description: "Initialize a template DAppNodePackage, for creating several package variants that have the same base structure.",
         type: "boolean"
       }),
 
@@ -133,46 +139,46 @@ It only covers the most common items, and tries to guess sensible defaults.
   const answers = useDefaults
     ? defaultAnswers
     : await inquirer.prompt([
-        {
-          type: "input",
-          name: "name",
-          default: defaultAnswers.name,
-          message: "DAppNodePackage name"
-        },
-        {
-          type: "input",
-          name: "version",
-          default: defaultAnswers.version,
-          message: "Version",
-          validate: val =>
-            !semver.valid(val) ||
+      {
+        type: "input",
+        name: "name",
+        default: defaultAnswers.name,
+        message: "DAppNodePackage name"
+      },
+      {
+        type: "input",
+        name: "version",
+        default: defaultAnswers.version,
+        message: "Version",
+        validate: val =>
+          !semver.valid(val) ||
             !(
               semver.eq(val, "1.0.0") ||
               semver.eq(val, "0.1.0") ||
               semver.eq(val, "0.0.1")
             )
-              ? "the version needs to be valid semver. If this is the first release, the version must be 1.0.0, 0.1.0 or 0.0.1 "
-              : true
-        },
-        {
-          type: "input",
-          name: "description",
-          message: "Description",
-          default: defaultAnswers.description
-        },
-        {
-          type: "input",
-          message: "Author",
-          name: "author",
-          default: defaultAnswers.author
-        },
-        {
-          type: "input",
-          message: "License",
-          name: "license",
-          default: defaultAnswers.license
-        }
-      ]);
+            ? "the version needs to be valid semver. If this is the first release, the version must be 1.0.0, 0.1.0 or 0.0.1 "
+            : true
+      },
+      {
+        type: "input",
+        name: "description",
+        message: "Description",
+        default: defaultAnswers.description
+      },
+      {
+        type: "input",
+        message: "Author",
+        name: "author",
+        default: defaultAnswers.author
+      },
+      {
+        type: "input",
+        message: "License",
+        name: "license",
+        default: defaultAnswers.license
+      }
+    ]);
 
   // Construct DNP
   const dnpName = answers.name ? getDnpName(answers.name) : defaultName;
