@@ -70,7 +70,6 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
   },
 
   handler: async (args): Promise<void> => {
-    //const { releaseMultiHash } = await buildHandler(args);
     const buildResults = await buildHandler(args);
 
     if (args.skipUpload) {
