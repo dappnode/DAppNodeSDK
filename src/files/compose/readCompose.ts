@@ -14,7 +14,7 @@ export function readCompose(paths?: ComposePaths): Compose {
 
   // Parse compose in try catch block to show a comprehensive error message
   try {
-    const compose = yaml.safeLoad(data);
+    const compose = yaml.load(data);
     if (!compose) throw Error("result is undefined");
     if (typeof compose === "string") throw Error("result is a string");
     return compose as Compose;
