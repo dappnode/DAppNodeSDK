@@ -58,7 +58,7 @@ export interface BuildAndUploadOptions {
   deleteOldPins?: boolean;
   composeFileName: string;
   dir: string;
-  packageVariantsDir?: string;
+  variantsDirPath?: string;
   variantName?: string; // If variant name is undefined we are not using template mode
 }
 
@@ -76,12 +76,13 @@ export function buildAndUpload({
   deleteOldPins,
   composeFileName,
   dir,
-  packageVariantsDir = defaultVariantsDir,
+  variantsDirPath = defaultVariantsDir,
   variantName
 }: BuildAndUploadOptions): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
+  const templateMode = !!variantName;
 
-  const variantPaths = variantName ? { dir: path.join(packageVariantsDir, variantName) } : undefined;
+  const variantPaths = templateMode ? { dir: path.join(variantsDirPath, variantName) } : undefined;
 
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
   const { manifest, format } = readManifest({ dir }, variantPaths);
@@ -110,7 +111,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
   // Update compose
   const composePath = getComposePath({ dir, composeFileName });
-  const variantComposePath = getComposePath(variantPaths);
+  const variantComposePath = templateMode ? getComposePath(variantPaths) : undefined;
   const composeForDev = readCompose({ dir, composeFileName }, variantPaths);
   const composeForBuild = updateComposeImageTags(composeForDev, manifest);
   const composeForRelease = updateComposeImageTags(composeForDev, manifest, {
@@ -127,7 +128,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
   const hardwareArchitecture = getArchitecture();
 
   const imagePathAmd = path.join(
-    buildDir, // TODO: Modify buildDir
+    buildDir,
     getImagePath(name, version, hardwareArchitecture)
   );
 

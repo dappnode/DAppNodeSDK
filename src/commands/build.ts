@@ -6,7 +6,6 @@ import Listr from "listr";
 // Tasks
 import { BuildAndUploadOptions, buildAndUpload } from "../tasks/buildAndUpload.js";
 // Utils
-import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion.js";
 import { getInstallDnpLink } from "../utils/getLinks.js";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types.js";
 import { UploadTo } from "../releaseUploader/index.js";
@@ -23,6 +22,10 @@ interface CliCommandOptions extends CliGlobalOptions {
   template?: boolean;
   variantsDir?: string;
   variants?: string;
+}
+
+interface VerbosityOptions {
+  renderer: "verbose" | "silent" | "default";
 }
 
 export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
@@ -90,41 +93,25 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 /**
  * Common handler for CLI and programatic usage
  */
-export async function buildHandler({
-  provider,
-  timeout,
-  upload_to,
-  skip_save,
+export function buildHandler({
+  provider: contentProvider,
+  timeout: userTimeout,
+  upload_to: uploadTo,
+  skip_save: skipSave,
   skip_upload,
-  require_git_data,
-  delete_old_pins,
+  require_git_data: requireGitData,
+  delete_old_pins: deleteOldPins,
   template,
   variantsDir = defaultVariantsDir,
   variants,
   // Global options
   dir = defaultDir,
-  compose_file_name = defaultComposeFileName,
+  compose_file_name: composeFileName = defaultComposeFileName,
   silent,
   verbose
 }: CliCommandOptions): Promise<ListrContextBuildAndPublish[]> {
-  // Parse options
-  const contentProvider = provider;
-  const uploadTo = upload_to;
-  const userTimeout = timeout;
-  const skipSave = skip_save;
-  const skipUpload = skip_save || skip_upload;
-  const composeFileName = compose_file_name;
-
-  const packageVariantsDir = path.join(dir, variantsDir);
-
-  const variantNames = !template ?
-    []
-    : variants ?
-      variants.split(",")
-      : getAllDirectoryNamesInPath(packageVariantsDir);
-
-  if (template)
-    console.log(`${chalk.dim(`Building package from template for variants ${variants}...`)}`);
+  const skipUpload = skipSave || skip_upload;
+  const templateMode = !!template;
 
   const buildOptions: BuildAndUploadOptions = {
     dir,
@@ -134,21 +121,79 @@ export async function buildHandler({
     skipSave,
     skipUpload,
     composeFileName,
-    requireGitData: require_git_data,
-    deleteOldPins: delete_old_pins,
-    packageVariantsDir,
+    requireGitData,
+    deleteOldPins,
   };
 
-  const buildTasks = variantNames.length == 0 ? [new Listr(
-    buildAndUpload(buildOptions),
-    { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
-  )] :
-    variantNames.map((variantName) => new Listr(
-      buildAndUpload({ ...buildOptions, variantName }),
-      { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
-    ));
+  const verbosityOptions: VerbosityOptions = { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
 
-  return await Promise.all(buildTasks.map((task) => task.run()));
+  const buildTasks = templateMode ?
+    handleTemplateBuild({ buildOptions, variantsDir, variants, verbosityOptions }) :
+    handleSinglePkgBuild({ buildOptions, verbosityOptions });
+
+  return Promise.all(buildTasks.map((task) => task.run()));
+}
+
+function handleTemplateBuild({
+  buildOptions,
+  variantsDir,
+  variants,
+  verbosityOptions
+}: {
+  buildOptions: BuildAndUploadOptions;
+  variantsDir: string;
+  variants?: string;
+  verbosityOptions: VerbosityOptions;
+}
+): Listr<ListrContextBuildAndPublish>[] {
+  const variantsDirPath = path.join(buildOptions.dir, variantsDir);
+  const variantNames = getVariantNames({ variantsDirPath, variants, templateMode: true });
+
+  console.log(`${chalk.dim(`Building package from template for variants ${variants}...`)}`);
+
+  return variantNames.map((variantName) => new Listr(
+    buildAndUpload({ ...buildOptions, variantName, variantsDirPath }),
+    verbosityOptions
+  ));
+}
+
+function handleSinglePkgBuild({
+  buildOptions,
+  verbosityOptions
+}: {
+  buildOptions: BuildAndUploadOptions;
+  verbosityOptions: VerbosityOptions;
+}): Listr<ListrContextBuildAndPublish>[] {
+  console.log(`${chalk.dim(`Building single package...`)}`);
+
+  return [new Listr(
+    buildAndUpload(buildOptions),
+    verbosityOptions
+  )];
+}
+
+/**
+ * Retrieves the valid variant names based on the specified variants and the available directories.
+ * 
+ * @param {string} variantsDirPath - The path to the directory containing variant directories.
+ * @param {string | undefined} variants - A comma-separated string of specified variant names.
+ * @param {boolean} templateMode - Flag indicating if the template mode is enabled.
+ * @returns {string[]} An array of valid variant names.
+ */
+function getVariantNames({ variantsDirPath, variants, templateMode }: { variantsDirPath: string; variants?: string; templateMode: boolean; }): string[] {
+  if (!templateMode) return [];
+
+  const allVariantNames = getAllDirectoryNamesInPath(variantsDirPath);
+  if (!variants) return allVariantNames; // If no specific variants are provided, use all available directories.
+
+  const specifiedVariantNames = variants.split(",").map(name => name.trim()); // Split and trim the specified variants to ensure clean comparisons.
+  const validVariantNames = specifiedVariantNames.filter(name => allVariantNames.includes(name)); // Filter out invalid names.
+
+  if (validVariantNames.length !== specifiedVariantNames.length) {
+    console.warn(chalk.yellow(`Warning: Some specified variants are not valid and will be ignored. Check the variants: ${variants}`));
+  }
+
+  return validVariantNames;
 }
 
 /**
@@ -159,10 +204,9 @@ export async function buildHandler({
 function getAllDirectoryNamesInPath(packageVariantsPath: string): string[] {
   try {
     const items = fs.readdirSync(packageVariantsPath, { withFileTypes: true });
-    const directories = items.filter(item => item.isDirectory()).map(dir => dir.name);
-    return directories;
+    return items.filter(item => item.isDirectory()).map(dir => dir.name);
   } catch (error) {
     console.error(`Error reading directory names in path: ${packageVariantsPath}`, error);
-    throw error; // Or return an empty array if you prefer not to throw an error
+    throw error;
   }
 }
