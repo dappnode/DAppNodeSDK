@@ -5,9 +5,10 @@ import { ComposePaths, Compose } from "@dappnode/types";
 import { merge } from "lodash-es";
 
 /**
- * Read a compose parsed data
- * Without arguments defaults to write the manifest at './docker-compose.yml'
- * @return compose object
+ * Read a compose file and optionally merge it with a variant compose file.
+ * @param paths The primary compose file paths.
+ * @param variantPaths Optional variant compose file paths to merge with the primary compose.
+ * @return The merged compose object.
  */
 export function readCompose(paths?: ComposePaths, variantPaths?: ComposePaths): Compose {
   // Parse compose in try catch block to show a comprehensive error message
@@ -31,8 +32,9 @@ export function readCompose(paths?: ComposePaths, variantPaths?: ComposePaths): 
 function loadCompose(paths?: ComposePaths): Compose {
   const composePath = getComposePath(paths);
   const data = readFile(composePath);
-  const compose = yaml.safeLoad(data);
-  if (!compose) throw Error("result is undefined");
-  if (typeof compose === "string") throw Error("result is a string");
-  return compose as Compose;
+  const compose = yaml.load(data);
+
+  if (!compose || typeof compose === "string") throw new Error(`Could not parse compose file: ${composePath}`);
+
+  return compose;
 }
