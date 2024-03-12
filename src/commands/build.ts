@@ -19,9 +19,9 @@ interface CliCommandOptions extends CliGlobalOptions {
   skip_upload?: boolean;
   require_git_data?: boolean;
   delete_old_pins?: boolean;
-  template?: boolean;
-  variantsDir?: string;
+  variants_dir?: string;
   variants?: string;
+  all_variants?: boolean;
 }
 
 interface VerbosityOptions {
@@ -57,17 +57,17 @@ export const build: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       description: `For testing only: do not upload image from disk`,
       type: "boolean"
     },
-    template: {
-      description: `Enables template mode. It will use the dappnode_package.json and docker-compose.yml files in the root of the project together with the specific ones defined for each package variant`,
+    all_variants: {
+      description: `It will use the dappnode_package.json and docker-compose.yml files in the root of the project together with the specific ones defined for each package variant to build all of them`,
       type: "boolean"
     },
-    variantsDir: {
-      description: `Path to the directory where the package variants are located. By default, it is ${defaultVariantsDir}`,
+    variants_dir: {
+      description: `Path to the directory where the package variants are located (only for packages that support it and combined with either "--all-variants" or "--variants"). By default, it is ${defaultVariantsDir}`,
       type: "string",
       default: defaultVariantsDir
     },
     variants: {
-      description: `Specify the package variants to build (only in template mode). Defined by comma-separated list of variant names. If not specified, all variants will be built. Example: "variant1,variant2"`,
+      description: `Specify the package variants to build (only for packages that support it). Defined by comma-separated list of variant names. If not specified, all variants will be built. Example: "variant1,variant2"`,
       type: "string"
     }
   },
@@ -101,8 +101,8 @@ export function buildHandler({
   skip_upload,
   require_git_data: requireGitData,
   delete_old_pins: deleteOldPins,
-  template,
-  variantsDir = defaultVariantsDir,
+  all_variants: allVariants,
+  variants_dir: variantsDir = defaultVariantsDir,
   variants,
   // Global options
   dir = defaultDir,
@@ -111,7 +111,7 @@ export function buildHandler({
   verbose
 }: CliCommandOptions): Promise<ListrContextBuildAndPublish[]> {
   const skipUpload = skipSave || skip_upload;
-  const templateMode = !!template;
+  const templateMode = !!allVariants || (variants && variants?.length > 0);
 
   const buildOptions: BuildAndUploadOptions = {
     dir,
@@ -185,7 +185,7 @@ function getVariantNames({ variantsDirPath, variants }: { variantsDirPath: strin
   const allVariantNames = getAllDirectoryNamesInPath(variantsDirPath);
 
   if (!variants) {
-    console.log(chalk.dim(`No variants specified. Building all available variants: ${allVariantNames.join(", ")}`));
+    console.log(chalk.dim(`Building all available variants: ${allVariantNames.join(", ")}`));
     return allVariantNames; // If no specific variants are provided, use all available directories.
   }
 
