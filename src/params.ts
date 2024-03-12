@@ -3,8 +3,8 @@ import { ManifestFormat } from "./files/manifest/types.js";
 
 export * from "./files/compose/params.js";
 
-export class CliError extends Error {}
-export class YargsError extends Error {}
+export class CliError extends Error { }
+export class YargsError extends Error { }
 
 // Github Actions params
 
@@ -13,6 +13,7 @@ export const branchNameRoot = "dappnodebot/bump-upstream/";
 // DAppNode params
 
 export const defaultDir = "./";
+export const defaultVariantsDir = "./package_variants";
 export const defaultManifestFileName = "dappnode_package.json";
 export const defaultManifestFormat = ManifestFormat.json;
 export const defaultComposeFileName = "docker-compose.yml";

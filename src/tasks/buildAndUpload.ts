@@ -5,7 +5,7 @@ import rimraf from "rimraf";
 import { verifyAvatar } from "../utils/verifyAvatar.js";
 import { copyReleaseFile } from "../utils/copyReleaseFile.js";
 import { addReleaseRecord } from "../utils/releaseRecord.js";
-import { CliError, releaseFilesDefaultNames } from "../params.js";
+import { CliError, defaultVariantsDir, releaseFilesDefaultNames } from "../params.js";
 import { ListrContextBuildAndPublish } from "../types.js";
 import { parseTimeout } from "../utils/timeout.js";
 import { buildWithBuildx } from "./buildWithBuildx.js";
@@ -48,23 +48,7 @@ import { releaseFiles } from "@dappnode/types";
 import { getImagePath } from "../utils/getImagePath.js";
 import { getLegacyImagePath } from "../utils/getLegacyImagePath.js";
 
-// Pretty percent uploaded reporting
-const percentToMessage = (percent: number) =>
-  `Uploading... ${(percent * 100).toFixed(2)}%`;
-
-export function buildAndUpload({
-  buildDir,
-  contentProvider,
-  uploadTo,
-  userTimeout,
-  skipSave,
-  skipUpload,
-  requireGitData,
-  deleteOldPins,
-  composeFileName,
-  dir
-}: {
-  buildDir: string;
+export interface BuildAndUploadOptions {
   contentProvider: string;
   uploadTo: UploadTo;
   userTimeout?: string;
@@ -74,11 +58,38 @@ export function buildAndUpload({
   deleteOldPins?: boolean;
   composeFileName: string;
   dir: string;
-}): ListrTask<ListrContextBuildAndPublish>[] {
+  variantsDirPath?: string;
+  variantName?: string;
+  templateMode: boolean;
+}
+
+// Pretty percent uploaded reporting
+const percentToMessage = (percent: number) =>
+  `Uploading... ${(percent * 100).toFixed(2)}%`;
+
+export function buildAndUpload({
+  contentProvider,
+  uploadTo,
+  userTimeout,
+  skipSave,
+  skipUpload,
+  requireGitData,
+  deleteOldPins,
+  composeFileName,
+  dir,
+  variantsDirPath = defaultVariantsDir,
+  variantName,
+  templateMode
+}: BuildAndUploadOptions): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
+  if (templateMode && !variantName)
+    throw new CliError("Template mode is enabled but variant name is missing, so the package can't be built.");
+
+  const variantPaths = templateMode && variantName ? { dir: path.join(variantsDirPath, variantName) } : undefined;
+
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
-  const { manifest, format } = readManifest({ dir });
+  const { manifest, format } = readManifest({ dir }, variantPaths);
 
   // Make sure the release is of correct type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -100,9 +111,12 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
   if (/[A-Z]/.test(name))
     throw new CliError("Package name in the manifest must be lowercase");
 
+  const buildDir = path.join(dir, `build_${name}_${version}`);
+
   // Update compose
   const composePath = getComposePath({ dir, composeFileName });
-  const composeForDev = readCompose({ dir, composeFileName });
+  const variantComposePath = templateMode ? getComposePath(variantPaths) : undefined;
+  const composeForDev = readCompose({ dir, composeFileName }, variantPaths);
   const composeForBuild = updateComposeImageTags(composeForDev, manifest);
   const composeForRelease = updateComposeImageTags(composeForDev, manifest, {
     editExternalImages: true
@@ -245,31 +259,33 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
     // const imageEntry = files.find(file => /\.tar\.xz$/.test(file));
     ...(architectures
       ? architectures.map(
-          (architecture): ListrTask<ListrContextBuildAndPublish> => ({
-            title: `Build architecture ${architecture}`,
-            task: () =>
-              new Listr(
-                buildWithBuildx({
-                  architecture,
-                  images,
-                  composePath,
-                  buildTimeout,
-                  skipSave,
-                  destPath: path.join(
-                    buildDir,
-                    getImagePath(name, version, architecture)
-                  )
-                })
-              )
-          })
-        )
+        (architecture): ListrTask<ListrContextBuildAndPublish> => ({
+          title: `Build architecture ${architecture}`,
+          task: () =>
+            new Listr(
+              buildWithBuildx({
+                architecture,
+                images,
+                composePath,
+                variantComposePath,
+                buildTimeout,
+                skipSave,
+                destPath: path.join(
+                  buildDir,
+                  getImagePath(name, version, architecture)
+                )
+              })
+            )
+        })
+      )
       : buildWithCompose({
-          images,
-          composePath,
-          buildTimeout,
-          skipSave,
-          destPath: imagePathAmd
-        })),
+        images,
+        composePath,
+        variantComposePath,
+        buildTimeout,
+        skipSave,
+        destPath: imagePathAmd
+      })),
 
     {
       title: `Upload release to ${releaseUploader.networkName}`,
@@ -328,6 +344,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         });
 
         // "return" result for next tasks
+        ctx.dnpName = manifest.name;
         ctx.releaseMultiHash = ctx.releaseHash;
 
         try {
