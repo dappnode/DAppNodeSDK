@@ -236,7 +236,8 @@ export async function publishHandler({
               uploadTo,
               userTimeout,
               requireGitData,
-              deleteOldPins
+              deleteOldPins,
+              templateMode: false // TODO: Implement template mode
             }),
             { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
           )
