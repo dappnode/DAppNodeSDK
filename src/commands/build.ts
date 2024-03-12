@@ -111,7 +111,7 @@ export function buildHandler({
   verbose
 }: CliCommandOptions): Promise<ListrContextBuildAndPublish[]> {
   const skipUpload = skipSave || skip_upload;
-  const templateMode = !!allVariants || (variants && variants?.length > 0);
+  const templateMode = Boolean(allVariants || (variants && variants?.length > 0));
 
   const buildOptions: BuildAndUploadOptions = {
     dir,
@@ -123,6 +123,7 @@ export function buildHandler({
     composeFileName,
     requireGitData,
     deleteOldPins,
+    templateMode
   };
 
   const verbosityOptions: VerbosityOptions = { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
@@ -177,7 +178,6 @@ function handleSinglePkgBuild({
  * 
  * @param {string} variantsDirPath - The path to the directory containing variant directories.
  * @param {string | undefined} variants - A comma-separated string of specified variant names.
- * @param {boolean} templateMode - Flag indicating if the template mode is enabled.
  * @returns {string[]} An array of valid variant names.
  */
 function getVariantNames({ variantsDirPath, variants }: { variantsDirPath: string; variants?: string }): string[] {

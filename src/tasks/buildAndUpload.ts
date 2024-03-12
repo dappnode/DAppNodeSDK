@@ -59,7 +59,8 @@ export interface BuildAndUploadOptions {
   composeFileName: string;
   dir: string;
   variantsDirPath?: string;
-  variantName?: string; // If variant name is undefined we are not using template mode
+  variantName?: string;
+  templateMode: boolean;
 }
 
 // Pretty percent uploaded reporting
@@ -77,12 +78,15 @@ export function buildAndUpload({
   composeFileName,
   dir,
   variantsDirPath = defaultVariantsDir,
-  variantName
+  variantName,
+  templateMode
 }: BuildAndUploadOptions): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);
-  const templateMode = !!variantName;
 
-  const variantPaths = templateMode ? { dir: path.join(variantsDirPath, variantName) } : undefined;
+  if (templateMode && !variantName)
+    throw new CliError("Template mode is enabled but variant name is missing, so the package can't be built.");
+
+  const variantPaths = templateMode && variantName ? { dir: path.join(variantsDirPath, variantName) } : undefined;
 
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
   const { manifest, format } = readManifest({ dir }, variantPaths);
