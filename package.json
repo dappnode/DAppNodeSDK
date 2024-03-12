@@ -52,7 +52,7 @@
     "graphql": "^16.6.0",
     "image-size": "^0.8.1",
     "inquirer": "^6.2.1",
-    "js-yaml": "^3.12.1",
+    "js-yaml": "^4.1.0",
     "listr": "^0.14.3",
     "lodash-es": "^4.17.21",
     "mime-types": "^2.1.24",
