@@ -26,6 +26,7 @@ import { Manifest, Compose, getImageTag, releaseFiles } from "@dappnode/types";
 import { FlexibleCompose } from "../files/compose/writeCompose.js";
 
 const defaultEnvName = "NETWORK";
+const defaultVariants = ["mainnet", "testnet"];
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",
@@ -60,15 +61,15 @@ build_*
 ${releasesRecordFileName}
 `;
 
-type TemplateAnswers = {
-  variantsDir?: string;
-  variants?: string[];
-  envName?: string;
+type TemplatePackageAnswers = {
+  variantsDir: string;
+  variants: string[];
+  envName: string;
 };
 
-type DefaultAnswers = Pick<Manifest, "name" | "version" | "description" | "avatar" | "type" | "author" | "license">;
+type SinglePackageAnswers = Pick<Manifest, "name" | "version" | "description" | "avatar" | "type" | "author" | "license">;
 
-type UserAnswers = DefaultAnswers & TemplateAnswers;
+type UserAnswers = SinglePackageAnswers & Partial<TemplatePackageAnswers>;
 
 interface CliCommandOptions extends CliGlobalOptions {
   yes?: boolean;
@@ -192,35 +193,36 @@ export async function initHandler({
 async function getUserAnswers({ templateMode, useDefaults, defaultName }: { templateMode: boolean, useDefaults: boolean, defaultName: string }): Promise<UserAnswers> {
   const defaultAuthor = await shell("whoami");
 
-  const defaultAnswers: DefaultAnswers = {
+  const defaultAnswers: UserAnswers = {
     name: defaultName,
     version: defaultVersion,
     description: `${defaultName} description`,
     avatar: "",
     type: "service",
     author: defaultAuthor,
-    license: "GPL-3.0"
+    license: "GPL-3.0",
+    envName: defaultEnvName,
+    variants: defaultVariants,
+    variantsDir: defaultVariantsDir
   };
 
-  if (!useDefaults) {
-    console.log(`This utility will walk you through creating a dappnode_package.json file.
+  if (useDefaults) return defaultAnswers;
+
+  console.log(`This utility will walk you through creating a dappnode_package.json file.
 It only covers the most common items, and tries to guess sensible defaults.
 `);
-  }
 
-  let answers: UserAnswers = useDefaults
-    ? defaultAnswers
-    : await getSinglePackageAnswers(defaultAnswers);
+  const answers: SinglePackageAnswers = await getSinglePackageAnswers(defaultAnswers);
 
   if (templateMode) {
     const templateAnswers = await getTemplateAnswers();
-    answers = { ...answers, ...templateAnswers };
+    return { ...answers, ...templateAnswers };
   }
 
   return answers;
 }
 
-async function getSinglePackageAnswers(defaultAnswers: DefaultAnswers): Promise<UserAnswers> {
+async function getSinglePackageAnswers(defaultAnswers: SinglePackageAnswers): Promise<SinglePackageAnswers> {
   return inquirer.prompt([
     {
       type: "input",
@@ -265,7 +267,7 @@ async function getSinglePackageAnswers(defaultAnswers: DefaultAnswers): Promise<
   );
 }
 
-async function getTemplateAnswers(): Promise<TemplateAnswers> {
+async function getTemplateAnswers(): Promise<TemplatePackageAnswers> {
   const templateAnswers = await inquirer.prompt(
     [{
       type: "input",
