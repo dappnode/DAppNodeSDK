@@ -39,3 +39,33 @@ describe("Init and build", function () {
     expect(buildResults[0].releaseMultiHash).to.include("/ipfs/Qm");
   });
 });
+
+describe("Init and build template repo", function () {
+  this.timeout(120 * 1000);
+
+  before("Clean testDir", () => cleanTestDir());
+  after("Clean testDir", () => cleanTestDir());
+
+  before("Init repo", async () => {
+    await initHandler({
+      dir: testDir,
+      force: true,
+      yes: true,
+      template: true
+    });
+  });
+
+  it("Should build and upload the current version", async () => {
+    const buildResults = await buildHandler({
+      dir: testDir,
+      provider: contentProvider,
+      upload_to: "ipfs",
+      timeout: "5min",
+      verbose: true,
+      all_variants: true
+    });
+
+    // Check returned hash is correct
+    expect(buildResults[0].releaseMultiHash).to.include("/ipfs/Qm");
+  });
+});
