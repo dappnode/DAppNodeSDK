@@ -3,7 +3,7 @@ import path from "path";
 import yaml from "js-yaml";
 import { SetupWizard, releaseFiles } from "@dappnode/types";
 import { readManifest } from "./readManifest.js";
-import { writeManifest } from "./writeManifest.js";
+import { writeManifest } from "./writeManifests.js";
 
 /**
  * Reads manifest and extra files in `buildDir` compacts them in the manifest
@@ -11,7 +11,7 @@ import { writeManifest } from "./writeManifest.js";
  * @param buildDir `build_0.1.0`
  */
 export function compactManifestIfCore(buildDir: string): void {
-  const { manifest, format } = readManifest({ dir: buildDir });
+  const { manifest, format } = readManifest({ paths: { dir: buildDir } });
 
   if (manifest.type !== "dncore") return;
 
@@ -20,7 +20,7 @@ export function compactManifestIfCore(buildDir: string): void {
     manifest.setupWizard = setupWizard;
   }
 
-  writeManifest(manifest, format, { dir: buildDir });
+  writeManifest({ manifest, format, paths: { dir: buildDir } });
 }
 
 // Utils

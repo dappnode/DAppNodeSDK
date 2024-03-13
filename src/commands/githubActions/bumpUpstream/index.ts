@@ -66,7 +66,7 @@ async function gaBumpUpstreamHandler({
   // Check if buildSdkEnvFileName file exists
   const templateArgs = readBuildSdkEnvFileNotThrow(dir);
 
-  const { manifest, format } = readManifest({ dir });
+  const { manifest, format } = readManifest({ paths: { dir } });
   const compose = readCompose({ dir });
 
   const upstreamRepos = templateArgs
@@ -221,7 +221,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
     }
   }
 
-  writeManifest(manifest, format, { dir });
+  writeManifest({ manifest, format, paths: { dir } });
   writeCompose(compose, { dir });
 
   const commitMsg = `bump ${versionsToUpdate

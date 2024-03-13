@@ -9,7 +9,7 @@ import { ManifestPaths } from "./types.js";
 export function getRepoSlugFromManifest(paths: ManifestPaths): string {
   const githubBaseUrl = "https://github.com/";
 
-  const { manifest } = readManifest(paths);
+  const { manifest } = readManifest({ paths });
   const { type, url } = manifest.repository || {};
   // Ignore faulty manifests
   if (type !== "git" || !url || !url.includes(githubBaseUrl)) return "";

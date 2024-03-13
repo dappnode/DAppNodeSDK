@@ -45,7 +45,7 @@ export function generatePublishTx({
   const apm = new ApmRepository(ethereumUrl);
 
   // Load manifest ##### Verify manifest object
-  const { manifest } = readManifest({ dir });
+  const { manifest } = readManifest({ paths: { dir } });
 
   // Compute tx data
   const contentURI =

@@ -61,7 +61,7 @@ export async function gaTestEndToEndHandler({
     throw Error(`Invalid network ${network}. Available values are ${networks}`);
   const dappmanagerTestApi = new DappmanagerTestApi(localDappmanagerTestApiUrl);
   const compose = readCompose({ dir });
-  const { manifest } = readManifest({ dir });
+  const { manifest } = readManifest({ paths: { dir } });
   const environmentByServiceParsed: Record<
     string,
     string

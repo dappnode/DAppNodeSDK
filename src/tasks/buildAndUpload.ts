@@ -89,7 +89,7 @@ export function buildAndUpload({
   const variantPaths = templateMode && variantName ? { dir: path.join(variantsDirPath, variantName) } : undefined;
 
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
-  const { manifest, format } = readManifest({ dir }, variantPaths);
+  const { manifest, format } = readManifest({ paths: { dir }, variantPaths });
 
   // Make sure the release is of correct type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -224,7 +224,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
             case "manifest":
-              writeManifest(manifest, format, { dir: buildDir });
+              writeManifest({ manifest, format, paths: { dir: buildDir } });
               break;
             case "compose":
               // Write compose with build props for builds

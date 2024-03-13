@@ -24,7 +24,7 @@ export async function increaseFromLocalVersion({
   checkSemverType(type);
 
   // Load manifest
-  const { manifest, format } = readManifest({ dir });
+  const { manifest, format } = readManifest({ paths: { dir } });
 
   const currentVersion = manifest.version;
 
@@ -34,7 +34,7 @@ export async function increaseFromLocalVersion({
   manifest.version = nextVersion;
 
   // Mofidy and write the manifest and docker-compose
-  writeManifest(manifest, format, { dir });
+  writeManifest({ manifest, format, paths: { dir } });
   const { name, version } = manifest;
   const compose = readCompose({ dir, composeFileName });
   const newCompose = updateComposeImageTags(compose, { name, version });
