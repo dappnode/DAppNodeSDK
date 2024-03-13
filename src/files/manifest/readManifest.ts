@@ -10,13 +10,10 @@ import { merge } from "lodash-es";
 /**
  * Reads a manifest and optionally merges it with a variant manifest.
  */
-export function readManifest({
-  paths,
-  variantPaths
-}: {
+export function readManifest(
   paths?: ManifestPaths,
   variantPaths?: ManifestPaths
-}): { manifest: Manifest; format: ManifestFormat } {
+): { manifest: Manifest; format: ManifestFormat } {
   try {
     const manifest = loadManifest(paths);
 

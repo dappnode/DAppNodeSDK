@@ -89,7 +89,7 @@ export function buildAndUpload({
   const variantPaths = templateMode && variantName ? { dir: path.join(variantsDirPath, variantName) } : undefined;
 
   // Load manifest #### Todo: Deleted check functions. Verify manifest beforehand
-  const { manifest, format } = readManifest({ paths: { dir }, variantPaths });
+  const { manifest, format } = readManifest({ dir }, variantPaths);
 
   // Make sure the release is of correct type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
