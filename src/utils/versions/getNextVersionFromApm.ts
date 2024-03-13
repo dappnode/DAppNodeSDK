@@ -21,7 +21,7 @@ export async function getNextVersionFromApm({
   const apm = new ApmRepository(getEthereumUrl(ethProvider));
 
   // Load manifest
-  const { manifest } = readManifest({ paths: { dir } });
+  const { manifest } = readManifest({ dir });
   const ensName = manifest.name.toLowerCase();
 
   // Fetch the latest version from APM

@@ -23,7 +23,7 @@ export async function increaseFromApmVersion({
   const nextVersion = await getNextVersionFromApm({ type, ethProvider, dir });
 
   // Load manifest
-  const { manifest, format } = readManifest({ paths: { dir } });
+  const { manifest, format } = readManifest({ dir });
 
   // Increase the version
   manifest.version = nextVersion;

@@ -67,7 +67,7 @@ async function gaBumpUpstreamHandler({
   // Check if buildSdkEnvFileName file exists
   const templateArgs = readBuildSdkEnvFileNotThrow(dir);
 
-  const { manifest, format } = readManifest({ paths: { dir } });
+  const { manifest, format } = readManifest({ dir });
   const compose = readCompose({ dir });
 
   const upstreamRepos = templateArgs

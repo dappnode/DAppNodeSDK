@@ -25,7 +25,7 @@ export async function increaseFromLocalVersion({
   checkSemverType(type);
 
   // Load manifest
-  const { manifest, format } = readManifest({ paths: { dir } });
+  const { manifest, format } = readManifest({ dir });
 
   const currentVersion = manifest.version;
 
