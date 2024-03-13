@@ -8,7 +8,7 @@ import {
   writeCompose,
   getComposePath,
   getManifestPath,
-  writeManifest as writeManifests
+  writeManifest
 } from "../files/index.js";
 import defaultAvatar from "../assets/defaultAvatar.js";
 import { shell } from "../utils/shell.js";
@@ -23,6 +23,9 @@ import {
 } from "../params.js";
 import { CliGlobalOptions } from "../types.js";
 import { Manifest, Compose, getImageTag, releaseFiles } from "@dappnode/types";
+import { FlexibleCompose } from "../files/compose/writeCompose.js";
+
+const defaultEnvName = "NETWORK";
 
 const stringsToRemoveFromName = [
   "DAppNode-package-",
@@ -121,14 +124,13 @@ dappnodesdk build
  */
 export async function initHandler({
   dir = defaultDir,
-  compose_file_name = defaultComposeFileName,
+  compose_file_name: composeFileName = defaultComposeFileName,
   yes,
   force,
   template
 }: CliCommandOptions): Promise<Manifest> {
   const templateMode = !!template;
   const useDefaults = !!yes;
-  const composeFileName = compose_file_name;
   // shell outputs tend to include trailing spaces and new lines
   const directoryName = await shell('echo "${PWD##*/}"');
   const defaultName = getDnpName(directoryName);
@@ -137,10 +139,10 @@ export async function initHandler({
 
   // Construct DNP
   const dnpName = answers.name ? getDnpName(answers.name) : defaultName;
-  const serviceName = dnpName;
+  const serviceName = getShortDnpName(dnpName);
   const version = answers.version || defaultVersion;
 
-  const manifest: Manifest = {
+  const rootManifest: Manifest = {
     name: dnpName,
     version: version,
     description: answers.description,
@@ -153,7 +155,7 @@ export async function initHandler({
     license: answers.license
   };
 
-  const compose: Compose = {
+  const rootCompose: Compose = {
     version: "3.5",
     services: {
       [serviceName]: {
@@ -166,28 +168,7 @@ export async function initHandler({
 
   createPackageDirectories(dir, answers, templateMode);
 
-  const manifestPath = getManifestPath(defaultManifestFormat, { dir });
-  if (fs.existsSync(manifestPath) && !force) {
-    const continueAnswer = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "continue",
-        message:
-          "This directory is already initialized. Are you sure you want to overwrite the existing manifest?"
-      }
-    ]);
-    if (!continueAnswer.continue) {
-      throw new YargsError("Stopping");
-    }
-  }
-
-  // Write manifest and compose
-  writeManifests({ manifest, format: defaultManifestFormat, paths: { dir } });
-
-  // Only write a compose if it doesn't exist
-  if (!fs.existsSync(getComposePath({ dir }))) {
-    writeCompose(compose, { dir, composeFileName });
-  }
+  writePackageFiles({ dir, answers, templateMode, force: !!force, rootManifest, rootCompose, composeFileName, serviceName });
 
   // Add default avatar so users can run the command right away
   const files = fs.readdirSync(dir);
@@ -199,29 +180,13 @@ export async function initHandler({
     );
   }
 
-  // Initialize Dockerfile
+  // Initialize Dockerfile  
   fs.writeFileSync(path.join(dir, dockerfilePath), dockerfileData);
 
   // Initialize .gitignore
   writeGitIgnore(path.join(dir, gitignorePath));
 
-  return manifest;
-}
-
-function createPackageDirectories(dir: string, answers: UserAnswers, templateMode: boolean): void {
-  // Create package root dir
-  fs.mkdirSync(dir, { recursive: true });
-
-  // Create all variant dirs
-  if (templateMode && answers.variants) {
-    const variantsDir = answers.variantsDir || defaultVariantsDir;
-
-    fs.mkdirSync(path.join(dir, variantsDir), { recursive: true });
-
-    for (const variant of answers.variants) {
-      fs.mkdirSync(path.join(dir, variantsDir, variant), { recursive: true });
-    }
-  }
+  return rootManifest;
 }
 
 async function getUserAnswers({ templateMode, useDefaults, defaultName }: { templateMode: boolean, useDefaults: boolean, defaultName: string }): Promise<UserAnswers> {
@@ -329,6 +294,168 @@ async function getTemplateAnswers(): Promise<TemplateAnswers> {
   }
 }
 
+function createPackageDirectories(dir: string, answers: UserAnswers, templateMode: boolean): void {
+  // Create package root dir
+  fs.mkdirSync(dir, { recursive: true });
+
+  // Create all variant dirs
+  if (templateMode && answers.variants) {
+    const variantsDir = answers.variantsDir || defaultVariantsDir;
+
+    fs.mkdirSync(path.join(dir, variantsDir), { recursive: true });
+
+    for (const variant of answers.variants) {
+      fs.mkdirSync(path.join(dir, variantsDir, variant), { recursive: true });
+    }
+  }
+}
+
+function writePackageFiles({
+  dir,
+  answers,
+  templateMode,
+  force,
+  rootManifest,
+  rootCompose,
+  composeFileName,
+  serviceName
+}: {
+  dir: string,
+  answers: UserAnswers,
+  templateMode: boolean,
+  force: boolean,
+  rootManifest: Manifest,
+  rootCompose: Compose,
+  composeFileName: string,
+  serviceName: string
+}): void {
+  const rootManifestPath = getManifestPath(defaultManifestFormat, { dir });
+  confirmManifestOverwrite(rootManifestPath, force);
+
+  if (!templateMode)
+    return writeSinglePackageFiles({ dir, rootManifest, rootCompose, composeFileName });
+
+  writeTemplatePackageFiles({ dir, rootManifest, rootCompose, composeFileName, answers, serviceName });
+}
+
+function writeSinglePackageFiles({
+  dir,
+  rootManifest,
+  rootCompose,
+  composeFileName
+}: {
+  dir: string,
+  rootManifest: Manifest,
+  rootCompose: Compose,
+  composeFileName: string
+}): void {
+  writeManifest<Manifest>(rootManifest, defaultManifestFormat, { dir });
+
+  // Only write a compose if it doesn't exist
+  if (!fs.existsSync(getComposePath({ dir }))) {
+    writeCompose(rootCompose, { dir, composeFileName });
+  }
+}
+
+function writeTemplatePackageFiles({
+  dir,
+  rootManifest,
+  rootCompose,
+  composeFileName,
+  answers,
+  serviceName
+}: {
+  dir: string,
+  rootManifest: Manifest,
+  rootCompose: Compose,
+  composeFileName: string,
+  answers: UserAnswers,
+  serviceName: string
+}): void {
+  const envName = answers.envName || defaultEnvName;
+
+  // All except name and version
+  const templateRootManifest = { ...rootManifest, name: undefined, version: undefined };
+
+  // Write the root manifest
+  writeManifest<Partial<Manifest>>(templateRootManifest, defaultManifestFormat, { dir });
+
+  // Write the root compose
+  writeCompose<FlexibleCompose>(removeImageFromCompose(rootCompose, serviceName), { dir, composeFileName });
+
+  // Write the variants
+  const variantsDir = answers.variantsDir || defaultVariantsDir;
+
+  for (const variant of answers.variants || []) {
+    const variantDir = path.join(dir, variantsDir, variant);
+    const variantName = addVariantToDnpName({ dnpName: rootManifest.name, variant });
+    const variantManifest: Partial<Manifest> = { name: variantName, version: rootManifest.version };
+    const variantCompose: Compose = {
+      version: "3.5",
+      services: {
+        [serviceName]: {
+          image: getImageTag({ dnpName: variantName, serviceName, version: rootManifest.version }),
+          environment: {
+            [envName]: variant
+          }
+        }
+      }
+    };
+    writeManifest<Partial<Manifest>>(variantManifest, defaultManifestFormat, { dir: variantDir });
+    writeCompose<Compose>(variantCompose, { dir: variantDir, composeFileName });
+  }
+}
+
+/**
+ * Make sure there's a gitignore for the builds or create it
+ */
+function writeGitIgnore(filepath: string) {
+  if (fs.existsSync(filepath)) {
+    const currentGitignore = fs.readFileSync(filepath, "utf8");
+    if (!currentGitignore.includes(gitignoreCheck))
+      fs.writeFileSync(filepath, currentGitignore + gitignoreData);
+  } else {
+    fs.writeFileSync(filepath, gitignoreData);
+  }
+}
+
+function removeImageFromCompose(compose: Compose, serviceName: string): FlexibleCompose {
+  return {
+    ...compose,
+    services: {
+      ...compose.services,
+      [serviceName]: {
+        ...compose.services[serviceName],
+        image: undefined
+      }
+    }
+  };
+}
+
+/**
+ * Check if the manifest already exists and ask for confirmation if it does
+ * 
+ * @param manifestPath
+ * @param force
+ * @throws YargsError if the user doesn't want to overwrite the manifest
+ * @returns void
+ */
+async function confirmManifestOverwrite(manifestPath: string, force: boolean): Promise<void> {
+  if (fs.existsSync(manifestPath) && !force) {
+    const continueAnswer = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "continue",
+        message:
+          "This directory is already initialized. Are you sure you want to overwrite the existing manifest?"
+      }
+    ]);
+    if (!continueAnswer.continue) {
+      throw new YargsError("Stopping");
+    }
+  }
+}
+
 /**
  * Parses a directory or generic package name and returns a full ENS guessed name
  * @param name "DAppNodePackage-vipnode"
@@ -347,19 +474,6 @@ function getDnpName(name: string): string {
   return name.endsWith(".eth") ? name : name + publicRepoDomain;
 }
 
-/**
- * Make sure there's a gitignore for the builds or create it
- */
-function writeGitIgnore(filepath: string) {
-  if (fs.existsSync(filepath)) {
-    const currentGitignore = fs.readFileSync(filepath, "utf8");
-    if (!currentGitignore.includes(gitignoreCheck))
-      fs.writeFileSync(filepath, currentGitignore + gitignoreData);
-  } else {
-    fs.writeFileSync(filepath, gitignoreData);
-  }
-}
-
 function validateVariantsInput(input: string): boolean | string {
   const variants = input.split(",").map(s => s.trim());
   const allNonEmpty = variants.every(variant => variant.length > 0);
@@ -373,4 +487,52 @@ function validateVariantsInput(input: string): boolean | string {
     return "Duplicate variants detected. Please ensure all variants are unique.";
   }
   return true;
+}
+
+function getShortDnpName(dnpName: string): string {
+  validateDnpName(dnpName);
+  return dnpName.split(".")[0];
+}
+
+/**
+ * Adds a variant suffix to a DAppNode package (DNP) name, ensuring the variant is inserted
+ * right before the domain part of the DNP name.
+ *
+ * @param {Object} params - The function parameters.
+ * @param {string} params.dnpName - The original DNP name.
+ * @param {string} params.variant - The variant to be added to the DNP name.
+ * @returns {string} - The modified DNP name including the variant.
+ *
+ * @example
+ * 
+ * --> Adds the 'mainnet' variant to the DNP name
+ * 
+ * const modifiedDnpName = addVariantToDnpName({ dnpName: "geth.dnp.dappnode.eth", variant: "mainnet" });
+ * console.log(modifiedDnpName);
+ * 
+ * --> Output: "geth-mainnet.dnp.dappnode.eth"
+ */
+function addVariantToDnpName({ dnpName, variant }: { dnpName: string, variant: string }): string {
+  validateDnpName(dnpName);
+
+  const firstDotAt = dnpName.indexOf(".");
+  return `${dnpName.substring(0, firstDotAt)}-${variant}${dnpName.substring(firstDotAt)}`;
+}
+
+// TODO: Move these functions to somewhere it can be reused (maybe @dappnode/types?)
+/**
+ * Validates if a given dnpName follows the expected structure.
+ * Expected format: <name>.<dnp|public>.dappnode.eth
+ * 
+ * @param {string} dnpName - The DAppNode package name to validate.
+ * @returns {boolean} - Returns true if the dnpName is valid, false otherwise.
+ */
+function isValidDnpName(dnpName: string): boolean {
+  const regex = /^[a-z0-9]+(-[a-z0-9]+)*\.(dnp|public)\.dappnode\.eth$/i;
+  return regex.test(dnpName);
+}
+
+function validateDnpName(name: string): void {
+  if (!isValidDnpName(name))
+    throw new Error("Invalid DAppNode package name. Expected format: <name>.<dnp|public>.dappnode.eth");
 }

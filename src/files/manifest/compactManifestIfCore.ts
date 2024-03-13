@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import { SetupWizard, releaseFiles } from "@dappnode/types";
+import { Manifest, SetupWizard, releaseFiles } from "@dappnode/types";
 import { readManifest } from "./readManifest.js";
 import { writeManifest } from "./writeManifests.js";
 
@@ -20,7 +20,7 @@ export function compactManifestIfCore(buildDir: string): void {
     manifest.setupWizard = setupWizard;
   }
 
-  writeManifest({ manifest, format, paths: { dir: buildDir } });
+  writeManifest<Manifest>(manifest, format, { dir: buildDir });
 }
 
 // Utils

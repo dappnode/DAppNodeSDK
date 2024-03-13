@@ -6,18 +6,13 @@ import { ManifestFormat, ManifestPaths } from "./types.js";
 
 /**
  * Writes a manifest. Without arguments defaults to write the manifest at './dappnode_package.json'
+ * Type Partial<Manifest> is used to allow writing partial manifests for template mode
  */
-export function writeManifest({
-  manifest,
-  format,
-  paths,
-  variantPaths
-}: {
-  manifest: Manifest,
+export function writeManifest<T extends Manifest | Partial<Manifest>>(
+  manifest: T,
   format: ManifestFormat,
   paths?: ManifestPaths,
-  variantPaths?: ManifestPaths
-}): void {
+): void {
   const manifestPath = getManifestPath(format, paths);
   fs.writeFileSync(manifestPath, stringifyJson(manifest, format));
 }

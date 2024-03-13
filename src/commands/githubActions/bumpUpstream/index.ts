@@ -24,6 +24,7 @@ import {
 import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
 import { getFirstAvailableEthProvider } from "../../../utils/tryEthProviders.js";
+import { Manifest } from "@dappnode/types";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
@@ -221,7 +222,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
     }
   }
 
-  writeManifest({ manifest, format, paths: { dir } });
+  writeManifest<Manifest>(manifest, format, { dir });
   writeCompose(compose, { dir });
 
   const commitMsg = `bump ${versionsToUpdate
