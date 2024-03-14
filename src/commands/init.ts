@@ -130,9 +130,9 @@ dappnodesdk build ${args.template && "--all_variants"}
 export async function initHandler({
   dir = defaultDir,
   compose_file_name: composeFileName = defaultComposeFileName,
-  yes: useDefaults,
-  force,
-  template: templateMode
+  yes: useDefaults = false,
+  force = false,
+  template: templateMode = false
 }: CliCommandOptions): Promise<Manifest> {
   // shell outputs tend to include trailing spaces and new lines
   const directoryName = await shell('echo "${PWD##*/}"');

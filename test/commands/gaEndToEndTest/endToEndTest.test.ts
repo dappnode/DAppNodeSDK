@@ -11,7 +11,7 @@ describe.skip("command / gaEndToEndTest", function () {
 
   before(async () => {
     cleanTestDir();
-    await initHandler({ dir: testDir, yes: true, force: true });
+    await initHandler({ dir: testDir, yes: true, force: true, template: false });
   });
 
   it("should execute end to end tests on a real dappnode environment", async () => {

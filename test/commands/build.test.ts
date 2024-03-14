@@ -22,7 +22,8 @@ describe("Init and build", function () {
     await initHandler({
       dir: testDir,
       force: true,
-      yes: true
+      yes: true,
+      template: false
     });
   });
 
