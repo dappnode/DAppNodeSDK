@@ -431,13 +431,13 @@ function writeDefaultAvatar(dir: string): void {
  * Make sure there's a gitignore for the builds or create it
  */
 function writeGitIgnore(filepath: string) {
-  if (fs.existsSync(filepath)) {
-    const currentGitignore = fs.readFileSync(filepath, "utf8");
-    if (!currentGitignore.includes(gitignoreCheck))
-      fs.writeFileSync(filepath, currentGitignore + gitignoreData);
-  } else {
-    fs.writeFileSync(filepath, gitignoreData);
-  }
+  const currentGitIgnore = fs.existsSync(filepath)
+    ? fs.readFileSync(filepath, "utf8")
+    : "";
+
+  if (currentGitIgnore.includes(gitignoreCheck)) return;
+
+  fs.writeFileSync(filepath, currentGitIgnore + gitignoreData);
 }
 
 function removeImageFromCompose(compose: Compose, serviceName: string): FlexibleCompose {
