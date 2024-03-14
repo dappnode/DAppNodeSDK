@@ -24,6 +24,7 @@ import {
 import { CliGlobalOptions } from "../types.js";
 import { Manifest, Compose, getImageTag, releaseFiles } from "@dappnode/types";
 import { FlexibleCompose } from "../files/compose/writeCompose.js";
+import { writeFileIfNotExists } from "../files/common/writeFileIfNotExists.js";
 
 const defaultEnvName = "NETWORK";
 const defaultVariants = ["mainnet", "testnet"];
@@ -115,7 +116,7 @@ ${args.template && `- Define the specific features of each variant in ${path.joi
 
 Once ready, you can build, install, and test it by running
 
-dappnodesdk build 
+dappnodesdk build ${args.template && "--all_variants"}
 `);
   }
 };
@@ -167,25 +168,9 @@ export async function initHandler({
     }
   };
 
-  createPackageDirectories(dir, answers, templateMode);
+  createPackageDirectories(dir, answers.variants || [], answers.variantsDir || defaultVariantsDir, templateMode);
 
   writePackageFiles({ dir, answers, templateMode, force: !!force, rootManifest, rootCompose, composeFileName, serviceName });
-
-  // Add default avatar so users can run the command right away
-  const files = fs.readdirSync(dir);
-  const avatarFile = files.find(file => releaseFiles.avatar.regex.test(file));
-  if (!avatarFile) {
-    fs.writeFileSync(
-      path.join(dir, avatarPath),
-      Buffer.from(avatarData, "base64")
-    );
-  }
-
-  // Initialize Dockerfile  
-  fs.writeFileSync(path.join(dir, dockerfilePath), dockerfileData);
-
-  // Initialize .gitignore
-  writeGitIgnore(path.join(dir, gitignorePath));
 
   return rootManifest;
 }
@@ -281,6 +266,7 @@ async function getTemplateAnswers(): Promise<TemplatePackageAnswers> {
       message: "Variants (comma separated)",
       default: "mainnet,testnet",
       validate: (input: string) => validateVariantsInput(input),
+      transformer: (input: string) => input.trim()
     },
     {
       type: "input",
@@ -292,25 +278,24 @@ async function getTemplateAnswers(): Promise<TemplatePackageAnswers> {
 
   return {
     ...templateAnswers,
-    variants: templateAnswers.variants.split(",").map((s: string) => s.trim())
+    variants: templateAnswers.variants.split(",")
   }
 }
 
-function createPackageDirectories(dir: string, answers: UserAnswers, templateMode: boolean): void {
+function createPackageDirectories(dir: string, variants: string[], variantsDir: string, templateMode: boolean): void {
   // Create package root dir
   fs.mkdirSync(dir, { recursive: true });
 
   // Create all variant dirs
-  if (templateMode && answers.variants) {
-    const variantsDir = answers.variantsDir || defaultVariantsDir;
-
+  if (templateMode && variants) {
     fs.mkdirSync(path.join(dir, variantsDir), { recursive: true });
 
-    for (const variant of answers.variants) {
+    for (const variant of variants) {
       fs.mkdirSync(path.join(dir, variantsDir, variant), { recursive: true });
     }
   }
 }
+
 
 function writePackageFiles({
   dir,
@@ -335,9 +320,16 @@ function writePackageFiles({
   confirmManifestOverwrite(rootManifestPath, force);
 
   if (!templateMode)
-    return writeSinglePackageFiles({ dir, rootManifest, rootCompose, composeFileName });
+    writeSinglePackageFiles({ dir, rootManifest, rootCompose, composeFileName });
+  else
+    writeTemplatePackageFiles({ dir, rootManifest, rootCompose, composeFileName, answers, serviceName });
 
-  writeTemplatePackageFiles({ dir, rootManifest, rootCompose, composeFileName, answers, serviceName });
+  writeDefaultAvatar(dir);
+
+  writeFileIfNotExists(path.join(dir, dockerfilePath), dockerfileData);
+
+  // Initialize .gitignore
+  writeGitIgnore(path.join(dir, gitignorePath));
 }
 
 function writeSinglePackageFiles({
@@ -374,8 +366,6 @@ function writeTemplatePackageFiles({
   answers: UserAnswers,
   serviceName: string
 }): void {
-  const envName = answers.envName || defaultEnvName;
-
   // All except name and version
   const templateRootManifest = { ...rootManifest, name: undefined, version: undefined };
 
@@ -385,26 +375,55 @@ function writeTemplatePackageFiles({
   // Write the root compose
   writeCompose<FlexibleCompose>(removeImageFromCompose(rootCompose, serviceName), { dir, composeFileName });
 
-  // Write the variants
+  for (const variant of answers.variants || []) {
+    writeVariantFiles({ dir, rootManifest, composeFileName, variant, serviceName, answers });
+  }
+}
+
+function writeVariantFiles({
+  dir,
+  rootManifest,
+  composeFileName,
+  variant,
+  serviceName,
+  answers
+}: {
+  dir: string,
+  rootManifest: Manifest,
+  composeFileName: string,
+  variant: string,
+  serviceName: string,
+  answers: UserAnswers
+}) {
+  const envName = answers.envName || defaultEnvName;
   const variantsDir = answers.variantsDir || defaultVariantsDir;
 
-  for (const variant of answers.variants || []) {
-    const variantDir = path.join(dir, variantsDir, variant);
-    const variantName = addVariantToDnpName({ dnpName: rootManifest.name, variant });
-    const variantManifest: Partial<Manifest> = { name: variantName, version: rootManifest.version };
-    const variantCompose: Compose = {
-      version: "3.5",
-      services: {
-        [serviceName]: {
-          image: getImageTag({ dnpName: variantName, serviceName, version: rootManifest.version }),
-          environment: {
-            [envName]: variant
-          }
+  const variantDir = path.join(dir, variantsDir, variant);
+  const variantName = addVariantToDnpName({ dnpName: rootManifest.name, variant });
+  const variantManifest: Partial<Manifest> = { name: variantName, version: rootManifest.version };
+  const variantCompose: Compose = {
+    version: "3.5",
+    services: {
+      [serviceName]: {
+        image: getImageTag({ dnpName: variantName, serviceName, version: rootManifest.version }),
+        environment: {
+          [envName]: variant
         }
       }
-    };
-    writeManifest<Partial<Manifest>>(variantManifest, defaultManifestFormat, { dir: variantDir });
-    writeCompose<Compose>(variantCompose, { dir: variantDir, composeFileName });
+    }
+  };
+  writeManifest<Partial<Manifest>>(variantManifest, defaultManifestFormat, { dir: variantDir });
+  writeCompose<Compose>(variantCompose, { dir: variantDir, composeFileName });
+}
+
+function writeDefaultAvatar(dir: string): void {
+  const files = fs.readdirSync(dir);
+  const avatarFile = files.find(file => releaseFiles.avatar.regex.test(file));
+  if (!avatarFile) {
+    fs.writeFileSync(
+      path.join(dir, avatarPath),
+      Buffer.from(avatarData, "base64")
+    );
   }
 }
 
