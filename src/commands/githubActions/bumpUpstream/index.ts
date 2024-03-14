@@ -28,6 +28,7 @@ import { getFirstAvailableEthProvider } from "../../../utils/tryEthProviders.js"
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
   use_fallback: boolean;
+  template: boolean;
 }
 
 // This action should be run periodically
@@ -53,6 +54,12 @@ export const gaBumpUpstream: CommandModule<
         "Use fallback eth provider if main provider fails: false (default), true. If main provider fails, it will try to use 'remote' first and then 'infura'",
       default: true,
       type: "boolean"
+    },
+    template: {
+      alias: "t",
+      description: "The directory tree corresponds to a template package with different variants",
+      default: false,
+      type: "boolean"
     }
   },
   handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
@@ -61,7 +68,8 @@ export const gaBumpUpstream: CommandModule<
 async function gaBumpUpstreamHandler({
   dir = defaultDir,
   eth_provider,
-  use_fallback
+  use_fallback,
+  template
 }: CliCommandOptions): Promise<void> {
   // Check if buildSdkEnvFileName file exists
   const templateArgs = readBuildSdkEnvFileNotThrow(dir);
