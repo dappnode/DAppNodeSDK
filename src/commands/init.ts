@@ -73,9 +73,9 @@ type SinglePackageAnswers = Pick<Manifest, "name" | "version" | "description" | 
 type UserAnswers = SinglePackageAnswers & Partial<TemplatePackageAnswers>;
 
 interface CliCommandOptions extends CliGlobalOptions {
-  yes?: boolean;
-  force?: boolean;
-  template?: boolean;
+  yes: boolean;
+  force: boolean;
+  template: boolean;
 }
 
 export const init: CommandModule<CliGlobalOptions, CliCommandOptions> = {
@@ -87,17 +87,20 @@ export const init: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       alias: "y",
       description:
         "Answer yes or the default option to all initialization questions",
-      type: "boolean"
+      type: "boolean",
+      default: false
     },
     force: {
       alias: "f",
       description: "Overwrite previous project if necessary",
-      type: "boolean"
+      type: "boolean",
+      default: false
     },
     template: {
       alias: "t",
       description: "Initialize a template DAppNodePackage, for creating several package variants that have the same base structure.",
-      type: "boolean"
+      type: "boolean",
+      default: false
     }
   },
   handler: async args => {
@@ -127,12 +130,10 @@ dappnodesdk build ${args.template && "--all_variants"}
 export async function initHandler({
   dir = defaultDir,
   compose_file_name: composeFileName = defaultComposeFileName,
-  yes,
+  yes: useDefaults,
   force,
-  template
+  template: templateMode
 }: CliCommandOptions): Promise<Manifest> {
-  const templateMode = !!template;
-  const useDefaults = !!yes;
   // shell outputs tend to include trailing spaces and new lines
   const directoryName = await shell('echo "${PWD##*/}"');
   const defaultName = getDnpName(directoryName);
@@ -170,7 +171,7 @@ export async function initHandler({
 
   createPackageDirectories(dir, answers.variants || [], answers.variantsDir || defaultVariantsDir, templateMode);
 
-  writePackageFiles({ dir, answers, templateMode, force: !!force, rootManifest, rootCompose, composeFileName, serviceName });
+  writePackageFiles({ dir, answers, templateMode, force, rootManifest, rootCompose, composeFileName, serviceName });
 
   return rootManifest;
 }
