@@ -26,12 +26,12 @@ export function getUpstreamVersionTag(
   return versionsToUpdate.length === 1
     ? versionsToUpdate[0].newVersion
     : versionsToUpdate
-        .map(({ repoSlug, newVersion }) => `${repoSlug}@${newVersion}`)
-        .join(", ");
+      .map(({ repoSlug, newVersion }) => `${repoSlug}@${newVersion}`)
+      .join(", ");
 }
 
 //Checking if the proposed realease is nightly or realeaseCandidate
-export function isUndesiredRealease(version: string): boolean {
+export function isUndesiredRelease(version: string): boolean {
   if (semver.valid(version) && !semver.prerelease(version)) return false;
   else return true;
 }

@@ -4,7 +4,7 @@ import { CliGlobalOptions } from "../../../types.js";
 import { branchNameRoot, defaultDir } from "../../../params.js";
 import { Github } from "../../../providers/github/Github.js";
 import {
-  isUndesiredRealease,
+  isUndesiredRelease,
   getPrBody,
   getUpstreamVersionTag,
   VersionToUpdate
@@ -24,12 +24,55 @@ import {
 import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
 import { getFirstAvailableEthProvider } from "../../../utils/tryEthProviders.js";
+import { ManifestFormat } from "../../../files/manifest/types.js";
+import { Compose, Manifest } from "@dappnode/types";
+import { isEmpty } from "lodash-es";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
   use_fallback: boolean;
   template: boolean;
 }
+
+interface UpstreamSettings {
+  upstreamRepo: string;
+  upstreamArg: string;
+}
+
+interface GitSettings {
+  userName: string;
+  userEmail: string;
+}
+
+interface GithubSettings {
+  repo: Github;
+  repoData: Awaited<ReturnType<Github["getRepo"]>>;
+  branchName: string;
+  branchRef: string;
+}
+
+interface GitBranch {
+  branchName: string;
+  branchRef: string;
+}
+
+interface InitialSetupData {
+  upstreamSettings: UpstreamSettings[];
+  manifestData: {
+    manifest: Manifest;
+    format: ManifestFormat;
+  };
+  compose: Compose;
+}
+type UpstreamRepo = {
+  repo: string;
+  repoSlug: string;
+  newVersion: string
+};
+
+type UpstreamRepoMap = {
+  [upstreamArg: string]: UpstreamRepo;
+};
 
 // This action should be run periodically
 
@@ -67,105 +110,31 @@ export const gaBumpUpstream: CommandModule<
 
 async function gaBumpUpstreamHandler({
   dir = defaultDir,
-  eth_provider,
-  use_fallback,
+  eth_provider: userEthProvider,
+  use_fallback: useFallback,
   template
 }: CliCommandOptions): Promise<void> {
-  // Check if buildSdkEnvFileName file exists
-  const templateArgs = readBuildSdkEnvFileNotThrow(dir);
 
-  const { manifest, format } = readManifest({ dir });
-  const compose = readCompose({ dir });
+  const { upstreamSettings, manifestData: { manifest, format }, compose } = await readInitialSetup(dir);
 
-  const upstreamRepos = templateArgs
-    ? [templateArgs._BUILD_UPSTREAM_REPO]
-    : parseCsv(manifest.upstreamRepo);
-  const upstreamArgs = templateArgs
-    ? [templateArgs._BUILD_UPSTREAM_VERSION]
-    : parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
+  const gitSettings = getGitSettings();
 
-  const githubActor = process.env.GITHUB_ACTOR || "bot";
-  const userName = githubActor;
-  const userEmail = `${userName}@users.noreply.github.com`;
+  const ethProviders = getEthProviders(useFallback, userEthProvider);
 
-  const defaultEthProviders = ["remote", "infura"];
-  const ethProvider = eth_provider;
+  printSettings(upstreamSettings, gitSettings, manifest, compose, ethProviders);
 
-  const ethProviders = use_fallback
-    ? [ethProvider, ...defaultEthProviders.filter(p => p !== ethProvider)]
-    : [ethProvider];
+  const upstreamRepoVersions = await getUpstreamRepoVersions(upstreamSettings);
 
-  console.log(`
-Arguments - ${JSON.stringify({
-    upstreamRepos,
-    upstreamArgs,
-    userName,
-    userEmail
-  })}
-
-Manifest - ${JSON.stringify(manifest, null, 2)}
-
-Compose - ${JSON.stringify(compose, null, 2)}
-`);
-
-  if (upstreamRepos.length < 1) {
-    throw Error("Must provide at least one 'upstream_repo'");
-  }
-
-  if (upstreamRepos.length !== upstreamArgs.length) {
-    throw Error(
-      `'upstream-repo' must have the same lenght as 'upstream_argNames' \n${JSON.stringify(
-        { upstreamRepos, upstreamArgs }
-      )}`
-    );
-  }
-
-  if (!arrIsUnique(upstreamRepos)) throw Error("upstreamRepos not unique");
-  if (!arrIsUnique(upstreamArgs)) throw Error("upstreamArgs not unique");
-
-  type UpstreamRepo = { repo: string; repoSlug: string; newVersion: string };
-  // index by argName, must be unique
-  const upstreamRepoVersions = new Map<string, UpstreamRepo>();
-
-  for (const [i, repoSlug] of upstreamRepos.entries()) {
-    // Fetch latest version
-    const [owner, repo] = repoSlug.split("/");
-    const upstreamRepo = new Github({ owner, repo });
-    const releases = await upstreamRepo.listReleases();
-    const latestRelease = releases[0];
-    if (!latestRelease) throw Error(`No release found for ${repoSlug}`);
-
-    const argName = upstreamArgs[i];
-    const newVersion = latestRelease.tag_name;
-
-    if (isUndesiredRealease(newVersion)) {
-      console.log(`This is a realease candidate - ${repoSlug}: ${newVersion}`);
-      return;
-    }
-    upstreamRepoVersions.set(argName, { repo, repoSlug, newVersion });
-
-    console.log(`Fetch latest version(s) - ${repoSlug}: ${newVersion}`);
-  }
-
-  // Compute branch name
-  const branch =
-    branchNameRoot +
-    Array.from(upstreamRepoVersions.values())
-      .map(({ repo, newVersion }) => `${repo}@${newVersion}`)
-      .join(",");
-  const branchRef = `refs/heads/${branch}`;
-
-  // Get current upstream version
-  const thisRepo = Github.fromLocal(dir);
-  const repoData = await thisRepo.getRepo();
-  const remoteBranchExists = await thisRepo.branchExists(branch);
-  const localBranchExists = await getLocalBranchExists(branch);
-  const branchExists = remoteBranchExists || localBranchExists;
-
-  if (branchExists) {
-    console.log(`Branch ${branch} already exists`);
+  if (isEmpty(upstreamRepoVersions)) {
+    console.log("There are no new versions to update");
     return;
-    // TODO, do some checking
+  }
+
+  const { repo, repoData, branchName, branchRef } = await getGitHubSettings(dir, upstreamRepoVersions);
+
+  if (!(await isBranchNew({ branchName, repo }))) {
+    console.log(`Branch ${branchName} already exists`);
+    return;
   }
 
   // index by repoSlug, must be unique
@@ -174,7 +143,7 @@ Compose - ${JSON.stringify(compose, null, 2)}
   for (const [serviceName, service] of Object.entries(compose.services))
     if (typeof service.build === "object" && service.build.args)
       for (const [argName, argValue] of Object.entries(service.build.args)) {
-        const upstreamRepoVersion = upstreamRepoVersions.get(argName);
+        const upstreamRepoVersion = upstreamRepoVersions[argName];
         if (!upstreamRepoVersion) continue;
 
         const currentVersion = argValue;
@@ -245,9 +214,9 @@ Compose - ${JSON.stringify(compose, null, 2)}
     return;
   }
 
-  await shell(`git config user.name ${userName}`);
-  await shell(`git config user.email ${userEmail}`);
-  await shell(`git checkout -b ${branch}`);
+  await shell(`git config user.name ${gitSettings.userName}`);
+  await shell(`git config user.email ${gitSettings.userEmail}`);
+  await shell(`git checkout -b ${branchName}`);
 
   // Check if there are changes
   console.log(await shell(`git status`));
@@ -262,19 +231,147 @@ Compose - ${JSON.stringify(compose, null, 2)}
   // Skip PR creation for testing
   if (process.env.ENVIRONMENT === "TEST") return;
 
-  await thisRepo.openPR({
-    from: branch,
+  await repo.openPR({
+    from: branchName,
     to: repoData.data.default_branch,
     title: commitMsg,
     body: getPrBody(versionsToUpdate)
   });
 
   try {
-    await closeOldPrs(thisRepo, branch);
+    await closeOldPrs(repo, branchName);
   } catch (e) {
     console.error("Error on closeOldPrs", e);
   }
 
   const gitHead = await getGitHead();
-  await buildAndComment({ dir, commitSha: gitHead.commit, branch });
+  await buildAndComment({ dir, commitSha: gitHead.commit, branch: branchName });
+}
+
+function getGitSettings(): GitSettings {
+  const githubActor = process.env.GITHUB_ACTOR || "bot";
+  const userEmail = `${githubActor}@users.noreply.github.com`;
+
+  return {
+    userName: githubActor,
+    userEmail
+  };
+}
+
+function getEthProviders(useFallback: boolean, userEthProvider: string): string[] {
+  const defaultEthProviders = ["remote", "infura"];
+
+  const ethProviders = useFallback
+    ? [userEthProvider, ...defaultEthProviders.filter(p => p !== userEthProvider)]
+    : [userEthProvider];
+
+  return ethProviders;
+}
+
+function printSettings(upstreamSettings: UpstreamSettings[], gitSettings: GitSettings, manifest: Manifest, compose: Compose, ethProviders: string[]) {
+
+  console.log(`
+
+  Upstream Settings - ${JSON.stringify(upstreamSettings)}
+
+  Git Settings - ${JSON.stringify({ gitSettings })}
+  
+  Manifest - ${JSON.stringify(manifest)}
+  
+  Compose - ${JSON.stringify(compose)}
+  
+  ETH Providers - ${JSON.stringify(ethProviders)}
+
+  `);
+}
+
+
+async function readInitialSetup(dir: string): Promise<InitialSetupData> {
+  const envFileArgs = readBuildSdkEnvFileNotThrow(dir);
+
+  const { manifest, format } = readManifest({ dir });
+  const compose = readCompose({ dir });
+
+  const upstreamRepos = envFileArgs
+    ? [envFileArgs._BUILD_UPSTREAM_REPO]
+    : parseCsv(manifest.upstreamRepo);
+  const upstreamArgs = envFileArgs
+    ? [envFileArgs._BUILD_UPSTREAM_VERSION]
+    : parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
+
+  // Create upstream settings after validation
+  validateUpstreamData(upstreamRepos, upstreamArgs);
+  const upstreamSettings = upstreamRepos.map((repo, i) => ({
+    upstreamRepo: repo,
+    upstreamArg: upstreamArgs[i],
+  }));
+
+  return {
+    upstreamSettings,
+    manifestData: { manifest, format },
+    compose,
+  };
+}
+
+function validateUpstreamData(upstreamRepos: string[], upstreamArgs: string[]) {
+  if (upstreamRepos.length < 1)
+    throw new Error("Must provide at least one 'upstream_repo'");
+
+  if (upstreamRepos.length !== upstreamArgs.length)
+    throw new Error(`'upstream_repo' must have the same length as 'upstream_argNames'. Got ${upstreamRepos.length} repos and ${upstreamArgs.length} args.`);
+
+  if (!arrIsUnique(upstreamRepos))
+    throw new Error("upstreamRepos not unique");
+
+
+  if (!arrIsUnique(upstreamArgs))
+    throw new Error("upstreamArgs not unique");
+}
+
+async function getUpstreamRepoVersions(upstreamSettings: UpstreamSettings[]): Promise<UpstreamRepoMap> {
+
+  const upstreamRepoVersions: UpstreamRepoMap = {};
+
+  for (const { upstreamArg, upstreamRepo } of upstreamSettings) {
+    const [owner, repo] = upstreamRepo.split("/");
+    const githubRepo = new Github({ owner, repo });
+    const releases = await githubRepo.listReleases();
+    const latestRelease = releases[0];
+    if (!latestRelease) throw Error(`No release found for ${upstreamRepo}`);
+
+    const newVersion = latestRelease.tag_name;
+
+    if (isUndesiredRelease(newVersion)) {
+      console.log(`This is a realease candidate - ${upstreamRepo}: ${newVersion}`);
+      continue;
+    }
+
+    upstreamRepoVersions[upstreamArg] = { repo, repoSlug: upstreamRepo, newVersion };
+    console.log(`Fetch latest version(s) - ${upstreamRepo}: ${newVersion}`);
+  }
+
+  return upstreamRepoVersions;
+}
+
+function getBranch(upstreamVersions: UpstreamRepoMap): GitBranch {
+  const branchName = branchNameRoot +
+    Array.from(Object.values(upstreamVersions))
+      .map(({ repo, newVersion }) => `${repo}@${newVersion}`)
+      .join(",");
+  const branchRef = `refs/heads/${branchName}`;
+
+  return { branchName, branchRef };
+}
+
+async function getGitHubSettings(dir: string, upstreamVersions: UpstreamRepoMap): Promise<GithubSettings> {
+  const thisRepo = Github.fromLocal(dir);
+  const repoData = await thisRepo.getRepo();
+  const branch = getBranch(upstreamVersions);
+  return { repo: thisRepo, repoData, ...branch };
+}
+
+async function isBranchNew({ branchName, repo }: { branchName: string, repo: Github }): Promise<boolean> {
+  const remoteBranchExists = await repo.branchExists(branchName);
+  const localBranchExists = await getLocalBranchExists(branchName);
+  return remoteBranchExists || localBranchExists;
 }
