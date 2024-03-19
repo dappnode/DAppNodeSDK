@@ -32,7 +32,7 @@ export interface InitialSetupData {
     };
     compose: Compose;
     gitSettings: GitSettings;
-    ethProviders: string[];
+    ethProvider: string;
 }
 
 export type UpstreamRepo = {

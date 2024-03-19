@@ -11,7 +11,6 @@ import {
   writeCompose
 } from "../../../files/index.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
-import { getFirstAvailableEthProvider } from "../../../utils/tryEthProviders.js";
 import { Compose } from "@dappnode/types";
 import { isEmpty } from "lodash-es";
 import { UpstreamSettings, UpstreamRepoMap, VersionsToUpdate } from "./types.js";
@@ -58,9 +57,9 @@ async function gaBumpUpstreamHandler({
   use_fallback: useFallback,
 }: CliCommandOptions): Promise<void> {
 
-  const { upstreamSettings, manifestData: { manifest, format }, compose, gitSettings, ethProviders } = await readInitialSetup({ dir, userEthProvider, useFallback });
+  const { upstreamSettings, manifestData: { manifest, format }, compose, gitSettings, ethProvider } = await readInitialSetup({ dir, userEthProvider, useFallback });
 
-  printSettings(upstreamSettings, gitSettings, manifest, compose, ethProviders);
+  printSettings(upstreamSettings, gitSettings, manifest, compose, ethProvider);
 
   const upstreamRepoVersions = await getUpstreamRepoVersions(upstreamSettings);
 
@@ -85,14 +84,7 @@ async function gaBumpUpstreamHandler({
 
   manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
 
-  const ethProviderAvailable = await getFirstAvailableEthProvider({
-    providers: ethProviders
-  });
-
-  if (!ethProviderAvailable)
-    throw Error(`No eth provider available. Tried: ${ethProviders.join(", ")}`);
-
-  manifest.version = await getNewManifestVersion({ dir, ethProviderAvailable });
+  manifest.version = await getNewManifestVersion({ dir, ethProvider });
 
   writeManifest(manifest, format, { dir });
   writeCompose(compose, { dir });
@@ -209,16 +201,16 @@ function getVersionsToUpdate(compose: Compose, upstreamRepoVersions: UpstreamRep
 }
 
 async function getNewManifestVersion({
-  ethProviderAvailable,
+  ethProvider,
   dir
 }: {
-  ethProviderAvailable: string;
+  ethProvider: string;
   dir: string;
 }): Promise<string> {
   try {
     return await getNextVersionFromApm({
       type: "patch",
-      ethProvider: ethProviderAvailable,
+      ethProvider,
       dir
     });
   } catch (e) {
