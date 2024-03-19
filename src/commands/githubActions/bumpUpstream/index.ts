@@ -282,7 +282,6 @@ function validateUpstreamData(upstreamRepos: string[], upstreamArgs: string[]) {
   if (!arrIsUnique(upstreamRepos))
     throw new Error("upstreamRepos not unique");
 
-
   if (!arrIsUnique(upstreamArgs))
     throw new Error("upstreamArgs not unique");
 }
