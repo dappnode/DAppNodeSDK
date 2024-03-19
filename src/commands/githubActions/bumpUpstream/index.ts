@@ -7,7 +7,7 @@ import {
   isUndesiredRelease,
   getPrBody,
   getUpstreamVersionTag,
-  VersionToUpdate
+  VersionsToUpdate,
 } from "./format.js";
 import { shell } from "../../../utils/shell.js";
 import { parseCsv } from "../../../utils/csv.js";
@@ -105,7 +105,7 @@ export const gaBumpUpstream: CommandModule<
       type: "boolean"
     }
   },
-  handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
+  handler: async (args): Promise<void> => gaBumpUpstreamHandler(args)
 };
 
 async function gaBumpUpstreamHandler({
@@ -137,41 +137,13 @@ async function gaBumpUpstreamHandler({
     return;
   }
 
-  // index by repoSlug, must be unique
-  const versionsToUpdateMap = new Map<string, VersionToUpdate>();
+  const versionsToUpdate = getVersionsToUpdate(compose, upstreamRepoVersions);
 
-  for (const [serviceName, service] of Object.entries(compose.services))
-    if (typeof service.build === "object" && service.build.args)
-      for (const [argName, argValue] of Object.entries(service.build.args)) {
-        const upstreamRepoVersion = upstreamRepoVersions[argName];
-        if (!upstreamRepoVersion) continue;
-
-        const currentVersion = argValue;
-        const { repoSlug, newVersion } = upstreamRepoVersion;
-        if (currentVersion === newVersion) continue;
-
-        // Update current version
-        compose.services[serviceName].build = {
-          ...service.build,
-          args: {
-            ...service.build.args,
-            [argName]: newVersion
-          }
-        };
-        // Use a Map since there may be multiple matches for the same argName
-        versionsToUpdateMap.set(repoSlug, {
-          repoSlug,
-          newVersion,
-          currentVersion
-        });
-      }
-
-  if (versionsToUpdateMap.size == 0) {
+  if (isEmpty(versionsToUpdate)) {
     console.log("All versions are up-to-date");
     return;
   }
 
-  const versionsToUpdate = Array.from(versionsToUpdateMap.values());
   manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
 
   const ethProviderAvailable = await getFirstAvailableEthProvider({
@@ -181,29 +153,16 @@ async function gaBumpUpstreamHandler({
   if (!ethProviderAvailable)
     throw Error(`No eth provider available. Tried: ${ethProviders.join(", ")}`);
 
-  try {
-    manifest.version = await getNextVersionFromApm({
-      type: "patch",
-      ethProvider: ethProviderAvailable,
-      dir
-    });
-  } catch (e) {
-    if (e.message.includes("NOREPO")) {
-      console.log("Package not found in APM (probably not published yet");
-      console.log("Manifest version set to default 0.1.0");
-      manifest.version = "0.1.0";
-    } else {
-      e.message = `Error getting next version from apm: ${e.message}`;
-      throw e;
-    }
-  }
+  manifest.version = await getNewManifestVersion({ dir, ethProviderAvailable });
 
   writeManifest(manifest, format, { dir });
   writeCompose(compose, { dir });
 
-  const commitMsg = `bump ${versionsToUpdate
-    .map(({ repoSlug, newVersion }) => `${repoSlug} to ${newVersion}`)
-    .join(", ")}`;
+  const commitMsg = `bump ${Object.entries(versionsToUpdate)
+    .map(([repoSlug, { newVersion }]) => `${repoSlug} to ${newVersion}`)
+    .join(", ")
+    }`;
+
   console.log(`commitMsg: ${commitMsg}`);
 
   console.log(await shell(`cat ${path.join(dir, "dappnode_package.json")}`));
@@ -272,15 +231,15 @@ function printSettings(upstreamSettings: UpstreamSettings[], gitSettings: GitSet
 
   console.log(`
 
-  Upstream Settings - ${JSON.stringify(upstreamSettings)}
+  Upstream Settings - ${JSON.stringify(upstreamSettings, null, 2)}
 
-  Git Settings - ${JSON.stringify({ gitSettings })}
+  Git Settings - ${JSON.stringify(gitSettings, null, 2)}
   
-  Manifest - ${JSON.stringify(manifest)}
+  Manifest - ${JSON.stringify(manifest, null, 2)}
   
-  Compose - ${JSON.stringify(compose)}
+  Compose - ${JSON.stringify(compose, null, 2)}
   
-  ETH Providers - ${JSON.stringify(ethProviders)}
+  ETH Providers - ${JSON.stringify(ethProviders, null, 2)}
 
   `);
 }
@@ -353,6 +312,64 @@ async function getUpstreamRepoVersions(upstreamSettings: UpstreamSettings[]): Pr
   return upstreamRepoVersions;
 }
 
+function getVersionsToUpdate(compose: Compose, upstreamRepoVersions: UpstreamRepoMap): VersionsToUpdate {
+  const versionsToUpdate: VersionsToUpdate = {};
+
+  for (const [serviceName, service] of Object.entries(compose.services))
+    if (typeof service.build === "object" && service.build.args)
+      for (const [argName, argValue] of Object.entries(service.build.args)) {
+        const upstreamRepoVersion = upstreamRepoVersions[argName];
+        if (!upstreamRepoVersion) continue;
+
+        const currentVersion = argValue;
+        const { repoSlug, newVersion } = upstreamRepoVersion;
+        if (currentVersion === newVersion) continue;
+
+        // Update current version
+        compose.services[serviceName].build = {
+          ...service.build,
+          args: {
+            ...service.build.args,
+            [argName]: newVersion
+          }
+        };
+
+        // Use a Map since there may be multiple matches for the same argName
+        versionsToUpdate[repoSlug] = {
+          newVersion,
+          currentVersion
+        };
+
+      }
+
+  return versionsToUpdate;
+}
+
+async function getNewManifestVersion({
+  ethProviderAvailable,
+  dir
+}: {
+  ethProviderAvailable: string;
+  dir: string;
+}): Promise<string> {
+  try {
+    return await getNextVersionFromApm({
+      type: "patch",
+      ethProvider: ethProviderAvailable,
+      dir
+    });
+  } catch (e) {
+    if (e.message.includes("NOREPO")) {
+      console.log("Package not found in APM (probably not published yet");
+      console.log("Manifest version set to default 0.1.0");
+      return "0.1.0";
+    } else {
+      e.message = `Error getting next version from apm: ${e.message}`;
+      throw e;
+    }
+  }
+}
+
 function getBranch(upstreamVersions: UpstreamRepoMap): GitBranch {
   const branchName = branchNameRoot +
     Array.from(Object.values(upstreamVersions))
@@ -371,7 +388,10 @@ async function getGitHubSettings(dir: string, upstreamVersions: UpstreamRepoMap)
 }
 
 async function isBranchNew({ branchName, repo }: { branchName: string, repo: Github }): Promise<boolean> {
-  const remoteBranchExists = await repo.branchExists(branchName);
-  const localBranchExists = await getLocalBranchExists(branchName);
+  const [remoteBranchExists, localBranchExists] = await Promise.all([
+    repo.branchExists(branchName),
+    getLocalBranchExists(branchName),
+  ]);
+
   return remoteBranchExists || localBranchExists;
 }
