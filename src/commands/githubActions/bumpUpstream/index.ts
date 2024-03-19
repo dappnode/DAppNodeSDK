@@ -291,22 +291,26 @@ async function getUpstreamRepoVersions(upstreamSettings: UpstreamSettings[]): Pr
 
   const upstreamRepoVersions: UpstreamRepoMap = {};
 
-  for (const { upstreamArg, upstreamRepo } of upstreamSettings) {
-    const [owner, repo] = upstreamRepo.split("/");
-    const githubRepo = new Github({ owner, repo });
-    const releases = await githubRepo.listReleases();
-    const latestRelease = releases[0];
-    if (!latestRelease) throw Error(`No release found for ${upstreamRepo}`);
+  try {
+    for (const { upstreamArg, upstreamRepo } of upstreamSettings) {
+      const [owner, repo] = upstreamRepo.split("/");
+      const githubRepo = new Github({ owner, repo });
+      const releases = await githubRepo.listReleases();
+      const latestRelease = releases[0];
+      if (!latestRelease) throw Error(`No release found for ${upstreamRepo}`);
 
-    const newVersion = latestRelease.tag_name;
+      const newVersion = latestRelease.tag_name;
+      if (isUndesiredRelease(newVersion)) {
+        console.log(`This is a realease candidate - ${upstreamRepo}: ${newVersion}`);
+        continue;
+      }
 
-    if (isUndesiredRelease(newVersion)) {
-      console.log(`This is a realease candidate - ${upstreamRepo}: ${newVersion}`);
-      continue;
+      upstreamRepoVersions[upstreamArg] = { repo, repoSlug: upstreamRepo, newVersion };
+      console.log(`Fetch latest version(s) - ${upstreamRepo}: ${newVersion}`);
     }
-
-    upstreamRepoVersions[upstreamArg] = { repo, repoSlug: upstreamRepo, newVersion };
-    console.log(`Fetch latest version(s) - ${upstreamRepo}: ${newVersion}`);
+  } catch (e) {
+    console.error("Error fetching upstream repo versions:", e);
+    throw e;
   }
 
   return upstreamRepoVersions;
@@ -393,5 +397,5 @@ async function isBranchNew({ branchName, repo }: { branchName: string, repo: Git
     getLocalBranchExists(branchName),
   ]);
 
-  return remoteBranchExists || localBranchExists;
+  return !remoteBranchExists && !localBranchExists;
 }
