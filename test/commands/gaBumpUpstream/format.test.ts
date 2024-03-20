@@ -58,7 +58,7 @@ describe("command / gaBumpUpstream / format", () => {
     });
   });
 
-  describe("checkDesiredRealease", () => {
+  describe("Check valid releases", () => {
     const correctVersionsToUpdate: ComposeVersionsToUpdate = {
       "sigp/lighthouse": {
         newVersion: "v0.1.5",
@@ -87,13 +87,13 @@ describe("command / gaBumpUpstream / format", () => {
     };
 
     Object.entries(wrongVersionsToUpdate).forEach(([repoSlug, { newVersion }]) => {
-      it(`isUndesiredRelease ${repoSlug} ${newVersion}`, () => {
+      it(`Release ${repoSlug} ${newVersion} is invalid`, () => {
         expect(isValidRelease(newVersion)).to.equal(false);
       });
     });
 
     Object.entries(correctVersionsToUpdate).forEach(([repoSlug, { newVersion }]) => {
-      it(`isUndesiredRelease ${repoSlug} ${newVersion}`, () => {
+      it(`Release ${repoSlug} ${newVersion} is valid`, () => {
         expect(isValidRelease(newVersion)).to.equal(true);
       });
     });
