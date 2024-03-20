@@ -11,11 +11,12 @@ import {
   writeCompose
 } from "../../../files/index.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
-import { Compose } from "@dappnode/types";
+import { Compose, Manifest } from "@dappnode/types";
 import { isEmpty } from "lodash-es";
-import { UpstreamSettings, UpstreamRepoMap, VersionsToUpdate } from "./types.js";
+import { UpstreamSettings, UpstreamRepoMap, ComposeVersionsToUpdate, GitSettings, GithubSettings } from "./types.js";
 import { closeOldPrs, getGitHubSettings, getPrBody, getUpstreamVersionTag, isBranchNew, isUndesiredRelease } from "./git.js";
 import { printSettings, readInitialSetup } from "./setup.js";
+import { ManifestFormat } from "../../../files/manifest/types.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
@@ -58,74 +59,34 @@ async function gaBumpUpstreamHandler({
 }: CliCommandOptions): Promise<void> {
 
   const { upstreamSettings, manifestData: { manifest, format }, compose, gitSettings, ethProvider } = await readInitialSetup({ dir, userEthProvider, useFallback });
-
   printSettings(upstreamSettings, gitSettings, manifest, compose, ethProvider);
 
   const upstreamRepoVersions = await getUpstreamRepoVersions(upstreamSettings);
-
   if (isEmpty(upstreamRepoVersions)) {
     console.log("There are no new versions to update");
     return;
   }
 
-  const { repo, repoData, branchName, branchRef } = await getGitHubSettings(dir, upstreamRepoVersions);
-
+  const githubSettings = await getGitHubSettings(dir, upstreamRepoVersions);
+  const { branchName, repo } = githubSettings;
   if (!(await isBranchNew({ branchName, repo }))) {
     console.log(`Branch ${branchName} already exists`);
     return;
   }
 
-  const versionsToUpdate = getVersionsToUpdate(compose, upstreamRepoVersions);
-
-  if (isEmpty(versionsToUpdate)) {
+  const composeVersionsToUpdate = updateComposeVersions(dir, compose, upstreamRepoVersions);
+  if (isEmpty(composeVersionsToUpdate)) {
     console.log("All versions are up-to-date");
     return;
   }
 
-  manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
+  updateManifest({ manifest, manifestFormat: format, composeVersionsToUpdate, dir, ethProvider });
 
-  manifest.version = await getNewManifestVersion({ dir, ethProvider });
-
-  writeManifest(manifest, format, { dir });
-  writeCompose(compose, { dir });
-
-  const commitMsg = `bump ${Object.entries(versionsToUpdate)
-    .map(([repoSlug, { newVersion }]) => `${repoSlug} to ${newVersion}`)
-    .join(", ")
-    }`;
-
-  console.log(`commitMsg: ${commitMsg}`);
-
-  console.log(await shell(`cat ${path.join(dir, "dappnode_package.json")}`));
-  console.log(await shell(`cat ${path.join(dir, "docker-compose.yml")}`));
-
-  if (process.env.SKIP_COMMIT) {
-    console.log("SKIP_COMMIT=true");
-    return;
-  }
-
-  await shell(`git config user.name ${gitSettings.userName}`);
-  await shell(`git config user.email ${gitSettings.userEmail}`);
-  await shell(`git checkout -b ${branchName}`);
-
-  // Check if there are changes
-  console.log(await shell(`git status`));
-
-  await shell(`git commit -a -m "${commitMsg}"`, {
-    pipeToMain: true
-  });
-  await shell(`git push -u origin ${branchRef}`, {
-    pipeToMain: true
-  });
-
-  // Skip PR creation for testing
-  if (process.env.ENVIRONMENT === "TEST") return;
-
-  await repo.openPR({
-    from: branchName,
-    to: repoData.data.default_branch,
-    title: commitMsg,
-    body: getPrBody(versionsToUpdate)
+  await prepareAndCommitChanges({
+    dir,
+    gitSettings,
+    composeVersionsToUpdate,
+    githubSettings,
   });
 
   try {
@@ -144,8 +105,10 @@ async function getUpstreamRepoVersions(upstreamSettings: UpstreamSettings[]): Pr
 
   try {
     for (const { upstreamArg, upstreamRepo } of upstreamSettings) {
+
       const [owner, repo] = upstreamRepo.split("/");
       const githubRepo = new Github({ owner, repo });
+
       const releases = await githubRepo.listReleases();
       const latestRelease = releases[0];
       if (!latestRelease) throw Error(`No release found for ${upstreamRepo}`);
@@ -167,37 +130,55 @@ async function getUpstreamRepoVersions(upstreamSettings: UpstreamSettings[]): Pr
   return upstreamRepoVersions;
 }
 
-function getVersionsToUpdate(compose: Compose, upstreamRepoVersions: UpstreamRepoMap): VersionsToUpdate {
-  const versionsToUpdate: VersionsToUpdate = {};
+function updateComposeVersions(dir: string, compose: Compose, upstreamRepoVersions: UpstreamRepoMap): ComposeVersionsToUpdate {
+  const newCompose = JSON.parse(JSON.stringify(compose)); // Deep copy
+  const versionsToUpdate: ComposeVersionsToUpdate = {};
 
-  for (const [serviceName, service] of Object.entries(compose.services))
-    if (typeof service.build === "object" && service.build.args)
-      for (const [argName, argValue] of Object.entries(service.build.args)) {
-        const upstreamRepoVersion = upstreamRepoVersions[argName];
-        if (!upstreamRepoVersion) continue;
+  for (const [serviceName, service] of Object.entries(compose.services)) {
 
-        const currentVersion = argValue;
-        const { repoSlug, newVersion } = upstreamRepoVersion;
-        if (currentVersion === newVersion) continue;
+    if (typeof service.build !== "object" || !service.build.args)
+      continue;
 
-        // Update current version
-        compose.services[serviceName].build = {
-          ...service.build,
-          args: {
-            ...service.build.args,
-            [argName]: newVersion
-          }
-        };
+    for (const [argName, currentVersion] of Object.entries(service.build.args)) {
+      const upstreamVersionInfo = upstreamRepoVersions[argName];
 
-        // Use a Map since there may be multiple matches for the same argName
-        versionsToUpdate[repoSlug] = {
-          newVersion,
-          currentVersion
-        };
+      if (!upstreamVersionInfo || currentVersion === upstreamVersionInfo.newVersion)
+        continue;
 
-      }
+      newCompose.services[serviceName].build.args[argName] = upstreamVersionInfo.newVersion;
+
+      versionsToUpdate[upstreamVersionInfo.repoSlug] = {
+        newVersion: upstreamVersionInfo.newVersion,
+        currentVersion,
+      };
+    }
+  }
+
+  if (!isEmpty(versionsToUpdate))
+    writeCompose(newCompose, { dir });
 
   return versionsToUpdate;
+}
+
+async function updateManifest({
+  manifest,
+  manifestFormat,
+  composeVersionsToUpdate,
+  dir,
+  ethProvider,
+}: {
+  manifest: Manifest;
+  manifestFormat: ManifestFormat;
+  composeVersionsToUpdate: ComposeVersionsToUpdate;
+  dir: string;
+  ethProvider: string;
+}): Promise<void> {
+
+  manifest.upstreamVersion = getUpstreamVersionTag(composeVersionsToUpdate);
+
+  manifest.version = await getNewManifestVersion({ dir, ethProvider });
+
+  writeManifest(manifest, manifestFormat, { dir });
 }
 
 async function getNewManifestVersion({
@@ -223,4 +204,73 @@ async function getNewManifestVersion({
       throw e;
     }
   }
+}
+
+async function prepareAndCommitChanges({
+  dir,
+  gitSettings,
+  composeVersionsToUpdate,
+  githubSettings,
+}: {
+  dir: string;
+  gitSettings: GitSettings;
+  composeVersionsToUpdate: ComposeVersionsToUpdate;
+  githubSettings: GithubSettings;
+}) {
+  const { branchName, branchRef } = githubSettings;
+  const commitMsg = createCommitMessage(composeVersionsToUpdate);
+
+  console.log(`commitMsg: ${commitMsg}`);
+  console.log(await shell(`cat ${path.join(dir, "dappnode_package.json")}`));
+  console.log(await shell(`cat ${path.join(dir, "docker-compose.yml")}`));
+
+  if (process.env.SKIP_COMMIT) {
+    console.log("SKIP_COMMIT=true");
+    return;
+  }
+
+  await configureGitUser(gitSettings);
+  await checkoutNewBranch(branchName);
+  await commitAndPushChanges({ commitMsg, branchRef });
+  await attemptToOpenPR({ commitMsg, composeVersionsToUpdate, githubSettings });
+}
+
+function createCommitMessage(composeVersionsToUpdate: ComposeVersionsToUpdate): string {
+  return `bump ${Object.entries(composeVersionsToUpdate)
+    .map(([repoSlug, { newVersion }]) => `${repoSlug} to ${newVersion}`)
+    .join(", ")}`;
+}
+
+async function configureGitUser({ userName, userEmail }: GitSettings) {
+  await shell(`git config user.name ${userName}`);
+  await shell(`git config user.email ${userEmail}`);
+}
+
+async function checkoutNewBranch(branchName: string) {
+  await shell(`git checkout -b ${branchName}`);
+}
+
+async function commitAndPushChanges({ commitMsg, branchRef }: { commitMsg: string, branchRef: string }) {
+  await shell(`git commit -a -m "${commitMsg}"`, { pipeToMain: true });
+  await shell(`git push -u origin ${branchRef}`, { pipeToMain: true });
+}
+
+async function attemptToOpenPR({
+  commitMsg,
+  composeVersionsToUpdate,
+  githubSettings: { repo, repoData, branchName }
+}: {
+  commitMsg: string;
+  composeVersionsToUpdate: ComposeVersionsToUpdate;
+  githubSettings: GithubSettings;
+}) {
+  // Skip PR creation for testing
+  if (process.env.ENVIRONMENT === "TEST") return;
+
+  await repo.openPR({
+    from: branchName,
+    to: repoData.data.default_branch,
+    title: commitMsg,
+    body: getPrBody(composeVersionsToUpdate)
+  });
 }

@@ -2,7 +2,7 @@ import semver from "semver";
 import { branchNameRoot } from "../../../params";
 import { Github } from "../../../providers/github/Github";
 import { shell } from "../../../utils/shell";
-import { GitBranch, GithubSettings, UpstreamRepoMap, VersionsToUpdate } from "./types";
+import { GitBranch, GithubSettings, UpstreamRepoMap, ComposeVersionsToUpdate } from "./types";
 import { getLocalBranchExists } from "../../../utils/git";
 
 /**
@@ -21,10 +21,9 @@ export async function closeOldPrs(
 
     const allBranches = await thisRepo.listBranches();
 
-    for (const { name: oldBranch } of allBranches) {
+    const bumpBranches = allBranches.filter(({ name }) => name.startsWith(branchNameRoot) && name !== newBranch);
 
-        if (!oldBranch.startsWith(branchNameRoot) || oldBranch === newBranch)
-            continue; // Skip to the next branch if conditions are not met.
+    for (const { name: oldBranch } of bumpBranches) {
 
         try {
 
@@ -54,7 +53,7 @@ export async function closeOldPrs(
     }
 }
 
-export function getPrBody(versionsToUpdate: VersionsToUpdate): string {
+export function getPrBody(versionsToUpdate: ComposeVersionsToUpdate): string {
     return [
         "Bumps upstream version",
         Object.entries(versionsToUpdate)
@@ -71,7 +70,7 @@ function getGitHubUrl({ repoSlug, tag = "" }: { repoSlug: string, tag?: string }
 }
 
 // https://github.com/ipfs/go-ipfs/releases/tag/v0.7.0
-export function getUpstreamVersionTag(versionsToUpdate: VersionsToUpdate): string {
+export function getUpstreamVersionTag(versionsToUpdate: ComposeVersionsToUpdate): string {
     const entries = Object.entries(versionsToUpdate);
 
     if (entries.length === 1) {

@@ -45,7 +45,7 @@ export type UpstreamRepoMap = {
     [upstreamArg: string]: UpstreamRepo;
 };
 
-export type VersionsToUpdate = {
+export type ComposeVersionsToUpdate = {
     [repoSlug: string]: {
         newVersion: string;
         currentVersion: string;
