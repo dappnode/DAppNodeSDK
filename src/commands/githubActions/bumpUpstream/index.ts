@@ -14,7 +14,7 @@ import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFro
 import { Compose, Manifest } from "@dappnode/types";
 import { isEmpty } from "lodash-es";
 import { UpstreamSettings, UpstreamRepoMap, ComposeVersionsToUpdate, GitSettings, GithubSettings } from "./types.js";
-import { closeOldPrs, getGitHubSettings, getPrBody, getUpstreamVersionTag, isBranchNew, isUndesiredRelease } from "./git.js";
+import { closeOldPrs, getGitHubSettings, getPrBody, getUpstreamVersionTag, isBranchNew, isValidRelease } from "./git.js";
 import { printSettings, readInitialSetup } from "./setup.js";
 import { ManifestFormat } from "../../../files/manifest/types.js";
 
@@ -114,8 +114,8 @@ async function getUpstreamRepoVersions(upstreamSettings: UpstreamSettings[]): Pr
       if (!latestRelease) throw Error(`No release found for ${upstreamRepo}`);
 
       const newVersion = latestRelease.tag_name;
-      if (isUndesiredRelease(newVersion)) {
-        console.log(`This is a realease candidate - ${upstreamRepo}: ${newVersion}`);
+      if (!isValidRelease(newVersion)) {
+        console.log(`This is not a valid release (probably a release candidate) - ${upstreamRepo}: ${newVersion}`);
         continue;
       }
 
