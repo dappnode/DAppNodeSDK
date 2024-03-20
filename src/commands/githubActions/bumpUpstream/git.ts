@@ -1,9 +1,9 @@
 import semver from "semver";
-import { branchNameRoot } from "../../../params";
-import { Github } from "../../../providers/github/Github";
-import { shell } from "../../../utils/shell";
-import { GitBranch, GithubSettings, UpstreamRepoMap, ComposeVersionsToUpdate } from "./types";
-import { getLocalBranchExists } from "../../../utils/git";
+import { branchNameRoot } from "../../../params.js";
+import { Github } from "../../../providers/github/Github.js";
+import { shell } from "../../../utils/shell.js";
+import { GitBranch, GithubSettings, UpstreamRepoMap, ComposeVersionsToUpdate } from "./types.js";
+import { getLocalBranchExists } from "../../../utils/git.js";
 
 /**
  * We only want one `bump-upstream` PR to be open since we likely

@@ -1,10 +1,10 @@
 import { Manifest, Compose } from "@dappnode/types";
-import { readManifest, readCompose } from "../../../files";
-import { arrIsUnique } from "../../../utils/array";
-import { parseCsv } from "../../../utils/csv";
-import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv";
-import { GitSettings, InitialSetupData, UpstreamSettings } from "./types";
-import { getFirstAvailableEthProvider } from "../../../utils/tryEthProviders";
+import { readManifest, readCompose } from "../../../files/index.js";
+import { arrIsUnique } from "../../../utils/array.js";
+import { parseCsv } from "../../../utils/csv.js";
+import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv.js";
+import { GitSettings, InitialSetupData, UpstreamSettings } from "./types.js";
+import { getFirstAvailableEthProvider } from "../../../utils/tryEthProviders.js";
 
 export async function readInitialSetup({ dir, userEthProvider, useFallback }: { dir: string, userEthProvider: string, useFallback: boolean }): Promise<InitialSetupData> {
     const envFileArgs = readBuildSdkEnvFileNotThrow(dir);
