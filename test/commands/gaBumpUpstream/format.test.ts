@@ -2,19 +2,19 @@ import { expect } from "chai";
 import {
   getPrBody,
   getUpstreamVersionTag,
-  isUndesiredRealease,
-  VersionToUpdate
-} from "../../../src/commands/githubActions/bumpUpstream/format.js";
+  isValidRelease,
+} from "../../../src/commands/githubActions/bumpUpstream/git.js";
+import { ComposeVersionsToUpdate } from "../../../src/commands/githubActions/bumpUpstream/types.js";
 
 describe("command / gaBumpUpstream / format", () => {
   describe("single version", () => {
-    const versionsToUpdate: VersionToUpdate[] = [
-      {
-        repoSlug: "ipfs/go-ipfs",
+    const versionsToUpdate: ComposeVersionsToUpdate = {
+      "ipfs/go-ipfs": {
         newVersion: "v0.7.0",
         currentVersion: "v0.6.0"
       }
-    ];
+
+    };
 
     it("getUpstreamVersionTag", () => {
       const upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
@@ -30,18 +30,17 @@ describe("command / gaBumpUpstream / format", () => {
   });
 
   describe("multiple version", () => {
-    const versionsToUpdate: VersionToUpdate[] = [
-      {
-        repoSlug: "sigp/lighthouse",
+    const versionsToUpdate: ComposeVersionsToUpdate = {
+      "sigp/lighthouse": {
         newVersion: "v0.1.4",
         currentVersion: "v0.1.2"
       },
-      {
-        repoSlug: "prysmaticlabs/prysm",
+      "prysmaticlabs/prysm": {
         newVersion: "v0.1.0-beta.29",
         currentVersion: "v0.1.0-beta.28"
       }
-    ];
+
+    };
 
     it("getUpstreamVersionTag", () => {
       const upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
@@ -60,48 +59,43 @@ describe("command / gaBumpUpstream / format", () => {
   });
 
   describe("checkDesiredRealease", () => {
-    const versionsToUpdate: VersionToUpdate[] = [
-      {
-        repoSlug: "sigp/lighthouse",
+    const correctVersionsToUpdate: ComposeVersionsToUpdate = {
+      "sigp/lighthouse": {
         newVersion: "v0.1.5",
         currentVersion: "v0.1.2"
       },
-      {
-        repoSlug: "sigp/lighthouse",
-        newVersion: "v0.1.4-rc.0",
-        currentVersion: "v0.1.2"
-      },
-      {
-        repoSlug: "ipfs/kubo",
+    };
+
+    const wrongVersionsToUpdate: ComposeVersionsToUpdate = {
+      "ipfs/kubo": {
         newVersion: "v0.27.0-rc1",
         currentVersion: "v0.1.2"
       },
-      {
-        repoSlug: "sigp/lighthouse",
-        newVersion: "v0.1.4-RC.0",
-        currentVersion: "v0.1.2"
-      },
-      {
-        repoSlug: "status-im/nimbus-eth2",
+      "status-im/nimbus-eth2": {
         newVersion: "nightly",
         currentVersion: "v23.3.2"
+      },
+      "prysmaticlabs/prysm": {
+        newVersion: "v0.1.0-rc.0",
+        currentVersion: "v0.1.0"
+      },
+      "ledgerwatch/erigon": {
+        newVersion: "v0.1.0-RC.0",
+        currentVersion: "v0.1.0"
       }
-    ];
 
-    it("isDesiredRealease", () => {
-      expect(isUndesiredRealease(versionsToUpdate[0].newVersion)).equal(false);
+    };
+
+    Object.entries(wrongVersionsToUpdate).forEach(([repoSlug, { newVersion }]) => {
+      it(`isUndesiredRelease ${repoSlug} ${newVersion}`, () => {
+        expect(isValidRelease(newVersion)).to.equal(false);
+      });
     });
-    it("isRealeaseCandidate", () => {
-      expect(isUndesiredRealease(versionsToUpdate[1].newVersion)).equal(true);
-    });
-    it("isRealeaseCandidate", () => {
-      expect(isUndesiredRealease(versionsToUpdate[2].newVersion)).equal(true);
-    });
-    it("isRealeaseCandidate", () => {
-      expect(isUndesiredRealease(versionsToUpdate[3].newVersion)).equal(true);
-    });
-    it("isNightlyRealease", () => {
-      expect(isUndesiredRealease(versionsToUpdate[4].newVersion)).equal(true);
+
+    Object.entries(correctVersionsToUpdate).forEach(([repoSlug, { newVersion }]) => {
+      it(`isUndesiredRelease ${repoSlug} ${newVersion}`, () => {
+        expect(isValidRelease(newVersion)).to.equal(true);
+      });
     });
   });
 });
