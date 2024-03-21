@@ -1,4 +1,4 @@
-import { ComposeVersionsToUpdate } from "../types";
+import { ComposeVersionsToUpdate } from "../types.js";
 
 export function getBumpPrBody(versionsToUpdate: ComposeVersionsToUpdate): string {
     return [

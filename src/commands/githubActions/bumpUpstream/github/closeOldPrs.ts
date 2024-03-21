@@ -1,6 +1,6 @@
-import { branchNameRoot } from "../../../../params";
-import { Github } from "../../../../providers/github/Github";
-import { shell } from "../../../../utils/shell";
+import { branchNameRoot } from "../../../../params.js";
+import { Github } from "../../../../providers/github/Github.js";
+import { shell } from "../../../../utils/shell.js";
 
 /**
  * Close old PRs related to bump-upstream branches, keeping only the latest one.

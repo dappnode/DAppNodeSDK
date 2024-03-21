@@ -1,6 +1,6 @@
 import { Manifest, Compose } from "@dappnode/types";
-import { ManifestFormat } from "../../../files/manifest/types";
-import { Github } from "../../../providers/github/Github";
+import { ManifestFormat } from "../../../files/manifest/types.js";
+import { Github } from "../../../providers/github/Github.js";
 
 export interface UpstreamSettings {
     upstreamRepo: string;

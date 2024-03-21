@@ -1,4 +1,4 @@
-import { ComposeVersionsToUpdate } from "../types";
+import { ComposeVersionsToUpdate } from "../types.js";
 
 // https://github.com/ipfs/go-ipfs/releases/tag/v0.7.0
 export function getUpstreamVersionTag(versionsToUpdate: ComposeVersionsToUpdate): string {
