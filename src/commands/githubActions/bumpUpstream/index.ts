@@ -14,7 +14,7 @@ import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFro
 import { Compose, Manifest } from "@dappnode/types";
 import { isEmpty } from "lodash-es";
 import { UpstreamSettings, UpstreamRepoMap, ComposeVersionsToUpdate, GitSettings, GithubSettings } from "./types.js";
-import { printSettings, readInitialSetup } from "./setup.js";
+import { printSettings, getInitialSettings } from "./settings/index.js";
 import { ManifestFormat } from "../../../files/manifest/types.js";
 import { closeOldPrs, getBumpPrBody, getGithubSettings, getUpstreamVersionTag, isBranchNew, isValidRelease } from "./github/index.js";
 
@@ -57,7 +57,7 @@ async function gaBumpUpstreamHandler({
   use_fallback: useFallback,
 }: CliCommandOptions): Promise<void> {
 
-  const { upstreamSettings, manifestData: { manifest, format }, compose, gitSettings, ethProvider } = await readInitialSetup({ dir, userEthProvider, useFallback });
+  const { upstreamSettings, manifestData: { manifest, format }, compose, gitSettings, ethProvider } = await getInitialSettings({ dir, userEthProvider, useFallback });
   printSettings(upstreamSettings, gitSettings, manifest, compose, ethProvider);
 
   const upstreamRepoVersions = await getUpstreamRepoVersions(upstreamSettings);

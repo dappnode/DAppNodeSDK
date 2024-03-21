@@ -1,11 +1,10 @@
-import { Manifest, Compose } from "@dappnode/types";
-import { readManifest, readCompose } from "../../../files/index.js";
-import { arrIsUnique } from "../../../utils/array.js";
-import { parseCsv } from "../../../utils/csv.js";
-import { GitSettings, InitialSetupData, UpstreamSettings } from "./types.js";
-import { getFirstAvailableEthProvider } from "../../../utils/tryEthProviders.js";
+import { readManifest, readCompose } from "../../../../files/index.js";
+import { arrIsUnique } from "../../../../utils/array.js";
+import { parseCsv } from "../../../../utils/csv.js";
+import { getFirstAvailableEthProvider } from "../../../../utils/tryEthProviders.js";
+import { InitialSetupData, GitSettings } from "../types.js";
 
-export async function readInitialSetup({ dir, userEthProvider, useFallback }: { dir: string, userEthProvider: string, useFallback: boolean }): Promise<InitialSetupData> {
+export async function getInitialSettings({ dir, userEthProvider, useFallback }: { dir: string, userEthProvider: string, useFallback: boolean }): Promise<InitialSetupData> {
     const { manifest, format } = readManifest({ dir });
     const compose = readCompose({ dir });
 
@@ -72,22 +71,4 @@ function validateUpstreamData(upstreamRepos: string[], upstreamArgs: string[]): 
 
     if (!arrIsUnique(upstreamArgs))
         throw new Error("upstreamArgs not unique");
-}
-
-
-export function printSettings(upstreamSettings: UpstreamSettings[], gitSettings: GitSettings, manifest: Manifest, compose: Compose, ethProvider: string): void {
-
-    console.log(`
-  
-    Upstream Settings - ${JSON.stringify(upstreamSettings, null, 2)}
-  
-    Git Settings - ${JSON.stringify(gitSettings, null, 2)}
-    
-    Manifest - ${JSON.stringify(manifest, null, 2)}
-    
-    Compose - ${JSON.stringify(compose, null, 2)}
-    
-    ETH Provider - ${ethProvider}
-  
-    `);
 }
