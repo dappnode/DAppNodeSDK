@@ -1,29 +1,22 @@
 import path from "path";
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
-import { branchNameRoot, defaultDir } from "../../../params.js";
+import { defaultDir } from "../../../params.js";
 import { Github } from "../../../providers/github/Github.js";
-import {
-  isUndesiredRealease,
-  getPrBody,
-  getUpstreamVersionTag,
-  VersionToUpdate
-} from "./format.js";
 import { shell } from "../../../utils/shell.js";
-import { parseCsv } from "../../../utils/csv.js";
-import { getLocalBranchExists, getGitHead } from "../../../utils/git.js";
-import { arrIsUnique } from "../../../utils/array.js";
+import { getGitHead } from "../../../utils/git.js";
 import { buildAndComment } from "../build/index.js";
-import { closeOldPrs } from "./closeOldPrs.js";
 import {
-  readManifest,
   writeManifest,
-  readCompose,
   writeCompose
 } from "../../../files/index.js";
-import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
-import { getFirstAvailableEthProvider } from "../../../utils/tryEthProviders.js";
+import { Compose, Manifest } from "@dappnode/types";
+import { isEmpty } from "lodash-es";
+import { UpstreamSettings, UpstreamRepoMap, ComposeVersionsToUpdate, GitSettings, GithubSettings } from "./types.js";
+import { printSettings, getInitialSettings } from "./settings/index.js";
+import { ManifestFormat } from "../../../files/manifest/types.js";
+import { closeOldPrs, getBumpPrBody, getGithubSettings, getUpstreamVersionTag, isBranchNew, isValidRelease } from "./github/index.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
@@ -60,175 +53,198 @@ export const gaBumpUpstream: CommandModule<
 
 async function gaBumpUpstreamHandler({
   dir = defaultDir,
-  eth_provider,
-  use_fallback
+  eth_provider: userEthProvider,
+  use_fallback: useFallback,
 }: CliCommandOptions): Promise<void> {
-  // Check if buildSdkEnvFileName file exists
-  const templateArgs = readBuildSdkEnvFileNotThrow(dir);
 
-  const { manifest, format } = readManifest({ dir });
-  const compose = readCompose({ dir });
+  const { upstreamSettings, manifestData: { manifest, format }, compose, gitSettings, ethProvider } = await getInitialSettings({ dir, userEthProvider, useFallback });
+  printSettings(upstreamSettings, gitSettings, manifest, compose, ethProvider);
 
-  const upstreamRepos = templateArgs
-    ? [templateArgs._BUILD_UPSTREAM_REPO]
-    : parseCsv(manifest.upstreamRepo);
-  const upstreamArgs = templateArgs
-    ? [templateArgs._BUILD_UPSTREAM_VERSION]
-    : parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
-
-  const githubActor = process.env.GITHUB_ACTOR || "bot";
-  const userName = githubActor;
-  const userEmail = `${userName}@users.noreply.github.com`;
-
-  const defaultEthProviders = ["remote", "infura"];
-  const ethProvider = eth_provider;
-
-  const ethProviders = use_fallback
-    ? [ethProvider, ...defaultEthProviders.filter(p => p !== ethProvider)]
-    : [ethProvider];
-
-  console.log(`
-Arguments - ${JSON.stringify({
-    upstreamRepos,
-    upstreamArgs,
-    userName,
-    userEmail
-  })}
-
-Manifest - ${JSON.stringify(manifest, null, 2)}
-
-Compose - ${JSON.stringify(compose, null, 2)}
-`);
-
-  if (upstreamRepos.length < 1) {
-    throw Error("Must provide at least one 'upstream_repo'");
-  }
-
-  if (upstreamRepos.length !== upstreamArgs.length) {
-    throw Error(
-      `'upstream-repo' must have the same lenght as 'upstream_argNames' \n${JSON.stringify(
-        { upstreamRepos, upstreamArgs }
-      )}`
-    );
-  }
-
-  if (!arrIsUnique(upstreamRepos)) throw Error("upstreamRepos not unique");
-  if (!arrIsUnique(upstreamArgs)) throw Error("upstreamArgs not unique");
-
-  type UpstreamRepo = { repo: string; repoSlug: string; newVersion: string };
-  // index by argName, must be unique
-  const upstreamRepoVersions = new Map<string, UpstreamRepo>();
-
-  for (const [i, repoSlug] of upstreamRepos.entries()) {
-    // Fetch latest version
-    const [owner, repo] = repoSlug.split("/");
-    const upstreamRepo = new Github({ owner, repo });
-    const releases = await upstreamRepo.listReleases();
-    const latestRelease = releases[0];
-    if (!latestRelease) throw Error(`No release found for ${repoSlug}`);
-
-    const argName = upstreamArgs[i];
-    const newVersion = latestRelease.tag_name;
-
-    if (isUndesiredRealease(newVersion)) {
-      console.log(`This is a realease candidate - ${repoSlug}: ${newVersion}`);
-      return;
-    }
-    upstreamRepoVersions.set(argName, { repo, repoSlug, newVersion });
-
-    console.log(`Fetch latest version(s) - ${repoSlug}: ${newVersion}`);
-  }
-
-  // Compute branch name
-  const branch =
-    branchNameRoot +
-    Array.from(upstreamRepoVersions.values())
-      .map(({ repo, newVersion }) => `${repo}@${newVersion}`)
-      .join(",");
-  const branchRef = `refs/heads/${branch}`;
-
-  // Get current upstream version
-  const thisRepo = Github.fromLocal(dir);
-  const repoData = await thisRepo.getRepo();
-  const remoteBranchExists = await thisRepo.branchExists(branch);
-  const localBranchExists = await getLocalBranchExists(branch);
-  const branchExists = remoteBranchExists || localBranchExists;
-
-  if (branchExists) {
-    console.log(`Branch ${branch} already exists`);
+  const upstreamRepoVersions = await getUpstreamRepoVersions(upstreamSettings);
+  if (!upstreamRepoVersions) {
+    console.log("There are no new versions to update");
     return;
-    // TODO, do some checking
   }
 
-  // index by repoSlug, must be unique
-  const versionsToUpdateMap = new Map<string, VersionToUpdate>();
+  const githubSettings = await getGithubSettings(dir, upstreamRepoVersions);
+  const { branchName, repo } = githubSettings;
+  if (!(await isBranchNew({ branchName, repo }))) {
+    // We assume the PR was already opened
+    console.log(`Branch ${branchName} already exists`);
+    return;
+  }
 
-  for (const [serviceName, service] of Object.entries(compose.services))
-    if (typeof service.build === "object" && service.build.args)
-      for (const [argName, argValue] of Object.entries(service.build.args)) {
-        const upstreamRepoVersion = upstreamRepoVersions.get(argName);
-        if (!upstreamRepoVersion) continue;
-
-        const currentVersion = argValue;
-        const { repoSlug, newVersion } = upstreamRepoVersion;
-        if (currentVersion === newVersion) continue;
-
-        // Update current version
-        compose.services[serviceName].build = {
-          ...service.build,
-          args: {
-            ...service.build.args,
-            [argName]: newVersion
-          }
-        };
-        // Use a Map since there may be multiple matches for the same argName
-        versionsToUpdateMap.set(repoSlug, {
-          repoSlug,
-          newVersion,
-          currentVersion
-        });
-      }
-
-  if (versionsToUpdateMap.size == 0) {
+  const composeVersionsToUpdate = updateComposeVersions(dir, compose, upstreamRepoVersions);
+  if (!composeVersionsToUpdate) {
     console.log("All versions are up-to-date");
     return;
   }
 
-  const versionsToUpdate = Array.from(versionsToUpdateMap.values());
-  manifest.upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
+  await updateManifest({ manifest, manifestFormat: format, composeVersionsToUpdate, dir, ethProvider });
 
-  const ethProviderAvailable = await getFirstAvailableEthProvider({
-    providers: ethProviders
+  await prepareAndCommitChanges({
+    dir,
+    gitSettings,
+    composeVersionsToUpdate,
+    githubSettings,
   });
 
-  if (!ethProviderAvailable)
-    throw Error(`No eth provider available. Tried: ${ethProviders.join(", ")}`);
+  try {
+    await closeOldPrs(repo, branchName);
+  } catch (e) {
+    console.warn("Could not close old linked PRs", e);
+  }
+
+  const gitHead = await getGitHead();
+  await buildAndComment({ dir, commitSha: gitHead.commit, branch: branchName });
+}
+
+async function getUpstreamRepoVersions(upstreamSettings: UpstreamSettings[]): Promise<UpstreamRepoMap | null> {
+
+  const upstreamRepoVersions: UpstreamRepoMap = {};
 
   try {
-    manifest.version = await getNextVersionFromApm({
+    for (const { upstreamArg, upstreamRepo } of upstreamSettings) {
+
+      const [owner, repo] = upstreamRepo.split("/");
+      const githubRepo = new Github({ owner, repo });
+
+      const releases = await githubRepo.listReleases();
+      const latestRelease = releases[0];
+      if (!latestRelease) throw Error(`No release found for ${upstreamRepo}`);
+
+      const newVersion = latestRelease.tag_name;
+      if (!isValidRelease(newVersion)) {
+        console.log(`This is not a valid release (probably a release candidate) - ${upstreamRepo}: ${newVersion}`);
+        continue;
+      }
+
+      upstreamRepoVersions[upstreamArg] = { repo, repoSlug: upstreamRepo, newVersion };
+      console.log(`Fetch latest version(s) - ${upstreamRepo}: ${newVersion}`);
+    }
+  } catch (e) {
+    console.error("Error fetching upstream repo versions:", e);
+    throw e;
+  }
+
+  if (isEmpty(upstreamRepoVersions)) return null;
+
+  return upstreamRepoVersions;
+}
+
+/**
+ * Updates Docker Compose service build arguments with new versions based on `upstreamRepoVersions`.
+ * Creates a deep copy of `compose`, modifies build arguments as needed, and writes the updated
+ * compose to `dir` if changes occur. Returns an object detailing updates or `null` if no update is needed.
+ *
+ * @param {string} dir - Directory for the Compose file.
+ * @param {Compose} compose - Original Docker Compose configuration.
+ * @param {UpstreamRepoMap} upstreamRepoVersions - Mapping of dependencies to their new versions.
+ * @return {ComposeVersionsToUpdate | null} - Details of updated versions or null.
+ */
+function updateComposeVersions(dir: string, compose: Compose, upstreamRepoVersions: UpstreamRepoMap): ComposeVersionsToUpdate | null {
+  const newCompose = JSON.parse(JSON.stringify(compose)); // Deep copy
+  const versionsToUpdate: ComposeVersionsToUpdate = {};
+
+  for (const [serviceName, service] of Object.entries(compose.services)) {
+
+    if (typeof service.build !== "object" || !service.build.args)
+      continue;
+
+    for (const [argName, currentVersion] of Object.entries(service.build.args)) {
+      const upstreamVersionInfo = upstreamRepoVersions[argName];
+
+      if (!upstreamVersionInfo || currentVersion === upstreamVersionInfo.newVersion)
+        continue;
+
+      newCompose.services[serviceName].build.args[argName] = upstreamVersionInfo.newVersion;
+
+      versionsToUpdate[upstreamVersionInfo.repoSlug] = {
+        newVersion: upstreamVersionInfo.newVersion,
+        currentVersion,
+      };
+    }
+  }
+
+  if (isEmpty(versionsToUpdate)) {
+    return null;
+  } else {
+    writeCompose(newCompose, { dir });
+  }
+
+  return versionsToUpdate;
+}
+
+/**
+ * Updates the manifest with a new version and upstream version tag based on the
+ * provided `composeVersionsToUpdate`. It also writes the updated manifest to disk.
+ */
+async function updateManifest({
+  manifest,
+  manifestFormat,
+  composeVersionsToUpdate,
+  dir,
+  ethProvider,
+}: {
+  manifest: Manifest;
+  manifestFormat: ManifestFormat;
+  composeVersionsToUpdate: ComposeVersionsToUpdate;
+  dir: string;
+  ethProvider: string;
+}): Promise<void> {
+
+  try {
+    manifest.upstreamVersion = getUpstreamVersionTag(composeVersionsToUpdate);
+
+    manifest.version = await getNewManifestVersion({ dir, ethProvider });
+
+    writeManifest(manifest, manifestFormat, { dir });
+  } catch (e) {
+    throw Error(`Error updating manifest: ${e.message}`);
+  }
+
+}
+
+async function getNewManifestVersion({
+  ethProvider,
+  dir
+}: {
+  ethProvider: string;
+  dir: string;
+}): Promise<string> {
+  try {
+    return await getNextVersionFromApm({
       type: "patch",
-      ethProvider: ethProviderAvailable,
+      ethProvider,
       dir
     });
   } catch (e) {
     if (e.message.includes("NOREPO")) {
       console.log("Package not found in APM (probably not published yet");
       console.log("Manifest version set to default 0.1.0");
-      manifest.version = "0.1.0";
+      return "0.1.0";
     } else {
       e.message = `Error getting next version from apm: ${e.message}`;
       throw e;
     }
   }
+}
 
-  writeManifest(manifest, format, { dir });
-  writeCompose(compose, { dir });
+async function prepareAndCommitChanges({
+  dir,
+  gitSettings,
+  composeVersionsToUpdate,
+  githubSettings,
+}: {
+  dir: string;
+  gitSettings: GitSettings;
+  composeVersionsToUpdate: ComposeVersionsToUpdate;
+  githubSettings: GithubSettings;
+}) {
+  const { branchName, branchRef } = githubSettings;
+  const commitMsg = createCommitMessage(composeVersionsToUpdate);
 
-  const commitMsg = `bump ${versionsToUpdate
-    .map(({ repoSlug, newVersion }) => `${repoSlug} to ${newVersion}`)
-    .join(", ")}`;
   console.log(`commitMsg: ${commitMsg}`);
-
   console.log(await shell(`cat ${path.join(dir, "dappnode_package.json")}`));
   console.log(await shell(`cat ${path.join(dir, "docker-compose.yml")}`));
 
@@ -237,36 +253,48 @@ Compose - ${JSON.stringify(compose, null, 2)}
     return;
   }
 
+  await configureGitUser(gitSettings);
+  await checkoutNewBranch(branchName);
+  await commitAndPushChanges({ commitMsg, branchRef });
+  await attemptToOpenPR({ commitMsg, composeVersionsToUpdate, githubSettings });
+}
+
+function createCommitMessage(composeVersionsToUpdate: ComposeVersionsToUpdate): string {
+  return `bump ${Object.entries(composeVersionsToUpdate)
+    .map(([repoSlug, { newVersion }]) => `${repoSlug} to ${newVersion}`)
+    .join(", ")}`;
+}
+
+async function configureGitUser({ userName, userEmail }: GitSettings) {
   await shell(`git config user.name ${userName}`);
   await shell(`git config user.email ${userEmail}`);
-  await shell(`git checkout -b ${branch}`);
+}
 
-  // Check if there are changes
-  console.log(await shell(`git status`));
+async function checkoutNewBranch(branchName: string) {
+  await shell(`git checkout -b ${branchName}`);
+}
 
-  await shell(`git commit -a -m "${commitMsg}"`, {
-    pipeToMain: true
-  });
-  await shell(`git push -u origin ${branchRef}`, {
-    pipeToMain: true
-  });
+async function commitAndPushChanges({ commitMsg, branchRef }: { commitMsg: string, branchRef: string }) {
+  await shell(`git commit -a -m "${commitMsg}"`, { pipeToMain: true });
+  await shell(`git push -u origin ${branchRef}`, { pipeToMain: true });
+}
 
+async function attemptToOpenPR({
+  commitMsg,
+  composeVersionsToUpdate,
+  githubSettings: { repo, repoData, branchName }
+}: {
+  commitMsg: string;
+  composeVersionsToUpdate: ComposeVersionsToUpdate;
+  githubSettings: GithubSettings;
+}) {
   // Skip PR creation for testing
   if (process.env.ENVIRONMENT === "TEST") return;
 
-  await thisRepo.openPR({
-    from: branch,
+  await repo.openPR({
+    from: branchName,
     to: repoData.data.default_branch,
     title: commitMsg,
-    body: getPrBody(versionsToUpdate)
+    body: getBumpPrBody(composeVersionsToUpdate)
   });
-
-  try {
-    await closeOldPrs(thisRepo, branch);
-  } catch (e) {
-    console.error("Error on closeOldPrs", e);
-  }
-
-  const gitHead = await getGitHead();
-  await buildAndComment({ dir, commitSha: gitHead.commit, branch });
 }
