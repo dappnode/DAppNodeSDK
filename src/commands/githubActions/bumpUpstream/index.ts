@@ -69,6 +69,7 @@ async function gaBumpUpstreamHandler({
   const githubSettings = await getGithubSettings(dir, upstreamRepoVersions);
   const { branchName, repo } = githubSettings;
   if (!(await isBranchNew({ branchName, repo }))) {
+    // We assume the PR was already opened
     console.log(`Branch ${branchName} already exists`);
     return;
   }
