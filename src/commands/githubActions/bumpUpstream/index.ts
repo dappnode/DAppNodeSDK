@@ -21,6 +21,7 @@ import { closeOldPrs, getBumpPrBody, getGithubSettings, getUpstreamVersionTag, i
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
   use_fallback: boolean;
+  template: boolean;
 }
 
 // This action should be run periodically
@@ -46,6 +47,12 @@ export const gaBumpUpstream: CommandModule<
         "Use fallback eth provider if main provider fails: false (default), true. If main provider fails, it will try to use 'remote' first and then 'infura'",
       default: true,
       type: "boolean"
+    },
+    template: {
+      alias: "t",
+      description: "The project corresponds to a template repo, so the manifest and compose files will be updated accordingly in the root and in the package variants",
+      default: false,
+      type: "boolean"
     }
   },
   handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
@@ -55,6 +62,7 @@ async function gaBumpUpstreamHandler({
   dir = defaultDir,
   eth_provider: userEthProvider,
   use_fallback: useFallback,
+  template: templateMode = false
 }: CliCommandOptions): Promise<void> {
 
   const { upstreamSettings, manifestData: { manifest, format }, compose, gitSettings, ethProvider } = await getInitialSettings({ dir, userEthProvider, useFallback });
