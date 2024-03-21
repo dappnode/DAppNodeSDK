@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import {
-  getPrBody,
+  getBumpPrBody,
   getUpstreamVersionTag,
   isValidRelease,
-} from "../../../src/commands/githubActions/bumpUpstream/git.js";
+} from "../../../src/commands/githubActions/bumpUpstream/github/index.js";
 import { ComposeVersionsToUpdate } from "../../../src/commands/githubActions/bumpUpstream/types.js";
 
 describe("command / gaBumpUpstream / format", () => {
@@ -22,7 +22,7 @@ describe("command / gaBumpUpstream / format", () => {
     });
 
     it("getPrBody", () => {
-      const upstreamVersion = getPrBody(versionsToUpdate);
+      const upstreamVersion = getBumpPrBody(versionsToUpdate);
       expect(upstreamVersion).to.equal(`Bumps upstream version
 
 - [ipfs/go-ipfs](https://github.com/ipfs/go-ipfs) from v0.6.0 to [v0.7.0](https://github.com/ipfs/go-ipfs/releases/tag/v0.7.0)`);
@@ -50,7 +50,7 @@ describe("command / gaBumpUpstream / format", () => {
     });
 
     it("getPrBody", () => {
-      const upstreamVersion = getPrBody(versionsToUpdate);
+      const upstreamVersion = getBumpPrBody(versionsToUpdate);
       expect(upstreamVersion).to.equal(`Bumps upstream version
 
 - [sigp/lighthouse](https://github.com/sigp/lighthouse) from v0.1.2 to [v0.1.4](https://github.com/sigp/lighthouse/releases/tag/v0.1.4)
