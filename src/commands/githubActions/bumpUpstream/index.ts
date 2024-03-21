@@ -14,9 +14,9 @@ import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFro
 import { Compose, Manifest } from "@dappnode/types";
 import { isEmpty } from "lodash-es";
 import { UpstreamSettings, UpstreamRepoMap, ComposeVersionsToUpdate, GitSettings, GithubSettings } from "./types.js";
-import { closeOldPrs, getGitHubSettings, getPrBody, getUpstreamVersionTag, isBranchNew, isValidRelease } from "./git.js";
 import { printSettings, readInitialSetup } from "./setup.js";
 import { ManifestFormat } from "../../../files/manifest/types.js";
+import { closeOldPrs, getBumpPrBody, getGithubSettings, getUpstreamVersionTag, isBranchNew, isValidRelease } from "./github/index.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
@@ -66,7 +66,7 @@ async function gaBumpUpstreamHandler({
     return;
   }
 
-  const githubSettings = await getGitHubSettings(dir, upstreamRepoVersions);
+  const githubSettings = await getGithubSettings(dir, upstreamRepoVersions);
   const { branchName, repo } = githubSettings;
   if (!(await isBranchNew({ branchName, repo }))) {
     console.log(`Branch ${branchName} already exists`);
@@ -294,6 +294,6 @@ async function attemptToOpenPR({
     from: branchName,
     to: repoData.data.default_branch,
     title: commitMsg,
-    body: getPrBody(composeVersionsToUpdate)
+    body: getBumpPrBody(composeVersionsToUpdate)
   });
 }
