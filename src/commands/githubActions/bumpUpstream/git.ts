@@ -95,8 +95,6 @@ export function isValidRelease(version: string): boolean {
     return preReleases === null || preReleases.length === 0;
 }
 
-
-
 export function getBranch(upstreamVersions: UpstreamRepoMap): GitBranch {
     const branchName = branchNameRoot +
         Array.from(Object.values(upstreamVersions))

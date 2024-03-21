@@ -21,7 +21,6 @@ import { ManifestFormat } from "../../../files/manifest/types.js";
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
   use_fallback: boolean;
-  template: boolean;
 }
 
 // This action should be run periodically
@@ -49,7 +48,7 @@ export const gaBumpUpstream: CommandModule<
       type: "boolean"
     }
   },
-  handler: async (args): Promise<void> => gaBumpUpstreamHandler(args)
+  handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
 };
 
 async function gaBumpUpstreamHandler({
@@ -62,7 +61,7 @@ async function gaBumpUpstreamHandler({
   printSettings(upstreamSettings, gitSettings, manifest, compose, ethProvider);
 
   const upstreamRepoVersions = await getUpstreamRepoVersions(upstreamSettings);
-  if (isEmpty(upstreamRepoVersions)) {
+  if (!upstreamRepoVersions) {
     console.log("There are no new versions to update");
     return;
   }
@@ -75,12 +74,12 @@ async function gaBumpUpstreamHandler({
   }
 
   const composeVersionsToUpdate = updateComposeVersions(dir, compose, upstreamRepoVersions);
-  if (isEmpty(composeVersionsToUpdate)) {
+  if (!composeVersionsToUpdate) {
     console.log("All versions are up-to-date");
     return;
   }
 
-  updateManifest({ manifest, manifestFormat: format, composeVersionsToUpdate, dir, ethProvider });
+  await updateManifest({ manifest, manifestFormat: format, composeVersionsToUpdate, dir, ethProvider });
 
   await prepareAndCommitChanges({
     dir,
@@ -92,14 +91,14 @@ async function gaBumpUpstreamHandler({
   try {
     await closeOldPrs(repo, branchName);
   } catch (e) {
-    console.error("Error on closeOldPrs", e);
+    console.warn("Could not close old linked PRs", e);
   }
 
   const gitHead = await getGitHead();
   await buildAndComment({ dir, commitSha: gitHead.commit, branch: branchName });
 }
 
-async function getUpstreamRepoVersions(upstreamSettings: UpstreamSettings[]): Promise<UpstreamRepoMap> {
+async function getUpstreamRepoVersions(upstreamSettings: UpstreamSettings[]): Promise<UpstreamRepoMap | null> {
 
   const upstreamRepoVersions: UpstreamRepoMap = {};
 
@@ -127,10 +126,22 @@ async function getUpstreamRepoVersions(upstreamSettings: UpstreamSettings[]): Pr
     throw e;
   }
 
+  if (isEmpty(upstreamRepoVersions)) return null;
+
   return upstreamRepoVersions;
 }
 
-function updateComposeVersions(dir: string, compose: Compose, upstreamRepoVersions: UpstreamRepoMap): ComposeVersionsToUpdate {
+/**
+ * Updates Docker Compose service build arguments with new versions based on `upstreamRepoVersions`.
+ * Creates a deep copy of `compose`, modifies build arguments as needed, and writes the updated
+ * compose to `dir` if changes occur. Returns an object detailing updates or `null` if no update is needed.
+ *
+ * @param {string} dir - Directory for the Compose file.
+ * @param {Compose} compose - Original Docker Compose configuration.
+ * @param {UpstreamRepoMap} upstreamRepoVersions - Mapping of dependencies to their new versions.
+ * @return {ComposeVersionsToUpdate | null} - Details of updated versions or null.
+ */
+function updateComposeVersions(dir: string, compose: Compose, upstreamRepoVersions: UpstreamRepoMap): ComposeVersionsToUpdate | null {
   const newCompose = JSON.parse(JSON.stringify(compose)); // Deep copy
   const versionsToUpdate: ComposeVersionsToUpdate = {};
 
@@ -154,12 +165,19 @@ function updateComposeVersions(dir: string, compose: Compose, upstreamRepoVersio
     }
   }
 
-  if (!isEmpty(versionsToUpdate))
+  if (isEmpty(versionsToUpdate)) {
+    return null;
+  } else {
     writeCompose(newCompose, { dir });
+  }
 
   return versionsToUpdate;
 }
 
+/**
+ * Updates the manifest with a new version and upstream version tag based on the
+ * provided `composeVersionsToUpdate`. It also writes the updated manifest to disk.
+ */
 async function updateManifest({
   manifest,
   manifestFormat,
@@ -174,11 +192,16 @@ async function updateManifest({
   ethProvider: string;
 }): Promise<void> {
 
-  manifest.upstreamVersion = getUpstreamVersionTag(composeVersionsToUpdate);
+  try {
+    manifest.upstreamVersion = getUpstreamVersionTag(composeVersionsToUpdate);
 
-  manifest.version = await getNewManifestVersion({ dir, ethProvider });
+    manifest.version = await getNewManifestVersion({ dir, ethProvider });
 
-  writeManifest(manifest, manifestFormat, { dir });
+    writeManifest(manifest, manifestFormat, { dir });
+  } catch (e) {
+    throw Error(`Error updating manifest: ${e.message}`);
+  }
+
 }
 
 async function getNewManifestVersion({

@@ -12,6 +12,7 @@ export async function readInitialSetup({ dir, userEthProvider, useFallback }: { 
     const { manifest, format } = readManifest({ dir });
     const compose = readCompose({ dir });
 
+    // TODO: Update when upstream fields in manifest follow the new format described in https://github.com/dappnode/DAppNodeSDK/issues/408
     const upstreamRepos = envFileArgs
         ? [envFileArgs._BUILD_UPSTREAM_REPO]
         : parseCsv(manifest.upstreamRepo);
