@@ -2,23 +2,16 @@ import { Manifest, Compose } from "@dappnode/types";
 import { readManifest, readCompose } from "../../../files/index.js";
 import { arrIsUnique } from "../../../utils/array.js";
 import { parseCsv } from "../../../utils/csv.js";
-import { readBuildSdkEnvFileNotThrow } from "../../../utils/readBuildSdkEnv.js";
 import { GitSettings, InitialSetupData, UpstreamSettings } from "./types.js";
 import { getFirstAvailableEthProvider } from "../../../utils/tryEthProviders.js";
 
 export async function readInitialSetup({ dir, userEthProvider, useFallback }: { dir: string, userEthProvider: string, useFallback: boolean }): Promise<InitialSetupData> {
-    const envFileArgs = readBuildSdkEnvFileNotThrow(dir);
-
     const { manifest, format } = readManifest({ dir });
     const compose = readCompose({ dir });
 
     // TODO: Update when upstream fields in manifest follow the new format described in https://github.com/dappnode/DAppNodeSDK/issues/408
-    const upstreamRepos = envFileArgs
-        ? [envFileArgs._BUILD_UPSTREAM_REPO]
-        : parseCsv(manifest.upstreamRepo);
-    const upstreamArgs = envFileArgs
-        ? [envFileArgs._BUILD_UPSTREAM_VERSION]
-        : parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
+    const upstreamRepos = parseCsv(manifest.upstreamRepo);
+    const upstreamArgs = parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
 
     // Create upstream settings after validation
     validateUpstreamData(upstreamRepos, upstreamArgs);
@@ -67,7 +60,7 @@ function getGitSettings(): GitSettings {
     };
 }
 
-export function validateUpstreamData(upstreamRepos: string[], upstreamArgs: string[]): void {
+function validateUpstreamData(upstreamRepos: string[], upstreamArgs: string[]): void {
     if (upstreamRepos.length < 1)
         throw new Error("Must provide at least one 'upstream_repo'");
 
