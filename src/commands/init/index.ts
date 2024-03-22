@@ -1,1 +1,2 @@
-export { init } from "./init.js";
+export { init, initHandler } from "./init.js";
+export { defaultVersion, defaultEnvName, publicRepoDomain, avatarPath, dockerfilePath } from "./params.js";

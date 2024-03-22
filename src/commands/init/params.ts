@@ -1,5 +1,5 @@
-import defaultAvatar from "../../assets/defaultAvatar";
-import { releasesRecordFileName } from "../../utils/releaseRecord";
+import defaultAvatar from "../../assets/defaultAvatar.js";
+import { releasesRecordFileName } from "../../utils/releaseRecord.js";
 
 export const defaultEnvName = "NETWORK";
 

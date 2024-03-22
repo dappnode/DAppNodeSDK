@@ -1,4 +1,4 @@
-import { publicRepoDomain, stringsToRemoveFromName } from "./params";
+import { publicRepoDomain, stringsToRemoveFromName } from "./params.js";
 
 /**
 * Parses a directory or generic package name and returns a full ENS guessed name

@@ -1,4 +1,4 @@
-import { validateDnpName } from "./validateDnpName";
+import { validateDnpName } from "./validateDnpName.js";
 
 export function getShortDnpName(dnpName: string): string {
     validateDnpName(dnpName);
