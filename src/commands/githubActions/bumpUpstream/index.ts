@@ -1,27 +1,29 @@
 import path from "path";
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
-import { defaultDir } from "../../../params.js";
+import { defaultDir, defaultManifestFileName, defaultVariantsDir } from "../../../params.js";
 import { Github } from "../../../providers/github/Github.js";
 import { shell } from "../../../utils/shell.js";
 import { getGitHead } from "../../../utils/git.js";
 import { buildAndComment } from "../build/index.js";
 import {
   writeManifest,
-  writeCompose
+  writeCompose,
+  readVariantManifests
 } from "../../../files/index.js";
-import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
 import { Compose, Manifest } from "@dappnode/types";
 import { isEmpty } from "lodash-es";
 import { UpstreamSettings, UpstreamRepoMap, ComposeVersionsToUpdate, GitSettings, GithubSettings } from "./types.js";
 import { printSettings, getInitialSettings } from "./settings/index.js";
 import { ManifestFormat } from "../../../files/manifest/types.js";
 import { closeOldPrs, getBumpPrBody, getGithubSettings, getUpstreamVersionTag, isBranchNew, isValidRelease } from "./github/index.js";
+import { getNextVersionFromApmByEns } from "../../../utils/versions/getNextVersionFromApmByEns.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
   use_fallback: boolean;
   template: boolean;
+  variants_dir: string;
 }
 
 // This action should be run periodically
@@ -53,6 +55,11 @@ export const gaBumpUpstream: CommandModule<
       description: "The project corresponds to a template repo, so the manifest and compose files will be updated accordingly in the root and in the package variants",
       default: false,
       type: "boolean"
+    },
+    variants_dir: {
+      description: "Specify the directory where the package variants are located",
+      default: defaultVariantsDir,
+      type: "string"
     }
   },
   handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
@@ -62,7 +69,8 @@ async function gaBumpUpstreamHandler({
   dir = defaultDir,
   eth_provider: userEthProvider,
   use_fallback: useFallback,
-  template: templateMode = false
+  template: templateMode = false,
+  variants_dir: variantsDir = defaultVariantsDir
 }: CliCommandOptions): Promise<void> {
 
   const { upstreamSettings, manifestData: { manifest, format }, compose, gitSettings, ethProvider } = await getInitialSettings({ dir, userEthProvider, useFallback });
@@ -87,6 +95,10 @@ async function gaBumpUpstreamHandler({
     console.log("All versions are up-to-date");
     return;
   }
+
+  if (templateMode)
+    // Does not throw error
+    await updatePackageVariantManifests({ dir, variantsDir, ethProvider });
 
   await updateManifest({ manifest, manifestFormat: format, composeVersionsToUpdate, dir, ethProvider });
 
@@ -190,12 +202,14 @@ function updateComposeVersions(dir: string, compose: Compose, upstreamRepoVersio
 async function updateManifest({
   manifest,
   manifestFormat,
+  manifestFileName = defaultManifestFileName,
   composeVersionsToUpdate,
   dir,
   ethProvider,
 }: {
   manifest: Manifest;
   manifestFormat: ManifestFormat;
+  manifestFileName?: string;
   composeVersionsToUpdate: ComposeVersionsToUpdate;
   dir: string;
   ethProvider: string;
@@ -204,27 +218,64 @@ async function updateManifest({
   try {
     manifest.upstreamVersion = getUpstreamVersionTag(composeVersionsToUpdate);
 
-    manifest.version = await getNewManifestVersion({ dir, ethProvider });
+    manifest.version = await getNewManifestVersion({ ensName: manifest.name, ethProvider });
 
-    writeManifest(manifest, manifestFormat, { dir });
+    writeManifest(manifest, manifestFormat, { dir, manifestFileName });
   } catch (e) {
     throw Error(`Error updating manifest: ${e.message}`);
+  }
+}
+
+/**
+ * Updates the manifest version for each package variant based on the ENS name.
+ * It also writes the updated manifest to disk.
+ * Upstream version is not defined for package variants, only in root manifest.
+ */
+async function updatePackageVariantManifests({
+  dir,
+  variantsDir = defaultVariantsDir,
+  variantManifestName = defaultManifestFileName,
+  ethProvider
+}: {
+  dir: string;
+  variantsDir: string;
+  variantManifestName?: string;
+  ethProvider: string;
+}): Promise<void> {
+
+  const variantManifests = readVariantManifests({ dir, variantsDir, manifestFileName: variantManifestName });
+
+  for (const [variant, { manifest: variantManifest }] of Object.entries(variantManifests)) {
+    try {
+      const ensName = variantManifest.name;
+
+      if (!ensName) {
+        console.warn(`Could not update manifest version for variant ${variant}: name is missing`);
+        continue;
+      }
+
+      variantManifest.version = await getNewManifestVersion({ ensName, ethProvider });
+      // TODO: Uncomment this after https://github.com/dappnode/DAppNodeSDK/pull/404 has been merged and this branch is rebased
+      // writeManifest<Partial<Manifest>>(variantManifest, ManifestFormat.json, { dir: path.join(dir, variantsDir, variant) });
+    } catch (e) {
+      console.error(`Error updating manifest for variant ${variant}: ${e.message} `);
+    }
   }
 
 }
 
 async function getNewManifestVersion({
   ethProvider,
-  dir
+  ensName,
 }: {
   ethProvider: string;
-  dir: string;
+  ensName: string;
 }): Promise<string> {
   try {
-    return await getNextVersionFromApm({
+    return await getNextVersionFromApmByEns({
       type: "patch",
       ethProvider,
-      dir
+      ensName,
     });
   } catch (e) {
     if (e.message.includes("NOREPO")) {
@@ -232,7 +283,7 @@ async function getNewManifestVersion({
       console.log("Manifest version set to default 0.1.0");
       return "0.1.0";
     } else {
-      e.message = `Error getting next version from apm: ${e.message}`;
+      e.message = `Error getting next version from apm: ${e.message} `;
       throw e;
     }
   }
@@ -252,9 +303,9 @@ async function prepareAndCommitChanges({
   const { branchName, branchRef } = githubSettings;
   const commitMsg = createCommitMessage(composeVersionsToUpdate);
 
-  console.log(`commitMsg: ${commitMsg}`);
-  console.log(await shell(`cat ${path.join(dir, "dappnode_package.json")}`));
-  console.log(await shell(`cat ${path.join(dir, "docker-compose.yml")}`));
+  console.log(`commitMsg: ${commitMsg} `);
+  console.log(await shell(`cat ${path.join(dir, "dappnode_package.json")} `));
+  console.log(await shell(`cat ${path.join(dir, "docker-compose.yml")} `));
 
   if (process.env.SKIP_COMMIT) {
     console.log("SKIP_COMMIT=true");
@@ -270,21 +321,22 @@ async function prepareAndCommitChanges({
 function createCommitMessage(composeVersionsToUpdate: ComposeVersionsToUpdate): string {
   return `bump ${Object.entries(composeVersionsToUpdate)
     .map(([repoSlug, { newVersion }]) => `${repoSlug} to ${newVersion}`)
-    .join(", ")}`;
+    .join(", ")
+    } `;
 }
 
 async function configureGitUser({ userName, userEmail }: GitSettings) {
-  await shell(`git config user.name ${userName}`);
-  await shell(`git config user.email ${userEmail}`);
+  await shell(`git config user.name ${userName} `);
+  await shell(`git config user.email ${userEmail} `);
 }
 
 async function checkoutNewBranch(branchName: string) {
-  await shell(`git checkout -b ${branchName}`);
+  await shell(`git checkout - b ${branchName} `);
 }
 
 async function commitAndPushChanges({ commitMsg, branchRef }: { commitMsg: string, branchRef: string }) {
-  await shell(`git commit -a -m "${commitMsg}"`, { pipeToMain: true });
-  await shell(`git push -u origin ${branchRef}`, { pipeToMain: true });
+  await shell(`git commit - a - m "${commitMsg}"`, { pipeToMain: true });
+  await shell(`git push - u origin ${branchRef} `, { pipeToMain: true });
 }
 
 async function attemptToOpenPR({
