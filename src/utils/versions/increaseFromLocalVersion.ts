@@ -9,6 +9,7 @@ import {
   writeCompose,
   updateComposeImageTags
 } from "../../files/index.js";
+import { Manifest } from "@dappnode/types";
 
 export async function increaseFromLocalVersion({
   type,
@@ -34,7 +35,7 @@ export async function increaseFromLocalVersion({
   manifest.version = nextVersion;
 
   // Mofidy and write the manifest and docker-compose
-  writeManifest(manifest, format, { dir });
+  writeManifest<Manifest>(manifest, format, { dir });
   const { name, version } = manifest;
   const compose = readCompose({ dir, composeFileName });
   const newCompose = updateComposeImageTags(compose, { name, version });

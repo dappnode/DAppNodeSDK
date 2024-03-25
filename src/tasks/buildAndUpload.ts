@@ -44,7 +44,7 @@ import {
   writeManifest,
   readSetupWizardIfExists
 } from "../files/index.js";
-import { releaseFiles } from "@dappnode/types";
+import { Manifest, releaseFiles } from "@dappnode/types";
 import { getImagePath } from "../utils/getImagePath.js";
 import { getLegacyImagePath } from "../utils/getLegacyImagePath.js";
 
@@ -224,7 +224,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
         for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
             case "manifest":
-              writeManifest(manifest, format, { dir: buildDir });
+              writeManifest<Manifest>(manifest, format, { dir: buildDir });
               break;
             case "compose":
               // Write compose with build props for builds
