@@ -1,8 +1,8 @@
-import { defaultManifestFileName, defaultVariantsDir } from "../../params";
-import { VariantManifestMap } from "./types";
+import { defaultManifestFileName, defaultVariantsDir } from "../../params.js";
+import { VariantManifestMap } from "./types.js";
 import path from "path";
 import fs from "fs";
-import { readManifest } from "./readManifest";
+import { readManifest } from "./readManifest.js";
 
 export function readVariantManifests({
     dir,
