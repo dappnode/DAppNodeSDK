@@ -11,6 +11,12 @@ import {
   writeCompose
 } from "../../../files/index.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
+import { Compose, Manifest } from "@dappnode/types";
+import { isEmpty } from "lodash-es";
+import { UpstreamSettings, UpstreamRepoMap, ComposeVersionsToUpdate, GitSettings, GithubSettings } from "./types.js";
+import { printSettings, getInitialSettings } from "./settings/index.js";
+import { ManifestFormat } from "../../../files/manifest/types.js";
+import { closeOldPrs, getBumpPrBody, getGithubSettings, getUpstreamVersionTag, isBranchNew, isValidRelease } from "./github/index.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
