@@ -18,6 +18,7 @@ export function buildWithBuildx({
   architecture,
   images,
   composePath,
+  variantComposePath,
   destPath,
   buildTimeout,
   skipSave
@@ -25,6 +26,7 @@ export function buildWithBuildx({
   architecture: Architecture;
   images: PackageImage[];
   composePath: string;
+  variantComposePath?: string;
   destPath: string;
   buildTimeout: number;
   skipSave?: boolean;
@@ -78,6 +80,7 @@ export function buildWithBuildx({
             "--progress plain",
             "--load",
             `--file ${composePath}`,
+            variantComposePath ? `--file ${variantComposePath}` : "",
             `--set=*.platform=${architecture}`
           ].join(" "),
           {

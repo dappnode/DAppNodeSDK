@@ -5,27 +5,64 @@ import { readFile } from "../../utils/file.js";
 import { defaultDir } from "../../params.js";
 import { Manifest, releaseFiles } from "@dappnode/types";
 import { ManifestFormat, ManifestPaths } from "./types.js";
+import { merge } from "lodash-es";
 
 /**
- * Reads a manifest. Without arguments defaults to read the manifest at './dappnode_package.json'
+ * Reads a manifest and optionally merges it with a variant manifest.
  */
 export function readManifest(
-  paths?: ManifestPaths
+  paths?: ManifestPaths,
+  variantPaths?: ManifestPaths
 ): { manifest: Manifest; format: ManifestFormat } {
-  // Figure out the path and format
+  try {
+    const manifest = loadManifest(paths);
+
+    if (!variantPaths) {
+      return manifest;
+    }
+
+    const variantManifest = loadManifest(variantPaths);
+
+    // Ensure both manifests are in JSON format for merging
+    if (manifest.format !== ManifestFormat.json || variantManifest.format !== ManifestFormat.json) {
+      throw new Error("Only JSON format is supported for template mode when merging manifests");
+    }
+
+    // Perform deep merging of the base manifest and variant
+    const mergedManifest = merge({}, manifest.manifest, variantManifest.manifest);
+
+    return {
+      format: ManifestFormat.json,
+      manifest: mergedManifest,
+    };
+  } catch (e) {
+    throw new Error(`Error parsing manifest: ${e.message}`);
+  }
+}
+
+/**
+ * Loads a manifest from the specified path.
+ */
+function loadManifest(paths?: ManifestPaths): { manifest: Manifest; format: ManifestFormat } {
   const manifestPath = findManifestPath(paths);
   const format = parseFormat(manifestPath);
   const data = readFile(manifestPath);
+  let parsedData;
 
-  // Parse manifest in try catch block to show a comprehensive error message
   try {
-    return {
-      format,
-      manifest: yaml.load(data)
-    };
+    parsedData = yaml.load(data);
   } catch (e) {
-    throw Error(`Error parsing manifest: ${e.message}`);
+    throw new Error(`Error parsing manifest at ${manifestPath}: ${e.message}`);
   }
+
+  if (!parsedData) {
+    throw new Error(`Manifest at ${manifestPath} is empty or invalid.`);
+  }
+
+  return {
+    format,
+    manifest: parsedData,
+  };
 }
 
 // Utils

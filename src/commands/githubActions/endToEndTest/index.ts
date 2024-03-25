@@ -70,11 +70,11 @@ export async function gaTestEndToEndHandler({
   try {
     // Build and upload
     console.log(chalk.dim("\nBuilding and uploading package..."));
-    const { releaseMultiHash } = await buildHandler({
+    const buildResult = await buildHandler({
       dir,
       provider: localIpfsApiUrl,
       upload_to: "ipfs",
-      verbose: false
+      verbose: false,
     });
 
     // Ensure test-integration environment is clean
@@ -88,7 +88,7 @@ export async function gaTestEndToEndHandler({
 
     await executeEndToEndTests({
       dappmanagerTestApi,
-      releaseMultiHash,
+      releaseMultiHash: buildResult[0].releaseMultiHash, // TODO: Do this for every releaseHash obtained
       manifest,
       compose,
       healthCheckUrl,

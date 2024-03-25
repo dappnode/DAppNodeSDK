@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { gaTestEndToEndHandler } from "../../../src/commands/githubActions/endToEndTest/index.js";
 import { attestanceProof } from "../../../src/commands/githubActions/endToEndTest/testCheckers.js";
 import { testDir, cleanTestDir } from "../../testUtils.js";
-import { initHandler } from "../../../src/commands/init.js";
+import { initHandler } from "../../../src/commands/init/index.js";
 
 // This test must be run in a dappnode environment otherwise it will fail
 describe.skip("command / gaEndToEndTest", function () {
@@ -11,7 +11,7 @@ describe.skip("command / gaEndToEndTest", function () {
 
   before(async () => {
     cleanTestDir();
-    await initHandler({ dir: testDir, yes: true, force: true });
+    await initHandler({ dir: testDir, yes: true, force: true, template: false });
   });
 
   it("should execute end to end tests on a real dappnode environment", async () => {

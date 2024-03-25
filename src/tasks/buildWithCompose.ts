@@ -12,12 +12,14 @@ import { defaultArch } from "@dappnode/types";
 export function buildWithCompose({
   images,
   composePath,
+  variantComposePath,
   destPath,
   buildTimeout,
   skipSave
 }: {
   images: PackageImage[];
   composePath: string;
+  variantComposePath?: string;
   destPath: string;
   buildTimeout: number;
   skipSave?: boolean;
@@ -27,7 +29,7 @@ export function buildWithCompose({
       title: "Build docker image",
       task: async (_, task) => {
         // Prior to this task, the compose should had been updated with the proper tag
-        await shell(`docker-compose --file ${composePath} build`, {
+        await shell(`docker-compose --file ${composePath} ${variantComposePath ? `--file ${variantComposePath} ` : ""}build`, {
           timeout: buildTimeout,
           maxBuffer: 100 * 1e6,
           onData: data => (task.output = data)

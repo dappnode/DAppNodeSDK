@@ -9,7 +9,7 @@ import dotenv from "dotenv";
 import { build } from "./commands/build.js";
 import { fromGithub } from "./commands/from_github.js";
 import { increase } from "./commands/increase.js";
-import { init } from "./commands/init.js";
+import { init } from "./commands/init/index.js";
 import { next } from "./commands/next.js";
 import { publish } from "./commands/publish.js";
 import { githubActions } from "./commands/githubActions/index.js";
