@@ -3,7 +3,7 @@ import path from "path";
 import yaml from "js-yaml";
 import { Manifest, SetupWizard, releaseFiles } from "@dappnode/types";
 import { readManifest } from "./readManifest.js";
-import { writeManifest } from "./writeManifests.js";
+import { writeManifest } from "./writeManifest.js";
 
 /**
  * Reads manifest and extra files in `buildDir` compacts them in the manifest

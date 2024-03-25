@@ -1,3 +1,5 @@
+import { Manifest } from "@dappnode/types";
+
 export enum ManifestFormat {
   json = "json",
   yml = "yml",
@@ -10,3 +12,7 @@ export interface ManifestPaths {
   /** 'manifest-admin.json', [optional] name of the manifest file */
   manifestFileName?: string;
 }
+
+export type VariantManifestMap = {
+  [variant: string]: { manifest: Partial<Manifest>, format: ManifestFormat }
+};
