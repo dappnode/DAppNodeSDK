@@ -331,12 +331,12 @@ async function configureGitUser({ userName, userEmail }: GitSettings) {
 }
 
 async function checkoutNewBranch(branchName: string) {
-  await shell(`git checkout - b ${branchName} `);
+  await shell(`git checkout -b ${branchName} `);
 }
 
 async function commitAndPushChanges({ commitMsg, branchRef }: { commitMsg: string, branchRef: string }) {
-  await shell(`git commit - a - m "${commitMsg}"`, { pipeToMain: true });
-  await shell(`git push - u origin ${branchRef} `, { pipeToMain: true });
+  await shell(`git commit -a -m "${commitMsg}"`, { pipeToMain: true });
+  await shell(`git push -u origin ${branchRef} `, { pipeToMain: true });
 }
 
 async function attemptToOpenPR({
