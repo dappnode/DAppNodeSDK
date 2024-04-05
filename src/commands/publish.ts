@@ -168,7 +168,7 @@ export async function publishHandler({
    */
   if (dappnode_team_preset) {
     if (isCi) {
-      contentProvider = "http://api.ipfs.dappnode.io:5001";
+      contentProvider = "http://api.ipfs.dappnode.io";
       uploadTo = "ipfs";
       // Activate verbose to see logs easier afterwards
       verbose = true;
