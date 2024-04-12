@@ -57,12 +57,12 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@dappnode/schemas@^0.1.12":
-  version "0.1.12"
-  resolved "https://registry.yarnpkg.com/@dappnode/schemas/-/schemas-0.1.12.tgz#527d215c74c2853bdf1708d2cd1382a6e0f55e4e"
-  integrity sha512-gVdJOhLOvKZI4Or6H9tXw+kSK1XUmGjuNVIuRxqB/g7UExeyVzi+U24e08e6HkjeZuLpp6yqGsfaNrUp8hfCZg==
+"@dappnode/schemas@^0.1.15":
+  version "0.1.15"
+  resolved "https://registry.yarnpkg.com/@dappnode/schemas/-/schemas-0.1.15.tgz#b37fe992a50fe224b28a587dd0bb765206ba1178"
+  integrity sha512-l4btcxvZH4FbaKI+gyKhKoS7TVV8YMUjQbpyt57e7s0BBa11n9Y5p12mcW+5hbfyy3DR0NYCP+Hg4W2KRjIFZg==
   dependencies:
-    "@dappnode/types" "^0.1.34"
+    "@dappnode/types" "^0.1.36"
     ajv "^8.12.0"
     semver "^7.5.0"
 
@@ -88,6 +88,11 @@
   version "0.1.34"
   resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.34.tgz#f84713687860b569e405884132a953e4ee4b8ade"
   integrity sha512-07DEQVP6umDUDhDcX8m7EZMZtUUeyOeigupTWo8/oNsHuw7/V+UMCnUjYr1UsoNug2B3nRJ4V+iYQl0R/fhBEQ==
+
+"@dappnode/types@^0.1.36":
+  version "0.1.36"
+  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.36.tgz#caa45a9290c10feb77e954a00119ec91cd9c8bc1"
+  integrity sha512-gUaHrOZKDoyHvZcyMu0IviKCikvHLrcl6pRWFFxlJgGlV5ZGaHBc7U6r6DZqZmj9bpebkpdSLRQBDVx6QA5t6Q==
 
 "@graphql-typed-document-node/core@^3.2.0":
   version "3.2.0"
@@ -2564,9 +2569,9 @@ js-tokens@^4.0.0:
   resolved "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz"
   integrity sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==
 
-js-yaml@4.1.0:
+js-yaml@4.1.0, js-yaml@^4.1.0:
   version "4.1.0"
-  resolved "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz"
+  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-4.1.0.tgz#c1fb65f8f5017901cdd2c951864ba18458a10602"
   integrity sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==
   dependencies:
     argparse "^2.0.1"
@@ -2578,13 +2583,6 @@ js-yaml@^3.13.1:
   dependencies:
     argparse "^1.0.7"
     esprima "^4.0.0"
-
-js-yaml@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-4.1.0.tgz#c1fb65f8f5017901cdd2c951864ba18458a10602"
-  integrity sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==
-  dependencies:
-    argparse "^2.0.1"
 
 jsbn@~0.1.0:
   version "0.1.1"
