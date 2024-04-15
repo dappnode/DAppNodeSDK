@@ -36,7 +36,7 @@
   },
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
-    "@dappnode/schemas": "^0.1.15",
+    "@dappnode/schemas": "^0.1.16",
     "@dappnode/toolkit": "^0.1.21",
     "@dappnode/types": "^0.1.34",
     "@octokit/rest": "^18.0.12",
