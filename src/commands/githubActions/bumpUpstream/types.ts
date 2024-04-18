@@ -3,8 +3,8 @@ import { ManifestFormat } from "../../../files/manifest/types.js";
 import { Github } from "../../../providers/github/Github.js";
 
 export interface UpstreamSettings {
-    upstreamRepo: string;
-    upstreamArg: string;
+    repo: string;
+    arg: string;
 }
 
 export interface GitSettings {

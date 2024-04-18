@@ -1,23 +1,15 @@
+import { Manifest } from "@dappnode/types";
 import { readManifest, readCompose } from "../../../../files/index.js";
 import { arrIsUnique } from "../../../../utils/array.js";
 import { parseCsv } from "../../../../utils/csv.js";
 import { getFirstAvailableEthProvider } from "../../../../utils/tryEthProviders.js";
-import { InitialSetupData, GitSettings } from "../types.js";
+import { InitialSetupData, GitSettings, UpstreamSettings } from "../types.js";
 
 export async function getInitialSettings({ dir, userEthProvider, useFallback }: { dir: string, userEthProvider: string, useFallback: boolean }): Promise<InitialSetupData> {
     const { manifest, format } = readManifest({ dir });
     const compose = readCompose({ dir });
 
-    // TODO: Update when upstream fields in manifest follow the new format described in https://github.com/dappnode/DAppNodeSDK/issues/408
-    const upstreamRepos = parseCsv(manifest.upstreamRepo);
-    const upstreamArgs = parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
-
-    // Create upstream settings after validation
-    validateUpstreamData(upstreamRepos, upstreamArgs);
-    const upstreamSettings = upstreamRepos.map((repo, i) => ({
-        upstreamRepo: repo,
-        upstreamArg: upstreamArgs[i],
-    }));
+    const upstreamSettings = parseUpstreamSettings(manifest);
 
     const gitSettings = getGitSettings();
 
@@ -37,6 +29,37 @@ export async function getInitialSettings({ dir, userEthProvider, useFallback }: 
         gitSettings,
         ethProvider: ethProviderAvailable,
     };
+}
+
+function parseUpstreamSettings(manifest: Manifest): UpstreamSettings[] {
+
+    const upstreamSettings =
+        manifest.upstream
+            ? manifest.upstream
+            : parseUpstreamSettingsFromLegacy(manifest);
+
+    validateUpstreamSettings(upstreamSettings);
+
+    return upstreamSettings;
+}
+
+/**
+ * Legacy support for 'upstreamRepo' and 'upstreamArg' fields
+ * Currently, 'upstream' field is used instead, which is an array of objects with 'repo', 'arg' and 'version' fields
+ * @param manifest 
+ * @returns 
+ */
+function parseUpstreamSettingsFromLegacy(manifest: Manifest): UpstreamSettings[] {
+    const upstreamRepos = parseCsv(manifest.upstreamRepo);
+    const upstreamArgs = parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
+
+    if (upstreamRepos.length !== upstreamArgs.length)
+        throw new Error(`'upstreamRepo' must have the same length as 'upstreamArgs'. Got ${upstreamRepos.length} repos and ${upstreamArgs.length} args.`);
+
+    return upstreamRepos.map((repo, i) => ({
+        repo,
+        arg: upstreamArgs[i],
+    }));
 }
 
 function getEthProviders(useFallback: boolean, userEthProvider: string): string[] {
@@ -59,16 +82,13 @@ function getGitSettings(): GitSettings {
     };
 }
 
-function validateUpstreamData(upstreamRepos: string[], upstreamArgs: string[]): void {
-    if (upstreamRepos.length < 1)
-        throw new Error("Must provide at least one 'upstream_repo'");
+function validateUpstreamSettings(upstreamSettings: UpstreamSettings[]): void {
+    if (upstreamSettings.length < 1)
+        throw new Error("Must provide at least one 'upstreamRepo'");
 
-    if (upstreamRepos.length !== upstreamArgs.length)
-        throw new Error(`'upstream_repo' must have the same length as 'upstream_argNames'. Got ${upstreamRepos.length} repos and ${upstreamArgs.length} args.`);
+    if (!arrIsUnique(upstreamSettings.map(s => s.repo)))
+        throw new Error("Upstream repositories must be unique");
 
-    if (!arrIsUnique(upstreamRepos))
-        throw new Error("upstreamRepos not unique");
-
-    if (!arrIsUnique(upstreamArgs))
-        throw new Error("upstreamArgs not unique");
+    if (!arrIsUnique(upstreamSettings.map(s => s.arg)))
+        throw new Error("Upstream args must be unique");
 }
