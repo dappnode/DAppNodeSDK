@@ -31,6 +31,10 @@ export async function getInitialSettings({ dir, userEthProvider, useFallback }: 
     };
 }
 
+/**
+ * Supports both legacy 'upstreamRepo' and 'upstreamArg' fields and current 'upstream' 
+ * field (array of objects with 'repo', 'arg' and 'version' fields)
+ */
 function parseUpstreamSettings(manifest: Manifest): UpstreamSettings[] {
 
     const upstreamSettings =
@@ -46,8 +50,6 @@ function parseUpstreamSettings(manifest: Manifest): UpstreamSettings[] {
 /**
  * Legacy support for 'upstreamRepo' and 'upstreamArg' fields
  * Currently, 'upstream' field is used instead, which is an array of objects with 'repo', 'arg' and 'version' fields
- * @param manifest 
- * @returns 
  */
 function parseUpstreamSettingsFromLegacy(manifest: Manifest): UpstreamSettings[] {
     const upstreamRepos = parseCsv(manifest.upstreamRepo);
