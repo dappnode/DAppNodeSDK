@@ -156,11 +156,12 @@ function updateComposeVersions(dir: string, compose: Compose, upstreamRepoVersio
     for (const [argName, currentVersion] of Object.entries(service.build.args)) {
       const upstreamVersionInfo = upstreamRepoVersions[argName];
 
-      if (!upstreamVersionInfo || currentVersion === upstreamVersionInfo.newVersion)
+      if (!upstreamVersionInfo)
         continue;
 
       newCompose.services[serviceName].build.args[argName] = upstreamVersionInfo.newVersion;
 
+      // Even the up-to-date versions are included to properly show upstream versions in the manifest for multi-upstream repos
       versionsToUpdate[upstreamVersionInfo.repoSlug] = {
         newVersion: upstreamVersionInfo.newVersion,
         currentVersion,
@@ -201,7 +202,8 @@ async function updateManifestVersions({
 
   if (manifest.upstream) {
     for (const upstreamItem of manifest.upstream) {
-      const versionUpdate = composeVersionsToUpdate[upstreamItem.arg];
+
+      const versionUpdate = composeVersionsToUpdate[upstreamItem.repo];
 
       if (versionUpdate)
         upstreamItem.version = versionUpdate.newVersion;
