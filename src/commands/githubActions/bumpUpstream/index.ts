@@ -80,7 +80,9 @@ async function gaBumpUpstreamHandler({
     return;
   }
 
-  await updateManifest({ manifest, manifestFormat: format, composeVersionsToUpdate, dir, ethProvider });
+  const updatedManifest = await updateManifestVersions({ manifest, composeVersionsToUpdate, dir, ethProvider });
+
+  saveManifest({ manifest: updatedManifest, format, dir });
 
   await prepareAndCommitChanges({
     dir,
@@ -176,40 +178,35 @@ function updateComposeVersions(dir: string, compose: Compose, upstreamRepoVersio
 }
 
 /**
- * Updates the manifest with a new version and upstream version tag based on the
- * provided `composeVersionsToUpdate`. It also writes the updated manifest to disk.
+ * Updates the manifest with new version tags based on the provided `composeVersionsToUpdate`
+ * and optionally fetches a new version for the manifest. The updated manifest is returned.
+ * @param {Object} options - The options for updating the manifest.
+ * @param {Manifest} options.manifest - The manifest object to update.
+ * @param {ComposeVersionsToUpdate} options.composeVersionsToUpdate - Object mapping upstream args to their new versions.
+ * @param {string} options.dir - Directory path where the manifest will be saved.
+ * @param {string} options.ethProvider - Ethereum provider URL.
+ * @returns {Promise<Manifest>} The updated manifest object.
  */
-async function updateManifest({
+async function updateManifestVersions({
   manifest,
-  manifestFormat,
   composeVersionsToUpdate,
   dir,
   ethProvider,
 }: {
   manifest: Manifest;
-  manifestFormat: ManifestFormat;
   composeVersionsToUpdate: ComposeVersionsToUpdate;
   dir: string;
   ethProvider: string;
-}): Promise<void> {
+}): Promise<Manifest> {
 
   if (manifest.upstream) {
-    const upstreamSettings: UpstreamSettings[] = manifest.upstream;
+    for (const upstreamItem of manifest.upstream) {
+      const versionUpdate = composeVersionsToUpdate[upstreamItem.arg];
 
-    for (const { arg: upstreamArg } of upstreamSettings) {
-      if (!composeVersionsToUpdate[upstreamArg])
-        continue;
-
-      const upstreamItem = upstreamSettings.find(({ arg }) => arg === upstreamArg);
-
-      if (!upstreamItem) {
-        console.error(`Could not find upstream item for ${upstreamArg}`);
-        continue;
-      }
-
-      upstreamItem.version = composeVersionsToUpdate[upstreamArg].newVersion;
-
+      if (versionUpdate)
+        upstreamItem.version = versionUpdate.newVersion;
     }
+
   } else {
     manifest.upstreamVersion = getUpstreamVersionTag(composeVersionsToUpdate);
   }
@@ -218,11 +215,15 @@ async function updateManifest({
     manifest.version = await getNewManifestVersion({ dir, ethProvider })
   } catch (e) {
     // Not throwing an error here because updating the manifest version is not critical
-    console.error(`Could not fetch new manifest version: ${e.message}`);
+    console.error(`Could not fetch new manifest version: ${e}`);
   }
 
+  return manifest;
+}
+
+function saveManifest({ manifest, format, dir }: { manifest: Manifest, format: ManifestFormat, dir: string }) {
   try {
-    writeManifest(manifest, manifestFormat, { dir });
+    writeManifest(manifest, format, { dir });
   } catch (e) {
     throw new Error(`Error writing manifest: ${e.message}`);
   }
