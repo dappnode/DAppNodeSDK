@@ -17,12 +17,17 @@ export function getPinMetadata(
   manifest: Manifest,
   gitHead?: GitHead
 ): PinataMetadata<DnpPinMetadata> {
+
+  const upstreamVersion = Array.isArray(manifest.upstreamVersion) ?
+    manifest.upstreamVersion.join(", ") :
+    manifest.upstreamVersion;
+
   return {
     name: prettyPinataPinName(manifest, gitHead),
     keyvalues: {
       dnpName: manifest.name,
       version: manifest.version,
-      upstreamVersion: manifest.upstreamVersion,
+      upstreamVersion: upstreamVersion,
       commit: gitHead ? gitHead.commit : undefined,
       branch: gitHead ? gitHead.branch : undefined
     }

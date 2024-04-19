@@ -1,5 +1,5 @@
 export type PinKeyvaluesDefault = {
-  [key: string]: string | number | undefined | string[];
+  [key: string]: string | number | undefined;
 };
 
 export interface PinataMetadata<PinKeyvalues = PinKeyvaluesDefault> {
