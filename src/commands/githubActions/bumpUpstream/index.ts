@@ -193,16 +193,39 @@ async function updateManifest({
   ethProvider: string;
 }): Promise<void> {
 
-  try {
+  if (manifest.upstream) {
+    const upstreamSettings: UpstreamSettings[] = manifest.upstream;
+
+    for (const { arg: upstreamArg } of upstreamSettings) {
+      if (!composeVersionsToUpdate[upstreamArg])
+        continue;
+
+      const upstreamItem = upstreamSettings.find(({ arg }) => arg === upstreamArg);
+
+      if (!upstreamItem) {
+        console.error(`Could not find upstream item for ${upstreamArg}`);
+        continue;
+      }
+
+      upstreamItem.version = composeVersionsToUpdate[upstreamArg].newVersion;
+
+    }
+  } else {
     manifest.upstreamVersion = getUpstreamVersionTag(composeVersionsToUpdate);
-
-    manifest.version = await getNewManifestVersion({ dir, ethProvider });
-
-    writeManifest(manifest, manifestFormat, { dir });
-  } catch (e) {
-    throw Error(`Error updating manifest: ${e.message}`);
   }
 
+  try {
+    manifest.version = await getNewManifestVersion({ dir, ethProvider })
+  } catch (e) {
+    // Not throwing an error here because updating the manifest version is not critical
+    console.error(`Could not fetch new manifest version: ${e.message}`);
+  }
+
+  try {
+    writeManifest(manifest, manifestFormat, { dir });
+  } catch (e) {
+    throw new Error(`Error writing manifest: ${e.message}`);
+  }
 }
 
 async function getNewManifestVersion({

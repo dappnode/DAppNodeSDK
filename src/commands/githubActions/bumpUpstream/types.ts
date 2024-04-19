@@ -5,6 +5,7 @@ import { Github } from "../../../providers/github/Github.js";
 export interface UpstreamSettings {
     repo: string;
     arg: string;
+    version?: string;
 }
 
 export interface GitSettings {
