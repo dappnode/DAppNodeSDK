@@ -104,7 +104,7 @@ async function getUpstreamRepoVersions(upstreamSettings: UpstreamSettings[]): Pr
   const upstreamRepoVersions: UpstreamRepoMap = {};
 
   try {
-    for (const { upstreamArg, upstreamRepo } of upstreamSettings) {
+    for (const { arg: upstreamArg, repo: upstreamRepo } of upstreamSettings) {
 
       const [owner, repo] = upstreamRepo.split("/");
       const githubRepo = new Github({ owner, repo });
