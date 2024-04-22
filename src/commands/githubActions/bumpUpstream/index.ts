@@ -16,7 +16,7 @@ import { isEmpty } from "lodash-es";
 import { UpstreamSettings, UpstreamRepoMap, ComposeVersionsToUpdate, GitSettings, GithubSettings } from "./types.js";
 import { printSettings, getInitialSettings } from "./settings/index.js";
 import { ManifestFormat } from "../../../files/manifest/types.js";
-import { closeOldPrs, getBumpPrBody, getGithubSettings, getUpstreamVersionTag, isBranchNew, isValidRelease } from "./github/index.js";
+import { closeOldPrs, getBumpPrBody, getGithubSettings, getLegacyUpstreamVersion, isBranchNew, isValidRelease } from "./github/index.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
@@ -209,7 +209,7 @@ async function updateManifestVersions({
     }
 
   } else {
-    manifest.upstreamVersion = getUpstreamVersionTag(composeVersionsToUpdate);
+    manifest.upstreamVersion = getLegacyUpstreamVersion(composeVersionsToUpdate);
   }
 
   try {

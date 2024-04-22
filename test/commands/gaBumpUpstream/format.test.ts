@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import {
   getBumpPrBody,
-  getUpstreamVersionTag,
+  getLegacyUpstreamVersion,
   isValidRelease,
 } from "../../../src/commands/githubActions/bumpUpstream/github/index.js";
 import { ComposeVersionsToUpdate } from "../../../src/commands/githubActions/bumpUpstream/types.js";
@@ -17,7 +17,7 @@ describe("command / gaBumpUpstream / format", () => {
     };
 
     it("getUpstreamVersionTag", () => {
-      const upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
+      const upstreamVersion = getLegacyUpstreamVersion(versionsToUpdate);
       expect(upstreamVersion).to.equal("v0.7.0");
     });
 
@@ -44,7 +44,7 @@ describe("command / gaBumpUpstream / format", () => {
 
     it("getUpstreamVersionTag throws error on multi-upstream", () => {
       // Expect getUpstreamVersionTag to throw an error when there are multiple versions to update
-      expect(() => getUpstreamVersionTag(versionsToUpdate)).to.throw();
+      expect(() => getLegacyUpstreamVersion(versionsToUpdate)).to.throw();
     });
 
     it("getPrBody", () => {
