@@ -57,12 +57,12 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@dappnode/schemas@^0.1.18":
-  version "0.1.18"
-  resolved "https://registry.yarnpkg.com/@dappnode/schemas/-/schemas-0.1.18.tgz#2d937bdcaebf446e5fe4e42af904be90d9e472a7"
-  integrity sha512-Pxahr4u72yiPVZDVDMXHEQWRuW22nOUuBtY5N3+XGL6qeZZNXNxkzlnP4mEUGBqUBBizK6ffWCCj1OZ/N8XddQ==
+"@dappnode/schemas@^0.1.19":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@dappnode/schemas/-/schemas-0.1.19.tgz#8609fa66a471f49c0101acfb124e76ce6ae4cb7a"
+  integrity sha512-4zKnsjOXt/iBsvXpm3ZqWOLNwGwACq9LsjuK+a5BR/W/wmh5mXacvYSI8O2/kN766kkSFTJteDLGcr0Vf84eHg==
   dependencies:
-    "@dappnode/types" "^0.1.37"
+    "@dappnode/types" "^0.1.38"
     ajv "^8.12.0"
     semver "^7.5.0"
 
@@ -89,10 +89,10 @@
   resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.34.tgz#f84713687860b569e405884132a953e4ee4b8ade"
   integrity sha512-07DEQVP6umDUDhDcX8m7EZMZtUUeyOeigupTWo8/oNsHuw7/V+UMCnUjYr1UsoNug2B3nRJ4V+iYQl0R/fhBEQ==
 
-"@dappnode/types@^0.1.37":
-  version "0.1.37"
-  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.37.tgz#c66424ca047006cb3b7e22e8d38556babc692bd6"
-  integrity sha512-+MBKIQsiMG78Yt8mAqQJXDih1D1IqiQVQdXHAdJfoBONnd+bl1shPuOggvS53iBQ54yq1Ccc5oI7usV4a04g0w==
+"@dappnode/types@^0.1.38":
+  version "0.1.38"
+  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.38.tgz#ec2d4fd52044e2e45fb696fa6a42faf807202b77"
+  integrity sha512-VsPDVYeQ05FKzlHDQHtjk2jL9Sv1dIwR25s0qVQXjB3IBh9jkYzSf99kVTuRpgiLah355tddJpPPHizgLhRqJA==
 
 "@graphql-typed-document-node/core@^3.2.0":
   version "3.2.0"
