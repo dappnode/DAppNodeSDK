@@ -161,7 +161,6 @@ function updateComposeVersions(dir: string, compose: Compose, upstreamRepoVersio
 
       newCompose.services[serviceName].build.args[argName] = upstreamVersionInfo.newVersion;
 
-      // Even the up-to-date versions are included to properly show upstream versions in the manifest for multi-upstream repos
       versionsToUpdate[upstreamVersionInfo.repoSlug] = {
         newVersion: upstreamVersionInfo.newVersion,
         currentVersion,
