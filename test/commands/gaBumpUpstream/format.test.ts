@@ -1,25 +1,18 @@
 import { expect } from "chai";
 import {
   getBumpPrBody,
-  getLegacyUpstreamVersion,
   isValidRelease,
 } from "../../../src/commands/githubActions/bumpUpstream/github/index.js";
-import { ComposeVersionsToUpdate } from "../../../src/commands/githubActions/bumpUpstream/types.js";
+import { ComposeVersionsToUpdate, UpstreamSettings } from "../../../src/commands/githubActions/bumpUpstream/types.js";
 
 describe("command / gaBumpUpstream / format", () => {
   describe("single version", () => {
-    const versionsToUpdate: ComposeVersionsToUpdate = {
-      "ipfs/go-ipfs": {
-        newVersion: "v0.7.0",
-        currentVersion: "v0.6.0"
-      }
-
-    };
-
-    it("getUpstreamVersionTag", () => {
-      const upstreamVersion = getLegacyUpstreamVersion(versionsToUpdate);
-      expect(upstreamVersion).to.equal("v0.7.0");
-    });
+    const versionsToUpdate: UpstreamSettings[] = [{
+      repo: "ipfs/go-ipfs",
+      arg: "v0.7.0",
+      manifestVersion: "v0.6.0",
+      githubVersion: "v0.7.0"
+    }];
 
     it("getPrBody", () => {
       const upstreamVersion = getBumpPrBody(versionsToUpdate);
@@ -30,22 +23,20 @@ describe("command / gaBumpUpstream / format", () => {
   });
 
   describe("multiple version", () => {
-    const versionsToUpdate: ComposeVersionsToUpdate = {
-      "sigp/lighthouse": {
-        newVersion: "v0.1.4",
-        currentVersion: "v0.1.2"
+    const versionsToUpdate: UpstreamSettings[] = [
+      {
+        repo: "sigp/lighthouse",
+        arg: "v0.1.4",
+        manifestVersion: "v0.1.2",
+        githubVersion: "v0.1.4"
       },
-      "prysmaticlabs/prysm": {
-        newVersion: "v0.1.0-beta.29",
-        currentVersion: "v0.1.0-beta.28"
+      {
+        repo: "prysmaticlabs/prysm",
+        arg: "v0.1.0-beta.29",
+        manifestVersion: "v0.1.0-beta.28",
+        githubVersion: "v0.1.0-beta.29"
       }
-
-    };
-
-    it("getUpstreamVersionTag throws error on multi-upstream", () => {
-      // Expect getUpstreamVersionTag to throw an error when there are multiple versions to update
-      expect(() => getLegacyUpstreamVersion(versionsToUpdate)).to.throw();
-    });
+    ];
 
     it("getPrBody", () => {
       const upstreamVersion = getBumpPrBody(versionsToUpdate);

@@ -3,12 +3,13 @@ import { readManifest, readCompose } from "../../../../files/index.js";
 import { arrIsUnique } from "../../../../utils/array.js";
 import { getFirstAvailableEthProvider } from "../../../../utils/tryEthProviders.js";
 import { InitialSetupData, GitSettings, UpstreamSettings } from "../types.js";
+import { fetchGithubUpstreamVersion } from "../github/fetchGithubUpstreamVersion.js";
 
 export async function getInitialSettings({ dir, userEthProvider, useFallback }: { dir: string, userEthProvider: string, useFallback: boolean }): Promise<InitialSetupData> {
     const { manifest, format } = readManifest({ dir });
     const compose = readCompose({ dir });
 
-    const upstreamSettings = parseUpstreamSettings(manifest);
+    const upstreamSettings = await parseUpstreamSettings(manifest);
 
     const gitSettings = getGitSettings();
 
@@ -34,31 +35,50 @@ export async function getInitialSettings({ dir, userEthProvider, useFallback }: 
  * Supports both legacy 'upstreamRepo' and 'upstreamArg' fields and current 'upstream' 
  * field (array of objects with 'repo', 'arg' and 'version' fields)
  */
-function parseUpstreamSettings(manifest: Manifest): UpstreamSettings[] {
+async function parseUpstreamSettings(manifest: Manifest): Promise<UpstreamSettings[] | null> {
 
     const upstreamSettings =
         manifest.upstream
-            ? manifest.upstream
-            : parseUpstreamSettingsFromLegacy(manifest);
+            ? await parseUpstreamSettingsNewFormat(manifest.upstream)
+            : await parseUpstreamSettingsLegacyFormat(manifest);
+
+    if (!upstreamSettings || upstreamSettings.length < 1) return null;
 
     validateUpstreamSettings(upstreamSettings);
 
     return upstreamSettings;
 }
 
+async function parseUpstreamSettingsNewFormat(upstream: NonNullable<Manifest['upstream']>): Promise<UpstreamSettings[]> {
+    const upstreamPromises = upstream.map(async ({ repo, arg, version }) => {
+        const githubVersion = await fetchGithubUpstreamVersion(repo);
+
+        if (githubVersion) return { repo, arg, manifestVersion: version, githubVersion };
+    });
+
+    const upstreamResults = await Promise.all(upstreamPromises);
+    return upstreamResults.filter((item) => item !== undefined) as UpstreamSettings[];
+}
+
 /**
  * Legacy support for 'upstreamRepo' and 'upstreamArg' fields
- * Currently, 'upstream' field is used instead, which is an array of objects with 'repo', 'arg' and 'version' fields
+ * Currently, 'upstream' field is used instead, which is an array of objects with 'repo', 'arg' and 'version' fields 
  */
-function parseUpstreamSettingsFromLegacy(manifest: Manifest): UpstreamSettings[] {
+async function parseUpstreamSettingsLegacyFormat(manifest: Manifest): Promise<UpstreamSettings[] | null> {
     // 'upstreamRepo' and 'upstreamArg' being defined as arrays has been deprecated
 
-    if (!manifest.upstreamRepo)
-        return [];
+    if (!manifest.upstreamRepo || manifest.upstreamRepo.trim() === "")
+        return null;
+
+    const githubVersion = await fetchGithubUpstreamVersion(manifest.upstreamRepo);
+
+    if (!githubVersion) return null;
 
     return [{
         repo: manifest.upstreamRepo,
+        manifestVersion: manifest.upstreamVersion || "UPSTREAM_VERSION",
         arg: manifest.upstreamArg || "UPSTREAM_VERSION",
+        githubVersion
     }];
 }
 
@@ -83,9 +103,6 @@ function getGitSettings(): GitSettings {
 }
 
 function validateUpstreamSettings(upstreamSettings: UpstreamSettings[]): void {
-    if (upstreamSettings.length < 1)
-        throw new Error("Must provide at least one 'upstreamRepo'");
-
     if (!arrIsUnique(upstreamSettings.map(s => s.repo)))
         throw new Error("Upstream repositories must be unique");
 
