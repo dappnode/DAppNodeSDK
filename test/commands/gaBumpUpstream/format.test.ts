@@ -42,11 +42,9 @@ describe("command / gaBumpUpstream / format", () => {
 
     };
 
-    it("getUpstreamVersionTag", () => {
-      const upstreamVersion = getUpstreamVersionTag(versionsToUpdate);
-      expect(upstreamVersion).to.equal(
-        "sigp/lighthouse@v0.1.4, prysmaticlabs/prysm@v0.1.0-beta.29"
-      );
+    it("getUpstreamVersionTag throws error on multi-upstream", () => {
+      // Expect getUpstreamVersionTag to throw an error when there are multiple versions to update
+      expect(() => getUpstreamVersionTag(versionsToUpdate)).to.throw();
     });
 
     it("getPrBody", () => {
