@@ -156,7 +156,7 @@ function updateComposeVersions(dir: string, compose: Compose, upstreamRepoVersio
     for (const [argName, currentVersion] of Object.entries(service.build.args)) {
       const upstreamVersionInfo = upstreamRepoVersions[argName];
 
-      if (!upstreamVersionInfo || upstreamVersionInfo.newVersion === currentVersion)
+      if (!upstreamVersionInfo || currentVersion === upstreamVersionInfo.newVersion)
         continue;
 
       newCompose.services[serviceName].build.args[argName] = upstreamVersionInfo.newVersion;
