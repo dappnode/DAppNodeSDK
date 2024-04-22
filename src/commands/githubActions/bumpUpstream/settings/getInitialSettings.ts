@@ -1,7 +1,6 @@
 import { Manifest } from "@dappnode/types";
 import { readManifest, readCompose } from "../../../../files/index.js";
 import { arrIsUnique } from "../../../../utils/array.js";
-import { parseCsv } from "../../../../utils/csv.js";
 import { getFirstAvailableEthProvider } from "../../../../utils/tryEthProviders.js";
 import { InitialSetupData, GitSettings, UpstreamSettings } from "../types.js";
 
@@ -52,16 +51,15 @@ function parseUpstreamSettings(manifest: Manifest): UpstreamSettings[] {
  * Currently, 'upstream' field is used instead, which is an array of objects with 'repo', 'arg' and 'version' fields
  */
 function parseUpstreamSettingsFromLegacy(manifest: Manifest): UpstreamSettings[] {
-    const upstreamRepos = parseCsv(manifest.upstreamRepo);
-    const upstreamArgs = parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
+    // 'upstreamRepo' and 'upstreamArg' being defined as arrays has been deprecated
 
-    if (upstreamRepos.length !== upstreamArgs.length)
-        throw new Error(`'upstreamRepo' must have the same length as 'upstreamArgs'. Got ${upstreamRepos.length} repos and ${upstreamArgs.length} args.`);
+    if (!manifest.upstreamRepo)
+        return [];
 
-    return upstreamRepos.map((repo, i) => ({
-        repo,
-        arg: upstreamArgs[i],
-    }));
+    return [{
+        repo: manifest.upstreamRepo,
+        arg: manifest.upstreamArg || "UPSTREAM_VERSION",
+    }];
 }
 
 function getEthProviders(useFallback: boolean, userEthProvider: string): string[] {

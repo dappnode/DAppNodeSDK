@@ -156,7 +156,7 @@ function updateComposeVersions(dir: string, compose: Compose, upstreamRepoVersio
     for (const [argName, currentVersion] of Object.entries(service.build.args)) {
       const upstreamVersionInfo = upstreamRepoVersions[argName];
 
-      if (!upstreamVersionInfo)
+      if (!upstreamVersionInfo || upstreamVersionInfo.newVersion === currentVersion)
         continue;
 
       newCompose.services[serviceName].build.args[argName] = upstreamVersionInfo.newVersion;
@@ -246,7 +246,7 @@ async function getNewManifestVersion({
     });
   } catch (e) {
     if (e.message.includes("NOREPO")) {
-      console.log("Package not found in APM (probably not published yet");
+      console.log("Package not found in APM (probably not published yet)");
       console.log("Manifest version set to default 0.1.0");
       return "0.1.0";
     } else {
