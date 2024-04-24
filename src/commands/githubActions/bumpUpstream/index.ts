@@ -60,12 +60,12 @@ async function gaBumpUpstreamHandler({
     return;
   }
 
-  printSettings(upstreamSettings, gitSettings, ethProvider);
-
   if (upstreamSettings.every(({ manifestVersion, githubVersion }) => manifestVersion === githubVersion)) {
     console.log("All versions are up-to-date");
     return;
   }
+
+  printSettings(upstreamSettings, gitSettings, ethProvider);
 
   const githubSettings = await getGithubSettings(dir, upstreamSettings);
   const { branchName, repo } = githubSettings;
