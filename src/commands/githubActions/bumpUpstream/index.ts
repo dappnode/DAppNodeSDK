@@ -111,6 +111,8 @@ function updateComposeUpstreamVersions(dir: string, compose: Compose, upstreamSe
 
     for (const [, service] of Object.entries(newCompose.services))
 
+      // Checks if the service includes a build argument with the same name as the 
+      // upstream item (e.g. "GETH_VERSION" is a build argument for the Geth service)
       if (typeof service.build !== "string" && service.build?.args && upstreamItem.arg in service.build.args)
 
         service.build.args[upstreamItem.arg] = upstreamItem.githubVersion;
