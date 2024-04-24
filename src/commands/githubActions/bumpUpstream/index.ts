@@ -1,4 +1,3 @@
-import path from "path";
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
 import { defaultDir } from "../../../params.js";
@@ -81,7 +80,6 @@ async function gaBumpUpstreamHandler({
   await updateManifestVersions({ manifest, manifestFormat, upstreamSettings, dir, ethProvider });
 
   await prepareAndCommitChanges({
-    dir,
     gitSettings,
     upstreamSettings,
     githubSettings,
@@ -199,12 +197,10 @@ async function getNewManifestVersion({
 }
 
 async function prepareAndCommitChanges({
-  dir,
   gitSettings,
   upstreamSettings,
   githubSettings,
 }: {
-  dir: string;
   gitSettings: GitSettings;
   upstreamSettings: UpstreamSettings[];
   githubSettings: GithubSettings;
@@ -213,8 +209,6 @@ async function prepareAndCommitChanges({
   const commitMsg = createCommitMessage(upstreamSettings);
 
   console.log(`commitMsg: ${commitMsg}`);
-  console.log(await shell(`cat ${path.join(dir, "dappnode_package.json")}`));
-  console.log(await shell(`cat ${path.join(dir, "docker-compose.yml")}`));
 
   if (process.env.SKIP_COMMIT) {
     console.log("SKIP_COMMIT=true");

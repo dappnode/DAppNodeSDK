@@ -1,10 +1,8 @@
-import { Manifest, Compose } from "@dappnode/types";
+import { UpstreamItem, Manifest, Compose } from "@dappnode/types";
 import { ManifestFormat } from "../../../files/manifest/types.js";
 import { Github } from "../../../providers/github/Github.js";
 
-export type ManifestUpstream = NonNullable<Manifest['upstream']>;
-
-export type UpstreamSettings = Omit<ManifestUpstream[number], 'version'> & {
+export type UpstreamSettings = Omit<UpstreamItem, 'version'> & {
     manifestVersion: string;
     githubVersion: string;
 }
