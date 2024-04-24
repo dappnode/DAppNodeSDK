@@ -2,7 +2,7 @@ import { Manifest } from "@dappnode/types";
 import { readManifest, readCompose } from "../../../../files/index.js";
 import { arrIsUnique } from "../../../../utils/array.js";
 import { getFirstAvailableEthProvider } from "../../../../utils/tryEthProviders.js";
-import { InitialSetupData, GitSettings, UpstreamSettings } from "../types.js";
+import { InitialSetupData, GitSettings, UpstreamSettings, ManifestUpstream } from "../types.js";
 import { fetchGithubUpstreamVersion } from "../github/fetchGithubUpstreamVersion.js";
 
 export async function getInitialSettings({ dir, userEthProvider, useFallback }: { dir: string, userEthProvider: string, useFallback: boolean }): Promise<InitialSetupData> {
@@ -49,7 +49,7 @@ async function parseUpstreamSettings(manifest: Manifest): Promise<UpstreamSettin
     return upstreamSettings;
 }
 
-async function parseUpstreamSettingsNewFormat(upstream: NonNullable<Manifest['upstream']>): Promise<UpstreamSettings[]> {
+async function parseUpstreamSettingsNewFormat(upstream: ManifestUpstream): Promise<UpstreamSettings[]> {
     const upstreamPromises = upstream.map(async ({ repo, arg, version }) => {
         const githubVersion = await fetchGithubUpstreamVersion(repo);
 
