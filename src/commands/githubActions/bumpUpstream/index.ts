@@ -75,7 +75,7 @@ async function gaBumpUpstreamHandler({
     return;
   }
 
-  updateComposeVersions(dir, compose, upstreamSettings);
+  updateComposeUpstreamVersions(dir, compose, upstreamSettings);
 
   await updateManifestVersions({ manifest, manifestFormat, upstreamSettings, dir, ethProvider });
 
@@ -104,7 +104,7 @@ async function gaBumpUpstreamHandler({
  * @param {Compose} compose - Original Docker Compose configuration.
  * @param {UpstreamSettings[]} upstreamSettings - New versions for the Compose services.
  */
-function updateComposeVersions(dir: string, compose: Compose, upstreamSettings: UpstreamSettings[]): void {
+function updateComposeUpstreamVersions(dir: string, compose: Compose, upstreamSettings: UpstreamSettings[]): void {
   const newCompose: Compose = JSON.parse(JSON.stringify(compose)); // Deep copy
 
   for (const upstreamItem of upstreamSettings) {
