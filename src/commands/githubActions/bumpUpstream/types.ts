@@ -1,10 +1,10 @@
-import { Manifest, Compose } from "@dappnode/types";
+import { UpstreamItem, Manifest, Compose } from "@dappnode/types";
 import { ManifestFormat } from "../../../files/manifest/types.js";
 import { Github } from "../../../providers/github/Github.js";
 
-export interface UpstreamSettings {
-    repo: string;
-    arg: string;
+export type UpstreamSettings = Omit<UpstreamItem, 'version'> & {
+    manifestVersion: string;
+    githubVersion: string;
 }
 
 export interface GitSettings {
@@ -25,7 +25,7 @@ export interface GitBranch {
 }
 
 export interface InitialSetupData {
-    upstreamSettings: UpstreamSettings[];
+    upstreamSettings: UpstreamSettings[] | null;
     manifestData: {
         manifest: Manifest;
         format: ManifestFormat;
@@ -39,10 +39,6 @@ export type UpstreamRepo = {
     repo: string;
     repoSlug: string;
     newVersion: string
-};
-
-export type UpstreamRepoMap = {
-    [upstreamArg: string]: UpstreamRepo;
 };
 
 export type ComposeVersionsToUpdate = {

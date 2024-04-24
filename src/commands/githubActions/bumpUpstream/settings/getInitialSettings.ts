@@ -1,15 +1,15 @@
-import { Manifest } from "@dappnode/types";
+import { Manifest, UpstreamItem } from "@dappnode/types";
 import { readManifest, readCompose } from "../../../../files/index.js";
 import { arrIsUnique } from "../../../../utils/array.js";
-import { parseCsv } from "../../../../utils/csv.js";
 import { getFirstAvailableEthProvider } from "../../../../utils/tryEthProviders.js";
 import { InitialSetupData, GitSettings, UpstreamSettings } from "../types.js";
+import { fetchGithubUpstreamVersion } from "../github/fetchGithubUpstreamVersion.js";
 
 export async function getInitialSettings({ dir, userEthProvider, useFallback }: { dir: string, userEthProvider: string, useFallback: boolean }): Promise<InitialSetupData> {
     const { manifest, format } = readManifest({ dir });
     const compose = readCompose({ dir });
 
-    const upstreamSettings = parseUpstreamSettings(manifest);
+    const upstreamSettings = await parseUpstreamSettings(manifest);
 
     const gitSettings = getGitSettings();
 
@@ -35,33 +35,51 @@ export async function getInitialSettings({ dir, userEthProvider, useFallback }: 
  * Supports both legacy 'upstreamRepo' and 'upstreamArg' fields and current 'upstream' 
  * field (array of objects with 'repo', 'arg' and 'version' fields)
  */
-function parseUpstreamSettings(manifest: Manifest): UpstreamSettings[] {
+async function parseUpstreamSettings(manifest: Manifest): Promise<UpstreamSettings[] | null> {
 
     const upstreamSettings =
         manifest.upstream
-            ? manifest.upstream
-            : parseUpstreamSettingsFromLegacy(manifest);
+            ? await parseUpstreamSettingsNewFormat(manifest.upstream)
+            : await parseUpstreamSettingsLegacyFormat(manifest);
+
+    if (!upstreamSettings || upstreamSettings.length < 1) return null;
 
     validateUpstreamSettings(upstreamSettings);
 
     return upstreamSettings;
 }
 
+async function parseUpstreamSettingsNewFormat(upstream: UpstreamItem[]): Promise<UpstreamSettings[]> {
+    const upstreamPromises = upstream.map(async ({ repo, arg, version }) => {
+        const githubVersion = await fetchGithubUpstreamVersion(repo);
+
+        if (githubVersion) return { repo, arg, manifestVersion: version, githubVersion };
+    });
+
+    const upstreamResults = await Promise.all(upstreamPromises);
+    return upstreamResults.filter((item) => item !== undefined) as UpstreamSettings[];
+}
+
 /**
  * Legacy support for 'upstreamRepo' and 'upstreamArg' fields
- * Currently, 'upstream' field is used instead, which is an array of objects with 'repo', 'arg' and 'version' fields
+ * Currently, 'upstream' field is used instead, which is an array of objects with 'repo', 'arg' and 'version' fields 
  */
-function parseUpstreamSettingsFromLegacy(manifest: Manifest): UpstreamSettings[] {
-    const upstreamRepos = parseCsv(manifest.upstreamRepo);
-    const upstreamArgs = parseCsv(manifest.upstreamArg || "UPSTREAM_VERSION");
+async function parseUpstreamSettingsLegacyFormat(manifest: Manifest): Promise<UpstreamSettings[] | null> {
+    // 'upstreamRepo' and 'upstreamArg' being defined as arrays has been deprecated
 
-    if (upstreamRepos.length !== upstreamArgs.length)
-        throw new Error(`'upstreamRepo' must have the same length as 'upstreamArgs'. Got ${upstreamRepos.length} repos and ${upstreamArgs.length} args.`);
+    if (!manifest.upstreamRepo || manifest.upstreamRepo.trim() === "")
+        return null;
 
-    return upstreamRepos.map((repo, i) => ({
-        repo,
-        arg: upstreamArgs[i],
-    }));
+    const githubVersion = await fetchGithubUpstreamVersion(manifest.upstreamRepo);
+
+    if (!githubVersion) return null;
+
+    return [{
+        repo: manifest.upstreamRepo,
+        manifestVersion: manifest.upstreamVersion || "UPSTREAM_VERSION",
+        arg: manifest.upstreamArg || "UPSTREAM_VERSION",
+        githubVersion
+    }];
 }
 
 function getEthProviders(useFallback: boolean, userEthProvider: string): string[] {
@@ -85,9 +103,6 @@ function getGitSettings(): GitSettings {
 }
 
 function validateUpstreamSettings(upstreamSettings: UpstreamSettings[]): void {
-    if (upstreamSettings.length < 1)
-        throw new Error("Must provide at least one 'upstreamRepo'");
-
     if (!arrIsUnique(upstreamSettings.map(s => s.repo)))
         throw new Error("Upstream repositories must be unique");
 

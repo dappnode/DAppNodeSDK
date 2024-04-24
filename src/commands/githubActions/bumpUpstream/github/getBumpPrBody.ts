@@ -1,17 +1,15 @@
-import { ComposeVersionsToUpdate } from "../types.js";
+import { UpstreamSettings } from "../types.js";
 
-export function getBumpPrBody(versionsToUpdate: ComposeVersionsToUpdate): string {
+export function getBumpPrBody(upstreamSettings: UpstreamSettings[]): string {
     return [
         "Bumps upstream version",
-        Object.entries(versionsToUpdate)
-            .map(([repoSlug, { newVersion, currentVersion }]) =>
-                `- [${repoSlug}](${getGitHubUrl({ repoSlug })}) from ${currentVersion} to [${newVersion}](${getGitHubUrl({ repoSlug, tag: newVersion })})`
-            )
-            .join("\n")
+        upstreamSettings.flatMap(({ repo, githubVersion, manifestVersion }) =>
+            `- [${repo}](${getGitHubUrl({ repo })}) from ${manifestVersion} to [${githubVersion}](${getGitHubUrl({ repo, tag: githubVersion })})`
+        ).join("\n")
     ].join("\n\n");
 }
 
-function getGitHubUrl({ repoSlug, tag = "" }: { repoSlug: string, tag?: string }): string {
-    const baseUrl = `https://github.com/${repoSlug}`;
+function getGitHubUrl({ repo, tag = "" }: { repo: string, tag?: string }): string {
+    const baseUrl = `https://github.com/${repo}`;
     return tag ? `${baseUrl}/releases/tag/${tag}` : baseUrl;
 }
