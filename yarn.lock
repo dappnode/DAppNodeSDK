@@ -94,6 +94,11 @@
   resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.38.tgz#ec2d4fd52044e2e45fb696fa6a42faf807202b77"
   integrity sha512-VsPDVYeQ05FKzlHDQHtjk2jL9Sv1dIwR25s0qVQXjB3IBh9jkYzSf99kVTuRpgiLah355tddJpPPHizgLhRqJA==
 
+"@dappnode/types@^0.1.39":
+  version "0.1.39"
+  resolved "https://registry.yarnpkg.com/@dappnode/types/-/types-0.1.39.tgz#f82591dc3403d7c2049a078d43515771e7627939"
+  integrity sha512-HekCz9O24km0FfAr3yzIq9j8TqCshY3+UD3+ee0SKwj/Iq5QYV0I4gH4EL2U8w7Mwgu2T8tJUzmTbG1c05giEw==
+
 "@graphql-typed-document-node/core@^3.2.0":
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/@graphql-typed-document-node/core/-/core-3.2.0.tgz#5f3d96ec6b2354ad6d8a28bf216a1d97b5426861"
