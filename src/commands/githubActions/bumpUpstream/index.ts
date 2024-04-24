@@ -77,7 +77,9 @@ async function gaBumpUpstreamHandler({
 
   updateComposeUpstreamVersions(dir, compose, upstreamSettings);
 
-  await updateManifestVersions({ manifest, manifestFormat, upstreamSettings, dir, ethProvider });
+  const newManifest = updateManifestUpstreamVersion({ manifest, manifestFormat, upstreamSettings, dir });
+
+  await updateManifestPkgVersion({ manifest: newManifest, manifestFormat, dir, ethProvider });
 
   await prepareAndCommitChanges({
     gitSettings,
@@ -131,19 +133,17 @@ function updateComposeUpstreamVersions(dir: string, compose: Compose, upstreamSe
  * @param {string} options.ethProvider - Ethereum provider URL.
  * @returns {Promise<Manifest>} The updated manifest object.
  */
-async function updateManifestVersions({
+function updateManifestUpstreamVersion({
   manifest,
   manifestFormat,
   upstreamSettings,
   dir,
-  ethProvider,
 }: {
   manifest: Manifest;
   manifestFormat: ManifestFormat;
   upstreamSettings: UpstreamSettings[];
   dir: string;
-  ethProvider: string;
-}): Promise<void> {
+}): Manifest {
 
   if (manifest.upstream) {
     for (const upstreamItem of manifest.upstream) {
@@ -160,16 +160,33 @@ async function updateManifestVersions({
   }
 
   try {
-    manifest.version = await getNewManifestVersion({ dir, ethProvider })
-  } catch (e) {
-    // Not throwing an error here because updating the manifest version is not critical
-    console.error(`Could not fetch new manifest version: ${e}`);
-  }
-
-  try {
     writeManifest(manifest, manifestFormat, { dir });
   } catch (e) {
     throw new Error(`Error writing manifest: ${e.message}`);
+  }
+
+  return manifest;
+}
+
+async function updateManifestPkgVersion({
+  manifest,
+  manifestFormat,
+  dir,
+  ethProvider,
+}: {
+  manifest: Manifest;
+  manifestFormat: ManifestFormat;
+  dir: string;
+  ethProvider: string;
+}): Promise<void> {
+
+  try {
+    manifest.version = await getNewManifestVersion({ dir, ethProvider });
+    writeManifest(manifest, manifestFormat, { dir });
+
+  } catch (e) {
+    // Not throwing an error here because updating the manifest version is not critical
+    console.error(`Could not fetch new manifest version: ${e}`);
   }
 }
 
