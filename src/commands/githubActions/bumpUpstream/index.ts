@@ -1,12 +1,13 @@
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
-import { defaultDir } from "../../../params.js";
+import { defaultDir, defaultVariantsDir } from "../../../params.js";
 import { shell } from "../../../utils/shell.js";
 import { getGitHead } from "../../../utils/git.js";
 import { buildAndComment } from "../build/index.js";
 import {
   writeManifest,
-  writeCompose
+  writeCompose,
+  readManifest
 } from "../../../files/index.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
 import { Compose, Manifest } from "@dappnode/types";
@@ -14,10 +15,15 @@ import { GitSettings, GithubSettings, UpstreamSettings } from "./types.js";
 import { printSettings, getInitialSettings } from "./settings/index.js";
 import { ManifestFormat } from "../../../files/manifest/types.js";
 import { closeOldPrs, getBumpPrBody, getGithubSettings, isBranchNew } from "./github/index.js";
+import path from "path";
+import { getAllVariantsInPath } from "../../../files/variants/getAllPackageVariants.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
   use_fallback: boolean;
+  use_variants?: boolean;
+  variants_dir: string;
+  skip_build?: boolean;
 }
 
 // This action should be run periodically
@@ -43,6 +49,19 @@ export const gaBumpUpstream: CommandModule<
         "Use fallback eth provider if main provider fails: false (default), true. If main provider fails, it will try to use 'remote' first and then 'infura'",
       default: true,
       type: "boolean"
+    },
+    use_variants: {
+      description: `It will use the dappnode_package.json and docker-compose.yml files in the root of the project together with the specific ones defined for each package variant to build all of them`,
+      type: "boolean"
+    },
+    variants_dir: {
+      description: `Path to the directory where the package variants are located (only for packages that support it and combined with either "--all-variants" or "--variants"). By default, it is ${defaultVariantsDir}`,
+      type: "string",
+      default: defaultVariantsDir
+    },
+    skip_build: {
+      description: `Only create the bump PR without building the package`,
+      type: "boolean"
     }
   },
   handler: async (args): Promise<void> => await gaBumpUpstreamHandler(args)
@@ -52,6 +71,9 @@ async function gaBumpUpstreamHandler({
   dir = defaultDir,
   eth_provider: userEthProvider,
   use_fallback: useFallback,
+  use_variants: useVariants,
+  variants_dir: variantsDir,
+  skip_build: skipBuild
 }: CliCommandOptions): Promise<void> {
 
   const { upstreamSettings, manifestData: { manifest, format: manifestFormat }, compose, gitSettings, ethProvider } = await getInitialSettings({ dir, userEthProvider, useFallback });
@@ -77,9 +99,9 @@ async function gaBumpUpstreamHandler({
 
   updateComposeUpstreamVersions(dir, compose, upstreamSettings);
 
-  const newManifest = updateManifestUpstreamVersion({ manifest, manifestFormat, upstreamSettings, dir });
+  updateManifestUpstreamVersion({ manifest, manifestFormat, upstreamSettings, dir });
 
-  await updateManifestPkgVersion({ manifest: newManifest, manifestFormat, dir, ethProvider });
+  await updateManifestPkgVersion({ dir, ethProvider, allVariants: useVariants, variantsDir });
 
   await prepareAndCommitChanges({
     gitSettings,
@@ -91,6 +113,17 @@ async function gaBumpUpstreamHandler({
     await closeOldPrs(repo, branchName);
   } catch (e) {
     console.warn("Could not close old linked PRs", e);
+  }
+
+  if (skipBuild) {
+    console.log("Skipping build and comment stage due to --skip_build flag");
+    return;
+  }
+
+  // TODO: Delete once the build action for template repos is ready
+  if (useVariants) {
+    console.log("Build and comment stage is not available for template package repositories yet");
+    return;
   }
 
   const gitHead = await getGitHead();
@@ -143,7 +176,7 @@ function updateManifestUpstreamVersion({
   manifestFormat: ManifestFormat;
   upstreamSettings: UpstreamSettings[];
   dir: string;
-}): Manifest {
+}): void {
 
   if (manifest.upstream) {
     for (const upstreamItem of manifest.upstream) {
@@ -164,29 +197,37 @@ function updateManifestUpstreamVersion({
   } catch (e) {
     throw new Error(`Error writing manifest: ${e.message}`);
   }
-
-  return manifest;
 }
 
 async function updateManifestPkgVersion({
-  manifest,
-  manifestFormat,
   dir,
   ethProvider,
+  allVariants,
+  variantsDir
 }: {
-  manifest: Manifest;
-  manifestFormat: ManifestFormat;
   dir: string;
   ethProvider: string;
+  allVariants?: boolean;
+  variantsDir: string;
 }): Promise<void> {
 
-  try {
-    manifest.version = await getNewManifestVersion({ dir, ethProvider });
-    writeManifest(manifest, manifestFormat, { dir });
+  const manifestDirs = allVariants
+    ? getAllVariantsInPath(variantsDir).map(variant => path.join(variantsDir, variant))
+    : [dir];
 
-  } catch (e) {
-    // Not throwing an error here because updating the manifest version is not critical
-    console.error(`Could not fetch new manifest version: ${e}`);
+  for (const dir of manifestDirs) {
+    try {
+      const { manifest, format } = readManifest({ dir });
+      manifest.version = await getNewManifestVersion({ dir, ethProvider });
+
+      console.log(`New manifest version for ${manifest.name}: ${manifest.version}`);
+
+      writeManifest(manifest, format, { dir });
+
+    } catch (e) {
+      // Not throwing an error here because updating the manifest version is not critical
+      console.error(`Could not fetch new manifest version: ${e}`);
+    }
   }
 }
 
