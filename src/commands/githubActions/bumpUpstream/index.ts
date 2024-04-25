@@ -219,6 +219,9 @@ async function updateManifestPkgVersion({
     try {
       const { manifest, format } = readManifest({ dir });
       manifest.version = await getNewManifestVersion({ dir, ethProvider });
+
+      console.log(`New manifest version for ${manifest.name}: ${manifest.version}`);
+
       writeManifest(manifest, format, { dir });
 
     } catch (e) {
