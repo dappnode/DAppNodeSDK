@@ -14,6 +14,9 @@ export const branchNameRoot = "dappnodebot/bump-upstream/";
 
 export const defaultDir = "./";
 export const defaultVariantsDir = "./package_variants";
+// This is the default name of the environment variable that will be used to select each of the variants
+export const defaultVariantsEnvName = "NETWORK";
+export const defaultVariantsEnvValues = ["mainnet", "testnet"];
 export const defaultManifestFileName = "dappnode_package.json";
 export const defaultManifestFormat = ManifestFormat.json;
 export const defaultComposeFileName = "docker-compose.yml";
