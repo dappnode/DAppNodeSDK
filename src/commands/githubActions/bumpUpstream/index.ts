@@ -21,7 +21,7 @@ import { getAllVariantsInPath } from "../../../files/variants/getAllPackageVaria
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
   use_fallback: boolean;
-  all_variants?: boolean;
+  use_variants?: boolean;
   variants_dir: string;
   skip_build?: boolean;
 }
@@ -50,7 +50,7 @@ export const gaBumpUpstream: CommandModule<
       default: true,
       type: "boolean"
     },
-    all_variants: {
+    use_variants: {
       description: `It will use the dappnode_package.json and docker-compose.yml files in the root of the project together with the specific ones defined for each package variant to build all of them`,
       type: "boolean"
     },
@@ -71,7 +71,7 @@ async function gaBumpUpstreamHandler({
   dir = defaultDir,
   eth_provider: userEthProvider,
   use_fallback: useFallback,
-  all_variants: allVariants,
+  use_variants: useVariants,
   variants_dir: variantsDir,
   skip_build: skipBuild
 }: CliCommandOptions): Promise<void> {
@@ -101,7 +101,7 @@ async function gaBumpUpstreamHandler({
 
   updateManifestUpstreamVersion({ manifest, manifestFormat, upstreamSettings, dir });
 
-  await updateManifestPkgVersion({ dir, ethProvider, allVariants, variantsDir });
+  await updateManifestPkgVersion({ dir, ethProvider, allVariants: useVariants, variantsDir });
 
   await prepareAndCommitChanges({
     gitSettings,
@@ -121,7 +121,7 @@ async function gaBumpUpstreamHandler({
   }
 
   // TODO: Delete once the build action for template repos is ready
-  if (allVariants) {
+  if (useVariants) {
     console.log("Build and comment stage is not available for template package repositories yet");
     return;
   }
