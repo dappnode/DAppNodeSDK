@@ -13,7 +13,7 @@ jobs:
     # to be run on self-hosted runner
     runs-on: packages
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - run: yarn install
       - run: yarn build
 
