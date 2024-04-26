@@ -1,6 +1,7 @@
 import fs from "fs";
 import rimraf from "rimraf";
 import { Compose, Manifest, getImageTag } from "@dappnode/types";
+import path from "path";
 
 export const testDir = "test_files";
 export function cleanTestDir(): void {
@@ -22,4 +23,12 @@ export function generateCompose(manifest: Manifest): Compose {
       }
     }
   };
+}
+
+export function testPathExists(file: string): boolean {
+  return fs.existsSync(path.join(testDir, file));
+}
+
+export function readTestFile(file: string): string {
+  return fs.readFileSync(path.join(testDir, file), "utf8");
 }
