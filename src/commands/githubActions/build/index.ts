@@ -2,7 +2,7 @@ import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
 import { defaultDir } from "../../../params.js";
 import { getGithubContext } from "../../../providers/github/githubActions.js";
-import { buildHandler } from "../../build.js";
+import { buildHandler } from "../../build/handler.js";
 import { Github } from "../../../providers/github/Github.js";
 import { parseRef } from "../../../providers/github/utils.js";
 import { getBuildBotComment, isTargetComment } from "./botComment.js";

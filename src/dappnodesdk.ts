@@ -6,7 +6,7 @@ import chalk from "chalk";
 import figlet from "figlet";
 import dotenv from "dotenv";
 
-import { build } from "./commands/build.js";
+import { build } from "./commands/build/index.js";
 import { fromGithub } from "./commands/from_github.js";
 import { increase } from "./commands/increase.js";
 import { init } from "./commands/init/index.js";

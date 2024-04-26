@@ -2,7 +2,7 @@ import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
 import { ensureDappnodeEnvironment } from "./ensureDappnodeEnvironment.js";
 import { readCompose, readManifest } from "../../../files/index.js";
-import { buildHandler } from "../../build.js";
+import { buildHandler } from "../../build/handler.js";
 import { executeEndToEndTests } from "./executeTests.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import { localDappmanagerTestApiUrl, localIpfsApiUrl } from "./params.js";
