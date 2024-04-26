@@ -1,3 +1,4 @@
+import { ListrContextBuildAndPublish } from "../../../types.js";
 import { getInstallDnpLink } from "../../../utils/getLinks.js";
 
 const botCommentTag = "(by dappnodebot/build-action)";
@@ -9,20 +10,20 @@ const botCommentTag = "(by dappnodebot/build-action)";
  */
 export function getBuildBotComment({
   commitSha,
-  releaseMultiHash
+  buildResults
 }: {
   commitSha: string;
-  releaseMultiHash: string;
+  buildResults: ListrContextBuildAndPublish[]
 }): string {
-  const installLink = getInstallDnpLink(releaseMultiHash);
+  return `Dappnode bot has built and pinned the built packages to an IPFS node, for commit: ${commitSha}
 
-  return `DAppNode bot has built and pinned the release to an IPFS node, for commit: ${commitSha}
+This is a development version and should **only** be installed for testing purposes.
 
-This is a development version and should **only** be installed for testing purposes, [install link](${installLink})
+${buildResults.map((result, index) => `${index + 1}. Package **${result.dnpName}**
 
-\`\`\`
-${releaseMultiHash}
-\`\`\`
+\t[Install link](${getInstallDnpLink(result.releaseMultiHash)})
+
+\tHash: \`${result.releaseMultiHash}\``)}
 
 ${botCommentTag}
 `;
