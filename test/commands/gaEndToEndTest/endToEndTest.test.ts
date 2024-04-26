@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { gaTestEndToEndHandler } from "../../../src/commands/githubActions/endToEndTest/index.js";
 import { attestanceProof } from "../../../src/commands/githubActions/endToEndTest/testCheckers.js";
 import { testDir, cleanTestDir } from "../../testUtils.js";
-import { initHandler } from "../../../src/commands/init.js";
+import { initHandler } from "../../../src/commands/init/handler.js";
 
 // This test must be run in a dappnode environment otherwise it will fail
 describe.skip("command / gaEndToEndTest", function () {
