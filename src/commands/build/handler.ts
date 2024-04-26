@@ -64,7 +64,7 @@ function handleMultiVariantBuild({
     const variantsDirPath = path.join(buildOptions.dir, variantsDir);
     const variantNames = getVariantNames({ variantsDirPath, variants });
 
-    console.log(`${chalk.dim(`Building package from template for variants ${variants}...`)}`);
+    console.log(`${chalk.dim(`Building package from template for variant(s) ${variants}...`)}`);
 
     return variantNames.map((variantName) => new Listr(
         buildAndUpload({ ...buildOptions, variantName, variantsDirPath }),
