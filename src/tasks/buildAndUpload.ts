@@ -153,6 +153,8 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
   });
   const releaseUploader = getReleaseUploader(releaseUploaderProvider);
 
+  // TODO: For multi-variant packages share stage verify connection
+  // TODO: For multi-variant packages properly show the progress in the console
   return [
     {
       title: "Verify connection",
