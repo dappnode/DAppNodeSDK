@@ -9,12 +9,12 @@ import { avatarData, avatarName, dockerfileData, dockerfileName, gitignoreCheck,
 import { FlexibleCompose } from "../../files/compose/types.js";
 import { addVariantToDnpName } from "./naming.js";
 
-export function createPackageDirectories(dir: string, answers: UserAnswers, templateMode: boolean): void {
+export function createPackageDirectories(dir: string, answers: UserAnswers, useVariants: boolean): void {
     // Create package root dir
     fs.mkdirSync(dir, { recursive: true });
 
     // Create all variant dirs
-    if (templateMode && answers.variants) {
+    if (useVariants && answers.variants) {
         const variantsDir = answers.variantsDir || defaultVariantsDir;
 
         fs.mkdirSync(path.join(dir, variantsDir), { recursive: true });
@@ -48,7 +48,7 @@ export function writePackageFiles({
     confirmManifestOverwrite(rootManifestPath, force);
 
     if (useVariants)
-        writeTemplatePackageFiles({ dir, rootManifest, rootCompose, composeFileName, answers, serviceName });
+        writeMultiVariantPackageFiles({ dir, rootManifest, rootCompose, composeFileName, answers, serviceName });
     else
         writeSinglePackageFiles({ dir, rootManifest, rootCompose, composeFileName });
 
@@ -78,7 +78,7 @@ function writeSinglePackageFiles({
     }
 }
 
-function writeTemplatePackageFiles({
+function writeMultiVariantPackageFiles({
     dir,
     rootManifest,
     rootCompose,

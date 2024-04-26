@@ -3,13 +3,13 @@ import semver from "semver";
 import { defaultVariantsEnvName, defaultVariantsDir, defaultVariantsEnvValues } from "../../params.js";
 import { shell } from "../../utils/shell.js";
 import { defaultVersion } from "./params.js";
-import { UserAnswers, TemplateAnswers, DefaultAnswers } from "./types.js";
+import { UserAnswers, MultiVariantAnswers, DefaultAnswers } from "./types.js";
 import { validateVariantsInput } from "./validation.js";
 
 export async function getUserAnswers({ useVariants, useDefaults, defaultName }: { useVariants: boolean, useDefaults: boolean, defaultName: string }): Promise<UserAnswers> {
     const defaultAuthor = await shell("whoami");
 
-    const defaultVariantAnswers: TemplateAnswers = {
+    const defaultVariantAnswers: MultiVariantAnswers = {
         envName: defaultVariantsEnvName,
         variantsDir: defaultVariantsDir,
         variants: defaultVariantsEnvValues
@@ -35,8 +35,8 @@ export async function getUserAnswers({ useVariants, useDefaults, defaultName }: 
     const answers: UserAnswers = await getSinglePackageAnswers(defaultAnswers);
 
     if (useVariants) {
-        const templateAnswers = await getVariantAnswers();
-        return { ...answers, ...templateAnswers };
+        const variantAnswers = await getVariantAnswers();
+        return { ...answers, ...variantAnswers };
     }
 
     return answers;
@@ -87,8 +87,8 @@ async function getSinglePackageAnswers(defaultAnswers: DefaultAnswers): Promise<
     );
 }
 
-async function getVariantAnswers(): Promise<TemplateAnswers> {
-    const templateAnswers = await inquirer.prompt(
+async function getVariantAnswers(): Promise<MultiVariantAnswers> {
+    const variantAnswers = await inquirer.prompt(
         [{
             type: "input",
             name: "variantsDir",
@@ -111,7 +111,7 @@ async function getVariantAnswers(): Promise<TemplateAnswers> {
         ]);
 
     return {
-        ...templateAnswers,
-        variants: templateAnswers.variants.split(",").map((s: string) => s.trim())
+        ...variantAnswers,
+        variants: variantAnswers.variants.split(",").map((s: string) => s.trim())
     }
 }
