@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import path from "path";
-import { initHandler } from "../../src/commands/init/index.js";
+import { initHandler } from "../../src/commands/init/handler.js";
 import { cleanTestDir, readTestFile, testDir, testPathExists } from "../testUtils.js";
-import { dockerfileData, dockerfilePath, gitignoreData, gitignorePath } from "../../src/commands/init/params.js";
+import { dockerfileData, dockerfileName, gitignoreData, gitignoreName } from "../../src/commands/init/params.js";
 import { defaultComposeFileName, defaultManifestFileName, defaultVariantsDir, defaultVariantsEnvValues } from "../../src/params.js";
 
 describe("Init simple package repository", function () {
@@ -22,7 +22,7 @@ describe("Init simple package repository", function () {
 
     describe("File creation", () => {
         it("should create a Dockerfile", () => {
-            expect(testPathExists(dockerfilePath)).to.be.true;
+            expect(testPathExists(dockerfileName)).to.be.true;
         });
 
         it("should create a Dappnode manifest", () => {
@@ -41,11 +41,11 @@ describe("Init simple package repository", function () {
 
     describe("Correct file content", () => {
         it("checks Dockerfile content", () => {
-            expect(readTestFile(dockerfilePath)).to.include(dockerfileData);
+            expect(readTestFile(dockerfileName)).to.include(dockerfileData);
         });
 
         it("checks .gitignore content", () => {
-            expect(readTestFile(gitignorePath)).to.include(gitignoreData);
+            expect(readTestFile(gitignoreName)).to.include(gitignoreData);
         });
 
         it("checks manifest content for correct initialization", () => {
