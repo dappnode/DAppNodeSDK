@@ -120,9 +120,9 @@ async function gaBumpUpstreamHandler({
     return;
   }
 
-  // TODO: Delete once the build action for template repos is ready
+  // TODO: Delete once the build action for multi-variant repos is ready
   if (useVariants) {
-    console.log("Build and comment stage is not available for template package repositories yet");
+    console.log("Build and comment stage is not available for multi-variant package repositories yet");
     return;
   }
 
