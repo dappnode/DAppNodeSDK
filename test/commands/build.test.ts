@@ -27,7 +27,7 @@ describe("Init and build", function () {
   });
 
   it("Should build and upload the current version", async () => {
-    const { releaseMultiHash } = await buildHandler({
+    const buildResults = await buildHandler({
       dir: testDir,
       provider: contentProvider,
       upload_to: "ipfs",
@@ -36,6 +36,6 @@ describe("Init and build", function () {
     });
 
     // Check returned hash is correct
-    expect(releaseMultiHash).to.include("/ipfs/Qm");
+    expect(buildResults[0].releaseMultiHash).to.include("/ipfs/Qm");
   });
 });
