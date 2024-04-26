@@ -89,7 +89,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: npx @dappnode/dappnodesdk github-action bump-upstream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
