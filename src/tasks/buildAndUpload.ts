@@ -194,7 +194,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
 
     {
       title: "Validate files",
-      task: async () => {
+      task: async (ctx) => {
         const setupWizard = readSetupWizardIfExists(dir);
         for (const [fileId] of Object.entries(releaseFiles)) {
           switch (fileId as keyof typeof releaseFiles) {
@@ -215,6 +215,9 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
               break;
           }
         }
+
+        if (variantName)
+          ctx.packageVariant = variantName;
       }
     },
 
