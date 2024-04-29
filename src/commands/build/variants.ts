@@ -16,7 +16,7 @@ export function getVariantNames({ variantsDirPath, variants }: { variantsDirPath
     const { validVariants, invalidVariants } = validateVariants(specifiedVariantNames, allVariantNames);
 
     if (invalidVariants.length > 0)
-        logInvalidVariants(invalidVariants, allVariantNames);
+        console.error(chalk.red(`Warning: Some specified variants are not valid and will be ignored. Allowed variants: ${allVariantNames.join(", ")}`));
 
     return validVariants;
 }
@@ -42,12 +42,4 @@ function validateVariants(specifiedVariantNames: string[], allVariantNames: stri
             return acc;
         }, { validVariants: [], invalidVariants: [] }
     );
-}
-
-/**
- * Logs warnings for invalid variants and throws an error.
- */
-function logInvalidVariants(invalidVariants: string[], allVariantNames: string[]): void {
-    console.error(chalk.red(`Warning: Some specified variants are not valid and will be ignored. Allowed variants: ${allVariantNames.join(", ")}`));
-    throw new Error(`Invalid variant names: ${invalidVariants.join(", ")}`);
 }
