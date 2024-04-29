@@ -18,7 +18,7 @@ export const build: CommandModule<CliGlobalOptions, BuildCommandOptions> = {
             default: "dappnode"
         },
         upload_to: {
-            alias: "upload_to",
+            alias: "upload-to",
             description: `Specify where to upload the release`,
             choices: ["ipfs", "swarm"] as UploadTo[],
             default: "ipfs" as UploadTo
@@ -29,18 +29,22 @@ export const build: CommandModule<CliGlobalOptions, BuildCommandOptions> = {
             default: "60min"
         },
         skip_save: {
+            alias: "skip-save",
             description: `For testing only: do not save image to disk`,
             type: "boolean"
         },
         skip_upload: {
+            alias: "skip-upload",
             description: `For testing only: do not upload image from disk`,
             type: "boolean"
         },
         all_variants: {
+            alias: "all-variants",
             description: `It will use the dappnode_package.json and docker-compose.yml files in the root of the project together with the specific ones defined for each package variant to build all of them`,
             type: "boolean"
         },
         variants_dir: {
+            alias: "variants-dir",
             description: `Path to the directory where the package variants are located (only for packages that support it and combined with either "--all-variants" or "--variants"). By default, it is ${defaultVariantsDir}`,
             type: "string",
             default: defaultVariantsDir
