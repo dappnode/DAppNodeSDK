@@ -79,4 +79,34 @@ describe("Init and build package variants", function () {
     });
 
   });
+
+  it.only("Should throw an error when all specified variants are invalid", async () => {
+    expect(() => buildHandler({
+      dir: testDir,
+      provider: contentProvider,
+      upload_to: "ipfs",
+      timeout: "5min",
+      verbose: true,
+      variants: "invalid_variant",
+      skip_save: true,
+      skip_upload: true
+    })).to.throw();
+  });
+
+  it("Should build only valid variants", async () => {
+    const buildResults = await buildHandler({
+      dir: testDir,
+      provider: contentProvider,
+      upload_to: "ipfs",
+      timeout: "5min",
+      verbose: true,
+      variants: `${defaultVariantsEnvValues[0]},invalid_variant`,
+      skip_save: true,
+      skip_upload: true
+    });
+
+    expect(buildResults).to.have.lengthOf(1);
+
+    expect(buildResults[0].packageVariant).to.equal(defaultVariantsEnvValues[0]);
+  });
 });

@@ -64,6 +64,9 @@ function handleMultiVariantBuild({
     const variantsDirPath = path.join(buildOptions.dir, variantsDir);
     const variantNames = getVariantNames({ variantsDirPath, variants });
 
+    if (variantNames.length === 0)
+        throw new Error(`No valid variants specified. They must be included in: ${variantsDirPath}`);
+
     console.log(`${chalk.dim(`Building package from template for variant(s) ${variants}...`)}`);
 
     return variantNames.map((variantName) => new Listr(
