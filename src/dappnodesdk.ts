@@ -32,6 +32,7 @@ dappnodesdk.options({
     type: "string"
   },
   compose_file_name: {
+    alias: "compose-file-name",
     description: `Compose file for docker-compose`,
     default: "docker-compose.yml",
     type: "string"
