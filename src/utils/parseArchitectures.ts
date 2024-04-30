@@ -1,12 +1,14 @@
 import { Architecture, architectures } from "@dappnode/types";
+import { getArchitecture } from "./getArchitecture.js";
 
-const architecturesList = architectures.join(" ");
+export function parseArchitectures(rawArchs: Architecture[] | undefined): Architecture[] {
 
-export function parseArchitectures(rawArchs: Architecture[]): Architecture[] {
+  if (!rawArchs) return [getArchitecture()];
+
   for (const rawArch of rawArchs)
     if (!architectures.includes(rawArch))
       throw Error(
-        `Invalid architecture '${rawArch}', allowed values: ${architecturesList}`
+        `Invalid architecture '${rawArch}', allowed values: ${architectures.join(", ")}`
       );
 
   if (!rawArchs.includes("linux/amd64"))
