@@ -16,7 +16,7 @@ import { verifyIpfsConnection } from "../releaseUploader/ipfsNode/verifyConnecti
 import { CliGlobalOptions, contentHashFile } from "../types.js";
 import { Manifest, defaultArch, releaseFiles } from "@dappnode/types";
 import { getLegacyImagePath } from "../utils/getLegacyImagePath.js";
-import { getImagePath } from "../utils/getImagePath.js";
+import { getImageFileName } from "../utils/getImageFileName.js";
 import { releaseFilesDefaultNames } from "../params.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
@@ -105,7 +105,7 @@ export async function fromGithubHandler({
       asset => asset.name === legacyImagePath
     );
     if (legacyImageAsset) {
-      const imageAmdPath = getImagePath(name, version, defaultArch);
+      const imageAmdPath = getImageFileName(name, version, defaultArch);
       release.assets.push({ ...legacyImageAsset, name: imageAmdPath });
     }
   }
