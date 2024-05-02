@@ -68,20 +68,22 @@ describe("Init and build package variants", function () {
 
     expect(buildResults).to.have.lengthOf(defaultVariantsEnvValues.length);
 
-    const builtVariants = buildResults.map(result => result.packageVariant);
+    const resultEntries = Object.entries(buildResults);
+
+    const builtVariants = resultEntries.map(([, { variant }]) => variant);
 
     expect(builtVariants).to.have.members(defaultVariantsEnvValues);
 
-    buildResults.forEach(result => {
+    resultEntries.forEach(([dnpName, { releaseMultiHash, variant }]) => {
       // Check returned hash is correct
-      expect(result.releaseMultiHash).to.include("/ipfs/Qm");
-      expect(result.dnpName).to.include(result.packageVariant);
+      expect(releaseMultiHash).to.include("/ipfs/Qm");
+      expect(dnpName).to.include(variant);
     });
 
   });
 
-  it.only("Should throw an error when all specified variants are invalid", async () => {
-    expect(() => buildHandler({
+  it("Should throw an error when all specified variants are invalid", async () => {
+    expect(async () => await buildHandler({
       dir: testDir,
       provider: contentProvider,
       upload_to: "ipfs",
@@ -105,8 +107,12 @@ describe("Init and build package variants", function () {
       skip_upload: true
     });
 
+    const resultEntries = Object.entries(buildResults);
+
+    const builtVariants = resultEntries.map(([, { variant }]) => variant);
+
     expect(buildResults).to.have.lengthOf(1);
 
-    expect(buildResults[0].packageVariant).to.equal(defaultVariantsEnvValues[0]);
+    expect(builtVariants[0]).to.equal(defaultVariantsEnvValues[0]);
   });
 });
