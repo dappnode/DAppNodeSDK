@@ -1,9 +1,9 @@
 import { ListrTask } from "listr";
 import semver from "semver";
-import { shell } from "../utils/shell.js";
-import { PackageImage, PackageImageLocal } from "../types.js";
-import { saveAndCompressImagesCached } from "./saveAndCompressImages.js";
-import { getDockerVersion } from "../utils/getDockerVersion.js";
+import { shell } from "../../utils/shell.js";
+import { PackageImage, PackageImageLocal } from "../../types.js";
+import { saveAndCompressImagesCached } from "../saveAndCompressImages.js";
+import { getDockerVersion } from "../../utils/getDockerVersion.js";
 import { Architecture } from "@dappnode/types";
 
 const minimumDockerVersion = "19.3.0";

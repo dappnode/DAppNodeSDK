@@ -62,7 +62,8 @@ export function generatePublishTx({
         task: async ctx => {
           try {
             const repository = await apm.getRepoContract(ensName);
-            ctx.txData = {
+            // TODO: Fix
+            ctx[ensName].txData = {
               to: await repository.getAddress(),
               value: 0,
               data: encodeNewVersionCall({
@@ -106,7 +107,7 @@ with command option:
                   );
                 }
 
-                ctx.txData = {
+                ctx[ensName].txData = {
                   to: registryAddress,
                   value: 0,
                   data: encodeNewRepoWithVersionCall({
@@ -136,7 +137,7 @@ with command option:
           addReleaseTx({
             dir,
             version: manifest.version,
-            link: getPublishTxLink(ctx.txData)
+            link: getPublishTxLink(ctx[ensName].txData)
           });
         }
       }

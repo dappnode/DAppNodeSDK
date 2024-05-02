@@ -1,11 +1,12 @@
 import path from "path";
 import chalk from "chalk";
 import Listr from "listr";
-import { BuildAndUploadOptions, buildAndUpload } from "../../tasks/buildAndUpload.js";
+import { buildAndUpload } from "../../tasks/buildAndUpload/buildAndUpload.js";
 import { ListrContextBuildAndPublish } from "../../types.js";
 import { defaultComposeFileName, defaultDir, defaultVariantsDir } from "../../params.js";
 import { BuildCommandOptions, VerbosityOptions } from "./types.js";
 import { getVariantNames } from "./variants.js";
+import { BuildAndUploadOptions } from "../../tasks/buildAndUpload/types.js";
 
 export async function buildHandler({
     provider: contentProvider,

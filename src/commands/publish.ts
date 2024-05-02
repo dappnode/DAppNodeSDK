@@ -3,7 +3,7 @@ import Listr from "listr";
 import chalk from "chalk";
 import { CommandModule } from "yargs";
 // Tasks
-import { buildAndUpload } from "../tasks/buildAndUpload.js";
+import { buildAndUpload } from "../tasks/buildAndUpload/buildAndUpload.js";
 import { generatePublishTx } from "../tasks/generatePublishTx.js";
 import { createGithubRelease } from "../tasks/createGithubRelease.js";
 // Utils
@@ -14,9 +14,9 @@ import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks.js";
 import { defaultComposeFileName, defaultDir, YargsError } from "../params.js";
 import {
   CliGlobalOptions,
+  ListrContextBuildAndPublish,
   ReleaseType,
-  releaseTypes,
-  TxData
+  releaseTypes
 } from "../types.js";
 import { printObject } from "../utils/print.js";
 import { UploadTo } from "../releaseUploader/index.js";
@@ -91,9 +91,14 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
   },
 
   handler: async args => {
-    const { txData, nextVersion, releaseMultiHash } = await publishHandler(
+    const publishedData = await publishHandler(
       args
     );
+
+    // TODO: Fix
+    const [, { nextVersion, releaseMultiHash, txData }] = Object.entries(
+      publishedData
+    )[0];
 
     if (!args.silent) {
       const txDataToPrint = {
@@ -142,11 +147,7 @@ export async function publishHandler({
   compose_file_name = defaultComposeFileName,
   silent,
   verbose
-}: CliCommandOptions): Promise<{
-  txData: TxData;
-  nextVersion: string;
-  releaseMultiHash: string;
-}> {
+}: CliCommandOptions): Promise<ListrContextBuildAndPublish> {
   // Parse optionsalias: "release",
   let ethProvider = provider || eth_provider;
   let contentProvider = provider || content_provider;
@@ -237,7 +238,7 @@ export async function publishHandler({
               userTimeout,
               requireGitData,
               deleteOldPins,
-              templateMode: false
+              // TODO
             }),
             { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
           )
@@ -277,7 +278,5 @@ export async function publishHandler({
     { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
   );
 
-  const tasksFinalCtx = await publishTasks.run();
-  const { txData, nextVersion, releaseMultiHash } = tasksFinalCtx;
-  return { txData, nextVersion, releaseMultiHash };
+  return await publishTasks.run();
 }

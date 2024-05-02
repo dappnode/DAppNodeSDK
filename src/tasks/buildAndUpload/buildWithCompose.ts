@@ -1,7 +1,7 @@
 import { ListrTask } from "listr";
-import { PackageImage } from "../types.js";
-import { shell } from "../utils/shell.js";
-import { saveAndCompressImagesCached } from "./saveAndCompressImages.js";
+import { PackageImage } from "../../types.js";
+import { shell } from "../../utils/shell.js";
+import { saveAndCompressImagesCached } from "../saveAndCompressImages.js";
 import { defaultArch } from "@dappnode/types";
 
 /**

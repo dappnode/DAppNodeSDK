@@ -1,9 +1,16 @@
 import { Architecture, architectures } from "@dappnode/types";
 import { getArchitecture } from "./getArchitecture.js";
 
-export function parseArchitectures(rawArchs: Architecture[] | undefined): Architecture[] {
-
-  if (!rawArchs) return [getArchitecture()];
+/**
+ * 
+ * @param rawArchs 
+ * @returns 
+ */
+export function parseArchitectures({
+  rawArchs = [getArchitecture()]
+}: {
+  rawArchs?: Architecture[]
+}): Architecture[] {
 
   for (const rawArch of rawArchs)
     if (!architectures.includes(rawArch))
