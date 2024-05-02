@@ -7,7 +7,7 @@ import { defaultComposeFileName, defaultDir, defaultVariantsDir } from "../../pa
 import { BuildCommandOptions, VerbosityOptions } from "./types.js";
 import { getVariantNames } from "./variants.js";
 
-export function buildHandler({
+export async function buildHandler({
     provider: contentProvider,
     timeout: userTimeout,
     upload_to: uploadTo,
@@ -23,7 +23,7 @@ export function buildHandler({
     compose_file_name: composeFileName = defaultComposeFileName,
     silent,
     verbose
-}: BuildCommandOptions): Promise<ListrContextBuildAndPublish[]> {
+}: BuildCommandOptions): Promise<ListrContextBuildAndPublish> {
     const skipUpload = skipSave || skip_upload;
     const multiVariantMode = Boolean(allVariants || (variants && variants?.length > 0));
 
@@ -37,55 +37,27 @@ export function buildHandler({
         composeFileName,
         requireGitData,
         deleteOldPins,
-        templateMode: multiVariantMode
+        ...multiVariantMode && getVariantOptions({ variantsStr: variants, rootDir: dir, variantsDir }),
     };
 
-    const verbosityOptions: VerbosityOptions = { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+    const verbosityOptions: VerbosityOptions = { renderer: verbose ? "verbose" : silent ? "silent" : "default" };
 
-    const buildTasks = multiVariantMode ?
-        handleMultiVariantBuild({ buildOptions, variantsDir, variants, verbosityOptions }) :
-        handleSinglePkgBuild({ buildOptions, verbosityOptions });
+    const buildTasks = new Listr(
+        buildAndUpload(buildOptions),
+        verbosityOptions
+    );
 
-    return Promise.all(buildTasks.map((task) => task.run()));
+    return await buildTasks.run();
 }
 
-function handleMultiVariantBuild({
-    buildOptions,
-    variantsDir,
-    variants,
-    verbosityOptions
-}: {
-    buildOptions: BuildAndUploadOptions;
-    variantsDir: string;
-    variants?: string;
-    verbosityOptions: VerbosityOptions;
-}
-): Listr<ListrContextBuildAndPublish>[] {
-    const variantsDirPath = path.join(buildOptions.dir, variantsDir);
-    const variantNames = getVariantNames({ variantsDirPath, variants });
+function getVariantOptions({ variantsStr, rootDir, variantsDir }: { variantsStr: string | undefined, rootDir: string, variantsDir: string }): { variants: string[], variantsDirPath: string } {
+    const variantsDirPath = path.join(rootDir, variantsDir);
+    const variantNames = getVariantNames({ variantsDirPath, variants: variantsStr });
 
     if (variantNames.length === 0)
         throw new Error(`No valid variants specified. They must be included in: ${variantsDirPath}`);
 
-    console.log(`${chalk.dim(`Building package from template for variant(s) ${variants}...`)}`);
+    console.log(`${chalk.dim(`Building package from template for variant(s) ${variantsStr}...`)}`);
 
-    return variantNames.map((variantName) => new Listr(
-        buildAndUpload({ ...buildOptions, variantName, variantsDirPath }),
-        verbosityOptions
-    ));
-}
-
-function handleSinglePkgBuild({
-    buildOptions,
-    verbosityOptions
-}: {
-    buildOptions: BuildAndUploadOptions;
-    verbosityOptions: VerbosityOptions;
-}): Listr<ListrContextBuildAndPublish>[] {
-    console.log(`${chalk.dim(`Building single package...`)}`);
-
-    return [new Listr(
-        buildAndUpload(buildOptions),
-        verbosityOptions
-    )];
+    return { variants: variantNames, variantsDirPath };
 }
