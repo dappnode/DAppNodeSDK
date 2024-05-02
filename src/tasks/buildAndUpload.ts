@@ -190,7 +190,7 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
               break;
             case "compose":
               // validate against official docker compose schema.
-              await validateComposeSchema(path.join(dir, composeFileName));
+              await validateComposeSchema([path.join(dir, composeFileName)]);
 
               // validate against custom dappnode requirements
               validateDappnodeCompose(composeForDev, manifest);
@@ -245,31 +245,31 @@ as ${releaseFilesDefaultNames.avatar} and then remove the 'manifest.avatar' prop
     // const imageEntry = files.find(file => /\.tar\.xz$/.test(file));
     ...(architectures
       ? architectures.map(
-          (architecture): ListrTask<ListrContextBuildAndPublish> => ({
-            title: `Build architecture ${architecture}`,
-            task: () =>
-              new Listr(
-                buildWithBuildx({
-                  architecture,
-                  images,
-                  composePath,
-                  buildTimeout,
-                  skipSave,
-                  destPath: path.join(
-                    buildDir,
-                    getImagePath(name, version, architecture)
-                  )
-                })
-              )
-          })
-        )
+        (architecture): ListrTask<ListrContextBuildAndPublish> => ({
+          title: `Build architecture ${architecture}`,
+          task: () =>
+            new Listr(
+              buildWithBuildx({
+                architecture,
+                images,
+                composePath,
+                buildTimeout,
+                skipSave,
+                destPath: path.join(
+                  buildDir,
+                  getImagePath(name, version, architecture)
+                )
+              })
+            )
+        })
+      )
       : buildWithCompose({
-          images,
-          composePath,
-          buildTimeout,
-          skipSave,
-          destPath: imagePathAmd
-        })),
+        images,
+        composePath,
+        buildTimeout,
+        skipSave,
+        destPath: imagePathAmd
+      })),
 
     {
       title: `Upload release to ${releaseUploader.networkName}`,
