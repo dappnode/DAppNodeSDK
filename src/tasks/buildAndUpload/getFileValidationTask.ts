@@ -9,8 +9,7 @@ import {
 import {
     readSetupWizardIfExists
 } from "../../files/index.js";
-import { releaseFiles } from "@dappnode/types";
-import { VariantsMap } from "./types.js";
+import { VariantsMap, VariantsMapEntry } from "./types.js";
 
 export function getFileValidationTask({ variantsMap, rootDir }: { variantsMap: VariantsMap, rootDir: string }): ListrTask<ListrContextBuildAndPublish> {
 
@@ -27,25 +26,29 @@ async function validatePackageFiles({ variantsMap, rootDir }: { variantsMap: Var
     if (setupWizard)
         validateSetupWizardSchema(setupWizard);
 
-    for (const [, { manifest, compose, rootComposePath: composePath, variantComposePath }] of Object.entries(variantsMap)) {
+    for (const [, variant] of Object.entries(variantsMap))
+        await validateVariantFiles(variant);
 
-        console.log(`Validating files for ${manifest.name} (version ${manifest.version})`);
+}
 
-        const composePaths = [composePath, ...(variantComposePath ? [variantComposePath] : [])];
+async function validateVariantFiles(variant: VariantsMapEntry): Promise<void> {
+    const {
+        manifest,
+        compose,
+        rootComposePath,
+        variantComposePath
+    } = variant;
 
-        for (const [fileId] of Object.entries(releaseFiles)) {
-            switch (fileId as keyof typeof releaseFiles) {
-                case "manifest":
-                    validateManifestSchema(manifest);
-                    break;
-                case "compose":
-                    // validate against official docker compose schema.
-                    await validateComposeSchema(composePaths);
+    console.log(`Validating files for ${manifest.name} (version ${manifest.version})`);
 
-                    // validate against custom dappnode requirements
-                    validateDappnodeCompose(compose, manifest);
-                    break;
-            }
-        }
-    }
+    // Include defined paths
+    const composePaths = [rootComposePath, ...(variantComposePath ? [variantComposePath] : [])];
+
+    // TODO: Check if the previous loop here can be removed
+    // Validate manifest schema
+    validateManifestSchema(manifest);
+
+    // Validate all compose files
+    await Promise.all(composePaths.map(path => validateComposeSchema([path])));
+    validateDappnodeCompose(compose, manifest);
 }
