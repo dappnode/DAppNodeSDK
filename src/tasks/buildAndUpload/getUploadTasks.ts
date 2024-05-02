@@ -25,7 +25,7 @@ export function getUploadTasks({ variantsMap, skipUpload, releaseUploader, requi
                 title: `Upload release for ${dnpName} to ${releaseUploader.networkName}`,
                 skip: () => skipUpload,
                 task: async (ctx, task) => {
-                    // TODO: Do this
+                    // TODO: Check if this is necessary
                     /*if (fs.existsSync(imagePathAmd))
                       fs.copyFileSync(imagePathAmd, imagePathLegacy);*/
 
@@ -34,8 +34,6 @@ export function getUploadTasks({ variantsMap, skipUpload, releaseUploader, requi
                     // Remove `build` property AFTER building. Otherwise it may break ISO installations
                     // https://github.com/dappnode/DAppNode_Installer/issues/161
                     composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
-
-                    console.log("Variant: ", variant);
 
                     ctx[dnpName] = ctx[dnpName] || {};
 
