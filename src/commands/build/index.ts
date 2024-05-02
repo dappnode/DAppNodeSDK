@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { CommandModule } from "yargs";
 import { getInstallDnpLink } from "../../utils/getLinks.js";
-import { CliGlobalOptions } from "../../types.js";
+import { CliGlobalOptions, ListrContextBuildAndPublish } from "../../types.js";
 import { UploadTo } from "../../releaseUploader/index.js";
 import { defaultVariantsDir } from "../../params.js";
 import { BuildCommandOptions } from "./types.js";
@@ -59,17 +59,23 @@ export const build: CommandModule<CliGlobalOptions, BuildCommandOptions> = {
     handler: async (args): Promise<void> => {
         const buildResults = await buildHandler(args);
 
-        if (args.skipUpload) {
-            return console.log(chalk.green("\nDNP (DAppNode Package) built\n"));
-        }
+        printBuildResults(buildResults, Boolean(args.skipUpload));
 
-        for (const result of buildResults) {
-            console.log(`
-      ${chalk.green(`Dappnode Package (${result.dnpName}) built and uploaded`)} 
-      DNP name : ${result.dnpName}
-      Release hash : ${result.releaseMultiHash}
-      ${getInstallDnpLink(result.releaseMultiHash)}
-    `);
-        }
     }
 };
+
+function printBuildResults(buildResults: ListrContextBuildAndPublish, skipUpload: boolean) {
+    if (skipUpload) {
+        console.log(chalk.green("\nDNP (DAppNode Package) built\n"));
+        return;
+    }
+
+    for (const [dnpName, { releaseMultiHash }] of Object.entries(buildResults)) {
+        console.log(`
+          ${chalk.green(`Dappnode Package (${dnpName}) built and uploaded`)} 
+          DNP name : ${dnpName}
+          Release hash : ${releaseMultiHash}
+          ${getInstallDnpLink(releaseMultiHash)}
+        `);
+    }
+}
