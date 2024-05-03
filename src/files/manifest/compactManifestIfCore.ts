@@ -11,7 +11,7 @@ import { writeManifest } from "./writeManifest.js";
  * @param buildDir `build_0.1.0`
  */
 export function compactManifestIfCore(buildDir: string): void {
-  const { manifest, format } = readManifest({ dir: buildDir });
+  const { manifest, format } = readManifest([{ dir: buildDir }]);
 
   if (manifest.type !== "dncore") return;
 

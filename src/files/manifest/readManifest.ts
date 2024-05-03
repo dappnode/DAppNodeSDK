@@ -11,25 +11,22 @@ import { merge } from "lodash-es";
  * Reads a manifest and optionally merges it with a variant manifest.
  */
 export function readManifest(
-  paths?: ManifestPaths,
-  variantPaths?: ManifestPaths
+  paths?: ManifestPaths[],
 ): { manifest: Manifest; format: ManifestFormat } {
   try {
-    const manifest = loadManifest(paths);
 
-    if (!variantPaths) {
-      return manifest;
-    }
+    if (!paths)
+      return loadManifest(); // Load default manifest
 
-    const variantManifest = loadManifest(variantPaths);
+    const manifestsSpecs = paths.map((path) => loadManifest(path));
 
-    // Ensure both manifests are in JSON format for merging
-    if (manifest.format !== ManifestFormat.json || variantManifest.format !== ManifestFormat.json) {
+    // TODO: Deprecate any manifest format other than JSON 
+    if (manifestsSpecs.some((manifest) => manifest.format !== ManifestFormat.json)) {
       throw new Error("Only JSON format is supported for template mode when merging manifests");
     }
 
-    // Perform deep merging of the base manifest and variant
-    const mergedManifest = merge({}, manifest.manifest, variantManifest.manifest);
+    // Merge all manifests using lodash merge
+    const mergedManifest = merge({}, ...manifestsSpecs.map((manifest) => manifest.manifest));
 
     return {
       format: ManifestFormat.json,

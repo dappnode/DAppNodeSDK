@@ -10,16 +10,16 @@ import { merge } from "lodash-es";
  * @param variantPaths Optional variant compose file paths to merge with the primary compose.
  * @return The merged compose object.
  */
-export function readCompose(paths?: ComposePaths, variantPaths?: ComposePaths): Compose {
+export function readCompose(paths?: ComposePaths[]): Compose {
   // Parse compose in try catch block to show a comprehensive error message
   try {
-    const compose = loadCompose(paths);
 
-    if (!variantPaths) return compose;
+    if (!paths)
+      return loadCompose(); // Load default compose
 
-    const variantCompose = loadCompose(variantPaths);
+    const composes = paths.map((path) => loadCompose(path));
 
-    return merge({}, compose, variantCompose);
+    return merge({}, ...composes);
   } catch (e) {
     throw Error(`Error parsing docker-compose: ${e.message}`);
   }
