@@ -2,7 +2,11 @@ import { Compose, Manifest } from "@dappnode/types";
 import { writeCompose, updateComposeImageTags } from "../../files/index.js";
 import { defaultComposeFileName } from "../../params.js";
 
-export function writeBuildCompose({
+/**
+ * Temporary compose is written to the root directory
+ * It is used to generate the docker images
+ */
+export function writeTmpCompose({
   compose,
   composeFileName = defaultComposeFileName,
   manifest,
