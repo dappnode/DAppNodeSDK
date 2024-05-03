@@ -69,6 +69,6 @@ export function buildAndUpload({
       deleteOldPins: !!deleteOldPins,
       releaseUploaderProvider
     }),
-    getSaveUploadResultsTask({ variantsMap, rootDir: dir, contentProvider })
+    getSaveUploadResultsTask({ variantsMap, rootDir: dir, contentProvider, variantsDirPath })
   ];
 }
