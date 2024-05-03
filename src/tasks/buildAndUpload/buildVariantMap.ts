@@ -59,10 +59,10 @@ export function createVariantMapEntry({
     composePaths.push(getComposePath({ dir: variantPath, composeFileName }));
 
   const compose = variantPath
-    ? readCompose(
-      [{ dir: rootDir, composeFileName },
-      { dir: path.join(rootDir, variantPath), composeFileName }]
-    )
+    ? readCompose([
+        { dir: rootDir, composeFileName },
+        { dir: path.join(rootDir, variantPath), composeFileName }
+      ])
     : readCompose([{ dir: rootDir, composeFileName }]);
 
   const upstreamVersion = getUpstreamVersion({ compose, manifest });

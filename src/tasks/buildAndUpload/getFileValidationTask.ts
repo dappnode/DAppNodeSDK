@@ -60,7 +60,9 @@ async function validateVariantFiles(variant: VariantsMapEntry): Promise<void> {
 
 function validatePackageName(name: string): void {
   if (/[A-Z]/.test(name))
-    throw new CliError(`Package name (${name}) in the manifest must be lowercase`);
+    throw new CliError(
+      `Package name (${name}) in the manifest must be lowercase`
+    );
 }
 
 function validatePackageVersion(version: string): void {

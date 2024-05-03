@@ -53,7 +53,7 @@ jobs:
 
       - name: Create GitHub release
         if: env.SHOULD_CONTINUE == 'true'
-        uses: actions/create-release@v4
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

@@ -19,7 +19,6 @@ export function getSaveUploadResultsTask({
   return {
     title: "Save upload results",
     task: async ctx => {
-
       // Single package
       if (variantsMap.default) {
         const { name, version } = variantsMap.default.manifest;
@@ -34,7 +33,12 @@ export function getSaveUploadResultsTask({
 
         // Multi-variant package
       } else {
-        for (const [variant, { manifest: { name, version } }] of Object.entries(variantsMap)) {
+        for (const [
+          variant,
+          {
+            manifest: { name, version }
+          }
+        ] of Object.entries(variantsMap)) {
           const variantDir = path.join(variantsDirPath, variant);
           const { releaseHash: hash } = ctx[name];
 
