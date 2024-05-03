@@ -2,8 +2,10 @@ import { ListrTask } from "listr";
 import { PackageImage } from "../../types.js";
 import { shell } from "../../utils/shell.js";
 import { saveAndCompressImagesCached } from "../saveAndCompressImages.js";
-import { defaultArch } from "@dappnode/types";
-import { defaultComposeFileName } from "../../params.js";
+import { Compose, Manifest, defaultArch } from "@dappnode/types";
+import { tmpComposeFileName } from "../../params.js";
+import path from "path";
+import { writeTmpCompose } from "./utils.js";
 
 /**
  * Save docker image
@@ -12,32 +14,41 @@ import { defaultComposeFileName } from "../../params.js";
  */
 export function buildWithCompose({
   images,
-  composePaths = [defaultComposeFileName],
+  compose,
+  manifest,
   destPath,
   buildTimeout,
-  skipSave
+  skipSave,
+  rootDir
 }: {
   images: PackageImage[];
-  composePaths: string[];
+  compose: Compose;
+  manifest: Manifest;
   destPath: string;
   buildTimeout: number;
   skipSave?: boolean;
+  rootDir: string;
 }): ListrTask[] {
-  if (composePaths.length === 0) composePaths = [defaultComposeFileName];
+  const tmpComposePath = path.join(rootDir, tmpComposeFileName);
+
+  // Write the compose to a temporary file
+  writeTmpCompose({
+    compose,
+    composeFileName: tmpComposeFileName,
+    manifest,
+    rootDir
+  });
 
   return [
     {
       title: "Build docker image",
       task: async (_, task) => {
         // Prior to this task, the compose should had been updated with the proper tag
-        await shell(
-          `docker-compose --file ${composePaths.join(" --file ")} build`,
-          {
-            timeout: buildTimeout,
-            maxBuffer: 100 * 1e6,
-            onData: data => (task.output = data)
-          }
-        );
+        await shell(`docker-compose --file ${tmpComposePath} build`, {
+          timeout: buildTimeout,
+          maxBuffer: 100 * 1e6,
+          onData: data => (task.output = data)
+        });
       }
     },
 
@@ -47,6 +58,10 @@ export function buildWithCompose({
       destPath,
       buildTimeout,
       skipSave
-    })
+    }),
+    {
+      title: "Cleanup temporary files",
+      task: async () => shell(`rm ${tmpComposePath}`)
+    }
   ];
 }

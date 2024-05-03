@@ -1,9 +1,9 @@
 import path from "path";
-import { ListrTask } from "listr/index.js";
+import Listr, { ListrTask } from "listr/index.js";
 import { ListrContextBuildAndPublish } from "../../types.js";
 import { buildWithBuildx } from "./buildWithBuildx.js";
 import { buildWithCompose } from "./buildWithCompose.js";
-import { Architecture } from "@dappnode/types";
+import { Architecture, defaultArch } from "@dappnode/types";
 import { getImageFileName } from "../../utils/getImageFileName.js";
 import { VariantsMap, VariantsMapEntry } from "./types.js";
 
@@ -17,11 +17,13 @@ import { VariantsMap, VariantsMapEntry } from "./types.js";
 export function getBuildTasks({
   variantsMap,
   buildTimeout,
-  skipSave
+  skipSave,
+  rootDir
 }: {
   variantsMap: VariantsMap;
   buildTimeout: number;
   skipSave?: boolean;
+  rootDir: string;
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTasks: ListrTask<ListrContextBuildAndPublish>[] = [];
 
@@ -31,25 +33,35 @@ export function getBuildTasks({
       architectures
     } = variantSpecs;
 
-    if (architectures) {
+    if (architectures.length === 1 && architectures[0] === defaultArch) {
+      buildTasks.push({
+        title: `Build ${name} (version ${version})`,
+        task: () =>
+          new Listr(
+            buildVariantWithCompose({
+              variantSpecs,
+              buildTimeout,
+              skipSave,
+              rootDir
+            })
+          )
+      });
+    } else {
       buildTasks.push(
         ...architectures.map(architecture => ({
           title: `Build ${name} (version ${version}) for arch ${architecture}`,
           task: () =>
-            buildVariantWithBuildx({
-              variantSpecs,
-              architecture,
-              buildTimeout,
-              skipSave
-            })
+            new Listr(
+              buildVariantWithBuildx({
+                variantSpecs,
+                architecture,
+                buildTimeout,
+                skipSave,
+                rootDir
+              })
+            )
         }))
       );
-    } else {
-      buildTasks.push({
-        title: `Build ${name} (version ${version})`,
-        task: () =>
-          buildVariantWithCompose({ variantSpecs, buildTimeout, skipSave })
-      });
     }
   }
 
@@ -60,55 +72,62 @@ function buildVariantWithBuildx({
   architecture,
   variantSpecs,
   buildTimeout,
-  skipSave
+  skipSave,
+  rootDir
 }: {
   architecture: Architecture;
   variantSpecs: VariantsMapEntry;
   buildTimeout: number;
   skipSave?: boolean;
-}): void {
-  const {
-    manifest: { name, version },
-    images,
-    composePaths,
-    releaseDir
-  } = variantSpecs;
+  rootDir: string;
+}): ListrTask[] {
+  const { manifest, images, compose, releaseDir } = variantSpecs;
 
-  const destPath = getImagePath({ releaseDir, name, version, architecture });
+  const destPath = getImagePath({
+    releaseDir,
+    name: manifest.name,
+    version: manifest.version,
+    architecture
+  });
 
-  buildWithBuildx({
+  return buildWithBuildx({
     architecture,
     images,
-    composePaths,
+    compose,
+    manifest,
     buildTimeout,
     skipSave,
-    destPath
+    destPath,
+    rootDir
   });
 }
 
 function buildVariantWithCompose({
   variantSpecs,
   buildTimeout,
-  skipSave
+  skipSave,
+  rootDir
 }: {
   variantSpecs: VariantsMapEntry;
   buildTimeout: number;
   skipSave?: boolean;
-}): void {
-  const {
-    manifest: { version, name },
-    images,
-    composePaths,
-    releaseDir
-  } = variantSpecs;
-  const destPath = getImagePath({ releaseDir, name, version });
+  rootDir: string;
+}): ListrTask[] {
+  const { images, compose, manifest, releaseDir } = variantSpecs;
+  const destPath = getImagePath({
+    releaseDir,
+    name: manifest.name,
+    version: manifest.version
+  });
 
-  buildWithCompose({
+  return buildWithCompose({
     images,
-    composePaths,
+    compose,
+    manifest,
     buildTimeout,
     skipSave,
-    destPath
+    destPath,
+    rootDir
   });
 }
 
@@ -116,7 +135,7 @@ function getImagePath({
   releaseDir,
   name,
   version,
-  architecture = "linux/amd64"
+  architecture = defaultArch
 }: {
   releaseDir: string;
   name: string;

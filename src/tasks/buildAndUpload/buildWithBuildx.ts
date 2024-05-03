@@ -4,8 +4,10 @@ import { shell } from "../../utils/shell.js";
 import { PackageImage, PackageImageLocal } from "../../types.js";
 import { saveAndCompressImagesCached } from "../saveAndCompressImages.js";
 import { getDockerVersion } from "../../utils/getDockerVersion.js";
-import { Architecture } from "@dappnode/types";
-import { defaultComposeFileName } from "../../params.js";
+import { Architecture, Compose, Manifest } from "@dappnode/types";
+import { tmpComposeFileName } from "../../params.js";
+import { writeTmpCompose } from "./utils.js";
+import path from "path";
 
 const minimumDockerVersion = "19.3.0";
 const buildxInstanceName = "dappnode-multiarch-builder";
@@ -18,23 +20,35 @@ const buildxInstanceName = "dappnode-multiarch-builder";
 export function buildWithBuildx({
   architecture,
   images,
-  composePaths = [defaultComposeFileName],
+  compose,
+  manifest,
   destPath,
   buildTimeout,
-  skipSave
+  skipSave,
+  rootDir
 }: {
   architecture: Architecture;
   images: PackageImage[];
-  composePaths?: string[];
+  compose: Compose;
+  manifest: Manifest;
   destPath: string;
   buildTimeout: number;
   skipSave?: boolean;
+  rootDir: string;
 }): ListrTask[] {
   const localImages = images.filter(
     (image): image is PackageImageLocal => image.type === "local"
   );
 
-  if (composePaths.length === 0) composePaths = [defaultComposeFileName];
+  const tmpComposePath = path.join(rootDir, tmpComposeFileName);
+
+  // Write the compose to a temporary file
+  writeTmpCompose({
+    compose,
+    composeFileName: tmpComposeFileName,
+    manifest,
+    rootDir
+  });
 
   return [
     {
@@ -80,7 +94,7 @@ export function buildWithBuildx({
             "docker buildx bake",
             "--progress plain",
             "--load",
-            `--file ${composePaths.join(" --file ")}`, // This will merge all compose files into a single one
+            `--file ${tmpComposePath}`,
             `--set=*.platform=${architecture}`
           ].join(" "),
           {
@@ -117,6 +131,10 @@ export function buildWithBuildx({
       destPath,
       buildTimeout,
       skipSave
-    })
+    }),
+    {
+      title: "Cleanup temporary files",
+      task: async () => shell(`rm ${tmpComposePath}`)
+    }
   ];
 }

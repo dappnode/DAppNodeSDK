@@ -8,7 +8,7 @@ import { getGitHeadIfAvailable } from "../../utils/git.js";
 import { writeManifest } from "../../files/index.js";
 import { Manifest, releaseFiles } from "@dappnode/types";
 import { VariantsMap, VariantsMapEntry } from "./types.js";
-import { writeBuildCompose, writeReleaseCompose } from "./utils.js";
+import { writeReleaseCompose } from "./utils.js";
 
 export function getFileCopyTask({
   variantsMap,
@@ -77,7 +77,6 @@ async function copyVariantFilesToReleaseDir({
         break;
 
       case "compose":
-        writeBuildCompose({ compose, composeFileName, manifest, rootDir });
         writeReleaseCompose({ compose, composeFileName, manifest, releaseDir });
         break;
 

@@ -31,10 +31,6 @@ export function getUploadTasks({
       title: `Upload release for ${dnpName} to ${releaseUploader.networkName}`,
       skip: () => skipUpload,
       task: async (ctx, task) => {
-        // TODO: Check if this is necessary
-        /*if (fs.existsSync(imagePathAmd))
-                      fs.copyFileSync(imagePathAmd, imagePathLegacy);*/
-
         const gitHead = await getGitHeadIfAvailable({ requireGitData });
 
         // Remove `build` property AFTER building. Otherwise it may break ISO installations

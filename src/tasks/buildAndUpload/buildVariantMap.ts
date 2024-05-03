@@ -53,12 +53,10 @@ export function createVariantMapEntry({
 
   const { name: dnpName, version } = manifest;
 
-  const composePaths = [
-    getComposePath({ dir: rootDir, composeFileName }),
-    ...(variantPath
-      ? getComposePath({ dir: variantPath, composeFileName })
-      : [])
-  ];
+  const composePaths = [getComposePath({ dir: rootDir, composeFileName })];
+
+  if (variantPath)
+    composePaths.push(getComposePath({ dir: variantPath, composeFileName }));
 
   const compose = variantPath
     ? readCompose(
