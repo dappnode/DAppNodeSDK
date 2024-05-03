@@ -5,55 +5,89 @@ import { copyReleaseFile } from "../../utils/copyReleaseFile.js";
 import { releaseFilesDefaultNames } from "../../params.js";
 import { ListrContextBuildAndPublish } from "../../types.js";
 import { getGitHeadIfAvailable } from "../../utils/git.js";
-import {
-    writeManifest,
-} from "../../files/index.js";
+import { writeManifest } from "../../files/index.js";
 import { Manifest, releaseFiles } from "@dappnode/types";
 import { VariantsMap, VariantsMapEntry } from "./types.js";
 import { writeBuildCompose, writeReleaseCompose } from "./utils.js";
 
-export function getFileCopyTask({ variantsMap, rootDir, composeFileName, requireGitData }: { variantsMap: VariantsMap, rootDir: string, composeFileName: string, requireGitData?: boolean }): ListrTask<ListrContextBuildAndPublish> {
-
-    return {
-        title: "Copy files to release directory",
-        task: async () => copyFilesToReleaseDir({ variantsMap, rootDir, composeFileName, requireGitData })
-    };
+export function getFileCopyTask({
+  variantsMap,
+  rootDir,
+  composeFileName,
+  requireGitData
+}: {
+  variantsMap: VariantsMap;
+  rootDir: string;
+  composeFileName: string;
+  requireGitData?: boolean;
+}): ListrTask<ListrContextBuildAndPublish> {
+  return {
+    title: "Copy files to release directory",
+    task: async () =>
+      copyFilesToReleaseDir({
+        variantsMap,
+        rootDir,
+        composeFileName,
+        requireGitData
+      })
+  };
 }
 
-async function copyFilesToReleaseDir({ variantsMap, rootDir, composeFileName, requireGitData }: { variantsMap: VariantsMap, rootDir: string, composeFileName: string, requireGitData?: boolean }): Promise<void> {
+async function copyFilesToReleaseDir({
+  variantsMap,
+  rootDir,
+  composeFileName,
+  requireGitData
+}: {
+  variantsMap: VariantsMap;
+  rootDir: string;
+  composeFileName: string;
+  requireGitData?: boolean;
+}): Promise<void> {
+  for (const [, variant] of Object.entries(variantsMap)) {
+    await copyVariantFilesToReleaseDir({ variant, rootDir, composeFileName });
 
-    for (const [, variant] of Object.entries(variantsMap)) {
-        await copyVariantFilesToReleaseDir({ variant, rootDir, composeFileName });
+    // Verify avatar (throws)
+    const avatarPath = path.join(
+      variant.releaseDir,
+      releaseFilesDefaultNames.avatar
+    );
+    verifyAvatar(avatarPath);
 
-        // Verify avatar (throws)
-        const avatarPath = path.join(variant.releaseDir, releaseFilesDefaultNames.avatar);
-        verifyAvatar(avatarPath);
-
-        // Make sure git data is available before doing a long build
-        await getGitHeadIfAvailable({ requireGitData });
-    }
+    // Make sure git data is available before doing a long build
+    await getGitHeadIfAvailable({ requireGitData });
+  }
 }
 
-async function copyVariantFilesToReleaseDir({ variant, rootDir, composeFileName }: { variant: VariantsMapEntry, rootDir: string, composeFileName: string }): Promise<void> {
-    const { manifest, manifestFormat, releaseDir, compose } = variant;
+async function copyVariantFilesToReleaseDir({
+  variant,
+  rootDir,
+  composeFileName
+}: {
+  variant: VariantsMapEntry;
+  rootDir: string;
+  composeFileName: string;
+}): Promise<void> {
+  const { manifest, manifestFormat, releaseDir, compose } = variant;
 
-    for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
-        switch (fileId as keyof typeof releaseFiles) {
-            case "manifest":
-                writeManifest<Manifest>(manifest, manifestFormat, { dir: releaseDir });
-                break;
-            case "compose":
-                // TODO: Check if we should set the custom compose file name here
-                writeBuildCompose({ compose, composeFileName, manifest, rootDir });
-                writeReleaseCompose({ compose, composeFileName, manifest, releaseDir });
-                break;
-            default:
-                copyReleaseFile({
-                    fileConfig: { ...fileConfig, id: fileId },
-                    fromDir: rootDir,
-                    toDir: releaseDir
-                });
-                break;
-        }
+  for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
+    switch (fileId as keyof typeof releaseFiles) {
+      case "manifest":
+        writeManifest<Manifest>(manifest, manifestFormat, { dir: releaseDir });
+        break;
+
+      case "compose":
+        writeBuildCompose({ compose, composeFileName, manifest, rootDir });
+        writeReleaseCompose({ compose, composeFileName, manifest, releaseDir });
+        break;
+
+      default:
+        copyReleaseFile({
+          fileConfig: { ...fileConfig, id: fileId },
+          fromDir: rootDir,
+          toDir: releaseDir
+        });
+        break;
     }
+  }
 }

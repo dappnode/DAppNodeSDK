@@ -5,6 +5,7 @@ import { PackageImage, PackageImageLocal } from "../../types.js";
 import { saveAndCompressImagesCached } from "../saveAndCompressImages.js";
 import { getDockerVersion } from "../../utils/getDockerVersion.js";
 import { Architecture } from "@dappnode/types";
+import { defaultComposeFileName } from "../../params.js";
 
 const minimumDockerVersion = "19.3.0";
 const buildxInstanceName = "dappnode-multiarch-builder";
@@ -17,16 +18,14 @@ const buildxInstanceName = "dappnode-multiarch-builder";
 export function buildWithBuildx({
   architecture,
   images,
-  composePath,
-  variantComposePath,
+  composePaths = [defaultComposeFileName],
   destPath,
   buildTimeout,
   skipSave
 }: {
   architecture: Architecture;
   images: PackageImage[];
-  composePath: string;
-  variantComposePath?: string;
+  composePaths?: string[];
   destPath: string;
   buildTimeout: number;
   skipSave?: boolean;
@@ -34,6 +33,8 @@ export function buildWithBuildx({
   const localImages = images.filter(
     (image): image is PackageImageLocal => image.type === "local"
   );
+
+  if (composePaths.length === 0) composePaths = [defaultComposeFileName];
 
   return [
     {
@@ -79,8 +80,7 @@ export function buildWithBuildx({
             "docker buildx bake",
             "--progress plain",
             "--load",
-            `--file ${composePath}`,
-            variantComposePath ? `--file ${variantComposePath}` : "",
+            `--file ${composePaths.join(" --file ")}`, // This will merge all compose files into a single one
             `--set=*.platform=${architecture}`
           ].join(" "),
           {

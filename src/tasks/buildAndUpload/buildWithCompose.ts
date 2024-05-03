@@ -3,6 +3,7 @@ import { PackageImage } from "../../types.js";
 import { shell } from "../../utils/shell.js";
 import { saveAndCompressImagesCached } from "../saveAndCompressImages.js";
 import { defaultArch } from "@dappnode/types";
+import { defaultComposeFileName } from "../../params.js";
 
 /**
  * Save docker image
@@ -11,29 +12,32 @@ import { defaultArch } from "@dappnode/types";
  */
 export function buildWithCompose({
   images,
-  composePath,
-  variantComposePath,
+  composePaths = [defaultComposeFileName],
   destPath,
   buildTimeout,
   skipSave
 }: {
   images: PackageImage[];
-  composePath: string;
-  variantComposePath?: string;
+  composePaths: string[];
   destPath: string;
   buildTimeout: number;
   skipSave?: boolean;
 }): ListrTask[] {
+  if (composePaths.length === 0) composePaths = [defaultComposeFileName];
+
   return [
     {
       title: "Build docker image",
       task: async (_, task) => {
         // Prior to this task, the compose should had been updated with the proper tag
-        await shell(`docker-compose --file ${composePath} ${variantComposePath ? `--file ${variantComposePath} ` : ""}build`, {
-          timeout: buildTimeout,
-          maxBuffer: 100 * 1e6,
-          onData: data => (task.output = data)
-        });
+        await shell(
+          `docker-compose --file ${composePaths.join(" --file ")} build`,
+          {
+            timeout: buildTimeout,
+            maxBuffer: 100 * 1e6,
+            onData: data => (task.output = data)
+          }
+        );
       }
     },
 

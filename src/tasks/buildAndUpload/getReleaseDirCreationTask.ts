@@ -6,28 +6,39 @@ import { ListrContextBuildAndPublish } from "../../types.js";
 import { getImageFileName } from "../../utils/getImageFileName.js";
 import { VariantsMap } from "./types.js";
 
-export function getReleaseDirCreationTask({ variantsMap }: { variantsMap: VariantsMap }): ListrTask<ListrContextBuildAndPublish> {
-
-    return {
-        title: `Create release directories`,
-        task: () => createReleaseDirs({ variantsMap })
-    };
+export function getReleaseDirCreationTask({
+  variantsMap
+}: {
+  variantsMap: VariantsMap;
+}): ListrTask<ListrContextBuildAndPublish> {
+  return {
+    title: `Create release directories`,
+    task: () => createReleaseDirs({ variantsMap })
+  };
 }
 
-function createReleaseDirs({ variantsMap }: { variantsMap: VariantsMap }): void {
+function createReleaseDirs({
+  variantsMap
+}: {
+  variantsMap: VariantsMap;
+}): void {
+  for (const [, { manifest, releaseDir, architectures }] of Object.entries(
+    variantsMap
+  )) {
+    console.log(
+      `Creating release directory for ${manifest.name} (version ${manifest.version}) at ${releaseDir}`
+    );
 
-    for (const [, { manifest, releaseDir, architectures }] of Object.entries(variantsMap)) {
+    fs.mkdirSync(releaseDir, { recursive: true }); // Ok on existing dir
+    const releaseFiles = fs.readdirSync(releaseDir);
 
-        console.log(`Creating release directory for ${manifest.name} (version ${manifest.version}) at ${releaseDir}`);
+    const imagePaths = architectures.map(arch =>
+      getImageFileName(manifest.name, manifest.version, arch)
+    );
 
-        fs.mkdirSync(releaseDir, { recursive: true }); // Ok on existing dir
-        const releaseFiles = fs.readdirSync(releaseDir);
-
-        const imagePaths = architectures.map(arch => getImageFileName(manifest.name, manifest.version, arch));
-
-        // Clean all files except the expected target images
-        for (const filepath of releaseFiles)
-            if (!imagePaths.includes(filepath))
-                rimraf.sync(path.join(releaseDir, filepath));
-    }
+    // Clean all files except the expected target images
+    for (const filepath of releaseFiles)
+      if (!imagePaths.includes(filepath))
+        rimraf.sync(path.join(releaseDir, filepath));
+  }
 }

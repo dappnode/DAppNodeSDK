@@ -1,54 +1,55 @@
 import { ListrTask } from "listr/index.js";
 import { ListrContextBuildAndPublish } from "../../types.js";
 import {
-    validateComposeSchema,
-    validateManifestSchema,
-    validateSetupWizardSchema,
-    validateDappnodeCompose
+  validateComposeSchema,
+  validateManifestSchema,
+  validateSetupWizardSchema,
+  validateDappnodeCompose
 } from "@dappnode/schemas";
-import {
-    readSetupWizardIfExists
-} from "../../files/index.js";
+import { readSetupWizardIfExists } from "../../files/index.js";
 import { VariantsMap, VariantsMapEntry } from "./types.js";
 
-export function getFileValidationTask({ variantsMap, rootDir }: { variantsMap: VariantsMap, rootDir: string }): ListrTask<ListrContextBuildAndPublish> {
-
-    return {
-        title: `Validate files`,
-        task: async () => await validatePackageFiles({ variantsMap, rootDir })
-    };
+export function getFileValidationTask({
+  variantsMap,
+  rootDir
+}: {
+  variantsMap: VariantsMap;
+  rootDir: string;
+}): ListrTask<ListrContextBuildAndPublish> {
+  return {
+    title: `Validate files`,
+    task: async () => await validatePackageFiles({ variantsMap, rootDir })
+  };
 }
 
-async function validatePackageFiles({ variantsMap, rootDir }: { variantsMap: VariantsMap, rootDir: string }): Promise<void> {
+async function validatePackageFiles({
+  variantsMap,
+  rootDir
+}: {
+  variantsMap: VariantsMap;
+  rootDir: string;
+}): Promise<void> {
+  const setupWizard = readSetupWizardIfExists(rootDir);
 
-    const setupWizard = readSetupWizardIfExists(rootDir);
+  if (setupWizard) validateSetupWizardSchema(setupWizard);
 
-    if (setupWizard)
-        validateSetupWizardSchema(setupWizard);
-
-    for (const [, variant] of Object.entries(variantsMap))
-        await validateVariantFiles(variant);
-
+  for (const [, variant] of Object.entries(variantsMap))
+    await validateVariantFiles(variant);
 }
 
 async function validateVariantFiles(variant: VariantsMapEntry): Promise<void> {
-    const {
-        manifest,
-        compose,
-        rootComposePath,
-        variantComposePath
-    } = variant;
+  const { manifest, compose, composePaths } = variant;
 
-    console.log(`Validating files for ${manifest.name} (version ${manifest.version})`);
+  console.log(
+    `Validating files for ${manifest.name} (version ${manifest.version})`
+  );
 
-    // Include defined paths
-    const composePaths = [rootComposePath, ...(variantComposePath ? [variantComposePath] : [])];
+  // Validate manifest schema
+  validateManifestSchema(manifest);
 
-    // TODO: Check if the previous loop here can be removed
-    // Validate manifest schema
-    validateManifestSchema(manifest);
+  // Validate compose file using docker compose
+  await Promise.all(composePaths.map(path => validateComposeSchema([path])));
 
-    // Validate all compose files
-    await Promise.all(composePaths.map(path => validateComposeSchema([path])));
-    validateDappnodeCompose(compose, manifest);
+  // Validate compose file specifically for Dappnode requirements
+  validateDappnodeCompose(compose, manifest);
 }

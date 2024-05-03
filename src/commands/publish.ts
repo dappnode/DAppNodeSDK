@@ -3,7 +3,7 @@ import Listr from "listr";
 import chalk from "chalk";
 import { CommandModule } from "yargs";
 // Tasks
-import { buildAndUpload } from "../tasks/buildAndUpload/buildAndUpload.js";
+import { buildAndUpload } from "../tasks/buildAndUpload/index.js";
 import { generatePublishTx } from "../tasks/generatePublishTx.js";
 import { createGithubRelease } from "../tasks/createGithubRelease.js";
 // Utils
