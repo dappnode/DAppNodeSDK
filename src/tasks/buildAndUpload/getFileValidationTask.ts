@@ -48,7 +48,7 @@ async function validateVariantFiles(variant: VariantsMapEntry): Promise<void> {
   validateManifestSchema(manifest);
 
   // Validate compose file using docker compose
-  await Promise.all(composePaths.map(path => validateComposeSchema([path])));
+  await validateComposeSchema(composePaths);
 
   // Validate compose file specifically for Dappnode requirements
   validateDappnodeCompose(compose, manifest);
