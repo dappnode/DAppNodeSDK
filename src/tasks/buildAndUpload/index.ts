@@ -8,7 +8,6 @@ import {
 } from "../../releaseUploader/index.js";
 import { BuildAndUploadOptions } from "./types.js";
 import { buildVariantMap } from "./buildVariantMap.js";
-import { validateManifests } from "./validation.js";
 import { getVerifyConnectionTask } from "./getVerifyConnectionTask.js";
 import { getReleaseDirCreationTask } from "./getReleaseDirCreationTask.js";
 import { getFileValidationTask } from "./getFileValidationTask.js";
@@ -47,19 +46,17 @@ export function buildAndUpload({
     composeFileName
   });
 
-  validateManifests(variantsMap);
-
   return [
+    getFileValidationTask({ variantsMap, rootDir: dir }),
     getVerifyConnectionTask({ releaseUploader, skipUpload }),
     getReleaseDirCreationTask({ variantsMap }),
-    getFileValidationTask({ variantsMap, rootDir: dir }),
     getFileCopyTask({
       variantsMap,
       rootDir: dir,
       composeFileName,
       requireGitData
     }),
-    ...getBuildTasks({ variantsMap, buildTimeout, skipSave }),
+    ...getBuildTasks({ variantsMap, buildTimeout, skipSave, rootDir: dir }),
     ...getUploadTasks({
       variantsMap,
       releaseUploader,

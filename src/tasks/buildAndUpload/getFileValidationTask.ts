@@ -8,6 +8,7 @@ import {
 } from "@dappnode/schemas";
 import { readSetupWizardIfExists } from "../../files/index.js";
 import { VariantsMap, VariantsMapEntry } from "./types.js";
+import { CliError } from "../../params.js";
 
 export function getFileValidationTask({
   variantsMap,
@@ -47,9 +48,25 @@ async function validateVariantFiles(variant: VariantsMapEntry): Promise<void> {
   // Validate manifest schema
   validateManifestSchema(manifest);
 
+  validatePackageName(manifest.name);
+  validatePackageVersion(manifest.version);
+
   // Validate compose file using docker compose
   await validateComposeSchema(composePaths);
 
   // Validate compose file specifically for Dappnode requirements
   validateDappnodeCompose(compose, manifest);
+}
+
+function validatePackageName(name: string): void {
+  if (/[A-Z]/.test(name))
+    throw new CliError(`Package name (${name}) in the manifest must be lowercase`);
+}
+
+function validatePackageVersion(version: string): void {
+  if (!/^\d+\.\d+\.\d+$/.test(version)) {
+    throw new CliError(
+      `Version in the manifest (${version}) must follow Semantic Versioning (SemVer) format (x.x.x)`
+    );
+  }
 }
