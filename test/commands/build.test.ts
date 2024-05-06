@@ -36,8 +36,12 @@ describe("Init and build simple package", function () {
       verbose: true
     });
 
+    const releaseHashes = Object.entries(buildResults).flatMap(([, { releaseMultiHash }]) => releaseMultiHash);
+
+    expect(releaseHashes).to.have.lengthOf(1);
+
     // Check returned hash is correct
-    expect(buildResults[0].releaseMultiHash).to.include("/ipfs/Qm");
+    expect(releaseHashes[0]).to.include("/ipfs/Qm");
   });
 });
 
@@ -66,11 +70,11 @@ describe("Init and build package variants", function () {
       all_variants: true
     });
 
-    expect(buildResults).to.have.lengthOf(defaultVariantsEnvValues.length);
-
     const resultEntries = Object.entries(buildResults);
 
     const builtVariants = resultEntries.map(([, { variant }]) => variant);
+
+    expect(builtVariants).to.have.lengthOf(defaultVariantsEnvValues.length);
 
     expect(builtVariants).to.have.members(defaultVariantsEnvValues);
 
@@ -83,7 +87,8 @@ describe("Init and build package variants", function () {
   });
 
   it("Should throw an error when all specified variants are invalid", async () => {
-    expect(async () => await buildHandler({
+
+    await buildHandler({
       dir: testDir,
       provider: contentProvider,
       upload_to: "ipfs",
@@ -92,26 +97,26 @@ describe("Init and build package variants", function () {
       variants: "invalid_variant",
       skip_save: true,
       skip_upload: true
-    })).to.throw();
+    }).catch((error) => {
+      expect(error.message).to.include("No valid variants specified");
+    });
   });
 
-  it("Should build only valid variants", async () => {
+  it("Should only build valid variants", async () => {
     const buildResults = await buildHandler({
       dir: testDir,
       provider: contentProvider,
       upload_to: "ipfs",
       timeout: "5min",
       verbose: true,
-      variants: `${defaultVariantsEnvValues[0]},invalid_variant`,
-      skip_save: true,
-      skip_upload: true
+      variants: `${defaultVariantsEnvValues[0]},invalid_variant`
     });
 
     const resultEntries = Object.entries(buildResults);
 
     const builtVariants = resultEntries.map(([, { variant }]) => variant);
 
-    expect(buildResults).to.have.lengthOf(1);
+    expect(builtVariants).to.have.lengthOf(1);
 
     expect(builtVariants[0]).to.equal(defaultVariantsEnvValues[0]);
   });
