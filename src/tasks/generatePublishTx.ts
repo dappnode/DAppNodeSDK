@@ -63,6 +63,7 @@ export function generatePublishTx({
           try {
             const repository = await apm.getRepoContract(ensName);
             // TODO: Fix
+            ctx[ensName] = ctx[ensName] || {};
             ctx[ensName].txData = {
               to: await repository.getAddress(),
               value: 0,
@@ -107,6 +108,7 @@ with command option:
                   );
                 }
 
+                ctx[ensName] = ctx[ensName] || {};
                 ctx[ensName].txData = {
                   to: registryAddress,
                   value: 0,
