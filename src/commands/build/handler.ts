@@ -17,7 +17,7 @@ export async function buildHandler({
   timeout: userTimeout,
   upload_to: uploadTo,
   skip_save: skipSave,
-  skip_upload,
+  skip_upload: skipUpload,
   require_git_data: requireGitData,
   delete_old_pins: deleteOldPins,
   all_variants: allVariants,
@@ -29,7 +29,6 @@ export async function buildHandler({
   silent,
   verbose
 }: BuildCommandOptions): Promise<ListrContextBuildAndPublish> {
-  const skipUpload = skipSave || skip_upload;
   const multiVariantMode = Boolean(
     allVariants || (variants && variants?.length > 0)
   );
