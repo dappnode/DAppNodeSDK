@@ -6,7 +6,7 @@ import yaml from "js-yaml";
 import { cleanTestDir, testDir } from "../../testUtils.js";
 import { readCompose } from "../../../src/files/index.js";
 
-describe.only("files / readCompose", () => {
+describe("files / readCompose", () => {
     before(() => {
         cleanTestDir(); // Clean up the test directory before each test
     });
