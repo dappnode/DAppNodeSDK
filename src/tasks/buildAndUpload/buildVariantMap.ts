@@ -48,7 +48,7 @@ export function createVariantMapEntry({
   variantPath?: string;
 }): VariantsMapEntry {
   const { manifest, format } = variantPath
-    ? readManifest([{ dir: rootDir }, { dir: path.join(rootDir, variantPath) }])
+    ? readManifest([{ dir: rootDir }, { dir: variantPath }])
     : readManifest([{ dir: rootDir }]);
 
   const { name: dnpName, version } = manifest;
@@ -60,9 +60,9 @@ export function createVariantMapEntry({
 
   const compose = variantPath
     ? readCompose([
-        { dir: rootDir, composeFileName },
-        { dir: path.join(rootDir, variantPath), composeFileName }
-      ])
+      { dir: rootDir, composeFileName },
+      { dir: variantPath, composeFileName }
+    ])
     : readCompose([{ dir: rootDir, composeFileName }]);
 
   const upstreamVersion = getUpstreamVersion({ compose, manifest });
