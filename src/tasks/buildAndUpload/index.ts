@@ -73,7 +73,8 @@ export function buildAndUpload({
       variantsMap,
       rootDir: dir,
       contentProvider,
-      variantsDirPath
+      variantsDirPath,
+      skipUpload
     })
   ];
 }
