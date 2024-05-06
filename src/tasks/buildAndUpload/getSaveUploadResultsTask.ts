@@ -9,15 +9,20 @@ export function getSaveUploadResultsTask({
   variantsMap,
   rootDir,
   variantsDirPath,
-  contentProvider
+  contentProvider,
+  skipUpload,
+  skipSave
 }: {
   variantsMap: VariantsMap;
   rootDir: string;
   variantsDirPath: string;
   contentProvider: string;
+  skipUpload?: boolean;
+  skipSave?: boolean;
 }): ListrTask<ListrContextBuildAndPublish> {
   return {
     title: "Save upload results",
+    skip: () => skipUpload || skipSave,
     task: async ctx => {
       // Single package
       if (variantsMap.default) {
