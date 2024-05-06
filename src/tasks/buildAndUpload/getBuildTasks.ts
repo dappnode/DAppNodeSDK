@@ -25,110 +25,63 @@ export function getBuildTasks({
   skipSave?: boolean;
   rootDir: string;
 }): ListrTask<ListrContextBuildAndPublish>[] {
-  const buildTasks: ListrTask<ListrContextBuildAndPublish>[] = [];
 
-  for (const [, variantSpecs] of Object.entries(variantsMap)) {
-    const {
-      manifest: { name, version },
-      architectures
-    } = variantSpecs;
+  const buildTasks: ListrTask<ListrContextBuildAndPublish>[] =
 
-    if (architectures.length === 1 && architectures[0] === defaultArch) {
-      buildTasks.push({
-        title: `Build ${name} (version ${version})`,
-        task: () =>
-          new Listr(
-            buildVariantWithCompose({
-              variantSpecs,
-              buildTimeout,
-              skipSave,
-              rootDir
-            })
-          )
-      });
-    } else {
-      buildTasks.push(
-        ...architectures.map(architecture => ({
-          title: `Build ${name} (version ${version}) for arch ${architecture}`,
-          task: () =>
-            new Listr(
-              buildVariantWithBuildx({
-                variantSpecs,
-                architecture,
-                buildTimeout,
-                skipSave,
-                rootDir
-              })
-            )
-        }))
-      );
-    }
-  }
+    Object.entries(variantsMap).flatMap(([, variantSpecs]) => {
+
+      return variantSpecs.architectures.map(architecture => createBuildTask({
+        variantSpecs,
+        architecture,
+        buildTimeout,
+        skipSave,
+        rootDir
+      }));
+
+    });
 
   return buildTasks;
 }
 
-function buildVariantWithBuildx({
-  architecture,
+function createBuildTask({
   variantSpecs,
+  architecture,
   buildTimeout,
   skipSave,
   rootDir
 }: {
-  architecture: Architecture;
   variantSpecs: VariantsMapEntry;
+  architecture: Architecture;
   buildTimeout: number;
   skipSave?: boolean;
   rootDir: string;
-}): ListrTask[] {
-  const { manifest, images, compose, releaseDir } = variantSpecs;
+}): ListrTask {
+
+  const { manifest, releaseDir, images, compose } = variantSpecs;
+  const { name, version } = manifest;
+  const buildFn = architecture === defaultArch ? buildWithCompose : buildWithBuildx;
 
   const destPath = getImagePath({
     releaseDir,
-    name: manifest.name,
-    version: manifest.version,
+    name,
+    version,
     architecture
   });
 
-  return buildWithBuildx({
-    architecture,
-    images,
-    compose,
-    manifest,
-    buildTimeout,
-    skipSave,
-    destPath,
-    rootDir
-  });
-}
+  return {
+    title: `Build ${name} (version ${version}) for arch ${architecture}`,
+    task: () => new Listr(buildFn({
+      architecture,
+      images,
+      compose,
+      manifest,
+      buildTimeout,
+      skipSave,
+      destPath,
+      rootDir
+    }))
 
-function buildVariantWithCompose({
-  variantSpecs,
-  buildTimeout,
-  skipSave,
-  rootDir
-}: {
-  variantSpecs: VariantsMapEntry;
-  buildTimeout: number;
-  skipSave?: boolean;
-  rootDir: string;
-}): ListrTask[] {
-  const { images, compose, manifest, releaseDir } = variantSpecs;
-  const destPath = getImagePath({
-    releaseDir,
-    name: manifest.name,
-    version: manifest.version
-  });
-
-  return buildWithCompose({
-    images,
-    compose,
-    manifest,
-    buildTimeout,
-    skipSave,
-    destPath,
-    rootDir
-  });
+  };
 }
 
 function getImagePath({
