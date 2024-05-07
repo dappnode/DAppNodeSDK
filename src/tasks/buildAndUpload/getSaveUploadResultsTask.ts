@@ -27,12 +27,13 @@ export function getSaveUploadResultsTask({
         const { name, version } = variantsMap.default.manifest;
         const { releaseHash: hash } = ctx[name];
 
-        addReleaseRecord({
-          dir: rootDir,
-          version,
-          hash,
-          to: contentProvider
-        });
+        if (hash)
+          addReleaseRecord({
+            dir: rootDir,
+            version,
+            hash,
+            to: contentProvider
+          });
 
         // Multi-variant package
       } else {
@@ -45,9 +46,11 @@ export function getSaveUploadResultsTask({
           const variantDir = path.join(variantsDirPath, variant);
           const { releaseHash: hash } = ctx[name];
 
+          if (!hash) continue;
+
           addReleaseRecord({
             dir: variantDir,
-            version: version,
+            version,
             hash,
             to: contentProvider
           });

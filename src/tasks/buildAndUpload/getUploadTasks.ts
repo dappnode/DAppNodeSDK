@@ -22,7 +22,7 @@ export function getUploadTasks({
 }): ListrTask<ListrContextBuildAndPublish>[] {
   const uploadTasks: ListrTask<ListrContextBuildAndPublish>[] = [];
 
-  for (const [variant, { manifest, releaseDir }] of Object.entries(
+  for (const [, { manifest, releaseDir }] of Object.entries(
     variantsMap
   )) {
     const { name: dnpName } = manifest;
@@ -36,10 +36,6 @@ export function getUploadTasks({
         // Remove `build` property AFTER building. Otherwise it may break ISO installations
         // https://github.com/dappnode/DAppNode_Installer/issues/161
         composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
-
-        ctx[dnpName] = ctx[dnpName] || {};
-
-        ctx[dnpName].variant = variant;
 
         ctx[dnpName].releaseHash = await releaseUploader.addFromFs({
           dirPath: releaseDir,

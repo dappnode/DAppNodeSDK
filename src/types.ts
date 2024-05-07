@@ -9,11 +9,12 @@ export interface CliGlobalOptions {
 
 export interface ListrContextBuildAndPublish {
   [dnpName: string]: {
-    releaseHash: string;
-    releaseMultiHash: string;
+    releaseDir?: string;
+    releaseHash?: string;
+    releaseMultiHash?: string;
     variant: string;
-    nextVersion: string;
-    txData: TxData;
+    nextVersion?: string;
+    txData?: TxData;
   };
 }
 

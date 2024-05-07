@@ -1,44 +1,19 @@
-import path from "path";
-import Listr from "listr";
 import chalk from "chalk";
 import { CommandModule } from "yargs";
 // Tasks
-import { buildAndUpload } from "../../tasks/buildAndUpload/index.js";
-import { generatePublishTx } from "../../tasks/generatePublishTx.js";
-import { createGithubRelease } from "../../tasks/createGithubRelease.js";
 // Utils
-import { getCurrentLocalVersion } from "../../utils/versions/getCurrentLocalVersion.js";
-import { increaseFromApmVersion } from "../../utils/versions/increaseFromApmVersion.js";
-import { verifyEthConnection } from "../../utils/verifyEthConnection.js";
 import { getInstallDnpLink, getPublishTxLink } from "../../utils/getLinks.js";
-import { defaultComposeFileName, defaultDir, YargsError } from "../../params.js";
 import {
   CliGlobalOptions,
   ListrContextBuildAndPublish,
-  ReleaseType,
   releaseTypes
 } from "../../types.js";
 import { printObject } from "../../utils/print.js";
 import { UploadTo } from "../../releaseUploader/index.js";
-import { VerbosityOptions } from "../build/types.js";
+import { publishHandler } from "./handler.js";
+import { PublishCommandOptions } from "./types.js";
 
-const typesList = releaseTypes.join(" | ");
-
-interface CliCommandOptions extends CliGlobalOptions {
-  type?: string;
-  provider?: string;
-  eth_provider: string;
-  content_provider: string;
-  upload_to: UploadTo;
-  developer_address?: string;
-  timeout?: string;
-  github_release?: boolean;
-  dappnode_team_preset?: boolean;
-  require_git_data?: boolean;
-  delete_old_pins?: boolean;
-}
-
-export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
+export const publish: CommandModule<CliGlobalOptions, PublishCommandOptions> = {
   command: "publish [type]",
   describe:
     "Publish a new version of the package in an Aragon Package Manager Repository",
@@ -103,127 +78,10 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 
 };
 
-/**
- * Common handler for CLI and programatic usage
- */
-export async function publishHandler({
-  type,
-  provider,
-  eth_provider,
-  content_provider,
-  developer_address: developerAddress = process.env.DEVELOPER_ADDRESS,
-  timeout: userTimeout,
-  upload_to: uploadTo,
-  github_release: githubRelease,
-  dappnode_team_preset: dappnode_team_preset,
-  require_git_data: requireGitData,
-  delete_old_pins: deleteOldPins,
-  // Global options
-  dir = defaultDir,
-  compose_file_name: composeFileName = defaultComposeFileName,
-  silent,
-  verbose
-}: CliCommandOptions): Promise<ListrContextBuildAndPublish> {
-  let ethProvider = provider || eth_provider;
-  let contentProvider = provider || content_provider;
-
-  const isCi = process.env.CI;
-
-  const verbosityOptions: VerbosityOptions = {
-    renderer: verbose ? "verbose" : silent ? "silent" : "default"
-  };
-
-  /**
-   * Specific set of options used for internal DAppNode releases.
-   * Caution: options may change without notice.
-   */
-  if (dappnode_team_preset) {
-    if (isCi) {
-      contentProvider = "https://api.ipfs.dappnode.io";
-      uploadTo = "ipfs";
-      verbose = true;
-    }
-    ethProvider = "infura";
-    githubRelease = true;
-  }
-
-  await verifyEthConnection(ethProvider);
-
-  const publishTasks = new Listr(
-    [
-      {
-        title: "Fetch current version from APM",
-        task: async (ctx, task) => {
-          let nextVersion;
-          try {
-            nextVersion = await increaseFromApmVersion({
-              type: parseReleaseType({ type }),
-              ethProvider,
-              dir,
-              composeFileName
-            });
-          } catch (e) {
-            if (e.message.includes("NOREPO"))
-              nextVersion = getCurrentLocalVersion({ dir });
-            else throw e;
-          }
-          ctx.nextVersion = nextVersion;
-          ctx.buildDir = path.join(dir, `build_${nextVersion}`);
-          task.title = task.title + ` (next version: ${nextVersion})`;
-        }
-      },
-      {
-        title: "Build and upload",
-        task: () =>
-          new Listr(
-            buildAndUpload({
-              dir,
-              composeFileName,
-              contentProvider,
-              uploadTo,
-              userTimeout,
-              requireGitData,
-              deleteOldPins,
-              // TODO
-            }),
-            verbosityOptions
-          )
-      },
-      {
-        title: "Generate transaction",
-        task: ctx =>
-          generatePublishTx({
-            dir,
-            compose_file_name: composeFileName,
-            releaseMultiHash: ctx.releaseMultiHash,
-            developerAddress,
-            ethProvider,
-            verbose,
-            silent
-          })
-      },
-      {
-        title: "Release on github",
-        enabled: () => !!githubRelease, // Only create release if requested
-        task: ctx =>
-          createGithubRelease({
-            dir,
-            compose_file_name: composeFileName,
-            buildDir: ctx.buildDir,
-            releaseMultiHash: ctx.releaseMultiHash,
-            verbose,
-            silent
-          })
-      }
-    ],
-    verbosityOptions
-  );
-
-  return await publishTasks.run();
-}
-
 function printPublishedData({ dnpName, publishedItem }: { dnpName: string, publishedItem: ListrContextBuildAndPublish[string] }) {
   const { releaseMultiHash, nextVersion, txData, variant } = publishedItem;
+
+  if (!txData || !releaseMultiHash) return;
 
   const txDataToPrint = {
     To: txData.to,
@@ -248,50 +106,4 @@ ${"You can also execute this transaction with Metamask by following this pre-fil
 
 ${chalk.cyan(getPublishTxLink(txData))}
   `);
-}
-
-function parseReleaseType({ type }: { type?: string }): ReleaseType {
-
-  const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
-  const typeFromEnv = process.env.RELEASE_TYPE;
-
-  /**
-   * Custom options to pass the type argument
-   */
-  if (!type) {
-    if (typeFromEnv)
-      type = typeFromEnv;
-
-    if (tag?.includes("release"))
-      type = parseReleaseTypeFromTag(tag);
-  }
-
-
-  if (!type && typeFromEnv) {
-    type = typeFromEnv as ReleaseType;
-  }
-  if (!type && tag?.includes("release")) {
-    type = parseReleaseTypeFromTag(tag);
-  }
-
-  validateReleaseType(type);
-
-  return type as ReleaseType;
-}
-
-function parseReleaseTypeFromTag(tag: string): ReleaseType {
-  return (tag.split("release/")[1] || "patch") as ReleaseType;
-}
-
-/**
-* Make sure the release type exists and is correct
-*/
-function validateReleaseType(type?: string) {
-  if (!type)
-    throw new YargsError(`Missing required argument [type]: ${typesList}`);
-
-  if (!releaseTypes.includes(type as ReleaseType))
-    throw new YargsError(
-      `Invalid release type "${type}", must be: ${typesList}`
-    );
 }

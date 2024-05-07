@@ -13,16 +13,18 @@ export function getReleaseDirCreationTask({
 }): ListrTask<ListrContextBuildAndPublish> {
   return {
     title: `Create release directories`,
-    task: () => createReleaseDirs({ variantsMap })
+    task: (ctx) => createReleaseDirs({ ctx, variantsMap })
   };
 }
 
 function createReleaseDirs({
+  ctx,
   variantsMap
 }: {
+  ctx: ListrContextBuildAndPublish;
   variantsMap: VariantsMap;
 }): void {
-  for (const [, { manifest, releaseDir, architectures }] of Object.entries(
+  for (const [variant, { manifest, releaseDir, architectures }] of Object.entries(
     variantsMap
   )) {
     console.log(
@@ -31,6 +33,9 @@ function createReleaseDirs({
 
     fs.mkdirSync(releaseDir, { recursive: true }); // Ok on existing dir
     const releaseFiles = fs.readdirSync(releaseDir);
+
+    ctx[manifest.name] = { variant };
+    ctx[manifest.name].releaseDir = releaseDir;
 
     const imagePaths = architectures.map(arch =>
       getImageFileName(manifest.name, manifest.version, arch)

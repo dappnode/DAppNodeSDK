@@ -3,6 +3,7 @@ import { getNextVersionFromApm } from "../utils/versions/getNextVersionFromApm.j
 import { verifyEthConnection } from "../utils/verifyEthConnection.js";
 import { CliGlobalOptions, ReleaseType } from "../types.js";
 import { defaultDir } from "../params.js";
+import { readManifest } from "../files/index.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   type: string;
@@ -45,12 +46,14 @@ export async function nextHandler({
 }: CliCommandOptions): Promise<string> {
   const ethProvider = provider;
 
+  const { manifest: { name } } = readManifest([{ dir }]);
+
   await verifyEthConnection(ethProvider);
 
   // Execute command
   return await getNextVersionFromApm({
     type: type as ReleaseType,
     ethProvider,
-    dir
+    ensName: name
   });
 }
