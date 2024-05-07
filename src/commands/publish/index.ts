@@ -3,23 +3,24 @@ import Listr from "listr";
 import chalk from "chalk";
 import { CommandModule } from "yargs";
 // Tasks
-import { buildAndUpload } from "../tasks/buildAndUpload/index.js";
-import { generatePublishTx } from "../tasks/generatePublishTx.js";
-import { createGithubRelease } from "../tasks/createGithubRelease.js";
+import { buildAndUpload } from "../../tasks/buildAndUpload/index.js";
+import { generatePublishTx } from "../../tasks/generatePublishTx.js";
+import { createGithubRelease } from "../../tasks/createGithubRelease.js";
 // Utils
-import { getCurrentLocalVersion } from "../utils/versions/getCurrentLocalVersion.js";
-import { increaseFromApmVersion } from "../utils/versions/increaseFromApmVersion.js";
-import { verifyEthConnection } from "../utils/verifyEthConnection.js";
-import { getInstallDnpLink, getPublishTxLink } from "../utils/getLinks.js";
-import { defaultComposeFileName, defaultDir, YargsError } from "../params.js";
+import { getCurrentLocalVersion } from "../../utils/versions/getCurrentLocalVersion.js";
+import { increaseFromApmVersion } from "../../utils/versions/increaseFromApmVersion.js";
+import { verifyEthConnection } from "../../utils/verifyEthConnection.js";
+import { getInstallDnpLink, getPublishTxLink } from "../../utils/getLinks.js";
+import { defaultComposeFileName, defaultDir, YargsError } from "../../params.js";
 import {
   CliGlobalOptions,
   ListrContextBuildAndPublish,
   ReleaseType,
   releaseTypes
-} from "../types.js";
-import { printObject } from "../utils/print.js";
-import { UploadTo } from "../releaseUploader/index.js";
+} from "../../types.js";
+import { printObject } from "../../utils/print.js";
+import { UploadTo } from "../../releaseUploader/index.js";
+import { VerbosityOptions } from "../build/types.js";
 
 const typesList = releaseTypes.join(" | ");
 
@@ -95,36 +96,11 @@ export const publish: CommandModule<CliGlobalOptions, CliCommandOptions> = {
       args
     );
 
-    // TODO: Fix
-    const [, { nextVersion, releaseMultiHash, txData }] = Object.entries(
-      publishedData
-    )[0];
-
-    if (!args.silent) {
-      const txDataToPrint = {
-        To: txData.to,
-        Value: txData.value,
-        Data: txData.data,
-        Gas: txData.gasLimit
-      };
-
-      console.log(`
-  ${chalk.green(`DNP (DAppNode Package) published (version ${nextVersion})`)} 
-  Release hash : ${releaseMultiHash}
-  ${getInstallDnpLink(releaseMultiHash)}
-  
-  ${"You must execute this transaction in mainnet to publish a new version of this DNP."}
-  
-  ${chalk.gray(
-        printObject(txDataToPrint, (key, value) => `  ${key.padEnd(5)} : ${value}`)
-      )}
-  
-  ${"You can also execute this transaction with Metamask by following this pre-filled link"}
-  
-  ${chalk.cyan(getPublishTxLink(txData))}
-  `);
-    }
+    Object.entries(publishedData).map(([dnpName, publishedItem]) =>
+      printPublishedData({ dnpName, publishedItem })
+    );
   }
+
 };
 
 /**
@@ -135,33 +111,27 @@ export async function publishHandler({
   provider,
   eth_provider,
   content_provider,
-  developer_address,
-  timeout,
-  upload_to,
-  github_release,
-  dappnode_team_preset,
-  require_git_data,
-  delete_old_pins,
+  developer_address: developerAddress = process.env.DEVELOPER_ADDRESS,
+  timeout: userTimeout,
+  upload_to: uploadTo,
+  github_release: githubRelease,
+  dappnode_team_preset: dappnode_team_preset,
+  require_git_data: requireGitData,
+  delete_old_pins: deleteOldPins,
   // Global options
   dir = defaultDir,
-  compose_file_name = defaultComposeFileName,
+  compose_file_name: composeFileName = defaultComposeFileName,
   silent,
   verbose
 }: CliCommandOptions): Promise<ListrContextBuildAndPublish> {
-  // Parse optionsalias: "release",
   let ethProvider = provider || eth_provider;
   let contentProvider = provider || content_provider;
-  let uploadTo = upload_to;
-  let githubRelease = Boolean(github_release);
-  const developerAddress = developer_address || process.env.DEVELOPER_ADDRESS;
-  const userTimeout = timeout;
-  const composeFileName = compose_file_name;
-  const requireGitData = require_git_data;
-  const deleteOldPins = delete_old_pins;
 
   const isCi = process.env.CI;
-  const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
-  const typeFromEnv = process.env.RELEASE_TYPE;
+
+  const verbosityOptions: VerbosityOptions = {
+    renderer: verbose ? "verbose" : silent ? "silent" : "default"
+  };
 
   /**
    * Specific set of options used for internal DAppNode releases.
@@ -171,45 +141,23 @@ export async function publishHandler({
     if (isCi) {
       contentProvider = "https://api.ipfs.dappnode.io";
       uploadTo = "ipfs";
-      // Activate verbose to see logs easier afterwards
       verbose = true;
     }
     ethProvider = "infura";
     githubRelease = true;
   }
 
-  /**
-   * Custom options to pass the type argument
-   */
-  if (!type && typeFromEnv) {
-    type = typeFromEnv as ReleaseType;
-  }
-  if (!type && tag && tag.includes("release")) {
-    type = (tag.split("release/")[1] || "patch") as ReleaseType;
-  }
-
-  /**
-   * Make sure the release type exists and is correct
-   */
-  if (!type)
-    throw new YargsError(`Missing required argument [type]: ${typesList}`);
-  if (!releaseTypes.includes(type as ReleaseType))
-    throw new YargsError(
-      `Invalid release type "${type}", must be: ${typesList}`
-    );
-
   await verifyEthConnection(ethProvider);
 
   const publishTasks = new Listr(
     [
-      // 1. Fetch current version from APM
       {
         title: "Fetch current version from APM",
         task: async (ctx, task) => {
           let nextVersion;
           try {
             nextVersion = await increaseFromApmVersion({
-              type: type as ReleaseType,
+              type: parseReleaseType({ type }),
               ethProvider,
               dir,
               composeFileName
@@ -224,8 +172,6 @@ export async function publishHandler({
           task.title = task.title + ` (next version: ${nextVersion})`;
         }
       },
-
-      // 2. Build and upload
       {
         title: "Build and upload",
         task: () =>
@@ -240,17 +186,15 @@ export async function publishHandler({
               deleteOldPins,
               // TODO
             }),
-            { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+            verbosityOptions
           )
       },
-
-      // 3. Generate transaction
       {
         title: "Generate transaction",
         task: ctx =>
           generatePublishTx({
             dir,
-            compose_file_name,
+            compose_file_name: composeFileName,
             releaseMultiHash: ctx.releaseMultiHash,
             developerAddress,
             ethProvider,
@@ -258,16 +202,13 @@ export async function publishHandler({
             silent
           })
       },
-
-      // 4. Create github release
-      // [ONLY] add the Release task if requested
       {
         title: "Release on github",
-        enabled: () => githubRelease,
+        enabled: () => !!githubRelease, // Only create release if requested
         task: ctx =>
           createGithubRelease({
             dir,
-            compose_file_name,
+            compose_file_name: composeFileName,
             buildDir: ctx.buildDir,
             releaseMultiHash: ctx.releaseMultiHash,
             verbose,
@@ -275,8 +216,82 @@ export async function publishHandler({
           })
       }
     ],
-    { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+    verbosityOptions
   );
 
   return await publishTasks.run();
+}
+
+function printPublishedData({ dnpName, publishedItem }: { dnpName: string, publishedItem: ListrContextBuildAndPublish[string] }) {
+  const { releaseMultiHash, nextVersion, txData, variant } = publishedItem;
+
+  const txDataToPrint = {
+    To: txData.to,
+    Value: txData.value,
+    Data: txData.data,
+    Gas: txData.gasLimit
+  };
+
+  console.log(`
+${chalk.green(`Dappnode Package (${variant}) published (version ${nextVersion})`)} 
+DNP name : ${dnpName}
+Release hash : ${releaseMultiHash}
+${getInstallDnpLink(releaseMultiHash)}
+
+${"You must execute this transaction in mainnet to publish a new version of this DNP."}
+
+${chalk.gray(
+    printObject(txDataToPrint, (key, value) => `  ${key.padEnd(5)} : ${value}`)
+  )}
+
+${"You can also execute this transaction with Metamask by following this pre-filled link"}
+
+${chalk.cyan(getPublishTxLink(txData))}
+  `);
+}
+
+function parseReleaseType({ type }: { type?: string }): ReleaseType {
+
+  const tag = process.env.TRAVIS_TAG || process.env.GITHUB_REF;
+  const typeFromEnv = process.env.RELEASE_TYPE;
+
+  /**
+   * Custom options to pass the type argument
+   */
+  if (!type) {
+    if (typeFromEnv)
+      type = typeFromEnv;
+
+    if (tag?.includes("release"))
+      type = parseReleaseTypeFromTag(tag);
+  }
+
+
+  if (!type && typeFromEnv) {
+    type = typeFromEnv as ReleaseType;
+  }
+  if (!type && tag?.includes("release")) {
+    type = parseReleaseTypeFromTag(tag);
+  }
+
+  validateReleaseType(type);
+
+  return type as ReleaseType;
+}
+
+function parseReleaseTypeFromTag(tag: string): ReleaseType {
+  return (tag.split("release/")[1] || "patch") as ReleaseType;
+}
+
+/**
+* Make sure the release type exists and is correct
+*/
+function validateReleaseType(type?: string) {
+  if (!type)
+    throw new YargsError(`Missing required argument [type]: ${typesList}`);
+
+  if (!releaseTypes.includes(type as ReleaseType))
+    throw new YargsError(
+      `Invalid release type "${type}", must be: ${typesList}`
+    );
 }
