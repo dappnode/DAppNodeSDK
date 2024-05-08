@@ -22,7 +22,7 @@ export function getBuildBotComment({
     .map(([dnpName, { releaseMultiHash }], index) =>
       formatBuildEntry({ dnpName, releaseMultiHash, index })
     )
-    .join('\n\n');
+    .join("\n\n");
 
   return `Dappnode bot has built and pinned the built packages to an IPFS node, for commit: ${commitSha}
 
@@ -34,7 +34,15 @@ ${botCommentTag}
 `;
 }
 
-function formatBuildEntry({ dnpName, releaseMultiHash, index }: { dnpName: string, releaseMultiHash: string, index: number }) {
+function formatBuildEntry({
+  dnpName,
+  releaseMultiHash,
+  index
+}: {
+  dnpName: string;
+  releaseMultiHash: string;
+  index: number;
+}) {
   const installLink = getInstallDnpLink(releaseMultiHash);
   return `${index + 1}. Package **${dnpName}**
   

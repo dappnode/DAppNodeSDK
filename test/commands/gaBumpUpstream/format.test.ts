@@ -1,18 +1,23 @@
 import { expect } from "chai";
 import {
   getBumpPrBody,
-  isValidRelease,
+  isValidRelease
 } from "../../../src/commands/githubActions/bumpUpstream/github/index.js";
-import { ComposeVersionsToUpdate, UpstreamSettings } from "../../../src/commands/githubActions/bumpUpstream/types.js";
+import {
+  ComposeVersionsToUpdate,
+  UpstreamSettings
+} from "../../../src/commands/githubActions/bumpUpstream/types.js";
 
 describe("command / gaBumpUpstream / format", () => {
   describe("single version", () => {
-    const versionsToUpdate: UpstreamSettings[] = [{
-      repo: "ipfs/go-ipfs",
-      arg: "v0.7.0",
-      manifestVersion: "v0.6.0",
-      githubVersion: "v0.7.0"
-    }];
+    const versionsToUpdate: UpstreamSettings[] = [
+      {
+        repo: "ipfs/go-ipfs",
+        arg: "v0.7.0",
+        manifestVersion: "v0.6.0",
+        githubVersion: "v0.7.0"
+      }
+    ];
 
     it("getPrBody", () => {
       const upstreamVersion = getBumpPrBody(versionsToUpdate);
@@ -52,7 +57,7 @@ describe("command / gaBumpUpstream / format", () => {
       "sigp/lighthouse": {
         newVersion: "v0.1.5",
         currentVersion: "v0.1.2"
-      },
+      }
     };
 
     const wrongVersionsToUpdate: ComposeVersionsToUpdate = {
@@ -72,19 +77,22 @@ describe("command / gaBumpUpstream / format", () => {
         newVersion: "v0.1.0-RC.0",
         currentVersion: "v0.1.0"
       }
-
     };
 
-    Object.entries(wrongVersionsToUpdate).forEach(([repoSlug, { newVersion }]) => {
-      it(`Release ${repoSlug} ${newVersion} is invalid`, () => {
-        expect(isValidRelease(newVersion)).to.equal(false);
-      });
-    });
+    Object.entries(wrongVersionsToUpdate).forEach(
+      ([repoSlug, { newVersion }]) => {
+        it(`Release ${repoSlug} ${newVersion} is invalid`, () => {
+          expect(isValidRelease(newVersion)).to.equal(false);
+        });
+      }
+    );
 
-    Object.entries(correctVersionsToUpdate).forEach(([repoSlug, { newVersion }]) => {
-      it(`Release ${repoSlug} ${newVersion} is valid`, () => {
-        expect(isValidRelease(newVersion)).to.equal(true);
-      });
-    });
+    Object.entries(correctVersionsToUpdate).forEach(
+      ([repoSlug, { newVersion }]) => {
+        it(`Release ${repoSlug} ${newVersion} is valid`, () => {
+          expect(isValidRelease(newVersion)).to.equal(true);
+        });
+      }
+    );
   });
 });

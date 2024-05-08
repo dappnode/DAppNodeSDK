@@ -8,7 +8,10 @@ import { FlexibleCompose } from "./types.js";
 /**
  * Writes the docker-compose.
  */
-export function writeCompose<T extends Compose | FlexibleCompose>(compose: T, paths?: ComposePaths): void {
+export function writeCompose<T extends Compose | FlexibleCompose>(
+  compose: T,
+  paths?: ComposePaths
+): void {
   const composePath = getComposePath(paths);
   fs.writeFileSync(composePath, stringifyCompose(compose));
 }

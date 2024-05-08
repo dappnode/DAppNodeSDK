@@ -16,7 +16,7 @@ export function getSaveUploadResultsTask({
   rootDir: string;
   variantsDirPath: string;
   contentProvider: string;
-  skipUpload?: boolean
+  skipUpload?: boolean;
 }): ListrTask<ListrContextBuildAndPublish> {
   return {
     title: "Save upload results",

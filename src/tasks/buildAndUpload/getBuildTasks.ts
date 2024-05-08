@@ -25,20 +25,19 @@ export function getBuildTasks({
   skipSave?: boolean;
   rootDir: string;
 }): ListrTask<ListrContextBuildAndPublish>[] {
-
-  const buildTasks: ListrTask<ListrContextBuildAndPublish>[] =
-
-    Object.entries(variantsMap).flatMap(([, variantSpecs]) => {
-
-      return variantSpecs.architectures.map(architecture => createBuildTask({
+  const buildTasks: ListrTask<ListrContextBuildAndPublish>[] = Object.entries(
+    variantsMap
+  ).flatMap(([, variantSpecs]) => {
+    return variantSpecs.architectures.map(architecture =>
+      createBuildTask({
         variantSpecs,
         architecture,
         buildTimeout,
         skipSave,
         rootDir
-      }));
-
-    });
+      })
+    );
+  });
 
   return buildTasks;
 }
@@ -56,10 +55,10 @@ function createBuildTask({
   skipSave?: boolean;
   rootDir: string;
 }): ListrTask {
-
   const { manifest, releaseDir, images, compose } = variantSpecs;
   const { name, version } = manifest;
-  const buildFn = architecture === defaultArch ? buildWithCompose : buildWithBuildx;
+  const buildFn =
+    architecture === defaultArch ? buildWithCompose : buildWithBuildx;
 
   const destPath = getImagePath({
     releaseDir,
@@ -70,17 +69,19 @@ function createBuildTask({
 
   return {
     title: `Build ${name} (version ${version}) for arch ${architecture}`,
-    task: () => new Listr(buildFn({
-      architecture,
-      images,
-      compose,
-      manifest,
-      buildTimeout,
-      skipSave,
-      destPath,
-      rootDir
-    }))
-
+    task: () =>
+      new Listr(
+        buildFn({
+          architecture,
+          images,
+          compose,
+          manifest,
+          buildTimeout,
+          skipSave,
+          destPath,
+          rootDir
+        })
+      )
   };
 }
 

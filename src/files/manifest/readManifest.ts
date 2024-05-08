@@ -11,7 +11,7 @@ import { merge } from "lodash-es";
  * Reads one or more manifest files and merges them if necessary. This function is intended
  * for combining a primary manifest with one or more variant manifests. It enforces the use
  * of JSON format when merging manifests.
- * 
+ *
  * @param {ManifestPaths[]} paths - Optional array of paths for the manifest files. If not
  *                                  provided, a default manifest will be loaded.
  * @return {{manifest: Manifest, format: ManifestFormat}} - Returns an object containing the
@@ -20,26 +20,31 @@ import { merge } from "lodash-es";
  *                   problem reading or parsing the manifests.
  */
 export function readManifest(
-  paths?: ManifestPaths[],
+  paths?: ManifestPaths[]
 ): { manifest: Manifest; format: ManifestFormat } {
   try {
+    if (!paths) return loadManifest(); // Load default manifest
 
-    if (!paths)
-      return loadManifest(); // Load default manifest
+    const manifestsSpecs = paths.map(path => loadManifest(path));
 
-    const manifestsSpecs = paths.map((path) => loadManifest(path));
-
-    // TODO: Deprecate any manifest format other than JSON 
-    if (manifestsSpecs.some((manifest) => manifest.format !== ManifestFormat.json)) {
-      throw new Error("Only JSON format is supported for template mode when merging manifests");
+    // TODO: Deprecate any manifest format other than JSON
+    if (
+      manifestsSpecs.some(manifest => manifest.format !== ManifestFormat.json)
+    ) {
+      throw new Error(
+        "Only JSON format is supported for template mode when merging manifests"
+      );
     }
 
     // Merge all manifests using lodash merge
-    const mergedManifest = merge({}, ...manifestsSpecs.map((manifest) => manifest.manifest));
+    const mergedManifest = merge(
+      {},
+      ...manifestsSpecs.map(manifest => manifest.manifest)
+    );
 
     return {
       format: ManifestFormat.json,
-      manifest: mergedManifest,
+      manifest: mergedManifest
     };
   } catch (e) {
     throw new Error(`Error parsing manifest: ${e.message}`);
@@ -49,7 +54,9 @@ export function readManifest(
 /**
  * Loads a manifest from the specified path.
  */
-function loadManifest(paths?: ManifestPaths): { manifest: Manifest; format: ManifestFormat } {
+function loadManifest(
+  paths?: ManifestPaths
+): { manifest: Manifest; format: ManifestFormat } {
   const manifestPath = findManifestPath(paths);
   const format = parseFormat(manifestPath);
   const data = readFile(manifestPath);
@@ -67,7 +74,7 @@ function loadManifest(paths?: ManifestPaths): { manifest: Manifest; format: Mani
 
   return {
     format,
-    manifest: parsedData,
+    manifest: parsedData
   };
 }
 
