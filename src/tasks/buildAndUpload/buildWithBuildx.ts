@@ -6,7 +6,7 @@ import { saveAndCompressImagesCached } from "../saveAndCompressImages.js";
 import { getDockerVersion } from "../../utils/getDockerVersion.js";
 import { Architecture, Compose, Manifest } from "@dappnode/types";
 import { tmpComposeFileName } from "../../params.js";
-import { writeTmpCompose } from "./utils.js";
+import { writeTmpCompose } from "./writeTmpCompose.js";
 import path from "path";
 
 const minimumDockerVersion = "19.3.0";

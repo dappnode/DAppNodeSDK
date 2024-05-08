@@ -5,7 +5,7 @@ import { saveAndCompressImagesCached } from "../saveAndCompressImages.js";
 import { Compose, Manifest, defaultArch } from "@dappnode/types";
 import { tmpComposeFileName } from "../../params.js";
 import path from "path";
-import { writeTmpCompose } from "./utils.js";
+import { writeTmpCompose } from "./writeTmpCompose.js";
 
 /**
  * Save docker image

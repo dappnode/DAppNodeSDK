@@ -2,13 +2,12 @@ import path from "path";
 import { ListrTask } from "listr/index.js";
 import { verifyAvatar } from "../../utils/verifyAvatar.js";
 import { copyReleaseFile } from "../../utils/copyReleaseFile.js";
-import { releaseFilesDefaultNames } from "../../params.js";
+import { defaultComposeFileName, releaseFilesDefaultNames } from "../../params.js";
 import { ListrContextBuildAndPublish } from "../../types.js";
 import { getGitHeadIfAvailable } from "../../utils/git.js";
-import { writeManifest } from "../../files/index.js";
-import { Manifest, releaseFiles } from "@dappnode/types";
+import { updateComposeImageTags, writeCompose, writeManifest } from "../../files/index.js";
+import { Compose, Manifest, releaseFiles } from "@dappnode/types";
 import { VariantsMap, VariantsMapEntry } from "./types.js";
-import { writeReleaseCompose } from "./utils.js";
 
 export function getFileCopyTask({
   variantsMap,
@@ -89,4 +88,21 @@ async function copyVariantFilesToReleaseDir({
         break;
     }
   }
+}
+
+function writeReleaseCompose({
+  compose,
+  composeFileName = defaultComposeFileName,
+  manifest,
+  releaseDir
+}: {
+  compose: Compose;
+  composeFileName?: string;
+  manifest: Manifest;
+  releaseDir: string;
+}): void {
+  const releaseCompose = updateComposeImageTags(compose, manifest, {
+    editExternalImages: true
+  });
+  writeCompose(releaseCompose, { dir: releaseDir, composeFileName });
 }
