@@ -5,6 +5,7 @@ import { getFetchApmVersionTask } from "./getFetchApmVersionTask.js";
 import { getBuildAndUploadTask } from "./getBuildAndUploadTask.js";
 import { getGenerateTxTask } from "./getGenerateTxTask.js";
 import { getCreateGithubReleaseTask } from "./getCreateGithubReleaseTask.js";
+import { getVerifyEthConnectionTask } from "./getVerifyEthConnectionTask.js";
 
 export function publish({
   releaseType,
@@ -21,6 +22,7 @@ export function publish({
   verbosityOptions
 }: PublishOptions): ListrTask<ListrContextBuildAndPublish>[] {
   return [
+    getVerifyEthConnectionTask({ ethProvider }),
     getFetchApmVersionTask({ releaseType, ethProvider, dir, composeFileName }),
     getBuildAndUploadTask({
       buildOptions: {

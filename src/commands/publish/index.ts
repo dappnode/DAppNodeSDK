@@ -84,7 +84,12 @@ function printPublishedData({
 }) {
   const { releaseMultiHash, nextVersion, txData, variant } = publishedItem;
 
-  if (!txData || !releaseMultiHash) return;
+  if (!txData || !releaseMultiHash) {
+    console.log(`
+    ${chalk.red(`Dappnode Package (${variant}) not published`)}
+    `);
+    return;
+  }
 
   const txDataToPrint = {
     To: txData.to,

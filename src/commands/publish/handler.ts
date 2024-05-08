@@ -1,6 +1,4 @@
 import Listr from "listr";
-// Utils
-import { verifyEthConnection } from "../../utils/verifyEthConnection.js";
 import {
   defaultComposeFileName,
   defaultDir,
@@ -62,8 +60,6 @@ export async function publishHandler({
   }
 
   const releaseType = parseReleaseType({ type });
-
-  await verifyEthConnection(ethProvider);
 
   const publishTasks = new Listr(
     publish({

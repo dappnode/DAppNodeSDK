@@ -28,6 +28,9 @@ export function getFetchApmVersionTask({
       const { manifest, format: manifestFormat } = readManifest([{ dir }]);
       const { name, version } = manifest;
 
+      // TODO: Create a task for setting this up
+      ctx[name] = { variant: "default" };
+
       try {
         ctx[name].nextVersion = await increaseFromApmVersion({
           type: releaseType,
