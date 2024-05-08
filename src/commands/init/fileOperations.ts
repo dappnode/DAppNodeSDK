@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { YargsError, defaultManifestFormat, defaultVariantsDir, defaultVariantsEnvName } from "../../params.js";
+import { YargsError, defaultManifestFormat, defaultVariantsDirName, defaultVariantsEnvName } from "../../params.js";
 import { UserAnswers } from "./types.js";
 import { Compose, Manifest, getImageTag, releaseFiles } from "@dappnode/types";
 import { getComposePath, getManifestPath, writeCompose, writeManifest } from "../../files/index.js";
@@ -15,7 +15,7 @@ export function createPackageDirectories(dir: string, answers: UserAnswers, useV
 
     // Create all variant dirs
     if (useVariants && answers.variants) {
-        const variantsDir = answers.variantsDir || defaultVariantsDir;
+        const variantsDir = answers.variantsDir || defaultVariantsDirName;
 
         fs.mkdirSync(path.join(dir, variantsDir), { recursive: true });
 
@@ -105,7 +105,7 @@ function writeMultiVariantPackageFiles({
     writeCompose<FlexibleCompose>(removeImageFromCompose(rootCompose, serviceName), { dir, composeFileName });
 
     // Write the variants
-    const variantsDir = answers.variantsDir || defaultVariantsDir;
+    const variantsDir = answers.variantsDir || defaultVariantsDirName;
 
     for (const variant of answers.variants || []) {
         const variantDir = path.join(dir, variantsDir, variant);

@@ -3,7 +3,7 @@ import { CommandModule } from "yargs";
 import { getInstallDnpLink } from "../../utils/getLinks.js";
 import { CliGlobalOptions, ListrContextBuildAndPublish } from "../../types.js";
 import { UploadTo } from "../../releaseUploader/index.js";
-import { defaultVariantsDir } from "../../params.js";
+import { defaultVariantsDirName } from "../../params.js";
 import { BuildCommandOptions } from "./types.js";
 import { buildHandler } from "./handler.js";
 
@@ -43,11 +43,11 @@ export const build: CommandModule<CliGlobalOptions, BuildCommandOptions> = {
       description: `It will use the dappnode_package.json and docker-compose.yml files in the root of the project together with the specific ones defined for each package variant to build all of them`,
       type: "boolean"
     },
-    variants_dir: {
-      alias: "variants-dir",
-      description: `Path to the directory where the package variants are located (only for packages that support it and combined with either "--all-variants" or "--variants"). By default, it is ${defaultVariantsDir}`,
+    variants_dir_name: {
+      alias: "variants-dir-name",
+      description: `Name of the directory where the package variants are located (only for packages that support it and combined with either "--all-variants" or "--variants"). By default, it is ${defaultVariantsDirName}`,
       type: "string",
-      default: defaultVariantsDir
+      default: defaultVariantsDirName
     },
     variants: {
       alias: "variant",

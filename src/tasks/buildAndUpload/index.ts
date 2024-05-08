@@ -1,5 +1,5 @@
 import { ListrTask } from "listr/index.js";
-import { defaultVariantsDir } from "../../params.js";
+import { defaultVariantsDirName } from "../../params.js";
 import { ListrContextBuildAndPublish } from "../../types.js";
 import { parseTimeout } from "../../utils/timeout.js";
 import {
@@ -27,7 +27,7 @@ export function buildAndUpload({
   deleteOldPins,
   composeFileName,
   dir,
-  variantsDirPath = defaultVariantsDir,
+  variantsDirPath = defaultVariantsDirName,
   variants
 }: BuildAndUploadOptions): ListrTask<ListrContextBuildAndPublish>[] {
   const buildTimeout = parseTimeout(userTimeout);

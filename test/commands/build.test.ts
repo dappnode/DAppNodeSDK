@@ -1,8 +1,10 @@
+import fs from "fs";
+import path from "path";
 import { expect } from "chai";
 import { cleanTestDir, testDir } from "../testUtils.js";
 import { initHandler } from "../../src/commands/init/handler.js";
 import { buildHandler } from "../../src/commands/build/handler.js";
-import { defaultVariantsEnvValues } from "../../src/params.js";
+import { defaultVariantsDirName, defaultVariantsEnvValues } from "../../src/params.js";
 
 const contentProvider = "http://api.ipfs.dappnode.io:5001";
 
@@ -48,10 +50,10 @@ describe("Init and build simple package", function () {
 describe("Init and build package variants", function () {
   this.timeout(120 * 1000);
 
-  before("Clean testDir", () => cleanTestDir());
-  after("Clean testDir", () => cleanTestDir());
+  beforeEach("Clean testDir", () => cleanTestDir());
+  afterEach("Clean testDir", () => cleanTestDir());
 
-  before("Init multi-variant repo", async () => {
+  beforeEach("Init multi-variant repo", async () => {
     await initHandler({
       dir: testDir,
       force: true,
@@ -84,6 +86,41 @@ describe("Init and build package variants", function () {
       expect(dnpName).to.include(variant);
     });
 
+  });
+
+  it("Should build and upload all package variants with custom variants dir", async () => {
+
+    const customVariantsDirName = "custom_variants";
+
+    // Ensure the directory exists before renaming
+    const oldPath = path.join(testDir, defaultVariantsDirName);
+    const newPath = path.join(testDir, customVariantsDirName);
+
+    if (fs.existsSync(oldPath)) {
+      fs.renameSync(oldPath, newPath);
+    } else {
+      throw new Error(`Directory ${oldPath} does not exist`);
+    }
+
+    const buildResults = await buildHandler({
+      dir: testDir,
+      provider: contentProvider,
+      upload_to: "ipfs",
+      timeout: "5min",
+      verbose: true,
+      variants: defaultVariantsEnvValues[0],
+      variants_dir_name: customVariantsDirName
+    });
+
+    const resultEntries = Object.entries(buildResults);
+
+    const builtVariants = resultEntries.map(([, { variant }]) => variant);
+
+    expect(builtVariants).to.have.lengthOf(1);
+
+    const [, { releaseMultiHash }] = resultEntries[0];
+
+    expect(releaseMultiHash).to.include("/ipfs/Qm");
   });
 
   it("Should throw an error when all specified variants are invalid", async () => {

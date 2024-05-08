@@ -4,7 +4,7 @@ import { getAllVariantsInPath } from "../../files/variants/getAllPackageVariants
 /**
  * Main function to retrieve the valid variant names based on the specified variants and available directories.
  */
-export function getVariantNames({
+export function getValidVariantNames({
   variantsDirPath,
   variants
 }: {
