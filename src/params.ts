@@ -13,13 +13,14 @@ export const branchNameRoot = "dappnodebot/bump-upstream/";
 // DAppNode params
 
 export const defaultDir = "./";
-export const defaultVariantsDir = "./package_variants";
+export const defaultVariantsDirName = "package_variants";
 // This is the default name of the environment variable that will be used to select each of the variants
 export const defaultVariantsEnvName = "NETWORK";
 export const defaultVariantsEnvValues = ["mainnet", "testnet"];
 export const defaultManifestFileName = "dappnode_package.json";
 export const defaultManifestFormat = ManifestFormat.json;
 export const defaultComposeFileName = "docker-compose.yml";
+export const tmpComposeFileName = "docker-compose-tmp.yml";
 export const publishTxAppUrl = "https://dappnode.github.io/sdk-publish/";
 export const UPSTREAM_VERSION_VARNAME = "UPSTREAM_VERSION";
 export const upstreamImageLabel = "dappnode.dnp.upstreamImage";

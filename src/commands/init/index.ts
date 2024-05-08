@@ -5,7 +5,7 @@ import {
   defaultComposeFileName,
   defaultDir,
   defaultManifestFileName,
-  defaultVariantsDir
+  defaultVariantsDirName
 } from "../../params.js";
 import { CliGlobalOptions } from "../../types.js";
 import { InitCommandOptions } from "./types.js";
@@ -46,7 +46,7 @@ To start, you can:
 - Develop your dockerized app in   ${path.join(dir, dockerfileName)}
 - Add settings in the compose at   ${path.join(dir, defaultComposeFileName)}
 - Add metadata in the manifest at  ${path.join(dir, defaultManifestFileName)}
-${args.use_variants ? `- Define the specific features of each variant in ${path.join(dir, defaultVariantsDir)}` : ""}
+${args.use_variants ? `- Define the specific features of each variant in ${path.join(dir, defaultVariantsDirName)}` : ""}
 
 Once ready, you can build, install, and test it by running
 

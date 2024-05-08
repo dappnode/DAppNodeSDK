@@ -8,12 +8,13 @@ export interface CliGlobalOptions {
 }
 
 export interface ListrContextBuildAndPublish {
-  // Build and upload
-  releaseHash: string;
-  releaseMultiHash: string;
-  // create Github release
-  nextVersion: string;
-  txData: TxData;
+  [dnpName: string]: {
+    releaseHash: string;
+    releaseMultiHash: string;
+    variant: string;
+    nextVersion: string;
+    txData: TxData;
+  };
 }
 
 // Interal types

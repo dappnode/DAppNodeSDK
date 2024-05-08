@@ -1,4 +1,5 @@
 import defaultAvatar from "../../assets/defaultAvatar.js";
+import { tmpComposeFileName } from "../../params.js";
 import { releasesRecordFileName } from "../../utils/releaseRecord.js";
 
 export const stringsToRemoveFromName = [
@@ -32,4 +33,5 @@ export const gitignoreCheck = "build_*";
 export const gitignoreData = `# DAppNodeSDK release directories
   build_*
   ${releasesRecordFileName}
+  ${tmpComposeFileName}
   `;

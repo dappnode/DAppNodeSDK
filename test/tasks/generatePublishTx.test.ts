@@ -31,7 +31,11 @@ describe("generatePublishTx", function () {
       ethProvider: "infura",
       verbose: true
     });
-    const { txData } = await generatePublishTxTasks.run();
+
+    // TODO: Fix when publish is adapted to multi-variant packages
+    const publishResults = await generatePublishTxTasks.run();
+    const { txData } = publishResults[manifest.name];
+
     expect(txData).to.be.an("object");
     // admin.dnp.dappnode.eth ==> 0xEe66C4765696C922078e8670aA9E6d4F6fFcc455
 
@@ -63,7 +67,10 @@ describe("generatePublishTx", function () {
       ethProvider: "infura",
       verbose: true
     });
-    const { txData } = await generatePublishTxTasks.run();
+    const publishResult = await generatePublishTxTasks.run();
+
+    const { txData } = publishResult[manifest.name];
+
     expect(txData).to.be.an("object");
 
     expect(txData).to.deep.equal({

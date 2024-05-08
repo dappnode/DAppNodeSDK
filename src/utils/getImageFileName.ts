@@ -7,7 +7,7 @@ import { Architecture } from "@dappnode/types";
  * @param arch Container architecture in the format <os>/<arch>
  * @returns Image path in the format <name>_<version>_<os>-<arch>.txz
  */
-export const getImagePath = (
+export const getImageFileName = (
   name: string,
   version: string,
   arch: Architecture

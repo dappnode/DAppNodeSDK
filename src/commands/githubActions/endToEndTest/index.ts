@@ -2,7 +2,7 @@ import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
 import { ensureDappnodeEnvironment } from "./ensureDappnodeEnvironment.js";
 import { readCompose, readManifest } from "../../../files/index.js";
-import { buildHandler } from "../../build.js";
+import { buildHandler } from "../../build/handler.js";
 import { executeEndToEndTests } from "./executeTests.js";
 import { DappmanagerTestApi } from "./dappmanagerTestApi.js";
 import { localDappmanagerTestApiUrl, localIpfsApiUrl } from "./params.js";
@@ -60,8 +60,8 @@ export async function gaTestEndToEndHandler({
   if (network && !networks.includes(network as Network))
     throw Error(`Invalid network ${network}. Available values are ${networks}`);
   const dappmanagerTestApi = new DappmanagerTestApi(localDappmanagerTestApiUrl);
-  const compose = readCompose({ dir });
-  const { manifest } = readManifest({ dir });
+  const compose = readCompose([{ dir }]);
+  const { manifest } = readManifest([{ dir }]);
   const environmentByServiceParsed: Record<
     string,
     string
@@ -70,7 +70,7 @@ export async function gaTestEndToEndHandler({
   try {
     // Build and upload
     console.log(chalk.dim("\nBuilding and uploading package..."));
-    const { releaseMultiHash } = await buildHandler({
+    const buildResult = await buildHandler({
       dir,
       provider: localIpfsApiUrl,
       upload_to: "ipfs",
@@ -88,7 +88,7 @@ export async function gaTestEndToEndHandler({
 
     await executeEndToEndTests({
       dappmanagerTestApi,
-      releaseMultiHash,
+      releaseMultiHash: buildResult[0].releaseMultiHash, // TODO: Do this for every releaseHash obtained
       manifest,
       compose,
       healthCheckUrl,

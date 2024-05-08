@@ -58,13 +58,13 @@ describe("increaseFromLocalVersion", function () {
     );
 
     // Check that the compose was edited correctly to the next version
-    const compose = readCompose({ dir: testDir });
+    const compose = readCompose([{ dir: testDir }]);
     expect(compose.services[dnpName].image).to.equal(
       "admin.dnp.dappnode.eth:0.1.1",
       "compose should be edited to the next version"
     );
     // Check that the manifest was edited correctly to the next version
-    const { manifest: newManifest } = readManifest({ dir: testDir });
+    const { manifest: newManifest } = readManifest([{ dir: testDir }]);
     expect(newManifest.version).to.equal(
       "0.1.1",
       "manifest should be edited to the next version"

@@ -36,7 +36,7 @@ describe("files / compose / composeDeleteBuildProperties", () => {
 
     composeDeleteBuildProperties({ dir: testDir });
 
-    const composeEdited = readCompose({ dir: testDir });
+    const composeEdited = readCompose([{ dir: testDir }]);
 
     expect(composeEdited).to.deep.equal(composeEditedExpected);
   });

@@ -86,7 +86,8 @@ export function createGithubRelease({
         task: async (ctx, task) => {
           //   console.log(res);
           // Get next version from context, fir
-          const { nextVersion, txData } = ctx;
+          // TODO: Fix
+          const [, { nextVersion, txData }] = Object.entries(ctx)[0];
           if (!nextVersion) throw Error("Missing ctx.nextVersion");
           const tag = `v${nextVersion}`;
 

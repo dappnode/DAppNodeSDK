@@ -45,7 +45,7 @@ export function generatePublishTx({
   const apm = new ApmRepository(ethereumUrl);
 
   // Load manifest ##### Verify manifest object
-  const { manifest } = readManifest({ dir });
+  const { manifest } = readManifest([{ dir }]);
 
   // Compute tx data
   const contentURI =
@@ -62,7 +62,9 @@ export function generatePublishTx({
         task: async ctx => {
           try {
             const repository = await apm.getRepoContract(ensName);
-            ctx.txData = {
+            // TODO: Fix
+            ctx[ensName] = ctx[ensName] || {};
+            ctx[ensName].txData = {
               to: await repository.getAddress(),
               value: 0,
               data: encodeNewVersionCall({
@@ -106,7 +108,8 @@ with command option:
                   );
                 }
 
-                ctx.txData = {
+                ctx[ensName] = ctx[ensName] || {};
+                ctx[ensName].txData = {
                   to: registryAddress,
                   value: 0,
                   data: encodeNewRepoWithVersionCall({
@@ -136,7 +139,7 @@ with command option:
           addReleaseTx({
             dir,
             version: manifest.version,
-            link: getPublishTxLink(ctx.txData)
+            link: getPublishTxLink(ctx[ensName].txData)
           });
         }
       }

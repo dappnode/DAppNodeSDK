@@ -6,8 +6,8 @@ import { InitialSetupData, GitSettings, UpstreamSettings } from "../types.js";
 import { fetchGithubUpstreamVersion } from "../github/fetchGithubUpstreamVersion.js";
 
 export async function getInitialSettings({ dir, userEthProvider, useFallback }: { dir: string, userEthProvider: string, useFallback: boolean }): Promise<InitialSetupData> {
-    const { manifest, format } = readManifest({ dir });
-    const compose = readCompose({ dir });
+    const { manifest, format } = readManifest([{ dir }]);
+    const compose = readCompose([{ dir }]);
 
     const upstreamSettings = await parseUpstreamSettings(manifest);
 

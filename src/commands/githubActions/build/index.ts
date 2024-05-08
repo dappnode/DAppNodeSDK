@@ -2,7 +2,7 @@ import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
 import { defaultDir } from "../../../params.js";
 import { getGithubContext } from "../../../providers/github/githubActions.js";
-import { buildHandler } from "../../build.js";
+import { buildHandler } from "../../build/handler.js";
 import { Github } from "../../../providers/github/Github.js";
 import { parseRef } from "../../../providers/github/utils.js";
 import { getBuildBotComment, isTargetComment } from "./botComment.js";
@@ -96,7 +96,7 @@ export async function buildAndComment({
   // Connect to Github Octokit REST API and post or edit a comment on PR
   const github = Github.fromLocal(dir);
 
-  const { releaseMultiHash } = await buildHandler({
+  const buildResults = await buildHandler({
     provider: "pinata",
     upload_to: "ipfs",
     require_git_data: true,
@@ -104,7 +104,8 @@ export async function buildAndComment({
     verbose: true
   });
 
-  const body = getBuildBotComment({ commitSha, releaseMultiHash });
+  const body = getBuildBotComment({ commitSha, buildResults });
+
   console.log(`Build bot comment: \n\n${body}`);
 
   const prs = await github.getOpenPrsFromBranch({ branch });
