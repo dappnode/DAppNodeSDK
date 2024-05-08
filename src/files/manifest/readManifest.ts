@@ -8,7 +8,16 @@ import { ManifestFormat, ManifestPaths } from "./types.js";
 import { merge } from "lodash-es";
 
 /**
- * Reads a manifest and optionally merges it with a variant manifest.
+ * Reads one or more manifest files and merges them if necessary. This function is intended
+ * for combining a primary manifest with one or more variant manifests. It enforces the use
+ * of JSON format when merging manifests.
+ * 
+ * @param {ManifestPaths[]} paths - Optional array of paths for the manifest files. If not
+ *                                  provided, a default manifest will be loaded.
+ * @return {{manifest: Manifest, format: ManifestFormat}} - Returns an object containing the
+ *                                                          merged manifest and its format.
+ * @throws {Error} - Throws an error if any manifest is not in JSON format, or if there is a
+ *                   problem reading or parsing the manifests.
  */
 export function readManifest(
   paths?: ManifestPaths[],
