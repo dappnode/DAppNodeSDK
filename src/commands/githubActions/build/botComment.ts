@@ -19,9 +19,10 @@ export function getBuildBotComment({
   buildResults: ListrContextBuildAndPublish;
 }): string {
   const buildEntries = Object.entries(buildResults)
-    .map(([dnpName, { releaseMultiHash }], index) =>
-      formatBuildEntry({ dnpName, releaseMultiHash, index })
-    )
+    .map(([dnpName, { releaseMultiHash }], index) => {
+      if (releaseMultiHash)
+        formatBuildEntry({ dnpName, releaseMultiHash, index });
+    })
     .join("\n\n");
 
   return `Dappnode bot has built and pinned the built packages to an IPFS node, for commit: ${commitSha}

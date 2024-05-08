@@ -2,17 +2,16 @@ import semver from "semver";
 import { getEthereumUrl } from "../getEthereumUrl.js";
 import { checkSemverType } from "../checkSemverType.js";
 import { ReleaseType } from "../../types.js";
-import { readManifest } from "../../files/index.js";
 import { ApmRepository } from "@dappnode/toolkit";
 
 export async function getNextVersionFromApm({
   type,
   ethProvider,
-  dir
+  ensName
 }: {
   type: ReleaseType;
   ethProvider: string;
-  dir: string;
+  ensName: string;
 }): Promise<string> {
   // Check variables
   checkSemverType(type);
@@ -20,12 +19,8 @@ export async function getNextVersionFromApm({
   // Init APM instance
   const apm = new ApmRepository(getEthereumUrl(ethProvider));
 
-  // Load manifest
-  const { manifest } = readManifest([{ dir }]);
-  const ensName = manifest.name.toLowerCase();
-
   // Fetch the latest version from APM
-  console.log("ensName: ", ensName);
+  console.log(`Fetching next version for ${ensName}`);
   const { version: currentVersion } = await apm.getVersionAndIpfsHash({
     dnpNameOrHash: ensName
   });

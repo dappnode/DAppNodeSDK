@@ -86,9 +86,17 @@ export async function gaTestEndToEndHandler({
       network: network as Network
     });
 
+    // TODO: Do this for every releaseHash obtained
+    const { variant, releaseMultiHash } = buildResult[0];
+
+    if (!releaseMultiHash)
+      throw Error(
+        `Could not execute end-to-end tests. No releaseMultiHash found for variant ${variant}`
+      );
+
     await executeEndToEndTests({
       dappmanagerTestApi,
-      releaseMultiHash: buildResult[0].releaseMultiHash, // TODO: Do this for every releaseHash obtained
+      releaseMultiHash: releaseMultiHash, // TODO: Do this for every releaseHash obtained
       manifest,
       compose,
       healthCheckUrl,

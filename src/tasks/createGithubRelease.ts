@@ -15,6 +15,7 @@ import {
 } from "../types.js";
 import { Github } from "../providers/github/Github.js";
 import { contentHashFile } from "../types.js";
+import { VerbosityOptions } from "../commands/build/types.js";
 
 /**
  * Create (or edit) a Github release, then upload all assets
@@ -24,11 +25,11 @@ export function createGithubRelease({
   compose_file_name: composeFileName,
   buildDir,
   releaseMultiHash,
-  verbose,
-  silent
+  verbosityOptions
 }: {
   buildDir: string;
   releaseMultiHash: string;
+  verbosityOptions: VerbosityOptions;
 } & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
   // OAuth2 token from Github
   if (!process.env.GITHUB_TOKEN)
@@ -112,15 +113,17 @@ export function createGithubRelease({
           // https://github.com/dappnode/DAppNode_Installer/issues/161
           composeDeleteBuildProperties({ dir: buildDir, composeFileName });
 
-          task.output = `Creating release for tag ${tag}...`;
-          await github.createReleaseAndUploadAssets(tag, {
-            body: getReleaseBody(txData),
-            // Tag as pre-release until it is actually published in APM mainnet
-            prerelease: true,
-            assetsDir: buildDir,
-            // Used to ignore duplicated legacy .tar.xz image
-            ignorePattern: /\.tar\.xz$/
-          });
+          if (txData) {
+            task.output = `Creating release for tag ${tag}...`;
+            await github.createReleaseAndUploadAssets(tag, {
+              body: getReleaseBody(txData),
+              // Tag as pre-release until it is actually published in APM mainnet
+              prerelease: true,
+              assetsDir: buildDir,
+              // Used to ignore duplicated legacy .tar.xz image
+              ignorePattern: /\.tar\.xz$/
+            });
+          }
 
           // Clean content hash file so the directory uploaded to IPFS is the same
           // as the local build_* dir. User can then `ipfs add -r` and get the same hash
@@ -128,7 +131,7 @@ export function createGithubRelease({
         }
       }
     ],
-    { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+    verbosityOptions
   );
 }
 

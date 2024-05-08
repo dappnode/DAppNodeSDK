@@ -8,12 +8,13 @@ import {
 import { getPublishTxLink } from "../utils/getLinks.js";
 import { addReleaseTx } from "../utils/releaseRecord.js";
 import { defaultDir, YargsError } from "../params.js";
-import { CliGlobalOptions, ListrContextBuildAndPublish } from "../types.js";
+import { CliGlobalOptions, ListrContextBuildAndPublish, TxData } from "../types.js";
 import { readManifest } from "../files/index.js";
 import { ApmRepository } from "@dappnode/toolkit";
 import registryAbi from "../contracts/ApmRegistryAbi.json" assert { type: "json" };
 import { semverToArray } from "../utils/semverToArray.js";
 import repoAbi from "../contracts/RepoAbi.json" assert { type: "json" };
+import { VerbosityOptions } from "../commands/build/types.js";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
@@ -33,12 +34,12 @@ export function generatePublishTx({
   releaseMultiHash,
   developerAddress,
   ethProvider,
-  verbose,
-  silent
+  verbosityOptions
 }: {
   releaseMultiHash: string;
   developerAddress?: string;
   ethProvider: string;
+  verbosityOptions: VerbosityOptions;
 } & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
   // Init APM instance
   const ethereumUrl = getEthereumUrl(ethProvider);
@@ -60,11 +61,12 @@ export function generatePublishTx({
       {
         title: "Generate transaction",
         task: async ctx => {
+
+          let txData: TxData;
+
           try {
             const repository = await apm.getRepoContract(ensName);
-            // TODO: Fix
-            ctx[ensName] = ctx[ensName] || {};
-            ctx[ensName].txData = {
+            txData = {
               to: await repository.getAddress(),
               value: 0,
               data: encodeNewVersionCall({
@@ -108,8 +110,7 @@ with command option:
                   );
                 }
 
-                ctx[ensName] = ctx[ensName] || {};
-                ctx[ensName].txData = {
+                txData = {
                   to: registryAddress,
                   value: 0,
                   data: encodeNewRepoWithVersionCall({
@@ -133,18 +134,22 @@ with command option:
             } else throw e;
           }
 
+          if (!txData) throw Error(`Transaction data not generated for ${ensName}`);
+
+          ctx[ensName].txData = txData;
+
           /**
            * Write Tx data in a file for future reference
            */
           addReleaseTx({
             dir,
             version: manifest.version,
-            link: getPublishTxLink(ctx[ensName].txData)
+            link: getPublishTxLink(txData)
           });
         }
       }
     ],
-    { renderer: verbose ? "verbose" : silent ? "silent" : "default" }
+    verbosityOptions
   );
 }
 

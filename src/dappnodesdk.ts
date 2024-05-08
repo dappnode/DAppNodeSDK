@@ -11,7 +11,7 @@ import { fromGithub } from "./commands/from_github.js";
 import { increase } from "./commands/increase.js";
 import { init } from "./commands/init/index.js";
 import { next } from "./commands/next.js";
-import { publish } from "./commands/publish.js";
+import { publish } from "./commands/publish/index.js";
 import { githubActions } from "./commands/githubActions/index.js";
 
 // "source-map-support" MUST be imported for stack traces to work properly after Typescript transpile -

@@ -29,7 +29,7 @@ describe("generatePublishTx", function () {
       releaseMultiHash: "/ipfs/Qm",
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
-      verbose: true
+      verbosityOptions: { renderer: "verbose" }
     });
 
     // TODO: Fix when publish is adapted to multi-variant packages
@@ -50,7 +50,7 @@ describe("generatePublishTx", function () {
       releaseMultiHash: "/ipfs/Qm"
     });
     // I am not sure if the Data property will be the same
-    expect(txData.data).to.be.a("string");
+    expect(txData?.data).to.be.a("string");
   });
 
   it("Should generate a publish TX", async function () {
@@ -65,7 +65,7 @@ describe("generatePublishTx", function () {
       releaseMultiHash: "/ipfs/Qm",
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
-      verbose: true
+      verbosityOptions: { renderer: "verbose" }
     });
     const publishResult = await generatePublishTxTasks.run();
 
@@ -85,6 +85,6 @@ describe("generatePublishTx", function () {
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B"
     });
     // I am not sure if the Data property will be the same
-    expect(txData.data).to.be.a("string");
+    expect(txData?.data).to.be.a("string");
   });
 });
