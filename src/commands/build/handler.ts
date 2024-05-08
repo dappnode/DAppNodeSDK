@@ -6,7 +6,7 @@ import { ListrContextBuildAndPublish } from "../../types.js";
 import {
   defaultComposeFileName,
   defaultDir,
-  defaultVariantsDir
+  defaultVariantsDirName
 } from "../../params.js";
 import { BuildCommandOptions, VerbosityOptions } from "./types.js";
 import { getValidVariantNames } from "./variants.js";
@@ -21,7 +21,7 @@ export async function buildHandler({
   require_git_data: requireGitData,
   delete_old_pins: deleteOldPins,
   all_variants: allVariants,
-  variants_dir: variantsDir = defaultVariantsDir,
+  variants_dir_name: variantsDirName = defaultVariantsDirName,
   variants,
   // Global options
   dir = defaultDir,
@@ -46,7 +46,7 @@ export async function buildHandler({
     requireGitData,
     deleteOldPins,
     ...(multiVariantMode &&
-      getVariantOptions({ variantsStr: variants, rootDir: dir, variantsDir }))
+      getVariantOptions({ variantsStr: variants, rootDir: dir, variantsDirName }))
   };
 
   const verbosityOptions: VerbosityOptions = {
@@ -61,13 +61,13 @@ export async function buildHandler({
 function getVariantOptions({
   variantsStr,
   rootDir,
-  variantsDir
+  variantsDirName
 }: {
   variantsStr: string | undefined;
   rootDir: string;
-  variantsDir: string;
+  variantsDirName: string;
 }): { variants: string[]; variantsDirPath: string } {
-  const variantsDirPath = path.join(rootDir, variantsDir);
+  const variantsDirPath = path.join(rootDir, variantsDirName);
   const variantNames = getValidVariantNames({
     variantsDirPath,
     variants: variantsStr

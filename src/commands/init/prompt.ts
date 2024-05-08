@@ -1,6 +1,6 @@
 import inquirer from "inquirer";
 import semver from "semver";
-import { defaultVariantsEnvName, defaultVariantsDir, defaultVariantsEnvValues } from "../../params.js";
+import { defaultVariantsEnvName, defaultVariantsDirName, defaultVariantsEnvValues } from "../../params.js";
 import { shell } from "../../utils/shell.js";
 import { defaultVersion } from "./params.js";
 import { UserAnswers, MultiVariantAnswers, DefaultAnswers } from "./types.js";
@@ -11,7 +11,7 @@ export async function getUserAnswers({ useVariants, useDefaults, defaultName }: 
 
     const defaultVariantAnswers: MultiVariantAnswers = {
         envName: defaultVariantsEnvName,
-        variantsDir: defaultVariantsDir,
+        variantsDir: defaultVariantsDirName,
         variants: defaultVariantsEnvValues
     };
 
@@ -92,7 +92,7 @@ async function getVariantAnswers(): Promise<MultiVariantAnswers> {
         [{
             type: "input",
             name: "variantsDir",
-            default: defaultVariantsDir,
+            default: defaultVariantsDirName,
             message: "Variants directory, where the different package variants are located",
         },
         {

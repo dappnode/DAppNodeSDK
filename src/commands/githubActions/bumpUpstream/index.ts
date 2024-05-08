@@ -1,6 +1,6 @@
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
-import { defaultDir, defaultVariantsDir } from "../../../params.js";
+import { defaultDir, defaultVariantsDirName } from "../../../params.js";
 import { shell } from "../../../utils/shell.js";
 import { getGitHead } from "../../../utils/git.js";
 import { buildAndComment } from "../build/index.js";
@@ -55,9 +55,9 @@ export const gaBumpUpstream: CommandModule<
       type: "boolean"
     },
     variants_dir: {
-      description: `Path to the directory where the package variants are located (only for packages that support it and combined with either "--all-variants" or "--variants"). By default, it is ${defaultVariantsDir}`,
+      description: `Path to the directory where the package variants are located (only for packages that support it and combined with either "--all-variants" or "--variants"). By default, it is ${defaultVariantsDirName}`,
       type: "string",
-      default: defaultVariantsDir
+      default: defaultVariantsDirName
     },
     skip_build: {
       description: `Only create the bump PR without building the package`,

@@ -9,17 +9,18 @@ import {
 } from "../../files/index.js";
 import { VariantsMap, VariantsMapEntry } from "./types.js";
 import { Compose, Manifest } from "@dappnode/types";
+import { defaultComposeFileName } from "../../params.js";
 
 export function buildVariantMap({
   variants,
   rootDir,
   variantsDirPath,
-  composeFileName
+  composeFileName = defaultComposeFileName
 }: {
   variants?: string[];
   rootDir: string;
   variantsDirPath: string;
-  composeFileName: string;
+  composeFileName?: string;
 }): VariantsMap {
   if (!variants || variants.length === 0)
     return { default: createVariantMapEntry({ rootDir, composeFileName }) };
