@@ -3,7 +3,7 @@ import path from "path";
 import { initHandler } from "../../src/commands/init/handler.js";
 import { cleanTestDir, readTestFile, testDir, testPathExists } from "../testUtils.js";
 import { dockerfileData, dockerfileName, gitignoreData, gitignoreName } from "../../src/commands/init/params.js";
-import { defaultComposeFileName, defaultManifestFileName, defaultVariantsDir, defaultVariantsEnvValues } from "../../src/params.js";
+import { defaultComposeFileName, defaultManifestFileName, defaultVariantsDirName, defaultVariantsEnvValues } from "../../src/params.js";
 
 describe("Init simple package repository", function () {
     this.timeout(120 * 1000);
@@ -76,11 +76,11 @@ describe("Variant initialization", function () {
     });
 
     it("should create variant directories", () => {
-        expect(testPathExists(defaultVariantsDir)).to.be.true;
+        expect(testPathExists(defaultVariantsDirName)).to.be.true;
     });
 
     it("checks for specific variant manifest", () => {
-        const variantManifestPath = path.join(defaultVariantsDir, defaultVariantsEnvValues[0], defaultManifestFileName);
+        const variantManifestPath = path.join(defaultVariantsDirName, defaultVariantsEnvValues[0], defaultManifestFileName);
         const rootManifestContent = JSON.parse(readTestFile(defaultManifestFileName));
         const variantManifestContent = JSON.parse(readTestFile(variantManifestPath));
         expect(rootManifestContent.name).to.not.exist;
