@@ -9,7 +9,7 @@ import {
   defaultVariantsDir
 } from "../../params.js";
 import { BuildCommandOptions, VerbosityOptions } from "./types.js";
-import { getVariantNames } from "./variants.js";
+import { getValidVariantNames } from "./variants.js";
 import { BuildAndUploadOptions } from "../../tasks/buildAndUpload/types.js";
 
 export async function buildHandler({
@@ -68,7 +68,7 @@ function getVariantOptions({
   variantsDir: string;
 }): { variants: string[]; variantsDirPath: string } {
   const variantsDirPath = path.join(rootDir, variantsDir);
-  const variantNames = getVariantNames({
+  const variantNames = getValidVariantNames({
     variantsDirPath,
     variants: variantsStr
   });
