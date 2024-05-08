@@ -4,7 +4,10 @@ import { expect } from "chai";
 import { cleanTestDir, testDir } from "../testUtils.js";
 import { initHandler } from "../../src/commands/init/handler.js";
 import { buildHandler } from "../../src/commands/build/handler.js";
-import { defaultVariantsDirName, defaultVariantsEnvValues } from "../../src/params.js";
+import {
+  defaultVariantsDirName,
+  defaultVariantsEnvValues
+} from "../../src/params.js";
 
 const contentProvider = "http://api.ipfs.dappnode.io:5001";
 
@@ -38,7 +41,9 @@ describe("Init and build simple package", function () {
       verbose: true
     });
 
-    const releaseHashes = Object.entries(buildResults).flatMap(([, { releaseMultiHash }]) => releaseMultiHash);
+    const releaseHashes = Object.entries(buildResults).flatMap(
+      ([, { releaseMultiHash }]) => releaseMultiHash
+    );
 
     expect(releaseHashes).to.have.lengthOf(1);
 
@@ -85,11 +90,9 @@ describe("Init and build package variants", function () {
       expect(releaseMultiHash).to.include("/ipfs/Qm");
       expect(dnpName).to.include(variant);
     });
-
   });
 
   it("Should build and upload all package variants with custom variants dir", async () => {
-
     const customVariantsDirName = "custom_variants";
 
     // Ensure the directory exists before renaming
@@ -124,7 +127,6 @@ describe("Init and build package variants", function () {
   });
 
   it("Should throw an error when all specified variants are invalid", async () => {
-
     await buildHandler({
       dir: testDir,
       provider: contentProvider,
@@ -134,7 +136,7 @@ describe("Init and build package variants", function () {
       variants: "invalid_variant",
       skip_save: true,
       skip_upload: true
-    }).catch((error) => {
+    }).catch(error => {
       expect(error.message).to.include("No valid variants specified");
     });
   });

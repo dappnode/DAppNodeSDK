@@ -3,8 +3,8 @@ import { ManifestFormat } from "./files/manifest/types.js";
 
 export * from "./files/compose/params.js";
 
-export class CliError extends Error { }
-export class YargsError extends Error { }
+export class CliError extends Error {}
+export class YargsError extends Error {}
 
 // Github Actions params
 

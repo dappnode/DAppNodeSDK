@@ -14,7 +14,12 @@ import { Compose, Manifest } from "@dappnode/types";
 import { GitSettings, GithubSettings, UpstreamSettings } from "./types.js";
 import { printSettings, getInitialSettings } from "./settings/index.js";
 import { ManifestFormat } from "../../../files/manifest/types.js";
-import { closeOldPrs, getBumpPrBody, getGithubSettings, isBranchNew } from "./github/index.js";
+import {
+  closeOldPrs,
+  getBumpPrBody,
+  getGithubSettings,
+  isBranchNew
+} from "./github/index.js";
 import path from "path";
 import { getAllVariantsInPath } from "../../../files/variants/getAllPackageVariants.js";
 
@@ -75,14 +80,23 @@ async function gaBumpUpstreamHandler({
   variants_dir: variantsDir,
   skip_build: skipBuild
 }: CliCommandOptions): Promise<void> {
-
-  const { upstreamSettings, manifestData: { manifest, format: manifestFormat }, compose, gitSettings, ethProvider } = await getInitialSettings({ dir, userEthProvider, useFallback });
+  const {
+    upstreamSettings,
+    manifestData: { manifest, format: manifestFormat },
+    compose,
+    gitSettings,
+    ethProvider
+  } = await getInitialSettings({ dir, userEthProvider, useFallback });
   if (!upstreamSettings) {
     console.log("There are no upstream repos/versions defined in the manifest");
     return;
   }
 
-  if (upstreamSettings.every(({ manifestVersion, githubVersion }) => manifestVersion === githubVersion)) {
+  if (
+    upstreamSettings.every(
+      ({ manifestVersion, githubVersion }) => manifestVersion === githubVersion
+    )
+  ) {
     console.log("All versions are up-to-date");
     return;
   }
@@ -99,14 +113,24 @@ async function gaBumpUpstreamHandler({
 
   updateComposeUpstreamVersions(dir, compose, upstreamSettings);
 
-  updateManifestUpstreamVersion({ manifest, manifestFormat, upstreamSettings, dir });
+  updateManifestUpstreamVersion({
+    manifest,
+    manifestFormat,
+    upstreamSettings,
+    dir
+  });
 
-  await updateManifestPkgVersion({ dir, ethProvider, allVariants: useVariants, variantsDir });
+  await updateManifestPkgVersion({
+    dir,
+    ethProvider,
+    allVariants: useVariants,
+    variantsDir
+  });
 
   await prepareAndCommitChanges({
     gitSettings,
     upstreamSettings,
-    githubSettings,
+    githubSettings
   });
 
   try {
@@ -133,17 +157,22 @@ async function gaBumpUpstreamHandler({
  * @param {Compose} compose - Original Docker Compose configuration.
  * @param {UpstreamSettings[]} upstreamSettings - New versions for the Compose services.
  */
-function updateComposeUpstreamVersions(dir: string, compose: Compose, upstreamSettings: UpstreamSettings[]): void {
+function updateComposeUpstreamVersions(
+  dir: string,
+  compose: Compose,
+  upstreamSettings: UpstreamSettings[]
+): void {
   const newCompose: Compose = JSON.parse(JSON.stringify(compose)); // Deep copy
 
   for (const upstreamItem of upstreamSettings) {
-
+    // Checks if the service includes a build argument with the same name as the
+    // upstream item (e.g. "GETH_VERSION" is a build argument for the Geth service)
     for (const [, service] of Object.entries(newCompose.services))
-
-      // Checks if the service includes a build argument with the same name as the 
-      // upstream item (e.g. "GETH_VERSION" is a build argument for the Geth service)
-      if (typeof service.build !== "string" && service.build?.args && upstreamItem.arg in service.build.args)
-
+      if (
+        typeof service.build !== "string" &&
+        service.build?.args &&
+        upstreamItem.arg in service.build.args
+      )
         service.build.args[upstreamItem.arg] = upstreamItem.githubVersion;
   }
 
@@ -164,23 +193,21 @@ function updateManifestUpstreamVersion({
   manifest,
   manifestFormat,
   upstreamSettings,
-  dir,
+  dir
 }: {
   manifest: Manifest;
   manifestFormat: ManifestFormat;
   upstreamSettings: UpstreamSettings[];
   dir: string;
 }): void {
-
   if (manifest.upstream) {
     for (const upstreamItem of manifest.upstream) {
+      const versionUpdate = upstreamSettings.find(
+        ({ repo }) => repo === upstreamItem.repo
+      )?.githubVersion;
 
-      const versionUpdate = upstreamSettings.find(({ repo }) => repo === upstreamItem.repo)?.githubVersion;
-
-      if (versionUpdate)
-        upstreamItem.version = versionUpdate;
+      if (versionUpdate) upstreamItem.version = versionUpdate;
     }
-
   } else {
     // There should be only one upstream repo in the legacy format
     manifest.upstreamVersion = upstreamSettings[0].githubVersion;
@@ -204,9 +231,10 @@ async function updateManifestPkgVersion({
   allVariants?: boolean;
   variantsDir: string;
 }): Promise<void> {
-
   const manifestDirs = allVariants
-    ? getAllVariantsInPath(variantsDir).map(variant => path.join(variantsDir, variant))
+    ? getAllVariantsInPath(variantsDir).map(variant =>
+        path.join(variantsDir, variant)
+      )
     : [dir];
 
   for (const dir of manifestDirs) {
@@ -214,10 +242,11 @@ async function updateManifestPkgVersion({
       const { manifest, format } = readManifest([{ dir }]);
       manifest.version = await getNewManifestVersion({ dir, ethProvider });
 
-      console.log(`New manifest version for ${manifest.name}: ${manifest.version}`);
+      console.log(
+        `New manifest version for ${manifest.name}: ${manifest.version}`
+      );
 
       writeManifest(manifest, format, { dir });
-
     } catch (e) {
       // Not throwing an error here because updating the manifest version is not critical
       console.error(`Could not fetch new manifest version: ${e}`);
@@ -253,7 +282,7 @@ async function getNewManifestVersion({
 async function prepareAndCommitChanges({
   gitSettings,
   upstreamSettings,
-  githubSettings,
+  githubSettings
 }: {
   gitSettings: GitSettings;
   upstreamSettings: UpstreamSettings[];
@@ -276,7 +305,9 @@ async function prepareAndCommitChanges({
 }
 
 function createCommitMessage(upstreamSettings: UpstreamSettings[]): string {
-  return `bump ${upstreamSettings.flatMap(({ repo, githubVersion }) => `${repo} to ${githubVersion}`).join(", ")}`;
+  return `bump ${upstreamSettings
+    .flatMap(({ repo, githubVersion }) => `${repo} to ${githubVersion}`)
+    .join(", ")}`;
 }
 
 async function configureGitUser({ userName, userEmail }: GitSettings) {
@@ -288,7 +319,13 @@ async function checkoutNewBranch(branchName: string) {
   await shell(`git checkout -b ${branchName}`);
 }
 
-async function commitAndPushChanges({ commitMsg, branchRef }: { commitMsg: string, branchRef: string }) {
+async function commitAndPushChanges({
+  commitMsg,
+  branchRef
+}: {
+  commitMsg: string;
+  branchRef: string;
+}) {
   await shell(`git commit -a -m "${commitMsg}"`, { pipeToMain: true });
   await shell(`git push -u origin ${branchRef}`, { pipeToMain: true });
 }

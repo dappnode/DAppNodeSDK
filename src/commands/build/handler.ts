@@ -46,7 +46,11 @@ export async function buildHandler({
     requireGitData,
     deleteOldPins,
     ...(multiVariantMode &&
-      getVariantOptions({ variantsStr: variants, rootDir: dir, variantsDirName }))
+      getVariantOptions({
+        variantsStr: variants,
+        rootDir: dir,
+        variantsDirName
+      }))
   };
 
   const verbosityOptions: VerbosityOptions = {

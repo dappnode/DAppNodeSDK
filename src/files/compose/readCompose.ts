@@ -8,7 +8,7 @@ import { merge } from "lodash-es";
  * Reads one or multiple Docker Compose YAML files. If multiple paths are provided, it merges
  * them into a single Compose object. This function is typically used to merge a primary Compose
  * file with one or more variant files that override or extend the primary configuration.
- * 
+ *
  * @param {ComposePaths[]} paths - Array of paths to the primary and optionally variant Compose files.
  *                                 If not provided, the function loads a default Compose configuration.
  * @return {Compose} The resulting Compose configuration object after merging all provided files.
@@ -18,11 +18,9 @@ import { merge } from "lodash-es";
 export function readCompose(paths?: ComposePaths[]): Compose {
   // Parse compose in try catch block to show a comprehensive error message
   try {
+    if (!paths) return loadCompose(); // Load default compose
 
-    if (!paths)
-      return loadCompose(); // Load default compose
-
-    const composes = paths.map((path) => loadCompose(path));
+    const composes = paths.map(path => loadCompose(path));
 
     return merge({}, ...composes);
   } catch (e) {
@@ -39,7 +37,8 @@ function loadCompose(paths?: ComposePaths): Compose {
   const data = readFile(composePath);
   const compose = yaml.load(data);
 
-  if (!compose || typeof compose === "string") throw new Error(`Could not parse compose file: ${composePath}`);
+  if (!compose || typeof compose === "string")
+    throw new Error(`Could not parse compose file: ${composePath}`);
 
   return compose;
 }

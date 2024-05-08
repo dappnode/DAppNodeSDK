@@ -29,5 +29,7 @@ export function getPublishTxLink(txData: TxData): string {
  * @param releaseMultiHash
  */
 export function getInstallDnpLink(releaseMultiHash: string): string {
-  return `${adminUiBaseUrl}/installer/public/${encodeURIComponent(releaseMultiHash)}`;
+  return `${adminUiBaseUrl}/installer/public/${encodeURIComponent(
+    releaseMultiHash
+  )}`;
 }
