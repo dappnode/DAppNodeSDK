@@ -10,9 +10,9 @@ import {
   TxData
 } from "../../types.js";
 import { ApmRepository } from "@dappnode/toolkit";
-import registryAbi from "../../contracts/ApmRegistryAbi.json";
+import registryAbi from "../../contracts/ApmRegistryAbi.json" assert { type: "json" };
 import { semverToArray } from "../../utils/semverToArray.js";
-import repoAbi from "../../contracts/RepoAbi.json";
+import repoAbi from "../../contracts/RepoAbi.json" assert { type: "json" };
 import { VerbosityOptions } from "../../commands/build/types.js";
 import { Manifest } from "@dappnode/types";
 import { getRegistryAddressFromDnpName } from "./getRegistryAddressFromEns.js";
