@@ -1,7 +1,8 @@
 import { ListrTask } from "listr";
-import { VerbosityOptions } from "../../commands/build/types.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
-import { generatePublishTx } from "../generatePublishTx.js";
+import { VerbosityOptions } from "../../../commands/build/types.js";
+import { ListrContextBuildAndPublish } from "../../../types.js";
+import { generatePublishTx } from "../../generatePublishTx/index.js";
+import { readManifest } from "../../../files/index.js";
 
 export function getGenerateTxTask({
   dir,
@@ -22,6 +23,8 @@ export function getGenerateTxTask({
       // TODO: Generate 1 tx per package
       const [, { releaseMultiHash }] = Object.entries(ctx)[0];
 
+      const { manifest } = readManifest([{ dir }]);
+
       if (releaseMultiHash) {
         generatePublishTx({
           dir,
@@ -29,7 +32,8 @@ export function getGenerateTxTask({
           releaseMultiHash,
           developerAddress,
           ethProvider,
-          verbosityOptions
+          verbosityOptions,
+          manifest
         });
       } else {
         // TODO: Check if this is the correct way to handle this case

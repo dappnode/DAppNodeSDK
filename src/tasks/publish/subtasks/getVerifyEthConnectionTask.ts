@@ -1,6 +1,6 @@
 import { ListrTask } from "listr";
-import { ListrContextBuildAndPublish } from "../../types.js";
-import { verifyEthConnection } from "../../utils/verifyEthConnection.js";
+import { ListrContextBuildAndPublish } from "../../../types.js";
+import { verifyEthConnection } from "../../../utils/verifyEthConnection.js";
 
 export function getVerifyEthConnectionTask({
   ethProvider

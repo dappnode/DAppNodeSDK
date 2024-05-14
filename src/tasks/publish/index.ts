@@ -1,12 +1,12 @@
 import { ListrTask } from "listr";
 import { PublishOptions } from "./types.js";
 import { ListrContextBuildAndPublish } from "../../types.js";
-import { getFetchApmVersionTask } from "./getFetchApmVersionTask.js";
-import { getBuildAndUploadTask } from "./getBuildAndUploadTask.js";
-import { getGenerateTxTask } from "./getGenerateTxTask.js";
-import { getCreateGithubReleaseTask } from "./getCreateGithubReleaseTask.js";
-import { getVerifyEthConnectionTask } from "./getVerifyEthConnectionTask.js";
-import { getSetupContextTask } from "./getSetupContextTask.js";
+import { getFetchApmVersionTask } from "./subtasks/getFetchApmVersionTask.js";
+import { getBuildAndUploadTask } from "./subtasks/getBuildAndUploadTask.js";
+import { getGenerateTxTask } from "./subtasks/getGenerateTxTask.js";
+import { getCreateGithubReleaseTask } from "./subtasks/getCreateGithubReleaseTask.js";
+import { getVerifyEthConnectionTask } from "./subtasks/getVerifyEthConnectionTask.js";
+import { getSetupContextTask } from "./subtasks/getSetupContextTask.js";
 
 export function publish({
   releaseType,

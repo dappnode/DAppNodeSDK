@@ -1,6 +1,6 @@
 import { ListrTask } from "listr";
-import { ListrContextBuildAndPublish } from "../../types";
-import { readManifest } from "../../files/index.js";
+import { ListrContextBuildAndPublish } from "../../../types.js";
+import { readManifest } from "../../../files/index.js";
 
 export function getSetupContextTask({
   rootDir

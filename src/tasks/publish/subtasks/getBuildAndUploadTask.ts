@@ -1,8 +1,8 @@
 import Listr, { ListrTask } from "listr";
-import { BuildAndUploadOptions } from "../buildAndUpload/types.js";
-import { VerbosityOptions } from "../../commands/build/types.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
-import { buildAndUpload } from "../buildAndUpload/index.js";
+import { BuildAndUploadOptions } from "../../buildAndUpload/types.js";
+import { VerbosityOptions } from "../../../commands/build/types.js";
+import { ListrContextBuildAndPublish } from "../../../types.js";
+import { buildAndUpload } from "../../buildAndUpload/index.js";
 
 export function getBuildAndUploadTask({
   buildOptions,

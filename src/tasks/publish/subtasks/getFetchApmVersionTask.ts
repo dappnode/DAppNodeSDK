@@ -1,15 +1,15 @@
 import { ListrTask } from "listr";
-import { ListrContextBuildAndPublish, ReleaseType } from "../../types.js";
+import { ListrContextBuildAndPublish, ReleaseType } from "../../../types.js";
 import {
   readManifest,
   writeManifest,
   readCompose,
   updateComposeImageTags,
   writeCompose
-} from "../../files/index.js";
-import { getNextVersionFromApm } from "../../utils/versions/getNextVersionFromApm.js";
+} from "../../../files/index.js";
+import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
 import { Manifest } from "@dappnode/types";
-import { ManifestFormat } from "../../files/manifest/types.js";
+import { ManifestFormat } from "../../../files/manifest/types.js";
 
 export function getFetchApmVersionTask({
   releaseType,
@@ -45,7 +45,7 @@ export function getFetchApmVersionTask({
   };
 }
 
-export async function increaseFromApmVersion({
+async function increaseFromApmVersion({
   type,
   ethProvider,
   dir,
