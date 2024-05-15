@@ -6,7 +6,6 @@ import { getBuildAndUploadTask } from "./subtasks/getBuildAndUploadTask.js";
 import { getGenerateTxTask } from "./subtasks/getGenerateTxTask.js";
 import { getCreateGithubReleaseTask } from "./subtasks/getCreateGithubReleaseTask.js";
 import { getVerifyEthConnectionTask } from "./subtasks/getVerifyEthConnectionTask.js";
-import { getSetupContextTask } from "./subtasks/getSetupContextTask.js";
 
 export function publish({
   releaseType,
@@ -23,7 +22,6 @@ export function publish({
   verbosityOptions
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
-    getSetupContextTask({ rootDir: dir }), // TODO: Pass the variants here once multi-variant package publish is implemented
     getVerifyEthConnectionTask({ ethProvider }),
     getFetchApmVersionTask({ releaseType, ethProvider, dir, composeFileName }),
     getBuildAndUploadTask({
