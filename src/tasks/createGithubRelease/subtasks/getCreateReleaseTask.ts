@@ -91,7 +91,7 @@ function writeContentHashToFile({
 /**
  * Write the release body
  *
- * TODO: Extend this to automatically write the body
+ * TODO: Extend this to automatically write the body of the changelog
  */
 function getReleaseBody(txData: TxData) {
   const link = getPublishTxLink(txData);

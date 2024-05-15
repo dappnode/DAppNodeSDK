@@ -7,6 +7,7 @@ export interface CliGlobalOptions {
   verbose?: boolean;
 }
 
+// TODO: Try to have all properties defined
 interface ListrContextBuildItem {
   releaseDir?: string;
   releaseMultiHash?: string;
