@@ -73,12 +73,12 @@ export const publish: CommandModule<CliGlobalOptions, PublishCommandOptions> = {
     const publishedData = await publishHandler(args);
 
     Object.entries(publishedData).map(([dnpName, publishedItem]) =>
-      printPublishedData({ dnpName, publishedItem })
+      printPublishResults({ dnpName, publishedItem })
     );
   }
 };
 
-function printPublishedData({
+function printPublishResults({
   dnpName,
   publishedItem
 }: {
@@ -89,7 +89,9 @@ function printPublishedData({
 
   if (!txData || !releaseMultiHash) {
     console.log(`
-    ${chalk.red(`Dappnode Package (${variant}) not published`)}
+    ${chalk.red(
+      `Could not generate tx to publish Dappnode Package (${variant})`
+    )}
     `);
     return;
   }
@@ -102,10 +104,9 @@ function printPublishedData({
   };
 
   console.log(`
-${chalk.green(
-  `Dappnode Package (${variant}) published (version ${nextVersion})`
-)} 
+${chalk.green(`Dappnode Package (${variant}) is ready to be published`)} 
 DNP name : ${dnpName}
+Version: ${nextVersion}
 Release hash : ${releaseMultiHash}
 ${getInstallDnpLink(releaseMultiHash)}
 
