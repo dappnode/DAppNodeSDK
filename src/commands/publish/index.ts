@@ -5,7 +5,7 @@ import { CommandModule } from "yargs";
 import { getInstallDnpLink, getPublishTxLink } from "../../utils/getLinks.js";
 import {
   CliGlobalOptions,
-  ListrContextBuildAndPublish,
+  ListrContextPublish,
   releaseTypes
 } from "../../types.js";
 import { printObject } from "../../utils/print.js";
@@ -32,22 +32,25 @@ export const publish: CommandModule<CliGlobalOptions, PublishCommandOptions> = {
       type: "string"
     },
     eth_provider: {
+      alias: "eth-provider",
       description: `Specify an eth provider: "dappnode" (default), "infura", "localhost:8545"`,
       default: "dappnode",
       type: "string"
     },
     content_provider: {
+      alias: "content-provider",
       description: `Specify an ipfs provider: "dappnode" (default), "infura", "http://localhost:5001"`,
       default: "dappnode",
       type: "string"
     },
     upload_to: {
+      alias: "upload-to",
       description: `Specify where to upload the release`,
       choices: ["ipfs", "swarm"],
       default: "ipfs" as UploadTo
     },
     developer_address: {
-      alias: "a",
+      alias: ["a", "developer-address"],
       description: `If there is no existing repo for this DNP the publish command needs a developer address. If it is not provided as an option a prompt will request it`,
       type: "string"
     },
@@ -57,10 +60,12 @@ export const publish: CommandModule<CliGlobalOptions, PublishCommandOptions> = {
       type: "string"
     },
     github_release: {
+      alias: "github-release",
       description: `Publish the release on the Github repo specified in the manifest. Requires a GITHUB_TOKEN ENV to authenticate`,
       type: "boolean"
     },
     dappnode_team_preset: {
+      alias: "dappnode-team-preset",
       description: `Specific set of options used for internal DAppNode releases. Caution: options may change without notice.`,
       type: "boolean"
     }
@@ -80,7 +85,7 @@ function printPublishedData({
   publishedItem
 }: {
   dnpName: string;
-  publishedItem: ListrContextBuildAndPublish[string];
+  publishedItem: ListrContextPublish[string];
 }) {
   const { releaseMultiHash, nextVersion, txData, variant } = publishedItem;
 

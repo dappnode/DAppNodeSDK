@@ -1,12 +1,12 @@
 import { ListrTask } from "listr";
-import { ListrContextBuildAndPublish } from "../../../types.js";
+import { ListrContextPublish } from "../../../types.js";
 import { verifyEthConnection } from "../../../utils/verifyEthConnection.js";
 
 export function getVerifyEthConnectionTask({
   ethProvider
 }: {
   ethProvider: string;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextPublish> {
   return {
     title: "Verify ETH node connection",
     task: () => verifyEthConnection(ethProvider)

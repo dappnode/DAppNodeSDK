@@ -1,6 +1,6 @@
 import { ListrTask } from "listr/index.js";
 import { addReleaseRecord } from "../../utils/releaseRecord.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import { pruneCache } from "../../utils/cache.js";
 import { VariantsMap } from "./types.js";
 import path from "path";
@@ -17,7 +17,7 @@ export function getSaveUploadResultsTask({
   variantsDirPath: string;
   contentProvider: string;
   skipUpload?: boolean;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextBuild> {
   return {
     title: "Save upload results",
     skip: () => skipUpload,

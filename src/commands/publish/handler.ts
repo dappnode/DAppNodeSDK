@@ -1,6 +1,6 @@
 import Listr from "listr";
 import { defaultComposeFileName, defaultDir } from "../../params.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextPublish } from "../../types.js";
 import { VerbosityOptions } from "../build/types.js";
 import { PublishCommandOptions } from "./types.js";
 import { publish } from "../../tasks/publish/index.js";
@@ -26,7 +26,7 @@ export async function publishHandler({
   compose_file_name: composeFileName = defaultComposeFileName,
   silent,
   verbose
-}: PublishCommandOptions): Promise<ListrContextBuildAndPublish> {
+}: PublishCommandOptions): Promise<ListrContextPublish> {
   let ethProvider = provider || eth_provider;
   let contentProvider = provider || content_provider;
 

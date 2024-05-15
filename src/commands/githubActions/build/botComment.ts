@@ -1,4 +1,4 @@
-import { ListrContextBuildAndPublish } from "../../../types.js";
+import { ListrContextBuild } from "../../../types.js";
 import { getInstallDnpLink } from "../../../utils/getLinks.js";
 
 const botCommentTag = "(by dappnodebot/build-action)";
@@ -8,7 +8,7 @@ const botCommentTag = "(by dappnodebot/build-action)";
  * This comment includes a tag to identify it, allowing easy retrieval or replacement.
  *
  * @param {string} commitSha - The Git commit SHA associated with the build.
- * @param {ListrContextBuildAndPublish} buildResults - The results of the build process.
+ * @param {ListrContextBuild} buildResults - The results of the build process.
  * @return {string} A formatted comment with links to install the built packages and their hashes.
  */
 export function getBuildBotComment({
@@ -16,7 +16,7 @@ export function getBuildBotComment({
   buildResults
 }: {
   commitSha: string;
-  buildResults: ListrContextBuildAndPublish;
+  buildResults: ListrContextBuild;
 }): string {
   const buildEntries = Object.entries(buildResults)
     .map(([dnpName, { releaseMultiHash }], index) => {

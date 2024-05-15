@@ -1,6 +1,6 @@
 import { ListrTask } from "listr";
 import { PublishOptions } from "./types.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextPublish } from "../../types.js";
 import { getFetchApmVersionTask } from "./subtasks/getFetchApmVersionTask.js";
 import { getBuildAndUploadTask } from "./subtasks/getBuildAndUploadTask.js";
 import { getGenerateTxTask } from "./subtasks/getGenerateTxTask.js";
@@ -21,7 +21,7 @@ export function publish({
   developerAddress,
   githubRelease,
   verbosityOptions
-}: PublishOptions): ListrTask<ListrContextBuildAndPublish>[] {
+}: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
     getSetupContextTask({ rootDir: dir }), // TODO: Pass the variants here once multi-variant package publish is implemented
     getVerifyEthConnectionTask({ ethProvider }),

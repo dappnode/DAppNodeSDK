@@ -1,6 +1,6 @@
 import { ListrTask } from "listr/index.js";
 import { CliError } from "../../params.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import {
   ReleaseUploaderConnectionError,
   IReleaseUploader
@@ -12,7 +12,7 @@ export function getVerifyConnectionTask({
 }: {
   releaseUploader: IReleaseUploader;
   skipUpload?: boolean;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextBuild> {
   return {
     title: "Verify connection",
     skip: () => skipUpload,

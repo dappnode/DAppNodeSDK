@@ -1,6 +1,6 @@
 import { ListrTask } from "listr";
 import { VerbosityOptions } from "../../../commands/build/types.js";
-import { ListrContextBuildAndPublish } from "../../../types.js";
+import { ListrContextPublish } from "../../../types.js";
 import { createGithubRelease } from "../../createGithubRelease/index.js";
 
 export function getCreateGithubReleaseTask({
@@ -13,7 +13,7 @@ export function getCreateGithubReleaseTask({
   dir: string;
   composeFileName: string;
   verbosityOptions: VerbosityOptions;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextPublish> {
   return {
     title: "Release on github",
     enabled: () => githubRelease, // Only create release if requested

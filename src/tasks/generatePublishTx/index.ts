@@ -6,7 +6,7 @@ import { addReleaseTx } from "../../utils/releaseRecord.js";
 import { defaultDir, YargsError } from "../../params.js";
 import {
   CliGlobalOptions,
-  ListrContextBuildAndPublish,
+  ListrContextPublish,
   TxData
 } from "../../types.js";
 import { ApmRepository } from "@dappnode/toolkit";
@@ -44,7 +44,7 @@ export function generatePublishTx({
   developerAddress?: string;
   ethProvider: string;
   verbosityOptions: VerbosityOptions;
-} & CliGlobalOptions): Listr<ListrContextBuildAndPublish> {
+} & CliGlobalOptions): Listr<ListrContextPublish> {
   // Init APM instance
   const ethereumUrl = getEthereumUrl(ethProvider);
   const apm = new ApmRepository(ethereumUrl);
@@ -56,7 +56,7 @@ export function generatePublishTx({
 
   const { name: dnpName, version } = manifest;
 
-  return new Listr<ListrContextBuildAndPublish>(
+  return new Listr<ListrContextPublish>(
     [
       {
         title: "Generate transaction",

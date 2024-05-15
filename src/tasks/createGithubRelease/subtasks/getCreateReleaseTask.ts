@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs";
 import { Github } from "../../../providers/github/Github.js";
 import {
-  ListrContextBuildAndPublish,
+  ListrContextPublish,
   TxData,
   contentHashFile
 } from "../../../types.js";
@@ -32,7 +32,7 @@ export function getCreateReleaseTask({
   buildDir: string;
   releaseMultiHash: string;
   composeFileName?: string;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextPublish> {
   return {
     title: `Create release`,
     task: async (ctx, task) => {

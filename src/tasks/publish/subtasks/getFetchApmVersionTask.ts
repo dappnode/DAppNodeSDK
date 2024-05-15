@@ -1,5 +1,5 @@
 import { ListrTask } from "listr";
-import { ListrContextBuildAndPublish, ReleaseType } from "../../../types.js";
+import { ListrContextPublish, ReleaseType } from "../../../types.js";
 import {
   readManifest,
   writeManifest,
@@ -21,7 +21,7 @@ export function getFetchApmVersionTask({
   ethProvider: string;
   dir: string;
   composeFileName: string;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextPublish> {
   return {
     title: "Fetch current version from APM",
     task: async ctx => {

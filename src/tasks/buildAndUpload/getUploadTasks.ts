@@ -1,5 +1,5 @@
 import { ListrTask } from "listr/index.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import { getGitHeadIfAvailable } from "../../utils/git.js";
 import { getPinMetadata } from "../../pinStrategy/index.js";
 import { PinKeyvaluesDefault } from "../../releaseUploader/pinata/index.js";
@@ -19,8 +19,8 @@ export function getUploadTasks({
   releaseUploader: IReleaseUploader;
   requireGitData: boolean;
   composeFileName: string;
-}): ListrTask<ListrContextBuildAndPublish>[] {
-  const uploadTasks: ListrTask<ListrContextBuildAndPublish>[] = [];
+}): ListrTask<ListrContextBuild>[] {
+  const uploadTasks: ListrTask<ListrContextBuild>[] = [];
 
   for (const [, { manifest, releaseDir }] of Object.entries(variantsMap)) {
     const { name: dnpName } = manifest;

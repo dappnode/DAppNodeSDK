@@ -1,6 +1,6 @@
 import { ListrTask } from "listr";
 import { VerbosityOptions } from "../../../commands/build/types.js";
-import { ListrContextBuildAndPublish } from "../../../types.js";
+import { ListrContextPublish } from "../../../types.js";
 import { generatePublishTx } from "../../generatePublishTx/index.js";
 import { readManifest } from "../../../files/index.js";
 
@@ -16,7 +16,7 @@ export function getGenerateTxTask({
   developerAddress?: string;
   ethProvider: string;
   verbosityOptions: VerbosityOptions;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextPublish> {
   return {
     title: "Generate transaction",
     task: (ctx, task) => {
@@ -26,7 +26,7 @@ export function getGenerateTxTask({
       const { manifest } = readManifest([{ dir }]);
 
       if (releaseMultiHash) {
-        generatePublishTx({
+        return generatePublishTx({
           dir,
           compose_file_name: composeFileName,
           releaseMultiHash,
@@ -36,7 +36,6 @@ export function getGenerateTxTask({
           manifest
         });
       } else {
-        // TODO: Check if this is the correct way to handle this case
         task.output = "No release hash found. Skipping transaction generation.";
       }
     }

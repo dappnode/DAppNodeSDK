@@ -1,5 +1,5 @@
 import { ListrTask } from "listr/index.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import {
   validateComposeSchema,
   validateManifestSchema,
@@ -16,7 +16,7 @@ export function getFileValidationTask({
 }: {
   variantsMap: VariantsMap;
   rootDir: string;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextBuild> {
   return {
     title: `Validate files`,
     task: async () => await validatePackageFiles({ variantsMap, rootDir })

@@ -1,6 +1,6 @@
 import path from "path";
 import Listr, { ListrTask } from "listr/index.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import { buildWithBuildx } from "./buildWithBuildx.js";
 import { buildWithCompose } from "./buildWithCompose.js";
 import { Architecture, defaultArch } from "@dappnode/types";
@@ -24,8 +24,8 @@ export function getBuildTasks({
   buildTimeout: number;
   skipSave?: boolean;
   rootDir: string;
-}): ListrTask<ListrContextBuildAndPublish>[] {
-  const buildTasks: ListrTask<ListrContextBuildAndPublish>[] = Object.entries(
+}): ListrTask<ListrContextBuild>[] {
+  const buildTasks: ListrTask<ListrContextBuild>[] = Object.entries(
     variantsMap
   ).flatMap(([, variantSpecs]) => {
     return variantSpecs.architectures.map(architecture =>

@@ -1,5 +1,5 @@
 import { getGitHead } from "../../../utils/git.js";
-import { ListrContextBuildAndPublish } from "../../../types.js";
+import { ListrContextPublish } from "../../../types.js";
 import { ListrTask } from "listr";
 import { Github } from "../../../providers/github/Github.js";
 import { getNextGitTag } from "./getNextGitTag.js";
@@ -16,7 +16,7 @@ export function getHandleTagsTask({
   github
 }: {
   github: Github;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextPublish> {
   const isCi = process.env.CI;
   const triggerTag = process.env.GITHUB_REF || process.env.TRAVIS_TAG;
 

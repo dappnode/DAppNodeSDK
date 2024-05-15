@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { ListrTask } from "listr/index.js";
 import rimraf from "rimraf";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import { getImageFileName } from "../../utils/getImageFileName.js";
 import { VariantsMap } from "./types.js";
 
@@ -10,7 +10,7 @@ export function getReleaseDirCreationTask({
   variantsMap
 }: {
   variantsMap: VariantsMap;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextBuild> {
   return {
     title: `Create release directories`,
     task: ctx => createReleaseDirs({ ctx, variantsMap })
@@ -21,7 +21,7 @@ function createReleaseDirs({
   ctx,
   variantsMap
 }: {
-  ctx: ListrContextBuildAndPublish;
+  ctx: ListrContextBuild;
   variantsMap: VariantsMap;
 }): void {
   for (const [
