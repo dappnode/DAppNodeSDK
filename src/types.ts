@@ -11,7 +11,7 @@ interface ListrContextBuildItem {
   releaseDir?: string;
   releaseHash?: string;
   releaseMultiHash?: string;
-  variant: string;
+  variant?: string;
 }
 
 interface ListrContextPublishItem extends ListrContextBuildItem {

@@ -20,8 +20,17 @@ export function getGenerateTxTask({
   return {
     title: "Generate transaction",
     task: (ctx, task) => {
+      const releaseHashes = Object.entries(ctx).map(
+        ([, { releaseMultiHash }]) => releaseMultiHash
+      );
+
+      if (releaseHashes.length < 1)
+        throw new Error(
+          "Could not get release hash from previous task while trying to generate the publish tx."
+        );
+
       // TODO: Generate 1 tx per package
-      const [, { releaseMultiHash }] = Object.entries(ctx)[0];
+      const releaseMultiHash = releaseHashes[0];
 
       const { manifest } = readManifest([{ dir }]);
 

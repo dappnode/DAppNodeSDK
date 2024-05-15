@@ -85,6 +85,7 @@ export function generatePublishTx({
                 ethereumUrl
               });
 
+          ctx[dnpName] = ctx[dnpName] || {};
           ctx[dnpName].txData = txData;
 
           /**

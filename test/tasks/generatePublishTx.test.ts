@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { defaultManifestFormat } from "../../src/params.js";
-import { generatePublishTx } from "../../src/tasks/generatePublishTx.js";
+import { generatePublishTx } from "../../src/tasks/generatePublishTx/index.js";
 import { writeManifest } from "../../src/files/index.js";
 import { testDir, cleanTestDir } from "../testUtils.js";
 
@@ -26,6 +26,7 @@ describe("generatePublishTx", function () {
 
     const generatePublishTxTasks = generatePublishTx({
       dir: testDir,
+      manifest,
       releaseMultiHash: "/ipfs/Qm",
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
@@ -33,8 +34,8 @@ describe("generatePublishTx", function () {
     });
 
     // TODO: Fix when publish is adapted to multi-variant packages
-    const publishResults = await generatePublishTxTasks.run();
-    const { txData } = publishResults[manifest.name];
+    const generateTxResults = await generatePublishTxTasks.run();
+    const { txData } = generateTxResults[manifest.name];
 
     expect(txData).to.be.an("object");
     // admin.dnp.dappnode.eth ==> 0xEe66C4765696C922078e8670aA9E6d4F6fFcc455
@@ -62,6 +63,7 @@ describe("generatePublishTx", function () {
 
     const generatePublishTxTasks = generatePublishTx({
       dir: testDir,
+      manifest,
       releaseMultiHash: "/ipfs/Qm",
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",

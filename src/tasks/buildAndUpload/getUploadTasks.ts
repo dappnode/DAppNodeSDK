@@ -22,7 +22,9 @@ export function getUploadTasks({
 }): ListrTask<ListrContextBuild>[] {
   const uploadTasks: ListrTask<ListrContextBuild>[] = [];
 
-  for (const [, { manifest, releaseDir }] of Object.entries(variantsMap)) {
+  for (const [variant, { manifest, releaseDir }] of Object.entries(
+    variantsMap
+  )) {
     const { name: dnpName } = manifest;
 
     uploadTasks.push({
@@ -35,6 +37,7 @@ export function getUploadTasks({
         // https://github.com/dappnode/DAppNode_Installer/issues/161
         composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
 
+        ctx[dnpName] = ctx[dnpName] || { variant };
         ctx[dnpName].releaseHash = await releaseUploader.addFromFs({
           dirPath: releaseDir,
           metadata: getPinMetadata(manifest, gitHead) as PinKeyvaluesDefault,

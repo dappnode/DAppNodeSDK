@@ -28,6 +28,8 @@ export function getFetchApmVersionTask({
       const { manifest, format: manifestFormat } = readManifest([{ dir }]);
       const { name, version } = manifest;
 
+      ctx[name] = ctx[name] || {};
+
       try {
         ctx[name].nextVersion = await increaseFromApmVersion({
           type: releaseType,
@@ -45,7 +47,8 @@ export function getFetchApmVersionTask({
   };
 }
 
-async function increaseFromApmVersion({
+// TODO: Try to test this without exporting the function (not used anywhere else)
+export async function increaseFromApmVersion({
   type,
   ethProvider,
   dir,

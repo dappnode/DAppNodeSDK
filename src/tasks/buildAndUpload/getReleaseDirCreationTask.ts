@@ -26,20 +26,24 @@ function createReleaseDirs({
 }): void {
   for (const [
     variant,
-    { manifest, releaseDir, architectures }
+    {
+      manifest: { name, version },
+      releaseDir,
+      architectures
+    }
   ] of Object.entries(variantsMap)) {
     console.log(
-      `Creating release directory for ${manifest.name} (version ${manifest.version}) at ${releaseDir}`
+      `Creating release directory for ${name} (version ${version}) at ${releaseDir}`
     );
 
     fs.mkdirSync(releaseDir, { recursive: true }); // Ok on existing dir
     const releaseFiles = fs.readdirSync(releaseDir);
 
-    ctx[manifest.name] = { variant };
-    ctx[manifest.name].releaseDir = releaseDir;
+    ctx[name] = ctx[name] || { variant };
+    ctx[name].releaseDir = releaseDir;
 
     const imagePaths = architectures.map(arch =>
-      getImageFileName(manifest.name, manifest.version, arch)
+      getImageFileName(name, version, arch)
     );
 
     // Clean all files except the expected target images

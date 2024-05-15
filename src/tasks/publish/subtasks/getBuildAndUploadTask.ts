@@ -22,9 +22,7 @@ export function getBuildAndUploadTask({
       const buildResults = await buildTasks.run();
 
       for (const [key, result] of Object.entries(buildResults)) {
-        if (key in ctx) {
-          ctx[key] = { ...ctx[key], ...result };
-        }
+        ctx[key] = ctx[key] ? { ...ctx[key], ...result } : result;
       }
     }
   };
