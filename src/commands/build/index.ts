@@ -73,7 +73,10 @@ function printBuildResults(
   }
 
   for (const [dnpName, { releaseMultiHash }] of Object.entries(buildResults)) {
-    if (!releaseMultiHash) continue;
+    if (!releaseMultiHash) {
+      console.log(chalk.red(`Error building Dappnode Package (${dnpName})\n`));
+      return;
+    }
 
     console.log(`
           ${chalk.green(`Dappnode Package (${dnpName}) built and uploaded`)} 
