@@ -25,7 +25,7 @@ export function getSaveUploadResultsTask({
       // Single package
       if (variantsMap.default) {
         const { name, version } = variantsMap.default.manifest;
-        const { releaseHash: hash } = ctx[name];
+        const { releaseMultiHash: hash } = ctx[name];
 
         if (hash)
           addReleaseRecord({
@@ -44,7 +44,7 @@ export function getSaveUploadResultsTask({
           }
         ] of Object.entries(variantsMap)) {
           const variantDir = path.join(variantsDirPath, variant);
-          const { releaseHash: hash } = ctx[name];
+          const { releaseMultiHash: hash } = ctx[name];
 
           if (!hash) continue;
 

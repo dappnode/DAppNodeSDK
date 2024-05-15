@@ -38,14 +38,11 @@ export function getUploadTasks({
         composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
 
         ctx[dnpName] = ctx[dnpName] || { variant };
-        ctx[dnpName].releaseHash = await releaseUploader.addFromFs({
+        ctx[dnpName].releaseMultiHash = await releaseUploader.addFromFs({
           dirPath: releaseDir,
           metadata: getPinMetadata(manifest, gitHead) as PinKeyvaluesDefault,
           onProgress: percent => (task.output = percentToMessage(percent))
         });
-
-        // TODO: Check what is the difference between releaseHash and releaseMultiHash
-        ctx[dnpName].releaseMultiHash = ctx[dnpName].releaseHash;
       }
     });
   }

@@ -96,7 +96,7 @@ export async function gaTestEndToEndHandler({
 
     await executeEndToEndTests({
       dappmanagerTestApi,
-      releaseMultiHash: releaseMultiHash, // TODO: Do this for every releaseHash obtained
+      releaseMultiHash, // TODO: Do this for every releaseHash obtained
       manifest,
       compose,
       healthCheckUrl,

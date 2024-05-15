@@ -9,7 +9,6 @@ export interface CliGlobalOptions {
 
 interface ListrContextBuildItem {
   releaseDir?: string;
-  releaseHash?: string;
   releaseMultiHash?: string;
   variant?: string;
 }
