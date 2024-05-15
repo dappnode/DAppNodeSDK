@@ -1,7 +1,5 @@
 import chalk from "chalk";
 import { CommandModule } from "yargs";
-// Tasks
-// Utils
 import { getInstallDnpLink, getPublishTxLink } from "../../utils/getLinks.js";
 import {
   CliGlobalOptions,
