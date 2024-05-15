@@ -18,8 +18,6 @@ interface ListrContextPublishItem extends ListrContextBuildItem {
   nextVersion?: string;
   txData?: TxData;
 }
-
-// TODO: Use this for the build task
 export interface ListrContextBuild {
   [dnpName: string]: ListrContextBuildItem;
 }
