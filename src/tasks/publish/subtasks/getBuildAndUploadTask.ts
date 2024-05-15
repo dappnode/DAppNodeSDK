@@ -1,6 +1,6 @@
 import Listr, { ListrTask } from "listr";
 import { BuildAndUploadOptions } from "../../buildAndUpload/types.js";
-import { ListrContextPublish } from "../../../types.js";
+import { ListrContextBuild, ListrContextPublish } from "../../../types.js";
 import { buildAndUpload } from "../../buildAndUpload/index.js";
 import { VerbosityOptions } from "../../../commands/build/types.js";
 
@@ -21,9 +21,24 @@ export function getBuildAndUploadTask({
 
       const buildResults = await buildTasks.run();
 
-      for (const [key, result] of Object.entries(buildResults)) {
-        ctx[key] = ctx[key] ? { ...ctx[key], ...result } : result;
-      }
+      copyBuildCtxToPublishCtx({
+        buildCtx: buildResults,
+        publishCtx: ctx
+      });
     }
   };
+}
+
+function copyBuildCtxToPublishCtx({
+  buildCtx,
+  publishCtx
+}: {
+  buildCtx: ListrContextBuild;
+  publishCtx: ListrContextPublish;
+}) {
+  for (const [key, result] of Object.entries(buildCtx)) {
+    publishCtx[key] = publishCtx[key]
+      ? { ...publishCtx[key], ...result }
+      : result;
+  }
 }
