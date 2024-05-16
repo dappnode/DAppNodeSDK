@@ -19,7 +19,9 @@ export function publish({
   deleteOldPins,
   developerAddress,
   githubRelease,
-  verbosityOptions
+  verbosityOptions,
+  variantsDirPath,
+  variants
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
     getVerifyEthConnectionTask({ ethProvider }),

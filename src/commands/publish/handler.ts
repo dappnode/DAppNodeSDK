@@ -1,10 +1,15 @@
 import Listr from "listr";
-import { defaultComposeFileName, defaultDir } from "../../params.js";
+import {
+  defaultComposeFileName,
+  defaultDir,
+  defaultVariantsDirName
+} from "../../params.js";
 import { ListrContextPublish } from "../../types.js";
 import { VerbosityOptions } from "../build/types.js";
 import { PublishCommandOptions } from "./types.js";
 import { publish } from "../../tasks/publish/index.js";
 import { parseReleaseType } from "./parseReleaseType.js";
+import { getVariantOptions } from "../build/variants.js";
 
 /**
  * Common handler for CLI and programatic usage
@@ -25,7 +30,10 @@ export async function publishHandler({
   dir = defaultDir,
   compose_file_name: composeFileName = defaultComposeFileName,
   silent,
-  verbose
+  verbose,
+  variants_dir_name: variantsDirName = defaultVariantsDirName,
+  all_variants: allVariants,
+  variants
 }: PublishCommandOptions): Promise<ListrContextPublish> {
   let ethProvider = provider || eth_provider;
   let contentProvider = provider || content_provider;
@@ -65,7 +73,13 @@ export async function publishHandler({
       deleteOldPins,
       developerAddress,
       githubRelease,
-      verbosityOptions
+      verbosityOptions,
+      ...getVariantOptions({
+        allVariants: Boolean(allVariants),
+        variantsStr: variants,
+        rootDir: dir,
+        variantsDirName
+      })
     }),
     verbosityOptions
   );

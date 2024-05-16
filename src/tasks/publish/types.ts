@@ -15,4 +15,6 @@ export interface PublishOptions {
   developerAddress?: string;
   githubRelease?: boolean;
   verbosityOptions: VerbosityOptions;
+  variantsDirPath?: string;
+  variants?: string[];
 }
