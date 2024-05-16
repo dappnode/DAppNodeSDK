@@ -10,7 +10,7 @@ import { getCreateReleaseTask } from "./subtasks/getCreateReleaseTask.js";
  * Create (or edit) a Github release, then upload all assets
  */
 export function createGithubRelease({
-  dir = defaultDir,
+  rootDir: dir = defaultDir,
   compose_file_name: composeFileName,
   buildDir,
   releaseMultiHash,

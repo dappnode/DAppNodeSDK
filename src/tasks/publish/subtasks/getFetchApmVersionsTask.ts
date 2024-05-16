@@ -1,7 +1,6 @@
 import { ListrTask } from "listr";
 import { ListrContextPublish, ReleaseType } from "../../../types.js";
 import {
-  readManifest,
   writeManifest,
   readCompose,
   updateComposeImageTags,
@@ -10,38 +9,31 @@ import {
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
 import { Manifest } from "@dappnode/types";
 import { ManifestFormat } from "../../../files/manifest/types.js";
-import path from "path";
-import { ManifestsMap } from "../types.js";
+import { VariantsMap } from "../../buildAndUpload/types.js";
 
 export function getFetchApmVersionsTask({
   releaseType,
   ethProvider,
   rootDir,
   composeFileName,
-  variants,
-  variantsDirPath
+  variantsMap
 }: {
   releaseType: ReleaseType;
   ethProvider: string;
   rootDir: string;
   composeFileName: string;
-  variants: string[] | null;
-  variantsDirPath: string;
+  variantsMap: VariantsMap;
 }): ListrTask<ListrContextPublish> {
   return {
     title: "Fetch current versions from APM",
     task: async ctx => {
-      const manifestsMap = buildManifestsMap({
-        dir: rootDir,
-        variants,
-        variantsDirPath
-      });
-
-      for (const [, { manifest, format }] of Object.entries(manifestsMap)) {
+      for (const [, { manifest, manifestFormat }] of Object.entries(
+        variantsMap
+      )) {
         await setNextVersionToContext({
           ctx,
           manifest,
-          manifestFormat: format,
+          manifestFormat,
           releaseType,
           ethProvider,
           dir: rootDir,
@@ -50,27 +42,6 @@ export function getFetchApmVersionsTask({
       }
     }
   };
-}
-
-function buildManifestsMap({
-  dir,
-  variants,
-  variantsDirPath
-}: {
-  dir: string;
-  variants: string[] | null;
-  variantsDirPath: string;
-}): ManifestsMap {
-  if (!variants) return { ["default"]: readManifest([{ dir }]) };
-
-  const manifestsMap: ManifestsMap = {};
-
-  variants.forEach(variant => {
-    const variantPath = path.join(variantsDirPath, variant);
-    manifestsMap[variant] = readManifest([{ dir }, { dir: variantPath }]);
-  });
-
-  return manifestsMap;
 }
 
 async function setNextVersionToContext({

@@ -14,7 +14,7 @@ export interface BuildAndUploadOptions {
   composeFileName: string;
   dir: string;
   variantsDirPath?: string;
-  variants: string[] | null;
+  variantsMap: VariantsMap;
 }
 
 export interface VariantsMapEntry {

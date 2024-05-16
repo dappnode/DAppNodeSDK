@@ -23,7 +23,7 @@ export function getCreateGithubReleaseTask({
 
       if (releaseMultiHash && releaseDir) {
         createGithubRelease({
-          dir,
+          rootDir: dir,
           compose_file_name: composeFileName,
           buildDir: releaseDir,
           releaseMultiHash,

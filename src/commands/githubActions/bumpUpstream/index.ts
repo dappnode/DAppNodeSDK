@@ -73,7 +73,7 @@ export const gaBumpUpstream: CommandModule<
 };
 
 async function gaBumpUpstreamHandler({
-  dir = defaultDir,
+  rootDir: dir = defaultDir,
   eth_provider: userEthProvider,
   use_fallback: useFallback,
   use_variants: useVariants,

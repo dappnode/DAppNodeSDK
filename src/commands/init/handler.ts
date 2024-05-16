@@ -11,7 +11,7 @@ import {
 } from "./fileOperations.js";
 
 export async function initHandler({
-  dir = defaultDir,
+  rootDir: dir = defaultDir,
   compose_file_name: composeFileName = defaultComposeFileName,
   yes,
   force,

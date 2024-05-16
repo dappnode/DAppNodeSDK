@@ -51,7 +51,7 @@ export const endToEndTest: CommandModule<
 };
 
 export async function gaTestEndToEndHandler({
-  dir,
+  rootDir: dir,
   healthCheckUrl,
   errorLogsTimeout,
   environmentByService,
@@ -71,7 +71,7 @@ export async function gaTestEndToEndHandler({
     // Build and upload
     console.log(chalk.dim("\nBuilding and uploading package..."));
     const buildResult = await buildHandler({
-      dir,
+      rootDir: dir,
       provider: localIpfsApiUrl,
       upload_to: "ipfs",
       verbose: false

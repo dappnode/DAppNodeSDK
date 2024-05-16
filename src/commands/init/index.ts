@@ -38,7 +38,7 @@ export const init: CommandModule<CliGlobalOptions, InitCommandOptions> = {
   handler: async args => {
     const manifest = await initHandler(args);
 
-    const dir = args.dir || defaultDir;
+    const dir = args.rootDir || defaultDir;
     console.log(`
     ${chalk.green("Your DAppNodePackage is ready")}: ${manifest.name}
 

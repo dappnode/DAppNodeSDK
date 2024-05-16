@@ -13,11 +13,11 @@ import {
 } from "../utils/githubGetReleases.js";
 import { ipfsAddDirFromUrls } from "../releaseUploader/ipfsNode/addDirFromUrls.js";
 import { verifyIpfsConnection } from "../releaseUploader/ipfsNode/verifyConnection.js";
-import { CliGlobalOptions, contentHashFile } from "../types.js";
+import { CliGlobalOptions } from "../types.js";
 import { Manifest, defaultArch, releaseFiles } from "@dappnode/types";
 import { getLegacyImagePath } from "../utils/getLegacyImagePath.js";
 import { getImageFileName } from "../utils/getImageFileName.js";
-import { releaseFilesDefaultNames } from "../params.js";
+import { contentHashFile, releaseFilesDefaultNames } from "../params.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   repoSlug: string;

@@ -1,7 +1,5 @@
-// CLI types
-
 export interface CliGlobalOptions {
-  dir?: string;
+  rootDir?: string;
   compose_file_name?: string;
   silent?: boolean;
   verbose?: boolean;
@@ -12,6 +10,7 @@ interface ListrContextBuildItem {
   releaseDir?: string;
   releaseMultiHash?: string;
   variant?: string;
+  // TODO: Add here VariantsMap ?
 }
 
 interface ListrContextPublishItem extends ListrContextBuildItem {
@@ -59,5 +58,3 @@ export interface TxDataShortKeys {
   h: string; // hash
   d?: string; // developerAddress
 }
-
-export const contentHashFile = "content-hash" as const;

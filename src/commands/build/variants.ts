@@ -1,33 +1,38 @@
 import chalk from "chalk";
 import { getAllVariantsInPath } from "../../files/variants/getAllPackageVariants.js";
 import path from "path";
+import { VariantsMap } from "../../tasks/buildAndUpload/types.js";
+import { buildVariantMap } from "../../tasks/buildAndUpload/buildVariantMap.js";
 
 export function getVariantOptions({
   allVariants,
   variantsStr,
   rootDir,
-  variantsDirName
+  variantsDirName,
+  composeFileName
 }: {
   allVariants: boolean;
   variantsStr?: string;
   rootDir: string;
   variantsDirName: string;
-}): { variants: string[] | null; variantsDirPath: string } {
+  composeFileName: string;
+}): { variantsMap: VariantsMap; variantsDirPath: string } {
   const variantsDirPath = path.join(rootDir, variantsDirName);
 
-  // Not a multi-variant build (return undefined for variants)
+  const buildVariantMapArgs = { rootDir, variantsDirPath, composeFileName };
+
   if (!allVariants && !variantsStr)
     return {
-      variants: null,
+      variantsMap: buildVariantMap({ ...buildVariantMapArgs, variants: null }),
       variantsDirPath
     };
 
-  const variantNames = getValidVariantNames({
+  const validVariantNames = getValidVariantNames({
     variantsDirPath,
     variants: variantsStr
   });
 
-  if (variantNames.length === 0)
+  if (validVariantNames.length === 0)
     throw new Error(
       `No valid variants specified. They must be included in: ${variantsDirPath}`
     );
@@ -38,7 +43,13 @@ export function getVariantOptions({
     )}`
   );
 
-  return { variants: variantNames, variantsDirPath };
+  return {
+    variantsMap: buildVariantMap({
+      ...buildVariantMapArgs,
+      variants: validVariantNames
+    }),
+    variantsDirPath
+  };
 }
 
 /**

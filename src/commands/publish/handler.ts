@@ -27,7 +27,7 @@ export async function publishHandler({
   require_git_data: requireGitData,
   delete_old_pins: deleteOldPins,
   // Global options
-  dir = defaultDir,
+  rootDir: dir = defaultDir,
   compose_file_name: composeFileName = defaultComposeFileName,
   silent,
   verbose,
@@ -78,7 +78,8 @@ export async function publishHandler({
         allVariants: Boolean(allVariants),
         variantsStr: variants,
         rootDir: dir,
-        variantsDirName
+        variantsDirName,
+        composeFileName
       })
     }),
     verbosityOptions

@@ -1,11 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { Github } from "../../../providers/github/Github.js";
-import {
-  ListrContextPublish,
-  TxData,
-  contentHashFile
-} from "../../../types.js";
+import { ListrContextPublish, TxData } from "../../../types.js";
 import { ListrTask } from "listr";
 import {
   compactManifestIfCore,
@@ -16,6 +12,7 @@ import {
   getPublishTxLink
 } from "../../../utils/getLinks.js";
 import { getNextGitTag } from "./getNextGitTag.js";
+import { contentHashFile } from "../../../params.js";
 
 /**
  * Create release

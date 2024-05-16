@@ -4,19 +4,15 @@ import { getEthereumUrl } from "../../utils/getEthereumUrl.js";
 import { getPublishTxLink } from "../../utils/getLinks.js";
 import { addReleaseTx } from "../../utils/releaseRecord.js";
 import { defaultDir, YargsError } from "../../params.js";
-import {
-  CliGlobalOptions,
-  ListrContextPublish,
-  TxData
-} from "../../types.js";
+import { CliGlobalOptions, ListrContextPublish, TxData } from "../../types.js";
 import { ApmRepository } from "@dappnode/toolkit";
 import registryAbi from "../../contracts/ApmRegistryAbi.json" assert { type: "json" };
 import { semverToArray } from "../../utils/semverToArray.js";
 import repoAbi from "../../contracts/RepoAbi.json" assert { type: "json" };
 import { VerbosityOptions } from "../../commands/build/types.js";
-import { Manifest } from "@dappnode/types";
 import { getRegistryAddressFromDnpName } from "./getRegistryAddressFromEns.js";
 import { Repo } from "./types.js";
+import { VariantsMap } from "../buildAndUpload/types.js";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
@@ -31,76 +27,112 @@ const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
  * - Show it on screen
  */
 
-export function generatePublishTx({
-  dir = defaultDir,
-  manifest,
-  releaseMultiHash,
+export function generatePublishTxs({
+  rootDir = defaultDir,
   developerAddress,
   ethProvider,
-  verbosityOptions
+  verbosityOptions,
+  variantsMap
 }: {
-  manifest: Manifest;
-  releaseMultiHash: string;
   developerAddress?: string;
   ethProvider: string;
   verbosityOptions: VerbosityOptions;
+  variantsMap: VariantsMap;
 } & CliGlobalOptions): Listr<ListrContextPublish> {
   // Init APM instance
   const ethereumUrl = getEthereumUrl(ethProvider);
   const apm = new ApmRepository(ethereumUrl);
 
-  // Compute tx data
-  const contentURI =
-    "0x" + Buffer.from(releaseMultiHash, "utf8").toString("hex");
-  const contractAddress = "0x0000000000000000000000000000000000000000";
-
-  const { name: dnpName, version } = manifest;
-
   return new Listr<ListrContextPublish>(
     [
       {
-        title: "Generate transaction",
-        task: async ctx => {
-          const repository = await getRepoContractIfExists({
-            apm,
-            ensName: dnpName
-          });
+        title: "Generate transactions",
+        task: async (ctx, task) => {
+          const contractAddress = "0x0000000000000000000000000000000000000000";
 
-          const txData: TxData = repository
-            ? await getTxDataForExistingRepo({
-                repository,
-                version,
-                contractAddress,
-                contentURI,
-                releaseMultiHash,
-                dnpName: dnpName
-              })
-            : await getTxDataForNewRepo({
-                dnpName: dnpName,
-                version,
-                contractAddress,
-                contentURI,
-                releaseMultiHash,
-                developerAddress,
-                ethereumUrl
-              });
+          for (const [, { manifest }] of Object.entries(variantsMap)) {
+            
+            const { name: dnpName, version } = manifest;
+            const releaseMultiHash = ctx[dnpName].releaseMultiHash;
 
-          ctx[dnpName] = ctx[dnpName] || {};
-          ctx[dnpName].txData = txData;
+            if (!releaseMultiHash) {
+              task.output += `No release hash found for ${dnpName}. Skipping it...\n`;
+              continue;
+            }
 
-          /**
-           * Write Tx data in a file for future reference
-           */
-          addReleaseTx({
-            dir,
-            version: manifest.version,
-            link: getPublishTxLink(txData)
-          });
+            const txData = await buildTxData({
+              apm,
+              contractAddress,
+              dnpName,
+              version,
+              releaseMultiHash,
+              developerAddress: developerAddress || "",
+              ethereumUrl
+            });
+
+            ctx[dnpName] = ctx[dnpName] || {};
+            ctx[dnpName].txData = txData;
+
+            /**
+             * Write Tx data in a file for future reference
+             */
+            addReleaseTx({
+              dir: rootDir,
+              version,
+              link: getPublishTxLink(txData)
+            });
+          }
         }
       }
     ],
     verbosityOptions
   );
+}
+
+async function buildTxData({
+  apm,
+  contractAddress,
+  dnpName,
+  version,
+  releaseMultiHash,
+  developerAddress,
+  ethereumUrl
+}: {
+  apm: ApmRepository;
+  contractAddress: string;
+  dnpName: string;
+  version: string;
+  releaseMultiHash: string;
+  developerAddress: string;
+  ethereumUrl: string;
+}): Promise<TxData> {
+  // Compute tx data
+  const contentURI =
+    "0x" + Buffer.from(releaseMultiHash, "utf8").toString("hex");
+
+  const repository = await getRepoContractIfExists({
+    apm,
+    ensName: dnpName
+  });
+
+  return repository
+    ? await getTxDataForExistingRepo({
+        repository,
+        version,
+        contractAddress,
+        contentURI,
+        releaseMultiHash,
+        dnpName: dnpName
+      })
+    : await getTxDataForNewRepo({
+        dnpName: dnpName,
+        version,
+        contractAddress,
+        contentURI,
+        releaseMultiHash,
+        developerAddress,
+        ethereumUrl
+      });
 }
 
 async function getRepoContractIfExists({

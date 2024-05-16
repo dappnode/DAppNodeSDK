@@ -22,7 +22,7 @@ export async function buildHandler({
   variants_dir_name: variantsDirName = defaultVariantsDirName,
   variants,
   // Global options
-  dir = defaultDir,
+  rootDir: dir = defaultDir,
   compose_file_name: composeFileName = defaultComposeFileName,
   silent,
   verbose
@@ -43,7 +43,8 @@ export async function buildHandler({
       allVariants: Boolean(allVariants),
       variantsStr: variants,
       rootDir: dir,
-      variantsDirName
+      variantsDirName,
+      composeFileName
     })
   };
 

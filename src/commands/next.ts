@@ -42,7 +42,7 @@ export const next: CommandModule<CliGlobalOptions, CliCommandOptions> = {
 export async function nextHandler({
   type,
   provider,
-  dir = defaultDir
+  rootDir: dir = defaultDir
 }: CliCommandOptions): Promise<string> {
   const ethProvider = provider;
 

@@ -36,7 +36,7 @@ export const gaBuild: CommandModule<CliGlobalOptions, CliGlobalOptions> = {
  * Common handler for CLI and programatic usage
  */
 async function gaBuildHandler({
-  dir = defaultDir
+  rootDir: dir = defaultDir
 }: CliGlobalOptions): Promise<void> {
   const { eventName, sha: commitSha, ref: refString } = getGithubContext();
   const ref = parseRef(refString);
