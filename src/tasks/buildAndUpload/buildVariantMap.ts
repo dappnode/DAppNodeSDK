@@ -17,7 +17,7 @@ export function buildVariantMap({
   variantsDirPath,
   composeFileName = defaultComposeFileName
 }: {
-  variants?: string[];
+  variants: string[] | null;
   rootDir: string;
   variantsDirPath: string;
   composeFileName?: string;

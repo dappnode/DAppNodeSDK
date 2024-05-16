@@ -12,11 +12,16 @@ export function getVariantOptions({
   variantsStr?: string;
   rootDir: string;
   variantsDirName: string;
-}): { variants?: string[]; variantsDirPath?: string } {
-  // Not a multi-variant build
-  if (!allVariants && !variantsStr) return {};
-
+}): { variants: string[] | null; variantsDirPath: string } {
   const variantsDirPath = path.join(rootDir, variantsDirName);
+
+  // Not a multi-variant build (return undefined for variants)
+  if (!allVariants && !variantsStr)
+    return {
+      variants: null,
+      variantsDirPath
+    };
+
   const variantNames = getValidVariantNames({
     variantsDirPath,
     variants: variantsStr

@@ -1,7 +1,7 @@
 import { ListrTask } from "listr";
 import { PublishOptions } from "./types.js";
 import { ListrContextPublish } from "../../types.js";
-import { getFetchApmVersionTask } from "./subtasks/getFetchApmVersionTask.js";
+import { getFetchApmVersionsTask } from "./subtasks/getFetchApmVersionsTask.js";
 import { getBuildAndUploadTask } from "./subtasks/getBuildAndUploadTask.js";
 import { getGenerateTxTask } from "./subtasks/getGenerateTxTask.js";
 import { getCreateGithubReleaseTask } from "./subtasks/getCreateGithubReleaseTask.js";
@@ -25,7 +25,14 @@ export function publish({
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
     getVerifyEthConnectionTask({ ethProvider }),
-    getFetchApmVersionTask({ releaseType, ethProvider, dir, composeFileName }),
+    getFetchApmVersionsTask({
+      releaseType,
+      ethProvider,
+      rootDir: dir,
+      composeFileName,
+      variants,
+      variantsDirPath
+    }),
     getBuildAndUploadTask({
       buildOptions: {
         dir,
@@ -34,7 +41,8 @@ export function publish({
         uploadTo,
         userTimeout,
         requireGitData,
-        deleteOldPins
+        deleteOldPins,
+        variants: null
         // TODO: Add multi-variant package build options here
       },
       verbosityOptions
