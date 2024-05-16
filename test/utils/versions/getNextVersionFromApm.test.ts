@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import semver from "semver";
 import { getNextVersionFromApm } from "../../../src/utils/versions/getNextVersionFromApm.js";
-import { writeManifest } from "../../../src/files/index.js";
+import { readManifest, writeManifest } from "../../../src/files/index.js";
 import { cleanTestDir, testDir } from "../../testUtils.js";
 import { defaultManifestFormat } from "../../../src/params.js";
 
@@ -24,10 +24,14 @@ describe("getNextVersionFromApm", function () {
   it("Should get the last version from APM", async () => {
     writeManifest(manifest, defaultManifestFormat, { dir: testDir });
 
+    const {
+      manifest: { name }
+    } = readManifest([{ dir: testDir }]);
+
     const nextVersion = await getNextVersionFromApm({
       type: "patch",
       ethProvider: "infura",
-      dir: testDir
+      ensName: name
     });
     // Check that the console output contains a valid semver version
     expect(semver.valid(nextVersion)).to.be.ok;

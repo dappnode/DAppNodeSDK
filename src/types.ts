@@ -7,14 +7,23 @@ export interface CliGlobalOptions {
   verbose?: boolean;
 }
 
-export interface ListrContextBuildAndPublish {
-  [dnpName: string]: {
-    releaseHash: string;
-    releaseMultiHash: string;
-    variant: string;
-    nextVersion: string;
-    txData: TxData;
-  };
+// TODO: Try to have all properties defined
+interface ListrContextBuildItem {
+  releaseDir?: string;
+  releaseMultiHash?: string;
+  variant?: string;
+}
+
+interface ListrContextPublishItem extends ListrContextBuildItem {
+  nextVersion?: string;
+  txData?: TxData;
+}
+export interface ListrContextBuild {
+  [dnpName: string]: ListrContextBuildItem;
+}
+
+export interface ListrContextPublish {
+  [dnpName: string]: ListrContextPublishItem;
 }
 
 // Interal types

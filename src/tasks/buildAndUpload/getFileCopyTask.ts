@@ -6,7 +6,7 @@ import {
   defaultComposeFileName,
   releaseFilesDefaultNames
 } from "../../params.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import { getGitHeadIfAvailable } from "../../utils/git.js";
 import {
   updateComposeImageTags,
@@ -26,7 +26,7 @@ export function getFileCopyTask({
   rootDir: string;
   composeFileName: string;
   requireGitData?: boolean;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextBuild> {
   return {
     title: "Copy files to release directory",
     task: async () =>

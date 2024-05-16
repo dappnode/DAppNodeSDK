@@ -1,5 +1,5 @@
 import { ListrTask } from "listr/index.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import { getGitHead } from "../../utils/git.js";
 import { fetchPinsWithBranchToDelete } from "../../pinStrategy/index.js";
 import { PinataPinManager } from "../../providers/pinata/pinManager.js";
@@ -14,7 +14,7 @@ export function getDeleteOldPinsTask({
   variantsMap: VariantsMap;
   deleteOldPins: boolean;
   releaseUploaderProvider: ReleaseUploaderProvider;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextBuild> {
   return {
     title: "Delete old pins",
     enabled: () => deleteOldPins,

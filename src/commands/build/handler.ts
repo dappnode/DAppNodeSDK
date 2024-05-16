@@ -2,7 +2,7 @@ import path from "path";
 import chalk from "chalk";
 import Listr from "listr";
 import { buildAndUpload } from "../../tasks/buildAndUpload/index.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import {
   defaultComposeFileName,
   defaultDir,
@@ -28,7 +28,7 @@ export async function buildHandler({
   compose_file_name: composeFileName = defaultComposeFileName,
   silent,
   verbose
-}: BuildCommandOptions): Promise<ListrContextBuildAndPublish> {
+}: BuildCommandOptions): Promise<ListrContextBuild> {
   const skipUpload = skip_upload || skipSave;
 
   const multiVariantMode = Boolean(

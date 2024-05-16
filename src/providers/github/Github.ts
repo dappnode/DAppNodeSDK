@@ -111,7 +111,8 @@ export class Github {
   }
 
   /**
-   * Removes all Github releases that match a tag, and it's assets
+   * Removes all Github releases that match a tag, and its assets
+   * If there are no releases, repos.listReleases will return []
    * @param tag "v0.2.0"
    */
   async deteleReleaseAndAssets(tag: string): Promise<void> {

@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import semver from "semver";
-import { increaseFromApmVersion } from "../../../src/utils/versions/increaseFromApmVersion.js";
 import { cleanTestDir, generateCompose, testDir } from "../../testUtils.js";
+import { increaseFromApmVersion } from "../../../src/tasks/publish/subtasks/getFetchApmVersionTask.js";
 import {
   defaultComposeFileName,
   defaultManifestFormat
@@ -13,6 +13,7 @@ import {
   readManifest
 } from "../../../src/files/index.js";
 import { Manifest } from "@dappnode/types";
+import { ManifestFormat } from "../../../src/files/manifest/types.js";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -43,7 +44,9 @@ describe("increaseFromApmVersion", function () {
       type: "patch",
       ethProvider: "infura",
       composeFileName: defaultComposeFileName,
-      dir: testDir
+      dir: testDir,
+      manifest,
+      manifestFormat: ManifestFormat.json
     });
 
     // Check that the console output contains a valid semver version

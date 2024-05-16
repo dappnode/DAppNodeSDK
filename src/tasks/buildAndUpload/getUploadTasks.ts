@@ -1,5 +1,5 @@
 import { ListrTask } from "listr/index.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import { getGitHeadIfAvailable } from "../../utils/git.js";
 import { getPinMetadata } from "../../pinStrategy/index.js";
 import { PinKeyvaluesDefault } from "../../releaseUploader/pinata/index.js";
@@ -19,8 +19,8 @@ export function getUploadTasks({
   releaseUploader: IReleaseUploader;
   requireGitData: boolean;
   composeFileName: string;
-}): ListrTask<ListrContextBuildAndPublish>[] {
-  const uploadTasks: ListrTask<ListrContextBuildAndPublish>[] = [];
+}): ListrTask<ListrContextBuild>[] {
+  const uploadTasks: ListrTask<ListrContextBuild>[] = [];
 
   for (const [variant, { manifest, releaseDir }] of Object.entries(
     variantsMap
@@ -37,18 +37,12 @@ export function getUploadTasks({
         // https://github.com/dappnode/DAppNode_Installer/issues/161
         composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
 
-        ctx[dnpName] = ctx[dnpName] || {};
-
-        ctx[dnpName].variant = variant;
-
-        ctx[dnpName].releaseHash = await releaseUploader.addFromFs({
+        ctx[dnpName] = ctx[dnpName] || { variant };
+        ctx[dnpName].releaseMultiHash = await releaseUploader.addFromFs({
           dirPath: releaseDir,
           metadata: getPinMetadata(manifest, gitHead) as PinKeyvaluesDefault,
           onProgress: percent => (task.output = percentToMessage(percent))
         });
-
-        // TODO: Check what is the difference between releaseHash and releaseMultiHash
-        ctx[dnpName].releaseMultiHash = ctx[dnpName].releaseHash;
       }
     });
   }

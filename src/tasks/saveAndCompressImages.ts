@@ -5,7 +5,7 @@ import { ListrTask } from "listr";
 import { getFileHash } from "../utils/getFileHash.js";
 import { loadCache, writeToCache, getCacheKey } from "../utils/cache.js";
 import {
-  ListrContextBuildAndPublish,
+  ListrContextBuild,
   PackageImage,
   PackageImageExternal
 } from "../types.js";
@@ -29,7 +29,7 @@ export function saveAndCompressImagesCached({
   destPath: string;
   buildTimeout: number;
   skipSave?: boolean;
-}): ListrTask<ListrContextBuildAndPublish>[] {
+}): ListrTask<ListrContextBuild>[] {
   const imageTags = images.map(image => image.imageTag);
   const externalImages = images.filter(
     (image): image is PackageImageExternal => image.type === "external"

@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { CommandModule } from "yargs";
 import { getInstallDnpLink } from "../../utils/getLinks.js";
-import { CliGlobalOptions, ListrContextBuildAndPublish } from "../../types.js";
+import { CliGlobalOptions, ListrContextBuild } from "../../types.js";
 import { UploadTo } from "../../releaseUploader/index.js";
 import { defaultVariantsDirName } from "../../params.js";
 import { BuildCommandOptions } from "./types.js";
@@ -64,7 +64,7 @@ export const build: CommandModule<CliGlobalOptions, BuildCommandOptions> = {
 };
 
 function printBuildResults(
-  buildResults: ListrContextBuildAndPublish,
+  buildResults: ListrContextBuild,
   skipUpload: boolean
 ) {
   if (skipUpload) {
@@ -73,6 +73,11 @@ function printBuildResults(
   }
 
   for (const [dnpName, { releaseMultiHash }] of Object.entries(buildResults)) {
+    if (!releaseMultiHash) {
+      console.log(chalk.red(`Error building Dappnode Package (${dnpName})\n`));
+      return;
+    }
+
     console.log(`
           ${chalk.green(`Dappnode Package (${dnpName}) built and uploaded`)} 
           DNP name : ${dnpName}

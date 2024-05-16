@@ -1,6 +1,6 @@
 import { ListrTask } from "listr/index.js";
 import { defaultVariantsDirName } from "../../params.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import { parseTimeout } from "../../utils/timeout.js";
 import {
   getReleaseUploader,
@@ -29,7 +29,7 @@ export function buildAndUpload({
   dir,
   variantsDirPath = defaultVariantsDirName,
   variants
-}: BuildAndUploadOptions): ListrTask<ListrContextBuildAndPublish>[] {
+}: BuildAndUploadOptions): ListrTask<ListrContextBuild>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
   // Release upload. Use function for return syntax

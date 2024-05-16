@@ -1,6 +1,6 @@
 import { ListrTask } from "listr/index.js";
 import { addReleaseRecord } from "../../utils/releaseRecord.js";
-import { ListrContextBuildAndPublish } from "../../types.js";
+import { ListrContextBuild } from "../../types.js";
 import { pruneCache } from "../../utils/cache.js";
 import { VariantsMap } from "./types.js";
 import path from "path";
@@ -17,7 +17,7 @@ export function getSaveUploadResultsTask({
   variantsDirPath: string;
   contentProvider: string;
   skipUpload?: boolean;
-}): ListrTask<ListrContextBuildAndPublish> {
+}): ListrTask<ListrContextBuild> {
   return {
     title: "Save upload results",
     skip: () => skipUpload,
@@ -25,14 +25,15 @@ export function getSaveUploadResultsTask({
       // Single package
       if (variantsMap.default) {
         const { name, version } = variantsMap.default.manifest;
-        const { releaseHash: hash } = ctx[name];
+        const { releaseMultiHash: hash } = ctx[name];
 
-        addReleaseRecord({
-          dir: rootDir,
-          version,
-          hash,
-          to: contentProvider
-        });
+        if (hash)
+          addReleaseRecord({
+            dir: rootDir,
+            version,
+            hash,
+            to: contentProvider
+          });
 
         // Multi-variant package
       } else {
@@ -43,11 +44,13 @@ export function getSaveUploadResultsTask({
           }
         ] of Object.entries(variantsMap)) {
           const variantDir = path.join(variantsDirPath, variant);
-          const { releaseHash: hash } = ctx[name];
+          const { releaseMultiHash: hash } = ctx[name];
+
+          if (!hash) continue;
 
           addReleaseRecord({
             dir: variantDir,
-            version: version,
+            version,
             hash,
             to: contentProvider
           });

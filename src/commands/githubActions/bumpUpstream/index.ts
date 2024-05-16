@@ -262,10 +262,14 @@ async function getNewManifestVersion({
   dir: string;
 }): Promise<string> {
   try {
+    const {
+      manifest: { name }
+    } = readManifest([{ dir }]);
+
     return await getNextVersionFromApm({
       type: "patch",
       ethProvider,
-      dir
+      ensName: name
     });
   } catch (e) {
     if (e.message.includes("NOREPO")) {
