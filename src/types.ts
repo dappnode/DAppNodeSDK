@@ -1,3 +1,6 @@
+import { Architecture, Compose, Manifest } from "@dappnode/types";
+import { ManifestFormat } from "./files/manifest/types.js";
+
 export interface CliGlobalOptions {
   rootDir?: string;
   compose_file_name?: string;
@@ -23,6 +26,29 @@ export interface ListrContextBuild {
 
 export interface ListrContextPublish {
   [dnpName: string]: ListrContextPublishItem;
+}
+
+interface PublishVariantsMapEntry {
+  // Manifest-related
+  manifest: Manifest;
+  manifestFormat: ManifestFormat;
+}
+
+export interface BuildVariantsMapEntry extends PublishVariantsMapEntry {
+  // Compose file
+  compose: Compose;
+
+  // File paths
+  releaseDir: string;
+  composePaths: string[];
+
+  // Package information
+  images: PackageImage[];
+  architectures: Architecture[];
+}
+
+export interface BuildVariantsMap {
+  [variant: string]: BuildVariantsMapEntry;
 }
 
 // Interal types

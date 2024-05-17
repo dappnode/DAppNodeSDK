@@ -2,7 +2,8 @@ import { getGitHead } from "../../../utils/git.js";
 import { ListrContextPublish } from "../../../types.js";
 import { ListrTask } from "listr";
 import { Github } from "../../../providers/github/Github.js";
-import { getNextGitTag } from "./getNextGitTag.js";
+import { getNextGitTag } from "../getNextGitTag.js";
+import { buildReleaseDetailsMap } from "../buildReleaseDetailsMap.js";
 /**
  * Handle tags
  *
@@ -23,13 +24,12 @@ export function getHandleTagsTask({
   return {
     title: `Handle tags`,
     task: async (ctx, task) => {
-      // TODO: Do this for each release
-      const [, { nextVersion }] = Object.entries(ctx)[0];
-
       // Sanity check, make sure repo exists
       await github.assertRepoExists();
 
-      const tag = getNextGitTag(nextVersion);
+      const releaseDetailsMap = buildReleaseDetailsMap(ctx);
+
+      const tag = getNextGitTag(releaseDetailsMap);
 
       // If the release is triggered in CI,
       // the trigger tag must be removed ("release/patch")

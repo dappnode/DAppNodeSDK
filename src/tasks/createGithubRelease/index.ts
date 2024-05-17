@@ -10,29 +10,23 @@ import { getCreateReleaseTask } from "./subtasks/getCreateReleaseTask.js";
  * Create (or edit) a Github release, then upload all assets
  */
 export function createGithubRelease({
-  rootDir: dir = defaultDir,
+  rootDir = defaultDir,
   compose_file_name: composeFileName,
-  buildDir,
-  releaseMultiHash,
   verbosityOptions
 }: {
-  buildDir: string;
-  releaseMultiHash: string;
   verbosityOptions: VerbosityOptions;
 } & CliGlobalOptions): Listr<ListrContextPublish> {
   // OAuth2 token from Github
   if (!process.env.GITHUB_TOKEN)
     throw Error("GITHUB_TOKEN ENV (OAuth2) is required");
 
-  const github = Github.fromLocal(dir);
+  const github = Github.fromLocal(rootDir);
 
   return new Listr<ListrContextPublish>(
     [
       getHandleTagsTask({ github }),
       getCreateReleaseTask({
         github,
-        buildDir,
-        releaseMultiHash,
         composeFileName
       })
     ],

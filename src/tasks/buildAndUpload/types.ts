@@ -17,7 +17,7 @@ export interface BuildAndUploadOptions {
   variantsMap: VariantsMap;
 }
 
-export interface VariantsMapEntry {
+export interface BuildVariantsMapEntry {
   // Manifest-related
   manifest: Manifest;
   manifestFormat: ManifestFormat;
@@ -35,5 +35,5 @@ export interface VariantsMapEntry {
 }
 
 export interface VariantsMap {
-  [variant: string]: VariantsMapEntry;
+  [variant: string]: BuildVariantsMapEntry;
 }

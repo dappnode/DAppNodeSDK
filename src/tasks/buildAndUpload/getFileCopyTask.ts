@@ -14,7 +14,7 @@ import {
   writeManifest
 } from "../../files/index.js";
 import { Compose, Manifest, releaseFiles } from "@dappnode/types";
-import { VariantsMap, VariantsMapEntry } from "./types.js";
+import { VariantsMap, BuildVariantsMapEntry } from "./types.js";
 
 export function getFileCopyTask({
   variantsMap,
@@ -70,7 +70,7 @@ async function copyVariantFilesToReleaseDir({
   rootDir,
   composeFileName
 }: {
-  variant: VariantsMapEntry;
+  variant: BuildVariantsMapEntry;
   rootDir: string;
   composeFileName: string;
 }): Promise<void> {

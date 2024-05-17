@@ -7,7 +7,7 @@ import {
   parseComposeUpstreamVersion,
   readManifest
 } from "../../files/index.js";
-import { VariantsMap, VariantsMapEntry } from "./types.js";
+import { VariantsMap, BuildVariantsMapEntry } from "./types.js";
 import { Compose, Manifest } from "@dappnode/types";
 import { defaultComposeFileName } from "../../params.js";
 
@@ -47,7 +47,7 @@ export function createVariantMapEntry({
   rootDir: string;
   composeFileName: string;
   variantPath?: string;
-}): VariantsMapEntry {
+}): BuildVariantsMapEntry {
   const { manifest, format } = variantPath
     ? readManifest([{ dir: rootDir }, { dir: variantPath }])
     : readManifest([{ dir: rootDir }]);
