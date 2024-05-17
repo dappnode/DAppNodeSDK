@@ -2,7 +2,6 @@ import { ListrTask } from "listr";
 import { VerbosityOptions } from "../../../commands/build/types.js";
 import { ListrContextPublish } from "../../../types.js";
 import { createGithubRelease } from "../../createGithubRelease/index.js";
-import { VariantsMap } from "../../buildAndUpload/types.js";
 
 export function getCreateGithubReleaseTask({
   githubRelease,

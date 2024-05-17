@@ -38,6 +38,6 @@ export function getNextGitTag(releaseDetailsMap: ReleaseDetailsMap): string {
       }
       return a.variant.localeCompare(b.variant);
     }) // Sort alphabetically by variant
-    .map(({ variant, nextVersion }) => `${variant}@${nextVersion}`) // Map to string
+    .map(({ variant, nextVersion }) => `${variant}@v${nextVersion}`) // Map to string
     .join("_"); // Join into a single string
 }

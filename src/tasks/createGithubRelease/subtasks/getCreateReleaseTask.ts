@@ -45,7 +45,7 @@ export function getCreateReleaseTask({
 
       task.output = `Creating release for tag ${tag}...`;
       await github.createReleaseAndUploadAssets(tag, {
-        body: getReleaseBody(releaseDetailsMap),
+        body: await getReleaseBody({ releaseDetailsMap, tag, github }),
         prerelease: true, // Until it is actually published to mainnet
         // assetsDir: buildDir, // TODO: Fix
         ignorePattern: /\.tar\.xz$/ // To ignore legacy .tar.xz image
@@ -112,20 +112,23 @@ function writeContentHashToFile({
  * Write the release body
  *
  */
-function getReleaseBody(releaseDetailsMap: ReleaseDetailsMap) {
-  // TODO: Update octokit to add the auto-generated changelog
-  // TODO: Prettify the release name
-
+async function getReleaseBody({
+  releaseDetailsMap,
+  tag,
+  github
+}: {
+  releaseDetailsMap: ReleaseDetailsMap;
+  tag: string;
+  github: Github;
+}) {
   return `
-  ## What's changed
-
-  // TODO: Add changelog (after bumping octokit version)
-
   <!-- Set :heavy_check_mark: to the packages that have already been published -->
 
   ## Package versions
 
   ${getPackageVersionsTable(releaseDetailsMap)}
+
+  ${await github.generateReleaseNotes(tag)}
 
   `.trim();
 }
@@ -146,7 +149,7 @@ function getReleaseBody(releaseDetailsMap: ReleaseDetailsMap) {
 function getPackageVersionsTable(releaseDetailsMap: ReleaseDetailsMap) {
   return `
   Package | Version | Hash | Install link | Publish link | Published
-  --- | --- | --- | --- | ---
+  --- | --- | --- | --- | --- | ---
   ${Object.entries(releaseDetailsMap)
     .map(([dnpName, { nextVersion, releaseMultiHash, txData }]) =>
       getPackageVersionsRow({
