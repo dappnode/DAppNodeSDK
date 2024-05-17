@@ -1,8 +1,9 @@
 import { expect } from "chai";
 import { defaultManifestFormat } from "../../src/params.js";
-import { generatePublishTx } from "../../src/tasks/generatePublishTx/index.js";
+import { generatePublishTxs } from "../../src/tasks/generatePublishTxs/index.js";
 import { writeManifest } from "../../src/files/index.js";
 import { testDir, cleanTestDir } from "../testUtils.js";
+import { VariantsMap } from "../../src/tasks/buildAndUpload/types.js";
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
@@ -24,13 +25,16 @@ describe("generatePublishTx", function () {
     };
     writeManifest(manifest, defaultManifestFormat, { dir: testDir });
 
-    const generatePublishTxTasks = generatePublishTx({
-      dir: testDir,
-      manifest,
-      releaseMultiHash: "/ipfs/Qm",
+    const variantsMap: VariantsMap = {
+      // TODP: Fix this test
+    };
+
+    const generatePublishTxTasks = generatePublishTxs({
+      rootDir: testDir,
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
-      verbosityOptions: { renderer: "verbose" }
+      verbosityOptions: { renderer: "verbose" },
+      variantsMap
     });
 
     // TODO: Fix when publish is adapted to multi-variant packages
@@ -61,13 +65,16 @@ describe("generatePublishTx", function () {
     };
     writeManifest(manifest, defaultManifestFormat, { dir: testDir });
 
-    const generatePublishTxTasks = generatePublishTx({
-      dir: testDir,
-      manifest,
-      releaseMultiHash: "/ipfs/Qm",
+    const variantsMap: VariantsMap = {
+      // TODP: Fix this test
+    };
+
+    const generatePublishTxTasks = generatePublishTxs({
+      rootDir: testDir,
       developerAddress: "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
       ethProvider: "infura",
-      verbosityOptions: { renderer: "verbose" }
+      verbosityOptions: { renderer: "verbose" },
+      variantsMap
     });
     const publishResult = await generatePublishTxTasks.run();
 
