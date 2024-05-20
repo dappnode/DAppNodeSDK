@@ -17,7 +17,7 @@ describe("buildVariantMap", function () {
   context("without variants provided", function () {
     before("Init repo", async () => {
       await initHandler({
-        dir: testDir,
+        rootDir: testDir,
         force: true,
         yes: true,
         use_variants: false
@@ -27,7 +27,8 @@ describe("buildVariantMap", function () {
     it("should return a map with only default variant", function () {
       const result = buildVariantMap({
         rootDir: testDir,
-        variantsDirPath: defaultVariantsDirName
+        variantsDirPath: defaultVariantsDirName,
+        variants: null
       });
 
       expect(result).to.have.all.keys("default");
@@ -64,7 +65,7 @@ describe("buildVariantMap", function () {
   context("with variants provided", function () {
     before("Init repo", async () => {
       await initHandler({
-        dir: testDir,
+        rootDir: testDir,
         force: true,
         yes: true,
         use_variants: true
