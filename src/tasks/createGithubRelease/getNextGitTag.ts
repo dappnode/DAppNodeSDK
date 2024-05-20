@@ -1,5 +1,13 @@
 import { ReleaseDetailsMap } from "./types.js";
 
+// Only variant and nextVersion are needed from the ReleaseDetailsMap
+type GitTagDetailsMap = {
+  [K in keyof ReleaseDetailsMap]: Pick<
+    ReleaseDetailsMap[K],
+    "variant" | "nextVersion"
+  >;
+};
+
 /**
  * Returns the next git tag based on the next version defined in the context
  *
@@ -9,7 +17,7 @@ import { ReleaseDetailsMap } from "./types.js";
  * - If the package is a single-variant package, the tag will be in the format:
  *  `v0.1.2`
  */
-export function getNextGitTag(releaseDetailsMap: ReleaseDetailsMap): string {
+export function getNextGitTag(releaseDetailsMap: GitTagDetailsMap): string {
   const variantVersions = Object.entries(
     releaseDetailsMap
   ).map(([, { variant, nextVersion }]) => ({ variant, nextVersion }));
@@ -18,26 +26,11 @@ export function getNextGitTag(releaseDetailsMap: ReleaseDetailsMap): string {
     throw Error("Could not generate git tag. Missing variant or nextVersion");
 
   // Not a multi-variant package
-  if (variantVersions.length === 1) {
-    const version = variantVersions[0].nextVersion;
-
-    if (!version)
-      throw Error("Could not generate git tag. Missing nextVersion");
-
-    return `v${variantVersions[0].nextVersion}`;
-  }
+  if (variantVersions.length === 1) return `v${variantVersions[0].nextVersion}`;
 
   // Multi-variant package
   return variantVersions
-    .sort((a, b) => {
-      if (typeof a.variant !== "string" || typeof b.variant !== "string") {
-        // TODO: Filter out undefined variants
-        throw new Error(
-          "Could not generate git tag: Variant name cannot be undefined"
-        );
-      }
-      return a.variant.localeCompare(b.variant);
-    }) // Sort alphabetically by variant
-    .map(({ variant, nextVersion }) => `${variant}@v${nextVersion}`) // Map to string
+    .sort((a, b) => a.variant.localeCompare(b.variant)) // Sort alphabetically by variant
+    .map(({ variant, nextVersion }) => `${variant}@${nextVersion}`) // Map to string
     .join("_"); // Join into a single string
 }

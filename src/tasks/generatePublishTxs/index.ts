@@ -16,6 +16,10 @@ import { VariantsMap } from "../buildAndUpload/types.js";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
+type GenerateTxVariantsMap = {
+  [K in keyof VariantsMap]: Pick<VariantsMap[K], "manifest">;
+}
+
 /**
  * Generates the transaction data necessary to publish the package.
  * It will check if the repository exists first:
@@ -37,7 +41,7 @@ export function generatePublishTxs({
   developerAddress?: string;
   ethProvider: string;
   verbosityOptions: VerbosityOptions;
-  variantsMap: VariantsMap;
+  variantsMap: GenerateTxVariantsMap;
 } & CliGlobalOptions): Listr<ListrContextPublish> {
   // Init APM instance
   const ethereumUrl = getEthereumUrl(ethProvider);
@@ -53,7 +57,7 @@ export function generatePublishTxs({
           for (const [, { manifest }] of Object.entries(variantsMap)) {
             
             const { name: dnpName, version } = manifest;
-            const releaseMultiHash = ctx[dnpName].releaseMultiHash;
+            const releaseMultiHash = ctx[dnpName]?.releaseMultiHash;
 
             if (!releaseMultiHash) {
               task.output += `No release hash found for ${dnpName}. Skipping it...\n`;
@@ -89,7 +93,8 @@ export function generatePublishTxs({
   );
 }
 
-async function buildTxData({
+// Exported to test it
+export async function buildTxData({
   apm,
   contractAddress,
   dnpName,

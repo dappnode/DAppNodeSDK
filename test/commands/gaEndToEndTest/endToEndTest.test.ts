@@ -11,12 +11,12 @@ describe.skip("command / gaEndToEndTest", function () {
 
   before(async () => {
     cleanTestDir();
-    await initHandler({ rootDir: testDir, yes: true, force: true });
+    await initHandler({ dir: testDir, yes: true, force: true });
   });
 
   it("should execute end to end tests on a real dappnode environment", async () => {
     await gaTestEndToEndHandler({
-      rootDir: testDir,
+      dir: testDir,
       // healthCheckUrl: "http://dappnodesdk.public.dappnode",
       errorLogsTimeout: 30
     });

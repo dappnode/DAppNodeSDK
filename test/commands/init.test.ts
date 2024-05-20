@@ -28,7 +28,7 @@ describe("Init simple package repository", function () {
 
   before("Init repo", async () => {
     await initHandler({
-      rootDir: testDir,
+      dir: testDir,
       force: true,
       yes: true,
       use_variants: false
@@ -82,7 +82,7 @@ describe("Variant initialization", function () {
 
   before("Init package repo with variants", async () => {
     await initHandler({
-      rootDir: testDir,
+      dir: testDir,
       force: true,
       yes: true,
       use_variants: true

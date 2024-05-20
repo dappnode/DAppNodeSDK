@@ -26,7 +26,7 @@ describe("Init and build simple package", function () {
 
   before("Init repo", async () => {
     await initHandler({
-      rootDir: testDir,
+      dir: testDir,
       force: true,
       yes: true
     });
@@ -34,7 +34,7 @@ describe("Init and build simple package", function () {
 
   it("Should build and upload the current version", async () => {
     const buildResults = await buildHandler({
-      rootDir: testDir,
+      dir: testDir,
       provider: contentProvider,
       upload_to: "ipfs",
       timeout: "5min",
@@ -60,7 +60,7 @@ describe("Init and build package variants", function () {
 
   beforeEach("Init multi-variant repo", async () => {
     await initHandler({
-      rootDir: testDir,
+      dir: testDir,
       force: true,
       yes: true,
       use_variants: true
@@ -69,7 +69,7 @@ describe("Init and build package variants", function () {
 
   it("Should build and upload all package variants", async () => {
     const buildResults = await buildHandler({
-      rootDir: testDir,
+      dir: testDir,
       provider: contentProvider,
       upload_to: "ipfs",
       timeout: "5min",
@@ -106,7 +106,7 @@ describe("Init and build package variants", function () {
     }
 
     const buildResults = await buildHandler({
-      rootDir: testDir,
+      dir: testDir,
       provider: contentProvider,
       upload_to: "ipfs",
       timeout: "5min",
@@ -128,7 +128,7 @@ describe("Init and build package variants", function () {
 
   it("Should throw an error when all specified variants are invalid", async () => {
     await buildHandler({
-      rootDir: testDir,
+      dir: testDir,
       provider: contentProvider,
       upload_to: "ipfs",
       timeout: "5min",
@@ -143,7 +143,7 @@ describe("Init and build package variants", function () {
 
   it("Should only build valid variants", async () => {
     const buildResults = await buildHandler({
-      rootDir: testDir,
+      dir: testDir,
       provider: contentProvider,
       upload_to: "ipfs",
       timeout: "5min",
