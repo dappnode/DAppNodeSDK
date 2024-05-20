@@ -27,6 +27,7 @@ export const upstreamImageLabel = "dappnode.dnp.upstreamImage";
 export const PINATA_URL = "https://api.pinata.cloud";
 // The build_sdk.env file is used by "slaves" DAppNode packages to define the UPSTREAM_PROJECT and UPSTREAM_VERSION used in the gha
 export const buildSdkEnvFileName = "build_sdk.env";
+export const contentHashFile = "content-hash" as const;
 
 export const releaseFilesDefaultNames: {
   [P in keyof typeof releaseFiles]: string;

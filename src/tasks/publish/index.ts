@@ -1,9 +1,9 @@
 import { ListrTask } from "listr";
 import { PublishOptions } from "./types.js";
 import { ListrContextPublish } from "../../types.js";
-import { getFetchApmVersionTask } from "./subtasks/getFetchApmVersionTask.js";
+import { getFetchApmVersionsTask } from "./subtasks/getFetchApmVersionsTask.js";
 import { getBuildAndUploadTask } from "./subtasks/getBuildAndUploadTask.js";
-import { getGenerateTxTask } from "./subtasks/getGenerateTxTask.js";
+import { getGenerateTxTask } from "./subtasks/getGenerateTxsTask.js";
 import { getCreateGithubReleaseTask } from "./subtasks/getCreateGithubReleaseTask.js";
 import { getVerifyEthConnectionTask } from "./subtasks/getVerifyEthConnectionTask.js";
 
@@ -19,11 +19,19 @@ export function publish({
   deleteOldPins,
   developerAddress,
   githubRelease,
-  verbosityOptions
+  verbosityOptions,
+  variantsDirPath,
+  variantsMap
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
     getVerifyEthConnectionTask({ ethProvider }),
-    getFetchApmVersionTask({ releaseType, ethProvider, dir, composeFileName }),
+    getFetchApmVersionsTask({
+      releaseType,
+      ethProvider,
+      rootDir: dir,
+      composeFileName,
+      variantsMap
+    }),
     getBuildAndUploadTask({
       buildOptions: {
         dir,
@@ -32,8 +40,9 @@ export function publish({
         uploadTo,
         userTimeout,
         requireGitData,
-        deleteOldPins
-        // TODO: Add multi-variant package build options here
+        deleteOldPins,
+        variantsMap,
+        variantsDirPath
       },
       verbosityOptions
     }),
@@ -42,7 +51,8 @@ export function publish({
       composeFileName,
       developerAddress,
       ethProvider,
-      verbosityOptions
+      verbosityOptions,
+      variantsMap
     }),
     getCreateGithubReleaseTask({
       dir,
