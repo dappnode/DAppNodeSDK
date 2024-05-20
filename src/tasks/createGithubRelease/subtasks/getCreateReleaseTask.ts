@@ -133,19 +133,6 @@ async function getReleaseBody({
   `.trim();
 }
 
-/*
-  ${/*Object.entries(releaseDetailsMap)
-    .map(([dnpName, { nextVersion, releaseMultiHash, txData }]) =>
-      getReleaseDetailsForDnpName({
-        dnpName,
-        nextVersion,
-        releaseMultiHash,
-        txData
-      })
-    )
-  .join("\n\n")}
-*/
-
 function getPackageVersionsTable(releaseDetailsMap: ReleaseDetailsMap) {
   return `
   Package | Version | Hash | Install link | Publish link | Published
@@ -218,34 +205,3 @@ function capitalize(s: string): string {
   if (!s || typeof s !== "string") return s;
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
-
-/*
-function getReleaseDetailsForDnpName({
-  dnpName,
-  nextVersion,
-  releaseMultiHash,
-  txData
-}: {
-  dnpName: string;
-  nextVersion?: string;
-  releaseMultiHash?: string;
-  txData?: TxData;
-}): string {
-  if (!nextVersion || !releaseMultiHash || !txData) {
-    return ""; // TODO: Throw error?
-  }
-
-  return `
-  <details><summary><b>${dnpName}</b></summary>
-  <p>
-
-    Version: ${nextVersion}
-    Hash: \`${releaseMultiHash}\`
-    <a href=${getInstallDnpLink(releaseMultiHash)}>Install</a>
-    <a href=${getPublishTxLink(txData)}>Publish</a>
-
-  </p>
-  </details>
-  `;
-}
-*/
