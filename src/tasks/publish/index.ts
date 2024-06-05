@@ -29,6 +29,7 @@ export function publish({
       releaseType,
       ethProvider,
       rootDir: dir,
+      variantsDirPath,
       composeFileName,
       variantsMap
     }),

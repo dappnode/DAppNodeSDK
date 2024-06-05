@@ -4,65 +4,73 @@ import {
   writeManifest,
   readCompose,
   updateComposeImageTags,
-  writeCompose
+  writeCompose,
+  readManifest
 } from "../../../files/index.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
-import { Manifest } from "@dappnode/types";
-import { ManifestFormat } from "../../../files/manifest/types.js";
 import { VariantsMap } from "../../buildAndUpload/types.js";
+import path from "path";
 
 export function getFetchApmVersionsTask({
   releaseType,
   ethProvider,
   rootDir,
+  variantsDirPath,
   composeFileName,
   variantsMap
 }: {
   releaseType: ReleaseType;
   ethProvider: string;
   rootDir: string;
+  variantsDirPath: string;
   composeFileName: string;
   variantsMap: VariantsMap;
 }): ListrTask<ListrContextPublish> {
   return {
     title: "Fetch current versions from APM",
     task: async ctx => {
-      for (const [, { manifest, manifestFormat }] of Object.entries(
-        variantsMap
-      )) {
+      for (const [
+        variant,
+        {
+          manifest: { name, version }
+        }
+      ] of Object.entries(variantsMap))
         await setNextVersionToContext({
           ctx,
-          manifest,
-          manifestFormat,
           releaseType,
           ethProvider,
           dir: rootDir,
-          composeFileName
+          variantsDirPath,
+          composeFileName,
+          variant: variant === "default" ? null : variant,
+          name,
+          version
         });
-      }
     }
   };
 }
 
 async function setNextVersionToContext({
   ctx,
-  manifest,
-  manifestFormat,
   releaseType,
   ethProvider,
   dir,
-  composeFileName
+  variantsDirPath,
+  composeFileName,
+  variant,
+  name,
+  version
 }: {
   ctx: ListrContextPublish;
-  manifest: Manifest;
-  manifestFormat: ManifestFormat;
   releaseType: ReleaseType;
   ethProvider: string;
   dir: string;
+  variantsDirPath: string;
   composeFileName: string;
+  variant: string | null;
+  name: string;
+  version: string;
 }): Promise<void> {
-  const { name, version } = manifest;
-
   ctx[name] = ctx[name] || {};
 
   try {
@@ -71,8 +79,9 @@ async function setNextVersionToContext({
       ethProvider,
       dir,
       composeFileName,
-      manifest,
-      manifestFormat
+      variant,
+      variantsDirPath,
+      ensName: name
     });
   } catch (e) {
     if (e.message.includes("NOREPO")) ctx[name].nextVersion = version;
@@ -86,32 +95,44 @@ export async function increaseFromApmVersion({
   ethProvider,
   dir,
   composeFileName,
-  manifest,
-  manifestFormat
+  variant,
+  variantsDirPath,
+  ensName
 }: {
   type: ReleaseType;
   ethProvider: string;
   dir: string;
   composeFileName: string;
-  manifest: Manifest;
-  manifestFormat: ManifestFormat;
+  variant: string | null;
+  variantsDirPath: string;
+  ensName: string;
 }): Promise<string> {
+  const variantDir = variant ? path.join(variantsDirPath, variant) : dir;
+
   // Check variables
   const nextVersion = await getNextVersionFromApm({
     type,
     ethProvider,
-    ensName: manifest.name
+    ensName
   });
+
+  const { manifest, format } = readManifest([{ dir: variantDir }]);
 
   // Increase the version
   manifest.version = nextVersion;
 
   // Modify and write the manifest and docker-compose
-  writeManifest(manifest, manifestFormat, { dir });
-  const { name, version } = manifest;
-  const compose = readCompose([{ dir, composeFileName }]);
-  const newCompose = updateComposeImageTags(compose, { name, version });
-  writeCompose(newCompose, { dir, composeFileName });
+  writeManifest(manifest, format, { dir: variantDir });
+
+  const compose = readCompose([{ dir: variantDir, composeFileName }]);
+  const newCompose = updateComposeImageTags(compose, {
+    name: ensName,
+    version: nextVersion
+  });
+  writeCompose(newCompose, {
+    dir: variantDir,
+    composeFileName
+  });
 
   return nextVersion;
 }
