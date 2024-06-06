@@ -12,7 +12,7 @@ import {
   getPublishTxLink
 } from "../../../utils/getLinks.js";
 import { getNextGitTag } from "../getNextGitTag.js";
-import { contentHashFile } from "../../../params.js";
+import { contentHashFileName } from "../../../params.js";
 import { ReleaseDetailsMap } from "../types.js";
 import { buildReleaseDetailsMap } from "../buildReleaseDetailsMap.js";
 
@@ -103,7 +103,7 @@ function writeContentHashToFile({
   releaseDir: string;
   releaseMultiHash: string;
 }): string {
-  const contentHashPath = path.join(releaseDir, contentHashFile);
+  const contentHashPath = path.join(releaseDir, contentHashFileName);
   fs.writeFileSync(contentHashPath, releaseMultiHash);
   return contentHashPath;
 }

@@ -17,7 +17,7 @@ import { CliGlobalOptions } from "../types.js";
 import { Manifest, defaultArch, releaseFiles } from "@dappnode/types";
 import { getLegacyImagePath } from "../utils/getLegacyImagePath.js";
 import { getImageFileName } from "../utils/getImageFileName.js";
-import { contentHashFile, releaseFilesDefaultNames } from "../params.js";
+import { contentHashFileName, releaseFilesDefaultNames } from "../params.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   repoSlug: string;
@@ -111,7 +111,7 @@ export async function fromGithubHandler({
   }
 
   const files = release.assets
-    .filter(asset => asset.name !== contentHashFile)
+    .filter(asset => asset.name !== contentHashFileName)
     .map(asset => ({
       filepath: path.join("release", asset.name),
       url: asset.browser_download_url,
@@ -147,7 +147,7 @@ export async function fromGithubHandler({
 
   // Verify that the resulting release hash matches the one in Github
   const contentHashAsset = release.assets.find(
-    asset => asset.name === contentHashFile
+    asset => asset.name === contentHashFileName
   );
   if (contentHashAsset) {
     const contentHash = await got(contentHashAsset.browser_download_url).text();
