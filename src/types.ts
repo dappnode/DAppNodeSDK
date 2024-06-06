@@ -13,7 +13,6 @@ interface ListrContextBuildItem {
   releaseDir?: string;
   releaseMultiHash?: string;
   variant?: string;
-  // TODO: Add here VariantsMap ?
 }
 
 interface ListrContextPublishItem extends ListrContextBuildItem {
