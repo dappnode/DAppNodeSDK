@@ -54,7 +54,7 @@ export class Github {
       });
     } catch (e) {
       const repoSlug = `${this.owner}/${this.repo}`;
-      if (e.status === 404) throw Error(`Repo does not exist: ${repoSlug}`);
+      if (e.status === "404") throw Error(`Repo does not exist: ${repoSlug}`);
       e.message = `Error verifying repo ${repoSlug}: ${e.message}`;
       throw e;
     }
@@ -361,7 +361,7 @@ export class Github {
       const data = await this.getBranch(branch);
       return Boolean(data);
     } catch (e) {
-      if (e.status === 404) return false;
+      if (e.status === "404") return false;
       else throw e;
     }
   }
