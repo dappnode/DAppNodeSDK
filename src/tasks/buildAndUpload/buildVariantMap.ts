@@ -66,8 +66,11 @@ export function createVariantMapEntry({
       ])
     : readCompose([{ dir: rootDir, composeFileName }]);
 
-  const upstreamVersion = getUpstreamVersion({ compose, manifest });
-  manifest.upstreamVersion = upstreamVersion;
+  // Only parse this upstream version for legacy format (upstreamVersion field defined instead of upstream object)
+  if (!manifest.upstream) {
+    const upstreamVersion = getUpstreamVersion({ compose, manifest });
+    manifest.upstreamVersion = upstreamVersion;
+  }
 
   return {
     manifest,
