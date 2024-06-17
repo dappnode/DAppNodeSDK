@@ -55,11 +55,9 @@ export function getCreateReleaseTask({
 
       if (txData) {
         task.output = `Creating release for tag ${tag}...`;
-        await github.createReleaseAndUploadAssets(tag, {
+        await github.createRelease(tag, {
           body: getReleaseBody(txData),
-          prerelease: true, // Until it is actually published to mainnet
-          assetsDir: buildDir,
-          ignorePattern: /\.tar\.xz$/ // To ignore legacy .tar.xz image
+          prerelease: true // Until it is actually published to mainnet
         });
       }
 

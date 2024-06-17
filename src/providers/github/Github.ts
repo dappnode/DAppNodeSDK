@@ -192,21 +192,18 @@ export class Github {
 
   /**
    * Create a Github release
-   * - With `assetsDir`, all its files will be uploaded as release assets
    * @param tag "v0.2.0"
    * @param options
    */
-  async createReleaseAndUploadAssets(
+  async createRelease(
     tag: string,
     options?: {
       body?: string;
       prerelease?: boolean;
-      assetsDir?: string;
-      ignorePattern?: RegExp;
     }
   ): Promise<void> {
-    const { body, prerelease, assetsDir, ignorePattern } = options || {};
-    const release = await this.octokit
+    const { body, prerelease } = options || {};
+    await this.octokit
       .request("POST /repos/{owner}/{repo}/releases", {
         owner: this.owner,
         repo: this.repo,
@@ -223,41 +220,6 @@ export class Github {
         e.message = `Error creating release: ${e.message}`;
         throw e;
       });
-
-    if (assetsDir)
-      for (const file of fs.readdirSync(assetsDir)) {
-        // Used to ignore duplicated legacy .tar.xz image
-        if (ignorePattern && ignorePattern.test(file)) continue;
-
-        const filepath = path.resolve(assetsDir, file);
-        const contentType = mime.lookup(filepath) || "application/octet-stream";
-        try {
-          // The uploadReleaseAssetApi fails sometimes, retry 3 times
-          await retry(
-            async () => {
-              await this.octokit.request(
-                "POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name}",
-                {
-                  owner: this.owner,
-                  repo: this.repo,
-                  release_id: release.data.id,
-                  data: fs.createReadStream(filepath),
-                  headers: {
-                    "X-GitHub-Api-Version": "2022-11-28",
-                    "content-type": contentType,
-                    "content-length": fs.statSync(filepath).size
-                  },
-                  name: path.basename(filepath)
-                }
-              );
-            },
-            { retries: 3 }
-          );
-        } catch (e) {
-          e.message = `Error uploading release asset: ${e.message}`;
-          throw e;
-        }
-      }
   }
 
   /**
