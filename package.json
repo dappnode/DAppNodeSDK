@@ -39,7 +39,7 @@
     "@dappnode/schemas": "^0.1.20",
     "@dappnode/toolkit": "^0.1.21",
     "@dappnode/types": "^0.1.39",
-    "@octokit/rest": "^18.0.12",
+    "@octokit/rest": "^20.1.1",
     "async-retry": "^1.2.3",
     "chalk": "^2.4.2",
     "cli-progress": "^3.8.2",
