@@ -54,7 +54,8 @@ export class Github {
       });
     } catch (e) {
       const repoSlug = `${this.owner}/${this.repo}`;
-      if (e.status === "404") throw Error(`Repo does not exist: ${repoSlug}`);
+      if (e.status === 404 || e.status === "404")
+        throw Error(`Repo does not exist: ${repoSlug}`);
       e.message = `Error verifying repo ${repoSlug}: ${e.message}`;
       throw e;
     }
@@ -69,18 +70,32 @@ export class Github {
    * @param tag "v0.2.0", "release/patch"
    */
   async deleteTagIfExists(tag: string): Promise<void> {
+    if (!(await this.tagExists(tag))) return;
+
+    await this.octokit.request("DELETE /repos/{owner}/{repo}/git/refs/{ref}", {
+      owner: this.owner,
+      repo: this.repo,
+      ref: `tags/${tag}`,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
+      }
+    });
+  }
+
+  private async tagExists(tag: string): Promise<boolean> {
     try {
-      await this.octokit.git.deleteRef({
+      await this.octokit.request("GET /repos/{owner}/{repo}/git/ref/{ref}", {
         owner: this.owner,
         repo: this.repo,
-        ref: `tags/${tag}`
+        ref: `tags/${tag}`,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
       });
+      return true;
     } catch (e) {
-      // Ignore error if the reference does not exist, can be deleted latter
-      if (!e.message.includes("Reference does not exist")) {
-        e.message = `Error deleting tag ${tag}: ${e.message}`;
-        throw e;
-      }
+      if (e.status === 404 || e.status === "404") return false;
+      else throw e;
     }
   }
 
@@ -91,11 +106,14 @@ export class Github {
    */
   async createTag(tag: string, sha: string): Promise<void> {
     try {
-      await this.octokit.git.createRef({
+      await this.octokit.request("POST /repos/{owner}/{repo}/git/refs", {
         owner: this.owner,
-        repo: this.repo,
+        repo: "DAppNodePackage-SSV-holesky",
         ref: `refs/tags/${tag}`,
-        sha
+        sha,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
       });
     } catch (e) {
       e.message = `Error creating tag ${tag} at ${sha}: ${e.message}`;
@@ -361,7 +379,7 @@ export class Github {
       const data = await this.getBranch(branch);
       return Boolean(data);
     } catch (e) {
-      if (e.status === "404") return false;
+      if (e.status === 404 || e.status === "404") return false;
       else throw e;
     }
   }
