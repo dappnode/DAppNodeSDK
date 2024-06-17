@@ -42,7 +42,7 @@ export function getCreateReleaseTask({
       const tag = getNextGitTag(nextVersion);
 
       task.output = "Deleting existing release...";
-      await github.deteleReleaseAndAssets(tag);
+      await github.deleteReleaseAndAssets(tag);
 
       const contentHashPath = writeContentHashToFile({
         buildDir,

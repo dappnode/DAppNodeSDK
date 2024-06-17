@@ -348,7 +348,7 @@ async function attemptToOpenPR({
 
   await repo.openPR({
     from: branchName,
-    to: repoData.data.default_branch,
+    to: repoData.default_branch,
     title: commitMsg,
     body: getBumpPrBody(upstreamSettings)
   });
