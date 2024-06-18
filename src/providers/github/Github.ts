@@ -1,8 +1,6 @@
 import fs from "fs";
-import path from "path";
-import mime from "mime-types";
-import retry from "async-retry";
 import { Octokit } from "@octokit/rest";
+import { RequestError } from "@octokit/request-error";
 import { getRepoSlugFromManifest } from "../../files/index.js";
 
 export class Github {
@@ -58,8 +56,10 @@ export class Github {
 
       return repoResponse.data;
     } catch (e) {
-      if (e.status === 404 || e.status === "404")
-        throw Error(`Repo does not exist: ${this.repoSlug}`);
+      if (e instanceof RequestError && e.status === 404) {
+        throw new Error(`Repo does not exist: ${this.repoSlug}`);
+      }
+
       e.message = `Error verifying repo ${this.repoSlug}: ${e.message}`;
       throw e;
     }
@@ -88,7 +88,7 @@ export class Github {
 
   private async tagExists(tag: string): Promise<boolean> {
     try {
-      await this.octokit.rest.git.getRef({
+      const matchingTags = await this.octokit.rest.git.listMatchingRefs({
         owner: this.owner,
         repo: this.repo,
         ref: `tags/${tag}`,
@@ -96,10 +96,13 @@ export class Github {
           "X-GitHub-Api-Version": "2022-11-28"
         }
       });
-      return true;
+
+      if (matchingTags.data.length > 0) return true;
+
+      return false;
     } catch (e) {
-      if (e.status === 404 || e.status === "404") return false;
-      else throw e;
+      e.message = `Error verifying tag ${tag}: ${e.message}`;
+      throw e;
     }
   }
 
@@ -381,8 +384,10 @@ export class Github {
       const data = await this.getBranch(branch);
       return Boolean(data);
     } catch (e) {
-      if (e.status === 404 || e.status === "404") return false;
-      else throw e;
+      if (e instanceof RequestError && e.status === 404) return false;
+
+      e.message = `Error verifying branch ${branch}: ${e.message}`;
+      throw e;
     }
   }
 
