@@ -22,7 +22,7 @@ export function getCreateGithubReleaseTask({
       const [, { releaseMultiHash, releaseDir }] = Object.entries(ctx)[0];
 
       if (releaseMultiHash && releaseDir) {
-        createGithubRelease({
+        return createGithubRelease({
           dir,
           compose_file_name: composeFileName,
           buildDir: releaseDir,

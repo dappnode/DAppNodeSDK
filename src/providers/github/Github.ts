@@ -1,8 +1,6 @@
 import fs from "fs";
-import path from "path";
-import mime from "mime-types";
-import retry from "async-retry";
 import { Octokit } from "@octokit/rest";
+import { RequestError } from "@octokit/request-error";
 import { getRepoSlugFromManifest } from "../../files/index.js";
 
 export class Github {
@@ -48,14 +46,21 @@ export class Github {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async getRepo() {
     try {
-      return await this.octokit.repos.get({
+      const repoResponse = await this.octokit.rest.repos.get({
         owner: this.owner,
-        repo: this.repo
+        repo: this.repo,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
       });
+
+      return repoResponse.data;
     } catch (e) {
-      const repoSlug = `${this.owner}/${this.repo}`;
-      if (e.status === "404") throw Error(`Repo does not exist: ${repoSlug}`);
-      e.message = `Error verifying repo ${repoSlug}: ${e.message}`;
+      if (e instanceof RequestError && e.status === 404) {
+        throw new Error(`Repo does not exist: ${this.repoSlug}`);
+      }
+
+      e.message = `Error verifying repo ${this.repoSlug}: ${e.message}`;
       throw e;
     }
   }
@@ -69,18 +74,35 @@ export class Github {
    * @param tag "v0.2.0", "release/patch"
    */
   async deleteTagIfExists(tag: string): Promise<void> {
+    if (!(await this.tagExists(tag))) return;
+
+    await this.octokit.rest.git.deleteRef({
+      owner: this.owner,
+      repo: this.repo,
+      ref: `tags/${tag}`,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
+      }
+    });
+  }
+
+  private async tagExists(tag: string): Promise<boolean> {
     try {
-      await this.octokit.git.deleteRef({
+      const matchingTags = await this.octokit.rest.git.listMatchingRefs({
         owner: this.owner,
         repo: this.repo,
-        ref: `tags/${tag}`
+        ref: `tags/${tag}`,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
       });
+
+      if (matchingTags.data.length > 0) return true;
+
+      return false;
     } catch (e) {
-      // Ignore error if the reference does not exist, can be deleted latter
-      if (!e.message.includes("Reference does not exist")) {
-        e.message = `Error deleting tag ${tag}: ${e.message}`;
-        throw e;
-      }
+      e.message = `Error verifying tag ${tag}: ${e.message}`;
+      throw e;
     }
   }
 
@@ -91,11 +113,14 @@ export class Github {
    */
   async createTag(tag: string, sha: string): Promise<void> {
     try {
-      await this.octokit.git.createRef({
+      await this.octokit.rest.git.createRef({
         owner: this.owner,
         repo: this.repo,
         ref: `refs/tags/${tag}`,
-        sha
+        sha,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
       });
     } catch (e) {
       e.message = `Error creating tag ${tag} at ${sha}: ${e.message}`;
@@ -105,8 +130,14 @@ export class Github {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async listReleases() {
-    return await this.octokit.repos
-      .listReleases({ owner: this.owner, repo: this.repo })
+    return await this.octokit.rest.repos
+      .listReleases({
+        owner: this.owner,
+        repo: this.repo,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
+      })
       .then(res => res.data);
   }
 
@@ -115,7 +146,7 @@ export class Github {
    * If there are no releases, repos.listReleases will return []
    * @param tag "v0.2.0"
    */
-  async deteleReleaseAndAssets(tag: string): Promise<void> {
+  async deleteReleaseAndAssets(tag: string): Promise<void> {
     const releases = await this.listReleases();
     const matchingReleases = releases.filter(
       ({ tag_name, name }) => tag_name === tag || name === tag
@@ -124,10 +155,13 @@ export class Github {
     for (const matchingRelease of matchingReleases) {
       for (const asset of matchingRelease.assets)
         try {
-          await this.octokit.repos.deleteReleaseAsset({
+          await this.octokit.rest.repos.deleteReleaseAsset({
             owner: this.owner,
             repo: this.repo,
-            asset_id: asset.id
+            asset_id: asset.id,
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28"
+            }
           });
         } catch (e) {
           e.message = `Error deleting release asset: ${e.message}`;
@@ -135,10 +169,13 @@ export class Github {
         }
 
       try {
-        await this.octokit.repos.deleteRelease({
+        await this.octokit.rest.repos.deleteRelease({
           owner: this.owner,
           repo: this.repo,
-          release_id: matchingRelease.id
+          release_id: matchingRelease.id,
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
         });
       } catch (e) {
         e.message = `Error deleting release: ${e.message}`;
@@ -149,64 +186,34 @@ export class Github {
 
   /**
    * Create a Github release
-   * - With `assetsDir`, all its files will be uploaded as release assets
    * @param tag "v0.2.0"
    * @param options
    */
-  async createReleaseAndUploadAssets(
+  async createRelease(
     tag: string,
     options?: {
       body?: string;
       prerelease?: boolean;
-      assetsDir?: string;
-      ignorePattern?: RegExp;
     }
   ): Promise<void> {
-    const { body, prerelease, assetsDir, ignorePattern } = options || {};
-    const release = await this.octokit.repos
+    const { body, prerelease } = options || {};
+    await this.octokit.rest.repos
       .createRelease({
         owner: this.owner,
         repo: this.repo,
         tag_name: tag,
         name: tag,
         body,
-        prerelease
+        prerelease,
+        generate_release_notes: true,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
       })
       .catch(e => {
         e.message = `Error creating release: ${e.message}`;
         throw e;
       });
-
-    if (assetsDir)
-      for (const file of fs.readdirSync(assetsDir)) {
-        // Used to ignore duplicated legacy .tar.xz image
-        if (ignorePattern && ignorePattern.test(file)) continue;
-
-        const filepath = path.resolve(assetsDir, file);
-        const contentType = mime.lookup(filepath) || "application/octet-stream";
-        try {
-          // The uploadReleaseAssetApi fails sometimes, retry 3 times
-          await retry(
-            async () => {
-              await this.octokit.repos.uploadReleaseAsset({
-                owner: this.owner,
-                repo: this.repo,
-                release_id: release.data.id,
-                data: fs.createReadStream(filepath) as any,
-                headers: {
-                  "content-type": contentType,
-                  "content-length": fs.statSync(filepath).size
-                },
-                name: path.basename(filepath)
-              });
-            },
-            { retries: 3 }
-          );
-        } catch (e) {
-          e.message = `Error uploading release asset: ${e.message}`;
-          throw e;
-        }
-      }
   }
 
   /**
@@ -223,13 +230,16 @@ export class Github {
     title: string;
     body?: string;
   }): Promise<void> {
-    await this.octokit.pulls.create({
+    await this.octokit.rest.pulls.create({
       owner: this.owner,
       repo: this.repo,
       title,
       body,
       head: from,
-      base: to
+      base: to,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
+      }
     });
   }
 
@@ -259,10 +269,13 @@ export class Github {
     body: string;
     isTargetComment: (commentBody: string) => boolean;
   }): Promise<void> {
-    const comments = await this.octokit.issues.listComments({
+    const comments = await this.octokit.rest.issues.listComments({
       owner: this.owner,
       repo: this.repo,
-      issue_number: number
+      issue_number: number,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
+      }
     });
 
     const existingComment = comments.data.find(
@@ -270,38 +283,38 @@ export class Github {
     );
 
     if (existingComment) {
-      await this.octokit.issues.updateComment({
+      await this.octokit.rest.issues.updateComment({
         owner: this.owner,
         repo: this.repo,
-        issue_number: number,
         comment_id: existingComment.id,
-        body
+        body,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
       });
     } else {
-      await this.octokit.issues.createComment({
-        owner: this.owner,
-        repo: this.repo,
-        issue_number: number,
-        body
-      });
+      this.createCommentInPr({ number, body });
     }
   }
 
   /**
    * Comment a Pull Request
    */
-  async commentPullRequest({
+  async createCommentInPr({
     number,
     body
   }: {
     number: number;
     body: string;
   }): Promise<void> {
-    await this.octokit.issues.createComment({
+    await this.octokit.rest.issues.createComment({
       owner: this.owner,
       repo: this.repo,
       issue_number: number,
-      body
+      body,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
+      }
     });
   }
 
@@ -310,15 +323,18 @@ export class Github {
    * Only branches and PRs originating from the same repo
    */
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  async getOpenPrsFromBranch({ branch }: { branch: string }) {
-    const res = await this.octokit.pulls.list({
+  async getOpenPrsFromBranch(branch: string) {
+    const openPrsResponse = await this.octokit.rest.pulls.list({
       owner: this.owner,
       repo: this.repo,
       state: "open",
-      // example: "dappnode:dapplion/test-builds"
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
+      },
       head: `${this.owner}:${branch}`
     });
-    return res.data;
+
+    return openPrsResponse.data;
   }
 
   /**
@@ -332,11 +348,15 @@ export class Github {
    */
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async listBranches() {
-    const res = await this.octokit.repos.listBranches({
+    const branchesResponse = await this.octokit.rest.repos.listBranches({
       owner: this.owner,
-      repo: this.repo
+      repo: this.repo,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
+      }
     });
-    return res.data;
+
+    return branchesResponse.data;
   }
 
   /**
@@ -344,12 +364,15 @@ export class Github {
    */
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async getBranch(branch: string) {
-    const res = await this.octokit.repos.getBranch({
+    const branchResponse = await this.octokit.rest.repos.getBranch({
       owner: this.owner,
       repo: this.repo,
-      branch
+      branch,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
+      }
     });
-    return res.data;
+    return branchResponse.data;
   }
 
   /**
@@ -361,8 +384,10 @@ export class Github {
       const data = await this.getBranch(branch);
       return Boolean(data);
     } catch (e) {
-      if (e.status === "404") return false;
-      else throw e;
+      if (e instanceof RequestError && e.status === 404) return false;
+
+      e.message = `Error verifying branch ${branch}: ${e.message}`;
+      throw e;
     }
   }
 
@@ -372,11 +397,14 @@ export class Github {
 
   async closePR(pull_number: number): Promise<void> {
     try {
-      this.octokit.pulls.update({
+      await this.octokit.rest.pulls.update({
         owner: this.owner,
         repo: this.repo,
         pull_number,
-        state: "closed"
+        state: "closed",
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
       });
     } catch (e) {
       e.message = `Error closing PR: ${e.message}`;
