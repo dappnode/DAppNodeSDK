@@ -48,16 +48,13 @@ export class Github {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async getRepo() {
     try {
-      const repoResponse = await this.octokit.request(
-        "GET /repos/{owner}/{repo}",
-        {
-          owner: this.owner,
-          repo: this.repo,
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
+      const repoResponse = await this.octokit.rest.repos.get({
+        owner: this.owner,
+        repo: this.repo,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
         }
-      );
+      });
 
       return repoResponse.data;
     } catch (e) {
@@ -79,7 +76,7 @@ export class Github {
   async deleteTagIfExists(tag: string): Promise<void> {
     if (!(await this.tagExists(tag))) return;
 
-    await this.octokit.request("DELETE /repos/{owner}/{repo}/git/refs/{ref}", {
+    await this.octokit.rest.git.deleteRef({
       owner: this.owner,
       repo: this.repo,
       ref: `tags/${tag}`,
@@ -91,7 +88,7 @@ export class Github {
 
   private async tagExists(tag: string): Promise<boolean> {
     try {
-      await this.octokit.request("GET /repos/{owner}/{repo}/git/ref/{ref}", {
+      await this.octokit.rest.git.getRef({
         owner: this.owner,
         repo: this.repo,
         ref: `tags/${tag}`,
@@ -113,9 +110,9 @@ export class Github {
    */
   async createTag(tag: string, sha: string): Promise<void> {
     try {
-      await this.octokit.request("POST /repos/{owner}/{repo}/git/refs", {
+      await this.octokit.rest.git.createRef({
         owner: this.owner,
-        repo: "DAppNodePackage-SSV-holesky",
+        repo: this.repo,
         ref: `refs/tags/${tag}`,
         sha,
         headers: {
@@ -130,8 +127,8 @@ export class Github {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async listReleases() {
-    return await this.octokit
-      .request("GET /repos/{owner}/{repo}/releases", {
+    return await this.octokit.rest.repos
+      .listReleases({
         owner: this.owner,
         repo: this.repo,
         headers: {
@@ -155,34 +152,28 @@ export class Github {
     for (const matchingRelease of matchingReleases) {
       for (const asset of matchingRelease.assets)
         try {
-          await this.octokit.request(
-            "DELETE /repos/{owner}/{repo}/releases/assets/{asset_id}",
-            {
-              owner: this.owner,
-              repo: this.repo,
-              asset_id: asset.id,
-              headers: {
-                "X-GitHub-Api-Version": "2022-11-28"
-              }
+          await this.octokit.rest.repos.deleteReleaseAsset({
+            owner: this.owner,
+            repo: this.repo,
+            asset_id: asset.id,
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28"
             }
-          );
+          });
         } catch (e) {
           e.message = `Error deleting release asset: ${e.message}`;
           throw e;
         }
 
       try {
-        await this.octokit.request(
-          "DELETE /repos/{owner}/{repo}/releases/{release_id}",
-          {
-            owner: this.owner,
-            repo: this.repo,
-            release_id: matchingRelease.id,
-            headers: {
-              "X-GitHub-Api-Version": "2022-11-28"
-            }
+        await this.octokit.rest.repos.deleteRelease({
+          owner: this.owner,
+          repo: this.repo,
+          release_id: matchingRelease.id,
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28"
           }
-        );
+        });
       } catch (e) {
         e.message = `Error deleting release: ${e.message}`;
         throw e;
@@ -203,8 +194,8 @@ export class Github {
     }
   ): Promise<void> {
     const { body, prerelease } = options || {};
-    await this.octokit
-      .request("POST /repos/{owner}/{repo}/releases", {
+    await this.octokit.rest.repos
+      .createRelease({
         owner: this.owner,
         repo: this.repo,
         tag_name: tag,
@@ -236,7 +227,7 @@ export class Github {
     title: string;
     body?: string;
   }): Promise<void> {
-    await this.octokit.request("POST /repos/{owner}/{repo}/pulls", {
+    await this.octokit.rest.pulls.create({
       owner: this.owner,
       repo: this.repo,
       title,
@@ -275,35 +266,29 @@ export class Github {
     body: string;
     isTargetComment: (commentBody: string) => boolean;
   }): Promise<void> {
-    const comments = await this.octokit.request(
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
-      {
-        owner: this.owner,
-        repo: this.repo,
-        issue_number: number,
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28"
-        }
+    const comments = await this.octokit.rest.issues.listComments({
+      owner: this.owner,
+      repo: this.repo,
+      issue_number: number,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
       }
-    );
+    });
 
     const existingComment = comments.data.find(
       comment => comment.body && isTargetComment(comment.body)
     );
 
     if (existingComment) {
-      await this.octokit.request(
-        "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
-        {
-          owner: this.owner,
-          repo: this.repo,
-          comment_id: existingComment.id,
-          body,
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
+      await this.octokit.rest.issues.updateComment({
+        owner: this.owner,
+        repo: this.repo,
+        comment_id: existingComment.id,
+        body,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
         }
-      );
+      });
     } else {
       this.createCommentInPr({ number, body });
     }
@@ -319,18 +304,15 @@ export class Github {
     number: number;
     body: string;
   }): Promise<void> {
-    await this.octokit.request(
-      "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-      {
-        owner: this.owner,
-        repo: this.repo,
-        issue_number: number,
-        body,
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28"
-        }
+    await this.octokit.rest.issues.createComment({
+      owner: this.owner,
+      repo: this.repo,
+      issue_number: number,
+      body,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
       }
-    );
+    });
   }
 
   /**
@@ -339,18 +321,15 @@ export class Github {
    */
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async getOpenPrsFromBranch(branch: string) {
-    const openPrsResponse = await this.octokit.request(
-      "GET /repos/{owner}/{repo}/pulls",
-      {
-        owner: this.owner,
-        repo: this.repo,
-        state: "open",
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28"
-        },
-        head: `${this.owner}:${branch}`
-      }
-    );
+    const openPrsResponse = await this.octokit.rest.pulls.list({
+      owner: this.owner,
+      repo: this.repo,
+      state: "open",
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
+      },
+      head: `${this.owner}:${branch}`
+    });
 
     return openPrsResponse.data;
   }
@@ -366,16 +345,13 @@ export class Github {
    */
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async listBranches() {
-    const branchesResponse = await this.octokit.request(
-      "GET /repos/{owner}/{repo}/branches",
-      {
-        owner: this.owner,
-        repo: this.repo,
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28"
-        }
+    const branchesResponse = await this.octokit.rest.repos.listBranches({
+      owner: this.owner,
+      repo: this.repo,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
       }
-    );
+    });
 
     return branchesResponse.data;
   }
@@ -385,17 +361,14 @@ export class Github {
    */
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async getBranch(branch: string) {
-    const branchResponse = await this.octokit.request(
-      "GET /repos/{owner}/{repo}/branches/{branch}",
-      {
-        owner: this.owner,
-        repo: this.repo,
-        branch,
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28"
-        }
+    const branchResponse = await this.octokit.rest.repos.getBranch({
+      owner: this.owner,
+      repo: this.repo,
+      branch,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
       }
-    );
+    });
     return branchResponse.data;
   }
 
@@ -419,18 +392,15 @@ export class Github {
 
   async closePR(pull_number: number): Promise<void> {
     try {
-      await this.octokit.request(
-        "PATCH /repos/{owner}/{repo}/pulls/{pull_number}",
-        {
-          owner: this.owner,
-          repo: this.repo,
-          pull_number,
-          state: "closed",
-          headers: {
-            "X-GitHub-Api-Version": "2022-11-28"
-          }
+      await this.octokit.rest.pulls.update({
+        owner: this.owner,
+        repo: this.repo,
+        pull_number,
+        state: "closed",
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
         }
-      );
+      });
     } catch (e) {
       e.message = `Error closing PR: ${e.message}`;
       throw e;
