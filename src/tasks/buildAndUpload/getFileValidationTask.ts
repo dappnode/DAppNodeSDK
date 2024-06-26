@@ -7,7 +7,7 @@ import {
   validateDappnodeCompose
 } from "@dappnode/schemas";
 import { readSetupWizardIfExists } from "../../files/index.js";
-import { VariantsMap, VariantsMapEntry } from "./types.js";
+import { VariantsMap, BuildVariantsMapEntry } from "./types.js";
 import { CliError } from "../../params.js";
 
 export function getFileValidationTask({
@@ -38,7 +38,9 @@ async function validatePackageFiles({
     await validateVariantFiles(variant);
 }
 
-async function validateVariantFiles(variant: VariantsMapEntry): Promise<void> {
+async function validateVariantFiles(
+  variant: BuildVariantsMapEntry
+): Promise<void> {
   const { manifest, compose, composePaths } = variant;
 
   console.log(

@@ -14,10 +14,10 @@ export interface BuildAndUploadOptions {
   composeFileName: string;
   dir: string;
   variantsDirPath?: string;
-  variants?: string[];
+  variantsMap: VariantsMap;
 }
 
-export interface VariantsMapEntry {
+export interface BuildVariantsMapEntry {
   // Manifest-related
   manifest: Manifest;
   manifestFormat: ManifestFormat;
@@ -35,5 +35,5 @@ export interface VariantsMapEntry {
 }
 
 export interface VariantsMap {
-  [variant: string]: VariantsMapEntry;
+  [variant: string]: BuildVariantsMapEntry;
 }

@@ -5,7 +5,7 @@ import { buildWithBuildx } from "./buildWithBuildx.js";
 import { buildWithCompose } from "./buildWithCompose.js";
 import { Architecture, defaultArch } from "@dappnode/types";
 import { getImageFileName } from "../../utils/getImageFileName.js";
-import { VariantsMap, VariantsMapEntry } from "./types.js";
+import { VariantsMap, BuildVariantsMapEntry } from "./types.js";
 
 /**
  * The naming scheme for multiarch exported images must be
@@ -49,7 +49,7 @@ function createBuildTask({
   skipSave,
   rootDir
 }: {
-  variantSpecs: VariantsMapEntry;
+  variantSpecs: BuildVariantsMapEntry;
   architecture: Architecture;
   buildTimeout: number;
   skipSave?: boolean;

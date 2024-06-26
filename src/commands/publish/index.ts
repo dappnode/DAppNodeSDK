@@ -10,6 +10,7 @@ import { printObject } from "../../utils/print.js";
 import { UploadTo } from "../../releaseUploader/index.js";
 import { publishHandler } from "./handler.js";
 import { PublishCommandOptions } from "./types.js";
+import { defaultVariantsDirName } from "../../params.js";
 
 export const publish: CommandModule<CliGlobalOptions, PublishCommandOptions> = {
   command: "publish [type]",
@@ -66,6 +67,22 @@ export const publish: CommandModule<CliGlobalOptions, PublishCommandOptions> = {
       alias: "dappnode-team-preset",
       description: `Specific set of options used for internal DAppNode releases. Caution: options may change without notice.`,
       type: "boolean"
+    },
+    all_variants: {
+      alias: "all-variants",
+      description: `It will use the dappnode_package.json and docker-compose.yml files in the root of the project together with the specific ones defined for each package variant to build all of them`,
+      type: "boolean"
+    },
+    variants_dir_name: {
+      alias: "variants-dir-name",
+      description: `Name of the directory where the package variants are located (only for packages that support it and combined with either "--all-variants" or "--variants"). By default, it is ${defaultVariantsDirName}`,
+      type: "string",
+      default: defaultVariantsDirName
+    },
+    variants: {
+      alias: "variant",
+      description: `Specify the package variants to build (only for packages that support it). Defined by comma-separated list of variant names. If not specified, all variants will be built. Example: "variant1,variant2"`,
+      type: "string"
     }
   },
 

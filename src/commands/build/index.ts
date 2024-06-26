@@ -40,7 +40,7 @@ export const build: CommandModule<CliGlobalOptions, BuildCommandOptions> = {
     },
     all_variants: {
       alias: "all-variants",
-      description: `It will use the dappnode_package.json and docker-compose.yml files in the root of the project together with the specific ones defined for each package variant to build all of them`,
+      description: `Build all package variants at once, by merging the dappnode_package.json and docker-compose.yml files in the root of the project with the specific ones defined for each package variant`,
       type: "boolean"
     },
     variants_dir_name: {
@@ -51,7 +51,7 @@ export const build: CommandModule<CliGlobalOptions, BuildCommandOptions> = {
     },
     variants: {
       alias: "variant",
-      description: `Specify the package variants to build (only for packages that support it). Defined by comma-separated list of variant names. If not specified, all variants will be built. Example: "variant1,variant2"`,
+      description: `Specify the package variants to build (only for packages that support it). Defined by comma-separated list of variant names. Example: "variant1,variant2"`,
       type: "string"
     }
   },

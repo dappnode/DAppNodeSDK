@@ -13,4 +13,7 @@ export interface PublishCommandOptions extends CliGlobalOptions {
   dappnode_team_preset?: boolean;
   require_git_data?: boolean;
   delete_old_pins?: boolean;
+  variants_dir_name?: string;
+  variants?: string;
+  all_variants?: boolean;
 }

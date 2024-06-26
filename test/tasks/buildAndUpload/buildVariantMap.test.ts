@@ -27,7 +27,8 @@ describe("buildVariantMap", function () {
     it("should return a map with only default variant", function () {
       const result = buildVariantMap({
         rootDir: testDir,
-        variantsDirPath: defaultVariantsDirName
+        variantsDirPath: defaultVariantsDirName,
+        variants: null
       });
 
       expect(result).to.have.all.keys("default");

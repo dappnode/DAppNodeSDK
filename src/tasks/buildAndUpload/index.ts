@@ -7,7 +7,6 @@ import {
   cliArgsToReleaseUploaderProvider
 } from "../../releaseUploader/index.js";
 import { BuildAndUploadOptions } from "./types.js";
-import { buildVariantMap } from "./buildVariantMap.js";
 import { getVerifyConnectionTask } from "./getVerifyConnectionTask.js";
 import { getReleaseDirCreationTask } from "./getReleaseDirCreationTask.js";
 import { getFileValidationTask } from "./getFileValidationTask.js";
@@ -28,7 +27,7 @@ export function buildAndUpload({
   composeFileName,
   dir,
   variantsDirPath = defaultVariantsDirName,
-  variants
+  variantsMap
 }: BuildAndUploadOptions): ListrTask<ListrContextBuild>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
@@ -38,13 +37,6 @@ export function buildAndUpload({
     contentProvider
   });
   const releaseUploader = getReleaseUploader(releaseUploaderProvider);
-
-  const variantsMap = buildVariantMap({
-    variants,
-    rootDir: dir,
-    variantsDirPath,
-    composeFileName
-  });
 
   return [
     getFileValidationTask({ variantsMap, rootDir: dir }),
