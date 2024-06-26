@@ -108,7 +108,7 @@ export async function buildAndComment({
 
   console.log(`Build bot comment: \n\n${body}`);
 
-  const prs = await github.getOpenPrsFromBranch({ branch });
+  const prs = await github.getOpenPrsFromBranch(branch);
   console.log(`
     Repo: ${github.repoSlug}
     Branch ${branch}

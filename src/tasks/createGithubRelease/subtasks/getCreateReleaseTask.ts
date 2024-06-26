@@ -36,7 +36,7 @@ export function getCreateReleaseTask({
       const tag = getNextGitTag(releaseDetailsMap);
 
       task.output = "Deleting existing release...";
-      await github.deteleReleaseAndAssets(tag);
+      await github.deleteReleaseAndAssets(tag);
 
       const contentHashPaths = await handleReleaseVariantFiles({
         releaseDetailsMap,
@@ -44,11 +44,9 @@ export function getCreateReleaseTask({
       });
 
       task.output = `Creating release for tag ${tag}...`;
-      await github.createReleaseAndUploadAssets(tag, {
+      await github.createRelease(tag, {
         body: await getReleaseBody({ releaseDetailsMap, tag, github }),
         prerelease: true, // Until it is actually published to mainnet
-        // assetsDir: buildDir, // TODO: Fix
-        ignorePattern: /\.tar\.xz$/ // To ignore legacy .tar.xz image
       });
 
       // Clean content hash file so the directory uploaded to IPFS is the same
@@ -138,15 +136,15 @@ function getPackageVersionsTable(releaseDetailsMap: ReleaseDetailsMap) {
   Package | Version | Hash | Install link | Publish link | Published
   --- | --- | --- | --- | --- | ---
   ${Object.entries(releaseDetailsMap)
-    .map(([dnpName, { nextVersion, releaseMultiHash, txData }]) =>
-      getPackageVersionsRow({
-        dnpName,
-        nextVersion,
-        releaseMultiHash,
-        txData
-      })
-    )
-    .join("\n")}
+      .map(([dnpName, { nextVersion, releaseMultiHash, txData }]) =>
+        getPackageVersionsRow({
+          dnpName,
+          nextVersion,
+          releaseMultiHash,
+          txData
+        })
+      )
+      .join("\n")}
   `.trim();
 }
 

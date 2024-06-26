@@ -21,7 +21,7 @@ export async function closeOldPrs(
  * Get the open PR for a given branch.
  */
 async function getNewPr(thisRepo: Github, newBranch: string) {
-  const [newPr] = await thisRepo.getOpenPrsFromBranch({ branch: newBranch });
+  const [newPr] = await thisRepo.getOpenPrsFromBranch(newBranch);
   if (!newPr) throw Error(`No PR found for branch ${newBranch}`);
   return newPr;
 }
@@ -45,7 +45,7 @@ async function closePrsAndDeleteBranch(
   newPrUrl: string
 ) {
   try {
-    const prs = await thisRepo.getOpenPrsFromBranch({ branch: oldBranch });
+    const prs = await thisRepo.getOpenPrsFromBranch(oldBranch);
     await Promise.all(prs.map(pr => closePr(thisRepo, pr, newPrUrl)));
     await deleteBranch(oldBranch);
   } catch (error) {
@@ -62,7 +62,7 @@ async function closePr(
   newPrUrl: string
 ) {
   try {
-    await thisRepo.commentPullRequest({
+    await thisRepo.createCommentInPr({
       number: pr.number,
       body: `Newer version available, closing for ${newPrUrl}`
     });

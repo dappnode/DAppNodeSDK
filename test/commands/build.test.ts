@@ -8,8 +8,9 @@ import {
   defaultVariantsDirName,
   defaultVariantsEnvValues
 } from "../../src/params.js";
+import { normalizeIpfsProvider } from "../../src/releaseUploader/ipfsNode/ipfsProvider.js";
 
-const contentProvider = "http://api.ipfs.dappnode.io:5001";
+const contentProvider = normalizeIpfsProvider("remote");
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest
