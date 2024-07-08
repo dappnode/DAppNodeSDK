@@ -217,24 +217,6 @@ export class Github {
   }
 
   /**
-   * Generate Github release notes for a tag
-   */
-  async generateReleaseNotesNoThrow(tag: string): Promise<string> {
-    try {
-      const ghResponse = await this.octokit.repos.generateReleaseNotes({
-        owner: this.owner,
-        repo: this.repo,
-        tag_name: tag
-      });
-
-      return ghResponse.data.body || "";
-    } catch (e) {
-      console.warn(`Could not generate release notes: ${e}`);
-      return "";
-    }
-  }
-
-  /**
    * Receives a tag and returns a prettified release name
    *
    * For single-variant packages:

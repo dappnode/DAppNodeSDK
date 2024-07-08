@@ -45,7 +45,7 @@ export function getCreateReleaseTask({
 
       task.output = `Creating release for tag ${tag}...`;
       await github.createRelease(tag, {
-        body: await getReleaseBody({ releaseDetailsMap, tag, github }),
+        body: await getReleaseBody({ releaseDetailsMap }),
         prerelease: true, // Until it is actually published to mainnet
       });
 
@@ -112,29 +112,21 @@ function writeContentHashToFile({
  */
 async function getReleaseBody({
   releaseDetailsMap,
-  tag,
-  github
 }: {
   releaseDetailsMap: ReleaseDetailsMap;
-  tag: string;
-  github: Github;
 }) {
   return `
-  <!-- Set :heavy_check_mark: to the packages that have already been published -->
-
   ## Package versions
 
   ${getPackageVersionsTable(releaseDetailsMap)}
-
-  ${await github.generateReleaseNotesNoThrow(tag)}
 
   `.trim();
 }
 
 function getPackageVersionsTable(releaseDetailsMap: ReleaseDetailsMap) {
   return `
-  Package | Version | Hash | Install link | Publish link | Published
-  --- | --- | --- | --- | --- | ---
+  Package | Version | Hash | Install | Publish
+  --- | --- | --- | --- | ---
   ${Object.entries(releaseDetailsMap)
       .map(([dnpName, { nextVersion, releaseMultiHash, txData }]) =>
         getPackageVersionsRow({
@@ -162,9 +154,9 @@ function getPackageVersionsRow({
   const prettyDnp = prettyDnpName(dnpName);
 
   return `
-  ${prettyDnp} | ${nextVersion} | \`${releaseMultiHash}\` | [Install ${prettyDnp}](${getInstallDnpLink(
+  ${prettyDnp} | ${nextVersion} | \`${releaseMultiHash}\` | [:inbox_tray:](${getInstallDnpLink(
     releaseMultiHash
-  )}) | [Publish ${prettyDnp}](${getPublishTxLink(txData)}) | :x:
+  )}) | [:mega:](${getPublishTxLink(txData)})
   `.trim();
 }
 
