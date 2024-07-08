@@ -1,4 +1,5 @@
-// CLI types
+import { Architecture, Compose, Manifest } from "@dappnode/types";
+import { ManifestFormat } from "./files/manifest/types.js";
 
 export interface CliGlobalOptions {
   dir?: string;
@@ -24,6 +25,29 @@ export interface ListrContextBuild {
 
 export interface ListrContextPublish {
   [dnpName: string]: ListrContextPublishItem;
+}
+
+interface PublishVariantsMapEntry {
+  // Manifest-related
+  manifest: Manifest;
+  manifestFormat: ManifestFormat;
+}
+
+export interface BuildVariantsMapEntry extends PublishVariantsMapEntry {
+  // Compose file
+  compose: Compose;
+
+  // File paths
+  releaseDir: string;
+  composePaths: string[];
+
+  // Package information
+  images: PackageImage[];
+  architectures: Architecture[];
+}
+
+export interface BuildVariantsMap {
+  [variant: string]: BuildVariantsMapEntry;
 }
 
 // Interal types
@@ -59,5 +83,3 @@ export interface TxDataShortKeys {
   h: string; // hash
   d?: string; // developerAddress
 }
-
-export const contentHashFile = "content-hash" as const;

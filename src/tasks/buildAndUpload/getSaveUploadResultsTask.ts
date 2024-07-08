@@ -1,8 +1,7 @@
 import { ListrTask } from "listr/index.js";
 import { addReleaseRecord } from "../../utils/releaseRecord.js";
-import { ListrContextBuild } from "../../types.js";
+import { BuildVariantsMap, ListrContextBuild } from "../../types.js";
 import { pruneCache } from "../../utils/cache.js";
-import { VariantsMap } from "./types.js";
 import path from "path";
 
 export function getSaveUploadResultsTask({
@@ -12,7 +11,7 @@ export function getSaveUploadResultsTask({
   contentProvider,
   skipUpload
 }: {
-  variantsMap: VariantsMap;
+  variantsMap: BuildVariantsMap;
   rootDir: string;
   variantsDirPath: string;
   contentProvider: string;

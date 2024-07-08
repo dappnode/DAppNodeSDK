@@ -1,5 +1,56 @@
 import chalk from "chalk";
 import { getAllVariantsInPath } from "../../files/variants/getAllPackageVariants.js";
+import path from "path";
+import { BuildVariantsMap } from "../../types.js";
+import { buildVariantMap } from "../../tasks/buildAndUpload/buildVariantMap.js";
+
+export function getVariantOptions({
+  allVariants,
+  variantsStr,
+  rootDir,
+  variantsDirName,
+  composeFileName
+}: {
+  allVariants: boolean;
+  variantsStr?: string;
+  rootDir: string;
+  variantsDirName: string;
+  composeFileName: string;
+}): { variantsMap: BuildVariantsMap; variantsDirPath: string } {
+  const variantsDirPath = path.join(rootDir, variantsDirName);
+
+  const buildVariantMapArgs = { rootDir, variantsDirPath, composeFileName };
+
+  if (!allVariants && !variantsStr)
+    return {
+      variantsMap: buildVariantMap({ ...buildVariantMapArgs, variants: null }),
+      variantsDirPath
+    };
+
+  const validVariantNames = getValidVariantNames({
+    variantsDirPath,
+    variants: variantsStr
+  });
+
+  if (validVariantNames.length === 0)
+    throw new Error(
+      `No valid variants specified. They must be included in: ${variantsDirPath}`
+    );
+
+  console.log(
+    `${chalk.dim(
+      `Building package from template for variant(s) ${variantsStr}...`
+    )}`
+  );
+
+  return {
+    variantsMap: buildVariantMap({
+      ...buildVariantMapArgs,
+      variants: validVariantNames
+    }),
+    variantsDirPath
+  };
+}
 
 /**
  * Main function to retrieve the valid variant names based on the specified variants and available directories.

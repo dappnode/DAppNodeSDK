@@ -202,7 +202,7 @@ export class Github {
         owner: this.owner,
         repo: this.repo,
         tag_name: tag,
-        name: tag,
+        name: this.buildReleaseNameFromTag(tag),
         body,
         prerelease,
         generate_release_notes: true,
@@ -214,6 +214,29 @@ export class Github {
         e.message = `Error creating release: ${e.message}`;
         throw e;
       });
+  }
+
+  /**
+   * Receives a tag and returns a prettified release name
+   *
+   * For single-variant packages:
+   *  Tag: "v0.2.0" => Release name: "v0.2.0"
+   *
+   * For multi-variant packages:
+   *  Tag: "gnosis@v0.1.2_holesky@v1.2.3_mainnet@v3.21.1" => Release name: "Gnosis(v0.1.2), Holesky(v1.2.3), Mainnet(v3.21.1)"
+   *
+   * @param tag
+   */
+  private buildReleaseNameFromTag(tag: string): string {
+    const variants = tag.split("_").map(variant => {
+      const [name, version] = variant.split("@");
+
+      // If the variant is a single-variant package
+      if (!version) return name;
+
+      return `${name}(${version})`;
+    });
+    return variants.join(", ");
   }
 
   /**

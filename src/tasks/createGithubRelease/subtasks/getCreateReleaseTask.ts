@@ -1,11 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { Github } from "../../../providers/github/Github.js";
-import {
-  ListrContextPublish,
-  TxData,
-  contentHashFile
-} from "../../../types.js";
+import { ListrContextPublish, TxData } from "../../../types.js";
 import { ListrTask } from "listr";
 import {
   compactManifestIfCore,
@@ -15,7 +11,10 @@ import {
   getInstallDnpLink,
   getPublishTxLink
 } from "../../../utils/getLinks.js";
-import { getNextGitTag } from "./getNextGitTag.js";
+import { getNextGitTag } from "../getNextGitTag.js";
+import { contentHashFileName } from "../../../params.js";
+import { ReleaseDetailsMap } from "../types.js";
+import { buildReleaseDetailsMap } from "../buildReleaseDetailsMap.js";
 
 /**
  * Create release
@@ -24,48 +23,69 @@ import { getNextGitTag } from "./getNextGitTag.js";
  */
 export function getCreateReleaseTask({
   github,
-  buildDir,
-  releaseMultiHash,
   composeFileName
 }: {
   github: Github;
-  buildDir: string;
-  releaseMultiHash: string;
   composeFileName?: string;
 }): ListrTask<ListrContextPublish> {
   return {
     title: `Create release`,
     task: async (ctx, task) => {
-      // TODO: Do this for each release
-      const [, { nextVersion, txData }] = Object.entries(ctx)[0];
+      const releaseDetailsMap = buildReleaseDetailsMap(ctx);
 
-      const tag = getNextGitTag(nextVersion);
+      const tag = getNextGitTag(releaseDetailsMap);
 
       task.output = "Deleting existing release...";
       await github.deleteReleaseAndAssets(tag);
 
-      const contentHashPath = writeContentHashToFile({
-        buildDir,
-        releaseMultiHash
+      const contentHashPaths = await handleReleaseVariantFiles({
+        releaseDetailsMap,
+        composeFileName
       });
 
-      compactManifestIfCore(buildDir);
-
-      composeDeleteBuildProperties({ dir: buildDir, composeFileName });
-
-      if (txData) {
-        task.output = `Creating release for tag ${tag}...`;
-        await github.createRelease(tag, {
-          body: getReleaseBody(txData),
-          prerelease: true // Until it is actually published to mainnet
-        });
-      }
+      task.output = `Creating release for tag ${tag}...`;
+      await github.createRelease(tag, {
+        body: await getReleaseBody({ releaseDetailsMap }),
+        prerelease: true, // Until it is actually published to mainnet
+      });
 
       // Clean content hash file so the directory uploaded to IPFS is the same
       // as the local build_* dir. User can then `ipfs add -r` and get the same hash
-      fs.unlinkSync(contentHashPath);
+      contentHashPaths.map(contentHashPath => fs.unlinkSync(contentHashPath));
     }
   };
+}
+
+async function handleReleaseVariantFiles({
+  releaseDetailsMap,
+  composeFileName
+}: {
+  releaseDetailsMap: ReleaseDetailsMap;
+  composeFileName?: string;
+}): Promise<string[]> {
+  const contentHashPaths: string[] = [];
+
+  for (const [, { variant, releaseDir, releaseMultiHash }] of Object.entries(
+    releaseDetailsMap
+  )) {
+    if (!releaseMultiHash) {
+      throw new Error(
+        `Release hash not found for variant ${variant} of ${name}`
+      );
+    }
+
+    const contentHashPath = writeContentHashToFile({
+      releaseDir,
+      releaseMultiHash
+    });
+
+    contentHashPaths.push(contentHashPath);
+
+    compactManifestIfCore(releaseDir);
+    composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
+  }
+
+  return contentHashPaths;
 }
 
 /**
@@ -75,13 +95,13 @@ export function getCreateReleaseTask({
  * to install an eth client when the user does not want to use a remote node
  */
 function writeContentHashToFile({
-  buildDir,
+  releaseDir,
   releaseMultiHash
 }: {
-  buildDir: string;
+  releaseDir: string;
   releaseMultiHash: string;
 }): string {
-  const contentHashPath = path.join(buildDir, contentHashFile);
+  const contentHashPath = path.join(releaseDir, contentHashFileName);
   fs.writeFileSync(contentHashPath, releaseMultiHash);
   return contentHashPath;
 }
@@ -89,39 +109,89 @@ function writeContentHashToFile({
 /**
  * Write the release body
  *
- * TODO: Extend this to automatically write the body of the changelog
  */
-function getReleaseBody(txData: TxData) {
-  const link = getPublishTxLink(txData);
-  const changelog = "";
-  const installLink = getInstallDnpLink(txData.releaseMultiHash);
+async function getReleaseBody({
+  releaseDetailsMap,
+}: {
+  releaseDetailsMap: ReleaseDetailsMap;
+}) {
   return `
-  ##### Changelog
-  
-  ${changelog}
-  
-  ---
-  
-  ##### For package mantainer
-  
-  Authorized developer account may execute this transaction [from a pre-filled link](${link})[.](${installLink})
-  
-  <details><summary>Release details</summary>
-  <p>
-  
-  \`\`\`
-  To: ${txData.to}
-  Value: ${txData.value}
-  Data: ${txData.data}
-  Gas limit: ${txData.gasLimit}
-  \`\`\`
-  
-  \`\`\`
-  ${txData.releaseMultiHash}
-  \`\`\`
-  
-  </p>
-  </details>
-  
+  ## Package versions
+
+  ${getPackageVersionsTable(releaseDetailsMap)}
+
   `.trim();
+}
+
+function getPackageVersionsTable(releaseDetailsMap: ReleaseDetailsMap) {
+  return `
+  Package | Version | Hash | Install | Publish
+  --- | --- | --- | --- | ---
+  ${Object.entries(releaseDetailsMap)
+      .map(([dnpName, { nextVersion, releaseMultiHash, txData }]) =>
+        getPackageVersionsRow({
+          dnpName,
+          nextVersion,
+          releaseMultiHash,
+          txData
+        })
+      )
+      .join("\n")}
+  `.trim();
+}
+
+function getPackageVersionsRow({
+  dnpName,
+  nextVersion,
+  releaseMultiHash,
+  txData
+}: {
+  dnpName: string;
+  nextVersion: string;
+  releaseMultiHash: string;
+  txData: TxData;
+}): string {
+  const prettyDnp = prettyDnpName(dnpName);
+
+  return `
+  ${prettyDnp} | ${nextVersion} | \`${releaseMultiHash}\` | [:inbox_tray:](${getInstallDnpLink(
+    releaseMultiHash
+  )}) | [:mega:](${getPublishTxLink(txData)})
+  `.trim();
+}
+
+/**
+ * Pretifies a ENS name
+ * "bitcoin.dnp.dappnode.eth" => "Bitcoin"
+ * "raiden-testnet.dnp.dappnode.eth" => "Raiden Testnet"
+ *
+ * TODO: This is duplicated from dappmanager
+ *
+ * @param name ENS name
+ * @returns pretty name
+ */
+function prettyDnpName(dnpName: string): string {
+  if (!dnpName || typeof dnpName !== "string") return dnpName;
+  return (
+    dnpName
+      .split(".")[0]
+      // Convert all "-" and "_" to spaces
+      .replace(new RegExp("-", "g"), " ")
+      .replace(new RegExp("_", "g"), " ")
+      .split(" ")
+      .map(capitalize)
+      .join(" ")
+  );
+}
+
+/**
+ * Capitalizes a string
+ * @param string = "hello world"
+ * @returns "Hello world"
+ *
+ * TODO: This is duplicated from dappmanager
+ */
+function capitalize(s: string): string {
+  if (!s || typeof s !== "string") return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }

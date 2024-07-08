@@ -1,17 +1,16 @@
 import { ListrTask } from "listr/index.js";
-import { ListrContextBuild } from "../../types.js";
+import { BuildVariantsMap, ListrContextBuild } from "../../types.js";
 import { getGitHead } from "../../utils/git.js";
 import { fetchPinsWithBranchToDelete } from "../../pinStrategy/index.js";
 import { PinataPinManager } from "../../providers/pinata/pinManager.js";
 import { ReleaseUploaderProvider } from "../../releaseUploader/index.js";
-import { VariantsMap } from "./types.js";
 
 export function getDeleteOldPinsTask({
   variantsMap,
   deleteOldPins,
   releaseUploaderProvider
 }: {
-  variantsMap: VariantsMap;
+  variantsMap: BuildVariantsMap;
   deleteOldPins: boolean;
   releaseUploaderProvider: ReleaseUploaderProvider;
 }): ListrTask<ListrContextBuild> {

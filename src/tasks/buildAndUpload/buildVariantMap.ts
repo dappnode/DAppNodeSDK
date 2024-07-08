@@ -7,9 +7,9 @@ import {
   parseComposeUpstreamVersion,
   readManifest
 } from "../../files/index.js";
-import { VariantsMap, VariantsMapEntry } from "./types.js";
 import { Compose, Manifest } from "@dappnode/types";
 import { defaultComposeFileName } from "../../params.js";
+import { BuildVariantsMap, BuildVariantsMapEntry } from "../../types.js";
 
 export function buildVariantMap({
   variants,
@@ -17,15 +17,15 @@ export function buildVariantMap({
   variantsDirPath,
   composeFileName = defaultComposeFileName
 }: {
-  variants?: string[];
+  variants: string[] | null;
   rootDir: string;
   variantsDirPath: string;
   composeFileName?: string;
-}): VariantsMap {
+}): BuildVariantsMap {
   if (!variants || variants.length === 0)
     return { default: createVariantMapEntry({ rootDir, composeFileName }) };
 
-  const map: VariantsMap = {};
+  const map: BuildVariantsMap = {};
 
   for (const variant of variants) {
     const variantPath = path.join(variantsDirPath, variant);
@@ -47,7 +47,7 @@ export function createVariantMapEntry({
   rootDir: string;
   composeFileName: string;
   variantPath?: string;
-}): VariantsMapEntry {
+}): BuildVariantsMapEntry {
   const { manifest, format } = variantPath
     ? readManifest([{ dir: rootDir }, { dir: variantPath }])
     : readManifest([{ dir: rootDir }]);
@@ -61,16 +61,14 @@ export function createVariantMapEntry({
 
   const compose = variantPath
     ? readCompose([
-        { dir: rootDir, composeFileName },
-        { dir: variantPath, composeFileName }
-      ])
+      { dir: rootDir, composeFileName },
+      { dir: variantPath, composeFileName }
+    ])
     : readCompose([{ dir: rootDir, composeFileName }]);
 
-  // Only parse this upstream version for legacy format (upstreamVersion field defined instead of upstream object)
-  if (!manifest.upstream) {
-    const upstreamVersion = getUpstreamVersion({ compose, manifest });
-    manifest.upstreamVersion = upstreamVersion;
-  }
+  // TODO: Handle upstream object defined case
+  if (!manifest.upstream)
+    manifest.upstreamVersion = getUpstreamVersion({ compose, manifest });
 
   return {
     manifest,
