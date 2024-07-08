@@ -44,6 +44,7 @@ export function buildAndUpload({
     getReleaseDirCreationTask({ variantsMap }),
     getFileCopyTask({
       variantsMap,
+      variantsDirPath,
       rootDir: dir,
       composeFileName,
       requireGitData

@@ -17,11 +17,13 @@ import { Compose, Manifest, releaseFiles } from "@dappnode/types";
 
 export function getFileCopyTask({
   variantsMap,
+  variantsDirPath,
   rootDir,
   composeFileName,
   requireGitData
 }: {
   variantsMap: BuildVariantsMap;
+  variantsDirPath: string;
   rootDir: string;
   composeFileName: string;
   requireGitData?: boolean;
@@ -31,6 +33,7 @@ export function getFileCopyTask({
     task: async () =>
       copyFilesToReleaseDir({
         variantsMap,
+        variantsDirPath,
         rootDir,
         composeFileName,
         requireGitData
@@ -40,21 +43,25 @@ export function getFileCopyTask({
 
 async function copyFilesToReleaseDir({
   variantsMap,
+  variantsDirPath,
   rootDir,
   composeFileName,
   requireGitData
 }: {
   variantsMap: BuildVariantsMap;
+  variantsDirPath: string;
   rootDir: string;
   composeFileName: string;
   requireGitData?: boolean;
 }): Promise<void> {
-  for (const [, variant] of Object.entries(variantsMap)) {
-    await copyVariantFilesToReleaseDir({ variant, rootDir, composeFileName });
+  for (const [variantName, variantProps] of Object.entries(variantsMap)) {
+
+    const variantDirPath = path.join(variantsDirPath, variantName);
+    await copyVariantFilesToReleaseDir({ variantProps, variantDirPath: variantDirPath, rootDir, composeFileName });
 
     // Verify avatar (throws)
     const avatarPath = path.join(
-      variant.releaseDir,
+      variantProps.releaseDir,
       releaseFilesDefaultNames.avatar
     );
     verifyAvatar(avatarPath);
@@ -65,15 +72,17 @@ async function copyFilesToReleaseDir({
 }
 
 async function copyVariantFilesToReleaseDir({
-  variant,
+  variantProps,
+  variantDirPath,
   rootDir,
   composeFileName
 }: {
-  variant: BuildVariantsMapEntry;
+  variantProps: BuildVariantsMapEntry;
+  variantDirPath: string;
   rootDir: string;
   composeFileName: string;
 }): Promise<void> {
-  const { manifest, manifestFormat, releaseDir, compose } = variant;
+  const { manifest, manifestFormat, releaseDir, compose } = variantProps;
 
   for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
     switch (fileId as keyof typeof releaseFiles) {
@@ -83,6 +92,17 @@ async function copyVariantFilesToReleaseDir({
 
       case "compose":
         writeReleaseCompose({ compose, composeFileName, manifest, releaseDir });
+        break;
+
+      case "prometheusTargets":
+        // Copy the targets in root and in the variant dir
+        for (const dir of [rootDir, variantDirPath]) {
+          copyReleaseFile({
+            fileConfig: { ...fileConfig, id: fileId },
+            fromDir: dir,
+            toDir: releaseDir
+          });
+        }
         break;
 
       default:
