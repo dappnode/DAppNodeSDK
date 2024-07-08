@@ -126,7 +126,7 @@ async function getReleaseBody({
 
   ${getPackageVersionsTable(releaseDetailsMap)}
 
-  ${await github.generateReleaseNotes(tag)}
+  ${await github.generateReleaseNotesNoThrow(tag)}
 
   `.trim();
 }

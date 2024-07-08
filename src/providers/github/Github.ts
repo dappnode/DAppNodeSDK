@@ -216,7 +216,10 @@ export class Github {
       });
   }
 
-  async generateReleaseNotes(tag: string): Promise<string> {
+  /**
+   * Generate Github release notes for a tag
+   */
+  async generateReleaseNotesNoThrow(tag: string): Promise<string> {
     try {
       const ghResponse = await this.octokit.repos.generateReleaseNotes({
         owner: this.owner,
