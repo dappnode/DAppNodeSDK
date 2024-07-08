@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 import { ListrTask } from "listr/index.js";
 import { verifyAvatar } from "../../utils/verifyAvatar.js";
@@ -95,8 +96,11 @@ async function copyVariantFilesToReleaseDir({
         break;
 
       case "prometheusTargets":
+        // For single variant packages, the targets are in the root dir
+        const dirsToCopy = fs.existsSync(variantDirPath) ? [rootDir, variantDirPath] : [rootDir];
+
         // Copy the targets in root and in the variant dir
-        for (const dir of [rootDir, variantDirPath]) {
+        for (const dir of dirsToCopy) {
           copyReleaseFile({
             fileConfig: { ...fileConfig, id: fileId },
             fromDir: dir,
