@@ -86,6 +86,9 @@ async function copyVariantFilesToReleaseDir({
   const { manifest, manifestFormat, releaseDir, compose } = variantProps;
 
   for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
+    // For single variant packages, the targets are in the root dir
+    const dirsToCopy = fs.existsSync(variantDirPath) ? [rootDir, variantDirPath] : [rootDir];
+
     switch (fileId as keyof typeof releaseFiles) {
       case "manifest":
         writeManifest<Manifest>(manifest, manifestFormat, { dir: releaseDir });
@@ -96,9 +99,6 @@ async function copyVariantFilesToReleaseDir({
         break;
 
       case "prometheusTargets":
-        // For single variant packages, the targets are in the root dir
-        const dirsToCopy = fs.existsSync(variantDirPath) ? [rootDir, variantDirPath] : [rootDir];
-
         // Copy the targets in root and in the variant dir
         for (const dir of dirsToCopy) {
           copyReleaseFile({
