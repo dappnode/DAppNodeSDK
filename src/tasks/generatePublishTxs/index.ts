@@ -4,7 +4,7 @@ import { getEthereumUrl } from "../../utils/getEthereumUrl.js";
 import { getPublishTxLink } from "../../utils/getLinks.js";
 import { addReleaseTx } from "../../utils/releaseRecord.js";
 import { defaultDir, YargsError } from "../../params.js";
-import { CliGlobalOptions, ListrContextPublish, TxData } from "../../types.js";
+import { BuildVariantsMap, CliGlobalOptions, ListrContextPublish, TxData } from "../../types.js";
 import { ApmRepository } from "@dappnode/toolkit";
 import registryAbi from "../../contracts/ApmRegistryAbi.json" assert { type: "json" };
 import { semverToArray } from "../../utils/semverToArray.js";
@@ -12,12 +12,11 @@ import repoAbi from "../../contracts/RepoAbi.json" assert { type: "json" };
 import { VerbosityOptions } from "../../commands/build/types.js";
 import { getRegistryAddressFromDnpName } from "./getRegistryAddressFromEns.js";
 import { Repo } from "./types.js";
-import { VariantsMap } from "../buildAndUpload/types.js";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
 type GenerateTxVariantsMap = {
-  [K in keyof VariantsMap]: Pick<VariantsMap[K], "manifest">;
+  [K in keyof BuildVariantsMap]: Pick<BuildVariantsMap[K], "manifest">;
 }
 
 /**
@@ -55,7 +54,7 @@ export function generatePublishTxs({
           const contractAddress = "0x0000000000000000000000000000000000000000";
 
           for (const [, { manifest }] of Object.entries(variantsMap)) {
-            
+
             const { name: dnpName, version } = manifest;
             const releaseMultiHash = ctx[dnpName]?.releaseMultiHash;
 
@@ -122,22 +121,22 @@ export async function buildTxData({
 
   return repository
     ? await getTxDataForExistingRepo({
-        repository,
-        version,
-        contractAddress,
-        contentURI,
-        releaseMultiHash,
-        dnpName: dnpName
-      })
+      repository,
+      version,
+      contractAddress,
+      contentURI,
+      releaseMultiHash,
+      dnpName: dnpName
+    })
     : await getTxDataForNewRepo({
-        dnpName: dnpName,
-        version,
-        contractAddress,
-        contentURI,
-        releaseMultiHash,
-        developerAddress,
-        ethereumUrl
-      });
+      dnpName: dnpName,
+      version,
+      contractAddress,
+      contentURI,
+      releaseMultiHash,
+      developerAddress,
+      ethereumUrl
+    });
 }
 
 async function getRepoContractIfExists({

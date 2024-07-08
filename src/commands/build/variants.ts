@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { getAllVariantsInPath } from "../../files/variants/getAllPackageVariants.js";
 import path from "path";
-import { VariantsMap } from "../../tasks/buildAndUpload/types.js";
+import { BuildVariantsMap } from "../../types.js";
 import { buildVariantMap } from "../../tasks/buildAndUpload/buildVariantMap.js";
 
 export function getVariantOptions({
@@ -16,7 +16,7 @@ export function getVariantOptions({
   rootDir: string;
   variantsDirName: string;
   composeFileName: string;
-}): { variantsMap: VariantsMap; variantsDirPath: string } {
+}): { variantsMap: BuildVariantsMap; variantsDirPath: string } {
   const variantsDirPath = path.join(rootDir, variantsDirName);
 
   const buildVariantMapArgs = { rootDir, variantsDirPath, composeFileName };

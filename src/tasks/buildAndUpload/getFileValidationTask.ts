@@ -1,5 +1,5 @@
 import { ListrTask } from "listr/index.js";
-import { ListrContextBuild } from "../../types.js";
+import { BuildVariantsMap, BuildVariantsMapEntry, ListrContextBuild } from "../../types.js";
 import {
   validateComposeSchema,
   validateManifestSchema,
@@ -7,14 +7,13 @@ import {
   validateDappnodeCompose
 } from "@dappnode/schemas";
 import { readSetupWizardIfExists } from "../../files/index.js";
-import { VariantsMap, BuildVariantsMapEntry } from "./types.js";
 import { CliError } from "../../params.js";
 
 export function getFileValidationTask({
   variantsMap,
   rootDir
 }: {
-  variantsMap: VariantsMap;
+  variantsMap: BuildVariantsMap;
   rootDir: string;
 }): ListrTask<ListrContextBuild> {
   return {
@@ -27,7 +26,7 @@ async function validatePackageFiles({
   variantsMap,
   rootDir
 }: {
-  variantsMap: VariantsMap;
+  variantsMap: BuildVariantsMap;
   rootDir: string;
 }): Promise<void> {
   const setupWizard = readSetupWizardIfExists(rootDir);

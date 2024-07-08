@@ -1,11 +1,10 @@
 import { ListrTask } from "listr/index.js";
-import { ListrContextBuild } from "../../types.js";
+import { BuildVariantsMap, ListrContextBuild } from "../../types.js";
 import { getGitHeadIfAvailable } from "../../utils/git.js";
 import { getPinMetadata } from "../../pinStrategy/index.js";
 import { PinKeyvaluesDefault } from "../../releaseUploader/pinata/index.js";
 import { IReleaseUploader } from "../../releaseUploader/index.js";
 import { composeDeleteBuildProperties } from "../../files/index.js";
-import { VariantsMap } from "./types.js";
 
 export function getUploadTasks({
   variantsMap,
@@ -14,7 +13,7 @@ export function getUploadTasks({
   requireGitData,
   composeFileName
 }: {
-  variantsMap: VariantsMap;
+  variantsMap: BuildVariantsMap;
   skipUpload?: boolean;
   releaseUploader: IReleaseUploader;
   requireGitData: boolean;

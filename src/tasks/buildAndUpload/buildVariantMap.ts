@@ -7,9 +7,9 @@ import {
   parseComposeUpstreamVersion,
   readManifest
 } from "../../files/index.js";
-import { VariantsMap, BuildVariantsMapEntry } from "./types.js";
 import { Compose, Manifest } from "@dappnode/types";
 import { defaultComposeFileName } from "../../params.js";
+import { BuildVariantsMap, BuildVariantsMapEntry } from "../../types.js";
 
 export function buildVariantMap({
   variants,
@@ -21,11 +21,11 @@ export function buildVariantMap({
   rootDir: string;
   variantsDirPath: string;
   composeFileName?: string;
-}): VariantsMap {
+}): BuildVariantsMap {
   if (!variants || variants.length === 0)
     return { default: createVariantMapEntry({ rootDir, composeFileName }) };
 
-  const map: VariantsMap = {};
+  const map: BuildVariantsMap = {};
 
   for (const variant of variants) {
     const variantPath = path.join(variantsDirPath, variant);

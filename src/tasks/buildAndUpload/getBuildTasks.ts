@@ -1,11 +1,10 @@
 import path from "path";
 import Listr, { ListrTask } from "listr/index.js";
-import { ListrContextBuild } from "../../types.js";
+import { BuildVariantsMap, BuildVariantsMapEntry, ListrContextBuild } from "../../types.js";
 import { buildWithBuildx } from "./buildWithBuildx.js";
 import { buildWithCompose } from "./buildWithCompose.js";
 import { Architecture, defaultArch } from "@dappnode/types";
 import { getImageFileName } from "../../utils/getImageFileName.js";
-import { VariantsMap, BuildVariantsMapEntry } from "./types.js";
 
 /**
  * The naming scheme for multiarch exported images must be
@@ -20,7 +19,7 @@ export function getBuildTasks({
   skipSave,
   rootDir
 }: {
-  variantsMap: VariantsMap;
+  variantsMap: BuildVariantsMap;
   buildTimeout: number;
   skipSave?: boolean;
   rootDir: string;

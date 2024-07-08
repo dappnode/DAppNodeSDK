@@ -1,5 +1,5 @@
 import { ListrTask } from "listr";
-import { ListrContextPublish, ReleaseType } from "../../../types.js";
+import { BuildVariantsMap, ListrContextPublish, ReleaseType } from "../../../types.js";
 import {
   writeManifest,
   readCompose,
@@ -8,7 +8,6 @@ import {
   readManifest
 } from "../../../files/index.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
-import { VariantsMap } from "../../buildAndUpload/types.js";
 import path from "path";
 
 export function getFetchApmVersionsTask({
@@ -24,7 +23,7 @@ export function getFetchApmVersionsTask({
   rootDir: string;
   variantsDirPath: string;
   composeFileName: string;
-  variantsMap: VariantsMap;
+  variantsMap: BuildVariantsMap;
 }): ListrTask<ListrContextPublish> {
   return {
     title: "Fetch current versions from APM",

@@ -1,7 +1,6 @@
 import { VerbosityOptions } from "../../commands/build/types.js";
 import { UploadTo } from "../../releaseUploader/index.js";
-import { ReleaseType } from "../../types.js";
-import { VariantsMap } from "../buildAndUpload/types.js";
+import { BuildVariantsMap, ReleaseType } from "../../types.js";
 
 export interface PublishOptions {
   releaseType: ReleaseType;
@@ -17,5 +16,5 @@ export interface PublishOptions {
   githubRelease?: boolean;
   verbosityOptions: VerbosityOptions;
   variantsDirPath: string;
-  variantsMap: VariantsMap;
+  variantsMap: BuildVariantsMap;
 }

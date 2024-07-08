@@ -6,7 +6,7 @@ import {
   defaultComposeFileName,
   releaseFilesDefaultNames
 } from "../../params.js";
-import { ListrContextBuild } from "../../types.js";
+import { BuildVariantsMap, BuildVariantsMapEntry, ListrContextBuild } from "../../types.js";
 import { getGitHeadIfAvailable } from "../../utils/git.js";
 import {
   updateComposeImageTags,
@@ -14,7 +14,6 @@ import {
   writeManifest
 } from "../../files/index.js";
 import { Compose, Manifest, releaseFiles } from "@dappnode/types";
-import { VariantsMap, BuildVariantsMapEntry } from "./types.js";
 
 export function getFileCopyTask({
   variantsMap,
@@ -22,7 +21,7 @@ export function getFileCopyTask({
   composeFileName,
   requireGitData
 }: {
-  variantsMap: VariantsMap;
+  variantsMap: BuildVariantsMap;
   rootDir: string;
   composeFileName: string;
   requireGitData?: boolean;
@@ -45,7 +44,7 @@ async function copyFilesToReleaseDir({
   composeFileName,
   requireGitData
 }: {
-  variantsMap: VariantsMap;
+  variantsMap: BuildVariantsMap;
   rootDir: string;
   composeFileName: string;
   requireGitData?: boolean;
