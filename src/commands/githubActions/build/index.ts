@@ -7,6 +7,7 @@ import { Github } from "../../../providers/github/Github.js";
 import { parseRef } from "../../../providers/github/utils.js";
 import { getBuildBotComment, isTargetComment } from "./botComment.js";
 import { cleanPinsFromDeletedBranches } from "./cleanPinsFromDeletedBranches.js";
+import { BuildActionOptions } from "./types.js";
 
 // This action should be run on 'push' and 'pull_request' events
 //
@@ -24,11 +25,22 @@ import { cleanPinsFromDeletedBranches } from "./cleanPinsFromDeletedBranches.js"
 // For 'pull_request' events:
 //   Does a build test but doesn't upload the result anywhere
 
-export const gaBuild: CommandModule<CliGlobalOptions, CliGlobalOptions> = {
+export const gaBuild: CommandModule<BuildActionOptions, CliGlobalOptions> = {
   command: "build",
   describe:
     "Build and upload test release and post a comment with install link to the triggering PR",
-  builder: {},
+  builder: {
+    all_variants: {
+      alias: "all-variants",
+      description: `Build all package variants at once, by merging the dappnode_package.json and docker-compose.yml files in the root of the project with the specific ones defined for each package variant`,
+      type: "boolean"
+    },
+    variants: {
+      alias: "variant",
+      description: `Specify the package variants to build (only for packages that support it). Defined by comma-separated list of variant names. Example: "variant1,variant2"`,
+      type: "string"
+    }
+  },
   handler: async (args): Promise<void> => await gaBuildHandler(args)
 };
 
@@ -36,8 +48,10 @@ export const gaBuild: CommandModule<CliGlobalOptions, CliGlobalOptions> = {
  * Common handler for CLI and programatic usage
  */
 async function gaBuildHandler({
-  dir = defaultDir
-}: CliGlobalOptions): Promise<void> {
+  dir = defaultDir,
+  all_variants,
+  variants
+}: BuildActionOptions): Promise<void> {
   const { eventName, sha: commitSha, ref: refString } = getGithubContext();
   const ref = parseRef(refString);
 
@@ -61,7 +75,9 @@ async function gaBuildHandler({
     await buildAndComment({
       dir,
       commitSha,
-      branch: ref.branch
+      branch: ref.branch,
+      all_variants,
+      variants
     });
   } else if (eventName === "push" || eventName === "pull_request") {
     // Consider that for 'pull_request' commitSha does not represent a known commit
@@ -75,7 +91,9 @@ async function gaBuildHandler({
       provider: "dappnode",
       upload_to: "ipfs",
       skip_save: true,
-      verbose: true
+      verbose: true,
+      all_variants,
+      variants
     });
   } else if (!eventName) {
     throw Error("Not in Github action context");
@@ -87,11 +105,15 @@ async function gaBuildHandler({
 export async function buildAndComment({
   dir,
   commitSha,
-  branch
+  branch,
+  all_variants,
+  variants
 }: {
   dir: string;
   commitSha: string;
   branch: string;
+  all_variants?: boolean;
+  variants?: string;
 }): Promise<void> {
   // Connect to Github Octokit REST API and post or edit a comment on PR
   const github = Github.fromLocal(dir);
@@ -101,7 +123,9 @@ export async function buildAndComment({
     upload_to: "ipfs",
     require_git_data: true,
     delete_old_pins: true,
-    verbose: true
+    verbose: true,
+    all_variants,
+    variants
   });
 
   const body = getBuildBotComment({ commitSha, buildResults });

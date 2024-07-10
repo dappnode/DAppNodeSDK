@@ -56,6 +56,7 @@ export const gaBumpUpstream: CommandModule<
       type: "boolean"
     },
     use_variants: {
+      alias: "use-variants",
       description: `It will use the dappnode_package.json and docker-compose.yml files in the root of the project together with the specific ones defined for each package variant to build all of them`,
       type: "boolean"
     },
@@ -233,8 +234,8 @@ async function updateManifestPkgVersion({
 }): Promise<void> {
   const manifestDirs = allVariants
     ? getAllVariantsInPath(variantsDir).map(variant =>
-        path.join(variantsDir, variant)
-      )
+      path.join(variantsDir, variant)
+    )
     : [dir];
 
   for (const dir of manifestDirs) {
