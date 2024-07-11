@@ -8,7 +8,7 @@ import {
   readManifest
 } from "../../files/index.js";
 import { Compose, Manifest } from "@dappnode/types";
-import { defaultComposeFileName } from "../../params.js";
+import { defaultComposeFileName, singleVariantName } from "../../params.js";
 import { BuildVariantsMap, BuildVariantsMapEntry } from "../../types.js";
 
 export function buildVariantMap({
@@ -23,7 +23,7 @@ export function buildVariantMap({
   composeFileName?: string;
 }): BuildVariantsMap {
   if (!variants || variants.length === 0)
-    return { default: createVariantMapEntry({ rootDir, composeFileName }) };
+    return { [singleVariantName]: createVariantMapEntry({ rootDir, composeFileName }) };
 
   const map: BuildVariantsMap = {};
 

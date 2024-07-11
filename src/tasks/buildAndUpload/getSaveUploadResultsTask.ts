@@ -3,6 +3,7 @@ import { addReleaseRecord } from "../../utils/releaseRecord.js";
 import { BuildVariantsMap, ListrContextBuild } from "../../types.js";
 import { pruneCache } from "../../utils/cache.js";
 import path from "path";
+import { singleVariantName } from "../../params.js";
 
 export function getSaveUploadResultsTask({
   variantsMap,
@@ -22,8 +23,8 @@ export function getSaveUploadResultsTask({
     skip: () => skipUpload,
     task: async ctx => {
       // Single package
-      if (variantsMap.default) {
-        const { name, version } = variantsMap.default.manifest;
+      if (variantsMap[singleVariantName]) {
+        const { name, version } = variantsMap[singleVariantName].manifest;
         const { releaseMultiHash: hash } = ctx[name];
 
         if (hash)
@@ -38,9 +39,7 @@ export function getSaveUploadResultsTask({
       } else {
         for (const [
           variant,
-          {
-            manifest: { name, version }
-          }
+          { manifest: { name, version } }
         ] of Object.entries(variantsMap)) {
           const variantDir = path.join(variantsDirPath, variant);
           const { releaseMultiHash: hash } = ctx[name];
