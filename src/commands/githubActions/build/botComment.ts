@@ -21,7 +21,7 @@ export function getBuildBotComment({
   const buildEntries = Object.entries(buildResults)
     .map(([dnpName, { releaseMultiHash }], index) => {
       if (releaseMultiHash)
-        formatBuildEntry({ dnpName, releaseMultiHash, index });
+        return formatBuildEntry({ dnpName, releaseMultiHash, index });
     })
     .join("\n\n");
 
