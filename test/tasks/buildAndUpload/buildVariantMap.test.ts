@@ -5,7 +5,8 @@ import { initHandler } from "../../../src/commands/init/handler.js";
 import {
   defaultComposeFileName,
   defaultVariantsDirName,
-  defaultVariantsEnvValues
+  defaultVariantsEnvValues,
+  singleVariantName
 } from "../../../src/params.js";
 import { defaultArch } from "@dappnode/types";
 import path from "path";
@@ -24,15 +25,15 @@ describe("buildVariantMap", function () {
       });
     });
 
-    it("should return a map with only default variant", function () {
+    it("should return a map with a single variant", function () {
       const result = buildVariantMap({
         rootDir: testDir,
         variantsDirPath: defaultVariantsDirName,
         variants: null
       });
 
-      expect(result).to.have.all.keys("default");
-      const defaultVariant = result.default;
+      expect(result).to.have.all.keys(singleVariantName);
+      const defaultVariant = result[singleVariantName];
 
       expect(defaultVariant).to.have.all.keys(
         "manifest",

@@ -1,14 +1,6 @@
 import { ListrTask } from "listr";
 import { BuildVariantsMap, ListrContextPublish, ReleaseType } from "../../../types.js";
-import {
-  writeManifest,
-  readCompose,
-  updateComposeImageTags,
-  writeCompose,
-  readManifest
-} from "../../../files/index.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
-import path from "path";
 import { Manifest } from "@dappnode/types";
 
 export function getFetchNextVersionsFromApmTask({
@@ -24,21 +16,40 @@ export function getFetchNextVersionsFromApmTask({
     title: "Fetch current versions from APM",
     task: async ctx => {
 
-      for (const [, { manifest: { name, version } }] of Object.entries(variantsMap)) {
-        ctx[name] = ctx[name] || {};
+      for (const [, { manifest }] of Object.entries(variantsMap)) {
+        const dnpName = manifest.name;
 
-        try {
-          ctx[name].nextVersion = await getNextVersionFromApm({
-            type: releaseType,
-            ethProvider,
-            ensName: name
-          });
-        } catch (e) {
-          if (e.message.includes("NOREPO")) ctx[name].nextVersion = version;
-          else throw e;
-        }
+        ctx[dnpName] = ctx[dnpName] || {};
+        ctx[dnpName].nextVersion = await getNextPackageVersion({
+          manifest,
+          releaseType,
+          ethProvider
+        });
 
       }
     }
   };
+}
+
+export async function getNextPackageVersion({
+  manifest,
+  releaseType,
+  ethProvider,
+}: {
+  manifest: Manifest;
+  releaseType: ReleaseType;
+  ethProvider: string;
+}) {
+  const { name, version } = manifest;
+
+  try {
+    return await getNextVersionFromApm({
+      type: releaseType,
+      ethProvider,
+      ensName: name
+    });
+  } catch (e) {
+    if (e.message.includes("NOREPO")) return version;
+    else throw e;
+  }
 }

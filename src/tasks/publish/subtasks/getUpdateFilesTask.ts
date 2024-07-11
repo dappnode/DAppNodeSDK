@@ -54,7 +54,8 @@ export function getUpdateFilesTask({
   };
 }
 
-function updateVariantFiles({
+// TODO: Test without exporting
+export function updateVariantFiles({
   rootDir,
   composeFileName,
   variant,
@@ -85,7 +86,6 @@ function updateVariantFiles({
     dnpName
   });
 }
-
 
 function updateManifestFileVersion({
   manifestDir,
@@ -127,7 +127,8 @@ function updateComposeFileImages({
   });
 }
 
-function updateVariantEntry({
+// TODO: Test without exporting
+export function updateVariantEntry({
   variant,
   rootDir,
   variantsDirPath,
