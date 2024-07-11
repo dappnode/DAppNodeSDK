@@ -9,6 +9,7 @@ import {
 } from "../../../files/index.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
 import path from "path";
+import { Manifest } from "@dappnode/types";
 
 export function getFetchApmVersionsTask({
   releaseType,
@@ -28,12 +29,7 @@ export function getFetchApmVersionsTask({
   return {
     title: "Fetch current versions from APM",
     task: async ctx => {
-      for (const [
-        variant,
-        {
-          manifest: { name, version }
-        }
-      ] of Object.entries(variantsMap))
+      for (const [variant, { manifest }] of Object.entries(variantsMap))
         await setNextVersionToContext({
           ctx,
           releaseType,
@@ -42,8 +38,7 @@ export function getFetchApmVersionsTask({
           variantsDirPath,
           composeFileName,
           variant: variant === "default" ? null : variant,
-          name,
-          version
+          manifest
         });
     }
   };
@@ -57,8 +52,7 @@ async function setNextVersionToContext({
   variantsDirPath,
   composeFileName,
   variant,
-  name,
-  version
+  manifest
 }: {
   ctx: ListrContextPublish;
   releaseType: ReleaseType;
@@ -67,13 +61,13 @@ async function setNextVersionToContext({
   variantsDirPath: string;
   composeFileName: string;
   variant: string | null;
-  name: string;
-  version: string;
+  manifest: Manifest;
 }): Promise<void> {
+  const { name, version } = manifest
   ctx[name] = ctx[name] || {};
 
   try {
-    ctx[name].nextVersion = await increaseFromApmVersion({
+    const nextVersion = await increaseFromApmVersion({
       type: releaseType,
       ethProvider,
       dir,
@@ -82,6 +76,9 @@ async function setNextVersionToContext({
       variantsDirPath,
       ensName: name
     });
+
+    ctx[name].nextVersion = nextVersion;
+    manifest.version = nextVersion;
   } catch (e) {
     if (e.message.includes("NOREPO")) ctx[name].nextVersion = version;
     else throw e;
