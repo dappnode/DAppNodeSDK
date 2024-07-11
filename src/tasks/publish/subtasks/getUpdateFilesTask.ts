@@ -119,7 +119,7 @@ function updateComposeFileImages({
   const newCompose = updateComposeImageTags(compose, {
     name: dnpName,
     version: nextVersion
-  });
+  }, { editExternalImages: true });
 
   writeCompose(newCompose, {
     dir: composeDir,

@@ -8,7 +8,7 @@ import {
     writeCompose,
     readManifest
 } from "../../../src/files/index.js";
-import { Manifest } from "@dappnode/types";
+import { Compose, Manifest } from "@dappnode/types";
 import { ManifestFormat } from "../../../src/files/manifest/types.js";
 import {
     updateVariantFiles,
@@ -21,11 +21,18 @@ describe("Update Variant Files and Entries", function () {
     this.timeout(60 * 1000);
 
     const dnpName = "admin.dnp.dappnode.eth";
+
     const manifest: Manifest = {
         name: dnpName,
         version: "0.1.0",
         type: "dncore"
     };
+
+    const compose: Compose = {
+        version: "3.8",
+        services: { [dnpName]: { image: "override-me" } }
+    };
+
     const nextVersion = "0.1.1";
 
     before("Clean testDir", () => cleanTestDir());
@@ -34,10 +41,7 @@ describe("Update Variant Files and Entries", function () {
     it("Should update manifest and compose files correctly", async () => {
         // Write initial manifest and compose files
         writeManifest(manifest, ManifestFormat.json, { dir: testDir });
-        writeCompose(
-            { version: "3.8", services: { [dnpName]: { image: `${dnpName}:${manifest.version}` } } },
-            { dir: testDir }
-        );
+        writeCompose(compose, { dir: testDir });
 
         // Update variant files
         updateVariantFiles({
