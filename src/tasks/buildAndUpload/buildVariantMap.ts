@@ -1,7 +1,6 @@
 import path from "path";
 import { parseArchitectures } from "../../utils/parseArchitectures.js";
 import {
-  getComposePath,
   readCompose,
   getComposePackageImages,
   parseComposeUpstreamVersion,
@@ -48,23 +47,18 @@ export function createVariantMapEntry({
   composeFileName: string;
   variantPath?: string;
 }): BuildVariantsMapEntry {
-  const { manifest, format } = variantPath
-    ? readManifest([{ dir: rootDir }, { dir: variantPath }])
-    : readManifest([{ dir: rootDir }]);
+  const manifestPaths = [{ dir: rootDir }];
+  const composePaths = [{ dir: rootDir, composeFileName }];
+
+  if (variantPath) {
+    manifestPaths.push({ dir: variantPath });
+    composePaths.push({ dir: variantPath, composeFileName });
+  }
+
+  const { manifest, format: manifestFormat } = readManifest(manifestPaths);
+  const compose = readCompose(composePaths);
 
   const { name: dnpName, version } = manifest;
-
-  const composePaths = [getComposePath({ dir: rootDir, composeFileName })];
-
-  if (variantPath)
-    composePaths.push(getComposePath({ dir: variantPath, composeFileName }));
-
-  const compose = variantPath
-    ? readCompose([
-      { dir: rootDir, composeFileName },
-      { dir: variantPath, composeFileName }
-    ])
-    : readCompose([{ dir: rootDir, composeFileName }]);
 
   // TODO: Handle upstream object defined case
   if (!manifest.upstream)
@@ -72,11 +66,12 @@ export function createVariantMapEntry({
 
   return {
     manifest,
-    manifestFormat: format,
+    manifestFormat,
 
     compose,
 
     releaseDir: getReleaseDirPath({ rootDir, dnpName, version }),
+    manifestPaths,
     composePaths,
 
     images: getComposePackageImages(compose, manifest),

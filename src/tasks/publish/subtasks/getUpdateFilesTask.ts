@@ -8,23 +8,24 @@ import {
   writeCompose,
   readManifest
 } from "../../../files/index.js";
-import { singleVariantName } from "../../../params.js";
 
 export function getUpdateFilesTask({
   rootDir,
   variantsDirPath,
   composeFileName,
-  variantsMap
+  variantsMap,
+  isMultiVariant
 }: {
   rootDir: string;
   variantsDirPath: string;
   composeFileName: string;
   variantsMap: BuildVariantsMap;
+  isMultiVariant: boolean;
 }): ListrTask<ListrContextPublish> {
   return {
     title: "Update compose and manifest files",
     task: async ctx => {
-      for (const [variant, { manifest: { name } }] of Object.entries(variantsMap)) {
+      for (const [variant, { manifest: { name }, composePaths, manifestPaths }] of Object.entries(variantsMap)) {
         const nextVersion = ctx[name].nextVersion;
 
         if (!nextVersion) {
@@ -39,16 +40,13 @@ export function getUpdateFilesTask({
           variant,
           variantsDirPath,
           dnpName: name,
-          nextVersion
+          nextVersion,
+          isMultiVariant
         });
 
-        updateVariantEntry({
-          variant,
-          rootDir,
-          variantsDirPath,
-          composeFileName,
-          variantsMap
-        });
+        // Update variantsMap entry
+        variantsMap[variant].compose = readCompose(composePaths);
+        variantsMap[variant].manifest = readManifest(manifestPaths).manifest;
       }
     }
   };
@@ -61,7 +59,8 @@ export function updateVariantFiles({
   variant,
   variantsDirPath,
   dnpName,
-  nextVersion
+  nextVersion,
+  isMultiVariant
 }: {
   rootDir: string;
   composeFileName: string;
@@ -69,10 +68,11 @@ export function updateVariantFiles({
   variantsDirPath: string;
   dnpName: string;
   nextVersion: string;
+  isMultiVariant: boolean;
 }): void {
   // For multi-variant packages, manifest and compose files to be modified are located in the variant folder
   // Single variant packages have single-variant as the variant name
-  const filesDir = variant === singleVariantName ? rootDir : path.join(variantsDirPath, variant);
+  const filesDir = isMultiVariant ? path.join(variantsDirPath, variant) : rootDir;
 
   updateManifestFileVersion({
     manifestDir: filesDir,
@@ -125,31 +125,4 @@ function updateComposeFileImages({
     dir: composeDir,
     composeFileName
   });
-}
-
-// TODO: Test without exporting
-export function updateVariantEntry({
-  variant,
-  rootDir,
-  variantsDirPath,
-  composeFileName,
-  variantsMap
-}: {
-  variant: string;
-  rootDir: string;
-  variantsDirPath: string;
-  composeFileName: string;
-  variantsMap: BuildVariantsMap;
-}) {
-  if (variant === singleVariantName) {
-
-    variantsMap[variant].manifest = readManifest([{ dir: rootDir }]).manifest;
-    variantsMap[variant].compose = readCompose([{ dir: rootDir, composeFileName }]);
-
-  } else {
-
-    const variantPath = path.join(variantsDirPath, variant);
-    variantsMap[variant].manifest = readManifest([{ dir: rootDir }, { dir: variantPath }]).manifest;
-    variantsMap[variant].compose = readCompose([{ dir: rootDir, composeFileName }, { dir: variantPath, composeFileName }]);
-  }
 }

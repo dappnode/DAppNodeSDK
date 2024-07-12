@@ -22,7 +22,8 @@ export function publish({
   githubRelease,
   verbosityOptions,
   variantsDirPath,
-  variantsMap
+  variantsMap,
+  isMultiVariant
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
     getVerifyEthConnectionTask({ ethProvider }),
@@ -35,7 +36,8 @@ export function publish({
       rootDir: dir,
       variantsDirPath,
       composeFileName,
-      variantsMap
+      variantsMap,
+      isMultiVariant
     }),
     getBuildAndUploadTask({
       buildOptions: {

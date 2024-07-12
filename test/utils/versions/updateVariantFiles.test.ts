@@ -10,11 +10,7 @@ import {
 } from "../../../src/files/index.js";
 import { Compose, Manifest } from "@dappnode/types";
 import { ManifestFormat } from "../../../src/files/manifest/types.js";
-import {
-    updateVariantFiles,
-    updateVariantEntry
-} from "../../../src/tasks/publish/subtasks/getUpdateFilesTask.js";
-import { BuildVariantsMap } from "../../../src/types.js";
+import { updateVariantFiles, } from "../../../src/tasks/publish/subtasks/getUpdateFilesTask.js";
 
 
 describe("Update Variant Files and Entries", function () {
@@ -50,7 +46,8 @@ describe("Update Variant Files and Entries", function () {
             variant: singleVariantName,
             variantsDirPath: testDir,
             dnpName,
-            nextVersion
+            nextVersion,
+            isMultiVariant: false
         });
 
         // Check that the manifest was updated correctly
@@ -62,40 +59,6 @@ describe("Update Variant Files and Entries", function () {
         expect(updatedCompose.services[dnpName].image).to.equal(
             `${dnpName}:${nextVersion}`,
             "Compose image should be updated to the next version"
-        );
-    });
-
-    it("Should update variant entry correctly", async () => {
-        // Prepare the variants map
-        const variantsMap: BuildVariantsMap = {
-            [singleVariantName]: {
-                manifest,
-                manifestFormat: ManifestFormat.json,
-                compose: readCompose([{ dir: testDir }]),
-                releaseDir: testDir,
-                composePaths: [path.join(testDir, defaultComposeFileName)],
-                images: [],
-                architectures: []
-            }
-        };
-
-        // Update variant entry
-        updateVariantEntry({
-            variant: singleVariantName,
-            rootDir: testDir,
-            variantsDirPath: testDir,
-            composeFileName: defaultComposeFileName,
-            variantsMap
-        });
-
-        // Check that the variants map was updated correctly
-        expect(variantsMap[singleVariantName].manifest.version).to.equal(
-            nextVersion,
-            "Variants map manifest version should be updated to the next version"
-        );
-        expect(variantsMap[singleVariantName].compose.services[dnpName].image).to.equal(
-            `${dnpName}:${nextVersion}`,
-            "Variants map compose image should be updated to the next version"
         );
     });
 });

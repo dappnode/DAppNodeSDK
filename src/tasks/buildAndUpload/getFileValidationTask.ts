@@ -6,7 +6,7 @@ import {
   validateSetupWizardSchema,
   validateDappnodeCompose
 } from "@dappnode/schemas";
-import { readSetupWizardIfExists } from "../../files/index.js";
+import { getComposePath, readSetupWizardIfExists } from "../../files/index.js";
 import { CliError } from "../../params.js";
 
 export function getFileValidationTask({
@@ -53,7 +53,7 @@ async function validateVariantFiles(
   validatePackageVersion(manifest.version);
 
   // Validate compose file using docker compose
-  await validateComposeSchema(composePaths);
+  await validateComposeSchema(composePaths.map(pathObj => getComposePath(pathObj)));
 
   // Validate compose file specifically for Dappnode requirements
   validateDappnodeCompose(compose, manifest);

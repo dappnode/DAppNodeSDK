@@ -40,6 +40,7 @@ describe("buildVariantMap", function () {
         "manifestFormat",
         "compose",
         "releaseDir",
+        "manifestPaths",
         "composePaths",
         "images",
         "architectures"
@@ -53,8 +54,11 @@ describe("buildVariantMap", function () {
       expect(defaultVariant.images).to.be.an("array");
       expect(defaultVariant.architectures).to.be.an("array");
 
-      expect(defaultVariant.composePaths).to.include.members([
-        `${testDir}/${defaultComposeFileName}`
+      expect(defaultVariant.composePaths).to.deep.include.members([
+        {
+          composeFileName: defaultComposeFileName,
+          dir: testDir
+        }
       ]);
 
       expect(defaultVariant.architectures).to.include(defaultArch);
@@ -103,9 +107,15 @@ describe("buildVariantMap", function () {
         expect(result[variant].architectures).to.be.an("array");
 
         // Example: Validate specific variant paths
-        expect(result[variant].composePaths).to.include.members([
-          `${testDir}/${defaultComposeFileName}`,
-          `${testDir}/${defaultVariantsDirName}/${variant}/${defaultComposeFileName}`
+        expect(result[variant].composePaths).to.deep.include.members([
+          {
+            composeFileName: defaultComposeFileName,
+            dir: testDir
+          },
+          {
+            composeFileName: defaultComposeFileName,
+            dir: `${testDir}/${defaultVariantsDirName}/${variant}`
+          }
         ]);
 
         // Assuming we can check details about manifest, compose object structure if known

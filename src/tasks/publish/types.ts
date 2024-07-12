@@ -17,4 +17,5 @@ export interface PublishOptions {
   verbosityOptions: VerbosityOptions;
   variantsDirPath: string;
   variantsMap: BuildVariantsMap;
+  isMultiVariant: boolean;
 }
