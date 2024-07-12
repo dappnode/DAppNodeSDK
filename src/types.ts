@@ -27,13 +27,15 @@ export interface ListrContextPublish {
   [dnpName: string]: ListrContextPublishItem;
 }
 
-interface PublishVariantsMapEntry {
+interface PackageToPublishProps {
   // Manifest-related
   manifest: Manifest;
   manifestFormat: ManifestFormat;
 }
 
-export interface BuildVariantsMapEntry extends PublishVariantsMapEntry {
+export interface PackageToBuildProps extends PackageToPublishProps {
+  variant: string | null;
+
   // Compose file
   compose: Compose;
 
@@ -45,10 +47,6 @@ export interface BuildVariantsMapEntry extends PublishVariantsMapEntry {
   // Package information
   images: PackageImage[];
   architectures: Architecture[];
-}
-
-export interface BuildVariantsMap {
-  [variant: string]: BuildVariantsMapEntry;
 }
 
 // Interal types

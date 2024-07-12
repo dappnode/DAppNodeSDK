@@ -9,7 +9,8 @@ import { VerbosityOptions } from "../build/types.js";
 import { PublishCommandOptions } from "./types.js";
 import { publish } from "../../tasks/publish/index.js";
 import { parseReleaseType } from "./parseReleaseType.js";
-import { getVariantOptions } from "../build/variants.js";
+import { getPackagesToBuildProps } from "../build/variants.js";
+import path from "path";
 
 /**
  * Common handler for CLI and programatic usage
@@ -61,6 +62,8 @@ export async function publishHandler({
 
   const releaseType = parseReleaseType({ type });
 
+  const variantsDirPath = path.join(dir, variantsDirName);
+
   const publishTasks = new Listr(
     publish({
       releaseType,
@@ -75,11 +78,12 @@ export async function publishHandler({
       developerAddress,
       githubRelease,
       verbosityOptions,
-      ...getVariantOptions({
+      variantsDirPath,
+      packagesToBuildProps: getPackagesToBuildProps({
         allVariants: Boolean(allVariants),
         variantsStr: variants,
         rootDir: dir,
-        variantsDirName,
+        variantsDirPath,
         composeFileName
       }),
       isMultiVariant

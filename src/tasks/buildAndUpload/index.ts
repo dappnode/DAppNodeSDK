@@ -27,7 +27,7 @@ export function buildAndUpload({
   composeFileName,
   dir,
   variantsDirPath = defaultVariantsDirName,
-  variantsMap
+  packagesToBuildProps: variantsMap
 }: BuildAndUploadOptions): ListrTask<ListrContextBuild>[] {
   const buildTimeout = parseTimeout(userTimeout);
 

@@ -22,7 +22,7 @@ export function publish({
   githubRelease,
   verbosityOptions,
   variantsDirPath,
-  variantsMap,
+  packagesToBuildProps: variantsMap,
   isMultiVariant
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
@@ -48,7 +48,7 @@ export function publish({
         userTimeout,
         requireGitData,
         deleteOldPins,
-        variantsMap,
+        packagesToBuildProps: variantsMap,
         variantsDirPath
       },
       verbosityOptions

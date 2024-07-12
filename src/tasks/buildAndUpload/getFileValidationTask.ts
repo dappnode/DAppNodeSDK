@@ -1,5 +1,5 @@
 import { ListrTask } from "listr/index.js";
-import { BuildVariantsMap, BuildVariantsMapEntry, ListrContextBuild } from "../../types.js";
+import { PackageToBuildProps, ListrContextBuild } from "../../types.js";
 import {
   validateComposeSchema,
   validateManifestSchema,
@@ -38,7 +38,7 @@ async function validatePackageFiles({
 }
 
 async function validateVariantFiles(
-  variant: BuildVariantsMapEntry
+  variant: PackageToBuildProps
 ): Promise<void> {
   const { manifest, compose, composePaths } = variant;
 

@@ -1,6 +1,6 @@
 import path from "path";
 import Listr, { ListrTask } from "listr/index.js";
-import { BuildVariantsMap, BuildVariantsMapEntry, ListrContextBuild } from "../../types.js";
+import { BuildVariantsMap, PackageToBuildProps, ListrContextBuild } from "../../types.js";
 import { buildWithBuildx } from "./buildWithBuildx.js";
 import { buildWithCompose } from "./buildWithCompose.js";
 import { Architecture, defaultArch } from "@dappnode/types";
@@ -48,7 +48,7 @@ function createBuildTask({
   skipSave,
   rootDir
 }: {
-  variantSpecs: BuildVariantsMapEntry;
+  variantSpecs: PackageToBuildProps;
   architecture: Architecture;
   buildTimeout: number;
   skipSave?: boolean;

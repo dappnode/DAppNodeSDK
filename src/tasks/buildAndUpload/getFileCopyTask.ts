@@ -7,7 +7,7 @@ import {
   defaultComposeFileName,
   releaseFilesDefaultNames
 } from "../../params.js";
-import { BuildVariantsMap, BuildVariantsMapEntry, ListrContextBuild } from "../../types.js";
+import { BuildVariantsMap, PackageToBuildProps, ListrContextBuild } from "../../types.js";
 import { getGitHeadIfAvailable } from "../../utils/git.js";
 import {
   updateComposeImageTags,
@@ -78,7 +78,7 @@ async function copyVariantFilesToReleaseDir({
   rootDir,
   composeFileName
 }: {
-  variantProps: BuildVariantsMapEntry;
+  variantProps: PackageToBuildProps;
   variantDirPath: string;
   rootDir: string;
   composeFileName: string;
