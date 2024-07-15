@@ -1,7 +1,6 @@
 import { expect } from "chai";
-import path from "path";
 import { cleanTestDir, testDir } from "../../testUtils.js";
-import { defaultComposeFileName, singleVariantName } from "../../../src/params.js";
+import { defaultComposeFileName } from "../../../src/params.js";
 import {
     writeManifest,
     readCompose,
@@ -34,7 +33,7 @@ describe("Update Variant Files and Entries", function () {
     before("Clean testDir", () => cleanTestDir());
     after("Clean testDir", () => cleanTestDir());
 
-    it("Should update manifest and compose files correctly", async () => {
+    it("Should update manifest and compose files correctly for a single variant package", async () => {
         // Write initial manifest and compose files
         writeManifest(manifest, ManifestFormat.json, { dir: testDir });
         writeCompose(compose, { dir: testDir });
@@ -43,11 +42,10 @@ describe("Update Variant Files and Entries", function () {
         updateVariantFiles({
             rootDir: testDir,
             composeFileName: defaultComposeFileName,
-            variant: singleVariantName,
+            variant: null,
             variantsDirPath: testDir,
             dnpName,
             nextVersion,
-            isMultiVariant: false
         });
 
         // Check that the manifest was updated correctly

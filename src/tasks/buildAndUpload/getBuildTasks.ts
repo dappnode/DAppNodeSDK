@@ -1,6 +1,6 @@
 import path from "path";
 import Listr, { ListrTask } from "listr/index.js";
-import { BuildVariantsMap, BuildVariantsMapEntry, ListrContextBuild } from "../../types.js";
+import { PackageToBuildProps, ListrContextBuild } from "../../types.js";
 import { buildWithBuildx } from "./buildWithBuildx.js";
 import { buildWithCompose } from "./buildWithCompose.js";
 import { Architecture, defaultArch } from "@dappnode/types";
@@ -14,22 +14,20 @@ import { getImageFileName } from "../../utils/getImageFileName.js";
  * const imageEntry = files.find(file => /\.tar\.xz$/.test(file));
  */
 export function getBuildTasks({
-  variantsMap,
+  packagesToBuildProps,
   buildTimeout,
   skipSave,
   rootDir
 }: {
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
   buildTimeout: number;
   skipSave?: boolean;
   rootDir: string;
 }): ListrTask<ListrContextBuild>[] {
-  const buildTasks: ListrTask<ListrContextBuild>[] = Object.entries(
-    variantsMap
-  ).flatMap(([, variantSpecs]) => {
-    return variantSpecs.architectures.map(architecture =>
+  const buildTasks: ListrTask<ListrContextBuild>[] = packagesToBuildProps.flatMap((pkgProps) => {
+    return pkgProps.architectures.map(architecture =>
       createBuildTask({
-        variantSpecs,
+        pkgProps,
         architecture,
         buildTimeout,
         skipSave,
@@ -42,19 +40,19 @@ export function getBuildTasks({
 }
 
 function createBuildTask({
-  variantSpecs,
+  pkgProps,
   architecture,
   buildTimeout,
   skipSave,
   rootDir
 }: {
-  variantSpecs: BuildVariantsMapEntry;
+  pkgProps: PackageToBuildProps;
   architecture: Architecture;
   buildTimeout: number;
   skipSave?: boolean;
   rootDir: string;
-}): ListrTask {
-  const { manifest, releaseDir, images, compose } = variantSpecs;
+}): ListrTask<ListrContextBuild> {
+  const { manifest, releaseDir, images, compose } = pkgProps;
   const { name, version } = manifest;
   const buildFn =
     architecture === defaultArch ? buildWithCompose : buildWithBuildx;

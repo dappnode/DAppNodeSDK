@@ -1,12 +1,11 @@
 import { expect } from "chai";
-import { buildVariantMap } from "../../../src/tasks/buildAndUpload/buildVariantMap.js";
+import { generatePackagesProps } from "../../../src/tasks/buildAndUpload/generatePackagesProps.js";
 import { cleanTestDir, testDir } from "../../testUtils.js";
 import { initHandler } from "../../../src/commands/init/handler.js";
 import {
   defaultComposeFileName,
   defaultVariantsDirName,
   defaultVariantsEnvValues,
-  singleVariantName
 } from "../../../src/params.js";
 import { defaultArch } from "@dappnode/types";
 import path from "path";
@@ -25,17 +24,19 @@ describe("buildVariantMap", function () {
       });
     });
 
-    it("should return a map with a single variant", function () {
-      const result = buildVariantMap({
+    it("should return a package properties array for a single-variant package", function () {
+      const pkgsProps = generatePackagesProps({
         rootDir: testDir,
         variantsDirPath: defaultVariantsDirName,
         variants: null
       });
 
-      expect(result).to.have.all.keys(singleVariantName);
-      const defaultVariant = result[singleVariantName];
+      expect(pkgsProps).to.be.an("array");
+      expect(pkgsProps).to.have.lengthOf(1);
 
-      expect(defaultVariant).to.have.all.keys(
+      const pkgProps = pkgsProps[0];
+
+      expect(pkgProps).to.have.all.keys(
         "manifest",
         "manifestFormat",
         "compose",
@@ -43,27 +44,28 @@ describe("buildVariantMap", function () {
         "manifestPaths",
         "composePaths",
         "images",
-        "architectures"
+        "architectures",
+        "variant"
       );
 
       // Validate the properties are of correct types or formats
-      expect(defaultVariant.manifest).to.be.an("object");
-      expect(defaultVariant.compose).to.be.an("object");
-      expect(defaultVariant.releaseDir).to.be.a("string");
-      expect(defaultVariant.composePaths).to.be.an("array");
-      expect(defaultVariant.images).to.be.an("array");
-      expect(defaultVariant.architectures).to.be.an("array");
+      expect(pkgProps.manifest).to.be.an("object");
+      expect(pkgProps.compose).to.be.an("object");
+      expect(pkgProps.releaseDir).to.be.a("string");
+      expect(pkgProps.composePaths).to.be.an("array");
+      expect(pkgProps.images).to.be.an("array");
+      expect(pkgProps.architectures).to.be.an("array");
 
-      expect(defaultVariant.composePaths).to.deep.include.members([
+      expect(pkgProps.composePaths).to.deep.include.members([
         {
           composeFileName: defaultComposeFileName,
           dir: testDir
         }
       ]);
 
-      expect(defaultVariant.architectures).to.include(defaultArch);
+      expect(pkgProps.architectures).to.include(defaultArch);
 
-      expect(defaultVariant.manifest).to.include.keys(["name", "version"]);
+      expect(pkgProps.manifest).to.include.keys(["name", "version"]);
     });
   });
 
@@ -78,17 +80,22 @@ describe("buildVariantMap", function () {
     });
 
     it("should return a map including all specified variants", function () {
-      const result = buildVariantMap({
+      const pkgsProps = generatePackagesProps({
         variants: defaultVariantsEnvValues,
         rootDir: testDir,
         variantsDirPath: path.join(testDir, defaultVariantsDirName)
       });
 
-      // Verify
-      expect(result).to.have.all.keys(defaultVariantsEnvValues);
-      defaultVariantsEnvValues.forEach(variant => {
-        expect(result[variant]).to.be.an("object");
-        expect(result[variant]).to.include.all.keys(
+      expect(pkgsProps).to.be.an("array");
+      expect(pkgsProps).to.have.lengthOf(defaultVariantsEnvValues.length);
+      expect(pkgsProps.map(pkgProps => pkgProps.variant)).to.deep.equal(defaultVariantsEnvValues);
+
+      defaultVariantsEnvValues.forEach((variant, index) => {
+        const pkgProps = pkgsProps[index];
+
+        expect(pkgProps).to.be.an("object");
+        expect(pkgProps.variant).to.equal(variant);
+        expect(pkgProps).to.include.all.keys(
           "manifest",
           "manifestFormat",
           "compose",
@@ -99,15 +106,15 @@ describe("buildVariantMap", function () {
         );
 
         // Validate the properties are of correct types or formats
-        expect(result[variant].manifest).to.be.an("object");
-        expect(result[variant].compose).to.be.an("object");
-        expect(result[variant].releaseDir).to.be.a("string");
-        expect(result[variant].composePaths).to.be.an("array");
-        expect(result[variant].images).to.be.an("array");
-        expect(result[variant].architectures).to.be.an("array");
+        expect(pkgProps.manifest).to.be.an("object");
+        expect(pkgProps.compose).to.be.an("object");
+        expect(pkgProps.releaseDir).to.be.a("string");
+        expect(pkgProps.composePaths).to.be.an("array");
+        expect(pkgProps.images).to.be.an("array");
+        expect(pkgProps.architectures).to.be.an("array");
 
         // Example: Validate specific variant paths
-        expect(result[variant].composePaths).to.deep.include.members([
+        expect(pkgProps.composePaths).to.deep.include.members([
           {
             composeFileName: defaultComposeFileName,
             dir: testDir
@@ -119,7 +126,7 @@ describe("buildVariantMap", function () {
         ]);
 
         // Assuming we can check details about manifest, compose object structure if known
-        expect(result[variant].manifest).to.include.keys(["name", "version"]);
+        expect(pkgProps.manifest).to.include.keys(["name", "version"]);
       });
     });
   });

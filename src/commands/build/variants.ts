@@ -1,31 +1,26 @@
 import chalk from "chalk";
 import { getAllVariantsInPath } from "../../files/variants/getAllPackageVariants.js";
-import path from "path";
-import { BuildVariantsMap } from "../../types.js";
-import { buildVariantMap } from "../../tasks/buildAndUpload/buildVariantMap.js";
+import { PackageToBuildProps } from "../../types.js";
+import { generatePackagesProps } from "../../tasks/buildAndUpload/generatePackagesProps.js";
 
-export function getVariantOptions({
+export function getPackagesToBuildProps({
   allVariants,
   variantsStr,
   rootDir,
-  variantsDirName,
+  variantsDirPath,
   composeFileName
 }: {
   allVariants: boolean;
   variantsStr?: string;
   rootDir: string;
-  variantsDirName: string;
+  variantsDirPath: string;
   composeFileName: string;
-}): { variantsMap: BuildVariantsMap; variantsDirPath: string } {
-  const variantsDirPath = path.join(rootDir, variantsDirName);
+}): PackageToBuildProps[] {
 
   const buildVariantMapArgs = { rootDir, variantsDirPath, composeFileName };
 
   if (!allVariants && !variantsStr)
-    return {
-      variantsMap: buildVariantMap({ ...buildVariantMapArgs, variants: null }),
-      variantsDirPath
-    };
+    return generatePackagesProps({ ...buildVariantMapArgs, variants: null });
 
   const validVariantNames = getValidVariantNames({
     variantsDirPath,
@@ -43,13 +38,10 @@ export function getVariantOptions({
     )}`
   );
 
-  return {
-    variantsMap: buildVariantMap({
-      ...buildVariantMapArgs,
-      variants: validVariantNames
-    }),
-    variantsDirPath
-  };
+  return generatePackagesProps({
+    ...buildVariantMapArgs,
+    variants: validVariantNames
+  });
 }
 
 /**

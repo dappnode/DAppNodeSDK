@@ -1,16 +1,16 @@
 import { ListrTask } from "listr/index.js";
-import { BuildVariantsMap, ListrContextBuild } from "../../types.js";
+import { PackageToBuildProps, ListrContextBuild } from "../../types.js";
 import { getGitHead } from "../../utils/git.js";
 import { fetchPinsWithBranchToDelete } from "../../pinStrategy/index.js";
 import { PinataPinManager } from "../../providers/pinata/pinManager.js";
 import { ReleaseUploaderProvider } from "../../releaseUploader/index.js";
 
 export function getDeleteOldPinsTask({
-  variantsMap,
+  packagesToBuildProps,
   deleteOldPins,
   releaseUploaderProvider
 }: {
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
   deleteOldPins: boolean;
   releaseUploaderProvider: ReleaseUploaderProvider;
 }): ListrTask<ListrContextBuild> {
@@ -25,7 +25,7 @@ export function getDeleteOldPinsTask({
       // Unpin items on the same branch but previous (ancestor) commits
       const pinata = new PinataPinManager(releaseUploaderProvider);
 
-      for (const [, { manifest }] of Object.entries(variantsMap)) {
+      for (const { manifest } of packagesToBuildProps) {
         const pinsToDelete = await fetchPinsWithBranchToDelete(
           pinata,
           manifest,

@@ -1,4 +1,4 @@
-import { BuildVariantsMap, PackageImage } from "../../types.js";
+import { PackageToBuildProps } from "../../types.js";
 import { UploadTo } from "../../releaseUploader/index.js";
 
 export interface BuildAndUploadOptions {
@@ -12,5 +12,5 @@ export interface BuildAndUploadOptions {
   composeFileName: string;
   dir: string;
   variantsDirPath?: string;
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
 }

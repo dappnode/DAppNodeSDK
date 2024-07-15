@@ -22,22 +22,20 @@ export function publish({
   githubRelease,
   verbosityOptions,
   variantsDirPath,
-  variantsMap,
-  isMultiVariant
+  packagesToBuildProps,
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
     getVerifyEthConnectionTask({ ethProvider }),
     getFetchNextVersionsFromApmTask({
       releaseType,
       ethProvider,
-      variantsMap
+      packagesToBuildProps
     }),
     getUpdateFilesTask({
       rootDir: dir,
       variantsDirPath,
       composeFileName,
-      variantsMap,
-      isMultiVariant
+      packagesToBuildProps
     }),
     getBuildAndUploadTask({
       buildOptions: {
@@ -48,7 +46,7 @@ export function publish({
         userTimeout,
         requireGitData,
         deleteOldPins,
-        variantsMap,
+        packagesToBuildProps,
         variantsDirPath
       },
       verbosityOptions
@@ -59,7 +57,7 @@ export function publish({
       developerAddress,
       ethProvider,
       verbosityOptions,
-      variantsMap
+      packagesToBuildProps
     }),
     getCreateGithubReleaseTask({
       dir,
