@@ -4,10 +4,6 @@ import { Github } from "../../../providers/github/Github.js";
 import { ListrContextPublish, TxData } from "../../../types.js";
 import { ListrTask } from "listr";
 import {
-  compactManifestIfCore,
-  composeDeleteBuildProperties
-} from "../../../files/index.js";
-import {
   getInstallDnpLink,
   getPublishTxLink
 } from "../../../utils/getLinks.js";
@@ -38,54 +34,25 @@ export function getCreateReleaseTask({
       task.output = "Deleting existing release...";
       await github.deleteReleaseAndAssets(tag);
 
-      const contentHashPaths = await handleReleaseVariantFiles({
-        releaseDetailsMap,
-        composeFileName
-      });
+      const hashesDir = path.join(process.cwd(), "content_hashes");
+
+      writeContentHashesToDir({ hashesDir, releaseDetailsMap });
 
       task.output = `Creating release for tag ${tag}...`;
-      await github.createRelease(tag, {
+      await github.createReleaseWithAssets(tag, {
         body: await getReleaseBody({ releaseDetailsMap }),
         prerelease: true, // Until it is actually published to mainnet
+        assetsDir: hashesDir
       });
 
-      // Clean content hash file so the directory uploaded to IPFS is the same
-      // as the local build_* dir. User can then `ipfs add -r` and get the same hash
-      contentHashPaths.map(contentHashPath => fs.unlinkSync(contentHashPath));
+      // Remove the hashes dir
+      try {
+        fs.rmdirSync(hashesDir);
+      } catch (e) {
+        console.error(`Error removing hashes dir ${hashesDir}`, e);
+      }
     }
   };
-}
-
-async function handleReleaseVariantFiles({
-  releaseDetailsMap,
-  composeFileName
-}: {
-  releaseDetailsMap: ReleaseDetailsMap;
-  composeFileName?: string;
-}): Promise<string[]> {
-  const contentHashPaths: string[] = [];
-
-  for (const [, { variant, releaseDir, releaseMultiHash }] of Object.entries(
-    releaseDetailsMap
-  )) {
-    if (!releaseMultiHash) {
-      throw new Error(
-        `Release hash not found for variant ${variant} of ${name}`
-      );
-    }
-
-    const contentHashPath = writeContentHashToFile({
-      releaseDir,
-      releaseMultiHash
-    });
-
-    contentHashPaths.push(contentHashPath);
-
-    compactManifestIfCore(releaseDir);
-    composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
-  }
-
-  return contentHashPaths;
 }
 
 /**
@@ -94,16 +61,29 @@ async function handleReleaseVariantFiles({
  * of the eth clients. The resulting hashes are used by the DAPPMANAGER
  * to install an eth client when the user does not want to use a remote node
  */
-function writeContentHashToFile({
-  releaseDir,
-  releaseMultiHash
+async function writeContentHashesToDir({
+  hashesDir,
+  releaseDetailsMap
 }: {
-  releaseDir: string;
-  releaseMultiHash: string;
-}): string {
-  const contentHashPath = path.join(releaseDir, contentHashFileName);
-  fs.writeFileSync(contentHashPath, releaseMultiHash);
-  return contentHashPath;
+  hashesDir: string;
+  releaseDetailsMap: ReleaseDetailsMap;
+}) {
+  if (!fs.existsSync(hashesDir)) {
+    fs.mkdirSync(hashesDir);
+  }
+
+  for (const [dnpName, { releaseMultiHash }] of Object.entries(releaseDetailsMap)) {
+
+    const shortDnpName = dnpName.split(".")[0];
+
+    const contentHashPath = path.join(hashesDir, `${contentHashFileName}_${shortDnpName}`);
+
+    try {
+      fs.writeFileSync(contentHashPath, releaseMultiHash);
+    } catch (e) {
+      console.error(`Error writing content hash to ${contentHashPath}`, e);
+    }
+  }
 }
 
 /**
