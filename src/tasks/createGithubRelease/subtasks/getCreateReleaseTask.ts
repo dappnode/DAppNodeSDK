@@ -11,6 +11,7 @@ import { getNextGitTag } from "../getNextGitTag.js";
 import { contentHashFileName } from "../../../params.js";
 import { ReleaseDetailsMap } from "../types.js";
 import { buildReleaseDetailsMap } from "../buildReleaseDetailsMap.js";
+import { compactManifestIfCore, composeDeleteBuildProperties } from "../../../files/index.js";
 
 /**
  * Create release
@@ -34,54 +35,77 @@ export function getCreateReleaseTask({
       task.output = "Deleting existing release...";
       await github.deleteReleaseAndAssets(tag);
 
-      const hashesDir = path.join(process.cwd(), "content_hashes");
-
-      writeContentHashesToDir({ hashesDir, releaseDetailsMap });
-
       task.output = `Creating release for tag ${tag}...`;
-      await github.createReleaseWithAssets(tag, {
+      const releaseId = await github.createRelease(tag, {
         body: await getReleaseBody({ releaseDetailsMap }),
         prerelease: true, // Until it is actually published to mainnet
-        assetsDir: hashesDir
       });
 
-      // Remove the hashes dir
-      try {
-        fs.rmdirSync(hashesDir);
-      } catch (e) {
-        console.error(`Error removing hashes dir ${hashesDir}`, e);
-      }
+      task.output = "Preparing release directories for Github release...";
+      prepareGithubReleaseFiles({ releaseDetailsMap, composeFileName });
+
+      task.output = "Uploading assets...";
+      await uploadAssets({ releaseDetailsMap, github, releaseId });
+
     }
   };
 }
 
-/**
- * Plain text file which should contain the IPFS hash of the release
- * Necessary for the installer script to fetch the latest content hash
- * of the eth clients. The resulting hashes are used by the DAPPMANAGER
- * to install an eth client when the user does not want to use a remote node
- */
-async function writeContentHashesToDir({
-  hashesDir,
-  releaseDetailsMap
+function prepareGithubReleaseFiles({
+  releaseDetailsMap,
+  composeFileName
 }: {
-  hashesDir: string;
   releaseDetailsMap: ReleaseDetailsMap;
+  composeFileName?: string;
 }) {
-  if (!fs.existsSync(hashesDir)) {
-    fs.mkdirSync(hashesDir);
-  }
+  for (const [, { releaseMultiHash, releaseDir }] of Object.entries(releaseDetailsMap)) {
 
-  for (const [dnpName, { releaseMultiHash }] of Object.entries(releaseDetailsMap)) {
-
-    const shortDnpName = dnpName.split(".")[0];
-
-    const contentHashPath = path.join(hashesDir, `${contentHashFileName}_${shortDnpName}`);
+    const contentHashPath = path.join(releaseDir, `${contentHashFileName}`);
 
     try {
+
+      /**
+       * Plain text file which should contain the IPFS hash of the release
+       * Necessary for the installer script to fetch the latest content hash
+       * of the eth clients. The resulting hashes are used by the DAPPMANAGER
+       * to install an eth client when the user does not want to use a remote node
+       */
       fs.writeFileSync(contentHashPath, releaseMultiHash);
+
+      compactManifestIfCore(releaseDir);
+      composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
+
     } catch (e) {
-      console.error(`Error writing content hash to ${contentHashPath}`, e);
+      console.error(`Error found while preparing files in ${releaseDir} for Github release`, e);
+    }
+  }
+}
+
+async function uploadAssets({
+  releaseDetailsMap,
+  github,
+  releaseId
+}: {
+  releaseDetailsMap: ReleaseDetailsMap;
+  github: Github;
+  releaseId: number;
+}) {
+  // TODO: Modify when releaseDetailsMap is replaced by releaseDetails[]
+  const isMultiVariant = Object.keys(releaseDetailsMap).length > 1;
+
+  for (const [dnpName, { releaseDir }] of Object.entries(releaseDetailsMap)) {
+    const shortDnpName = dnpName.split(".")[0];
+
+    try {
+      await github.uploadReleaseAssets({
+        releaseId,
+        assetsDir: releaseDir,
+        ignorePattern: /\.tar\.xz$/,
+        fileNamePrefix: isMultiVariant ? `${shortDnpName}_` : ""
+      });
+
+    } catch (e) {
+      console.error(`Error uploading assets from ${releaseDir}`, e);
     }
   }
 }

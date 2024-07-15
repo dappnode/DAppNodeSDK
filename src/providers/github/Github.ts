@@ -188,20 +188,18 @@ export class Github {
   }
 
   /**
-   * Create a Github release
+   * Create a Github release and return the release id
    * @param tag "v0.2.0"
    * @param options
    */
-  async createReleaseWithAssets(
+  async createRelease(
     tag: string,
     options?: {
       body?: string;
       prerelease?: boolean;
-      assetsDir?: string;
-      ignorePattern?: RegExp;
     }
-  ): Promise<void> {
-    const { body, prerelease, assetsDir, ignorePattern } = options || {};
+  ): Promise<number> {
+    const { body, prerelease } = options || {};
     const release = await this.octokit.rest.repos
       .createRelease({
         owner: this.owner,
@@ -220,36 +218,49 @@ export class Github {
         throw e;
       });
 
-    if (assetsDir)
-      for (const file of fs.readdirSync(assetsDir)) {
-        // Used to ignore duplicated legacy .tar.xz image
-        if (ignorePattern && ignorePattern.test(file)) continue;
+    return release.data.id;
+  }
 
-        const filepath = path.resolve(assetsDir, file);
-        const contentType = mime.lookup(filepath) || "application/octet-stream";
-        try {
-          // The uploadReleaseAssetApi fails sometimes, retry 3 times
-          await retry(
-            async () => {
-              await this.octokit.repos.uploadReleaseAsset({
-                owner: this.owner,
-                repo: this.repo,
-                release_id: release.data.id,
-                data: fs.createReadStream(filepath) as any,
-                headers: {
-                  "content-type": contentType,
-                  "content-length": fs.statSync(filepath).size
-                },
-                name: path.basename(filepath)
-              });
-            },
-            { retries: 3 }
-          );
-        } catch (e) {
-          e.message = `Error uploading release asset: ${e.message}`;
-          throw e;
-        }
+  async uploadReleaseAssets({
+    releaseId,
+    assetsDir,
+    ignorePattern,
+    fileNamePrefix
+  }: {
+    releaseId: number;
+    assetsDir: string;
+    ignorePattern?: RegExp;
+    fileNamePrefix?: string;
+  }) {
+    for (const file of fs.readdirSync(assetsDir)) {
+      // Used to ignore duplicated legacy .tar.xz image
+      if (ignorePattern && ignorePattern.test(file)) continue;
+
+      const filepath = path.resolve(assetsDir, file);
+      const contentType = mime.lookup(filepath) || "application/octet-stream";
+      try {
+        // The uploadReleaseAssetApi fails sometimes, retry 3 times
+        await retry(
+          async () => {
+            await this.octokit.repos.uploadReleaseAsset({
+              owner: this.owner,
+              repo: this.repo,
+              release_id: releaseId,
+              data: fs.createReadStream(filepath) as any,
+              headers: {
+                "content-type": contentType,
+                "content-length": fs.statSync(filepath).size
+              },
+              name: `${fileNamePrefix || ""}${path.basename(filepath)}`
+            });
+          },
+          { retries: 3 }
+        );
+      } catch (e) {
+        e.message = `Error uploading release asset: ${e.message}`;
+        throw e;
       }
+    }
   }
 
   /**
