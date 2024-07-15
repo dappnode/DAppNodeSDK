@@ -9,51 +9,32 @@ export function getSaveUploadResultsTask({
   rootDir,
   variantsDirPath,
   contentProvider,
-  skipUpload
+  skipUpload,
+  isMultiVariant
 }: {
   variantsMap: BuildVariantsMap;
   rootDir: string;
   variantsDirPath: string;
   contentProvider: string;
   skipUpload?: boolean;
+  isMultiVariant?: boolean;
 }): ListrTask<ListrContextBuild> {
   return {
     title: "Save upload results",
     skip: () => skipUpload,
     task: async ctx => {
-      // Single package
-      if (variantsMap.default) {
-        const { name, version } = variantsMap.default.manifest;
+
+      for (const [variant, { manifest: { name, version } }] of Object.entries(variantsMap)) {
         const { releaseMultiHash: hash } = ctx[name];
 
-        if (hash)
-          addReleaseRecord({
-            dir: rootDir,
-            version,
-            hash,
-            to: contentProvider
-          });
+        if (!hash) continue;
 
-        // Multi-variant package
-      } else {
-        for (const [
-          variant,
-          {
-            manifest: { name, version }
-          }
-        ] of Object.entries(variantsMap)) {
-          const variantDir = path.join(variantsDirPath, variant);
-          const { releaseMultiHash: hash } = ctx[name];
-
-          if (!hash) continue;
-
-          addReleaseRecord({
-            dir: variantDir,
-            version,
-            hash,
-            to: contentProvider
-          });
-        }
+        addReleaseRecord({
+          dir: isMultiVariant ? path.join(variantsDirPath, variant) : rootDir,
+          version,
+          hash,
+          to: contentProvider
+        });
       }
 
       try {

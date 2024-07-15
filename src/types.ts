@@ -1,5 +1,5 @@
-import { Architecture, Compose, Manifest } from "@dappnode/types";
-import { ManifestFormat } from "./files/manifest/types.js";
+import { Architecture, Compose, ComposePaths, Manifest } from "@dappnode/types";
+import { ManifestFormat, ManifestPaths } from "./files/manifest/types.js";
 
 export interface CliGlobalOptions {
   dir?: string;
@@ -39,7 +39,8 @@ export interface BuildVariantsMapEntry extends PublishVariantsMapEntry {
 
   // File paths
   releaseDir: string;
-  composePaths: string[];
+  composePaths: ComposePaths[];
+  manifestPaths: ManifestPaths[];
 
   // Package information
   images: PackageImage[];

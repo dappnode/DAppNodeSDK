@@ -37,6 +37,7 @@ export async function publishHandler({
 }: PublishCommandOptions): Promise<ListrContextPublish> {
   let ethProvider = provider || eth_provider;
   let contentProvider = provider || content_provider;
+  const isMultiVariant = Boolean(allVariants) || Boolean(variants);
 
   const isCi = process.env.CI;
 
@@ -80,7 +81,8 @@ export async function publishHandler({
         rootDir: dir,
         variantsDirName,
         composeFileName
-      })
+      }),
+      isMultiVariant
     }),
     verbosityOptions
   );

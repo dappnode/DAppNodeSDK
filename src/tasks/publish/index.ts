@@ -1,11 +1,12 @@
 import { ListrTask } from "listr";
 import { PublishOptions } from "./types.js";
 import { ListrContextPublish } from "../../types.js";
-import { getFetchApmVersionsTask } from "./subtasks/getFetchApmVersionsTask.js";
+import { getFetchNextVersionsFromApmTask } from "./subtasks/getFetchApmVersionsTask.js";
 import { getBuildAndUploadTask } from "./subtasks/getBuildAndUploadTask.js";
 import { getGenerateTxTask } from "./subtasks/getGenerateTxsTask.js";
 import { getCreateGithubReleaseTask } from "./subtasks/getCreateGithubReleaseTask.js";
 import { getVerifyEthConnectionTask } from "./subtasks/getVerifyEthConnectionTask.js";
+import { getUpdateFilesTask } from "./subtasks/getUpdateFilesTask.js";
 
 export function publish({
   releaseType,
@@ -21,17 +22,22 @@ export function publish({
   githubRelease,
   verbosityOptions,
   variantsDirPath,
-  variantsMap
+  variantsMap,
+  isMultiVariant
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
     getVerifyEthConnectionTask({ ethProvider }),
-    getFetchApmVersionsTask({
+    getFetchNextVersionsFromApmTask({
       releaseType,
       ethProvider,
+      variantsMap
+    }),
+    getUpdateFilesTask({
       rootDir: dir,
       variantsDirPath,
       composeFileName,
-      variantsMap
+      variantsMap,
+      isMultiVariant
     }),
     getBuildAndUploadTask({
       buildOptions: {

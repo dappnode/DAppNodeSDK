@@ -3,8 +3,8 @@ import { ManifestFormat } from "./files/manifest/types.js";
 
 export * from "./files/compose/params.js";
 
-export class CliError extends Error {}
-export class YargsError extends Error {}
+export class CliError extends Error { }
+export class YargsError extends Error { }
 
 // Github Actions params
 
@@ -14,6 +14,7 @@ export const branchNameRoot = "dappnodebot/bump-upstream/";
 
 export const defaultDir = "./";
 export const defaultVariantsDirName = "package_variants";
+export const singleVariantName = "single-variant";
 // This is the default name of the environment variable that will be used to select each of the variants
 export const defaultVariantsEnvName = "NETWORK";
 export const defaultVariantsEnvValues = ["mainnet", "testnet"];

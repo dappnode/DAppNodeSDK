@@ -5,7 +5,8 @@ import { initHandler } from "../../../src/commands/init/handler.js";
 import {
   defaultComposeFileName,
   defaultVariantsDirName,
-  defaultVariantsEnvValues
+  defaultVariantsEnvValues,
+  singleVariantName
 } from "../../../src/params.js";
 import { defaultArch } from "@dappnode/types";
 import path from "path";
@@ -24,21 +25,22 @@ describe("buildVariantMap", function () {
       });
     });
 
-    it("should return a map with only default variant", function () {
+    it("should return a map with a single variant", function () {
       const result = buildVariantMap({
         rootDir: testDir,
         variantsDirPath: defaultVariantsDirName,
         variants: null
       });
 
-      expect(result).to.have.all.keys("default");
-      const defaultVariant = result.default;
+      expect(result).to.have.all.keys(singleVariantName);
+      const defaultVariant = result[singleVariantName];
 
       expect(defaultVariant).to.have.all.keys(
         "manifest",
         "manifestFormat",
         "compose",
         "releaseDir",
+        "manifestPaths",
         "composePaths",
         "images",
         "architectures"
@@ -52,8 +54,11 @@ describe("buildVariantMap", function () {
       expect(defaultVariant.images).to.be.an("array");
       expect(defaultVariant.architectures).to.be.an("array");
 
-      expect(defaultVariant.composePaths).to.include.members([
-        `${testDir}/${defaultComposeFileName}`
+      expect(defaultVariant.composePaths).to.deep.include.members([
+        {
+          composeFileName: defaultComposeFileName,
+          dir: testDir
+        }
       ]);
 
       expect(defaultVariant.architectures).to.include(defaultArch);
@@ -102,9 +107,15 @@ describe("buildVariantMap", function () {
         expect(result[variant].architectures).to.be.an("array");
 
         // Example: Validate specific variant paths
-        expect(result[variant].composePaths).to.include.members([
-          `${testDir}/${defaultComposeFileName}`,
-          `${testDir}/${defaultVariantsDirName}/${variant}/${defaultComposeFileName}`
+        expect(result[variant].composePaths).to.deep.include.members([
+          {
+            composeFileName: defaultComposeFileName,
+            dir: testDir
+          },
+          {
+            composeFileName: defaultComposeFileName,
+            dir: `${testDir}/${defaultVariantsDirName}/${variant}`
+          }
         ]);
 
         // Assuming we can check details about manifest, compose object structure if known
