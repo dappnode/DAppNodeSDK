@@ -6,7 +6,8 @@ import {
   readCompose,
   updateComposeImageTags,
   writeCompose,
-  readManifest
+  readManifest,
+  getComposePackageImages
 } from "../../../files/index.js";
 
 export function getUpdateFilesTask({
@@ -44,9 +45,13 @@ export function getUpdateFilesTask({
           isMultiVariant
         });
 
+        const newCompose = readCompose(composePaths);
+        const newManifest = readManifest(manifestPaths).manifest;
+
         // Update variantsMap entry
-        variantsMap[variant].compose = readCompose(composePaths);
-        variantsMap[variant].manifest = readManifest(manifestPaths).manifest;
+        variantsMap[variant].compose = newCompose;
+        variantsMap[variant].manifest = newManifest;
+        variantsMap[variant].images = getComposePackageImages(newCompose, newManifest);
       }
     }
   };
