@@ -22,7 +22,7 @@ export function publish({
   githubRelease,
   verbosityOptions,
   variantsDirPath,
-  packagesToBuildProps: variantsMap,
+  packagesToBuildProps,
   isMultiVariant
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
@@ -30,14 +30,13 @@ export function publish({
     getFetchNextVersionsFromApmTask({
       releaseType,
       ethProvider,
-      variantsMap
+      packagesToBuildProps
     }),
     getUpdateFilesTask({
       rootDir: dir,
       variantsDirPath,
       composeFileName,
-      variantsMap,
-      isMultiVariant
+      packagesToBuildProps
     }),
     getBuildAndUploadTask({
       buildOptions: {

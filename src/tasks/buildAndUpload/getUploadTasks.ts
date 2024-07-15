@@ -1,5 +1,5 @@
 import { ListrTask } from "listr/index.js";
-import { BuildVariantsMap, ListrContextBuild } from "../../types.js";
+import { PackageToBuildProps, ListrContextBuild } from "../../types.js";
 import { getGitHeadIfAvailable } from "../../utils/git.js";
 import { getPinMetadata } from "../../pinStrategy/index.js";
 import { PinKeyvaluesDefault } from "../../releaseUploader/pinata/index.js";
@@ -7,13 +7,13 @@ import { IReleaseUploader } from "../../releaseUploader/index.js";
 import { composeDeleteBuildProperties } from "../../files/index.js";
 
 export function getUploadTasks({
-  variantsMap,
+  packagesToBuildProps,
   skipUpload,
   releaseUploader,
   requireGitData,
   composeFileName
 }: {
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
   skipUpload?: boolean;
   releaseUploader: IReleaseUploader;
   requireGitData: boolean;
@@ -21,9 +21,7 @@ export function getUploadTasks({
 }): ListrTask<ListrContextBuild>[] {
   const uploadTasks: ListrTask<ListrContextBuild>[] = [];
 
-  for (const [variant, { manifest, releaseDir }] of Object.entries(
-    variantsMap
-  )) {
+  for (const { manifest, releaseDir } of packagesToBuildProps) {
     const { name: dnpName } = manifest;
 
     uploadTasks.push({
@@ -36,7 +34,8 @@ export function getUploadTasks({
         // https://github.com/dappnode/DAppNode_Installer/issues/161
         composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
 
-        ctx[dnpName] = ctx[dnpName] || { variant };
+        // TODO: Remove this line after cheking that the release is correctly uploaded
+        // ctx[dnpName] = ctx[dnpName] || { variant, releaseDir };
         ctx[dnpName].releaseMultiHash = await releaseUploader.addFromFs({
           dirPath: releaseDir,
           metadata: getPinMetadata(manifest, gitHead) as PinKeyvaluesDefault,

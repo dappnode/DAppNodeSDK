@@ -7,7 +7,7 @@ import {
   defaultComposeFileName,
   releaseFilesDefaultNames
 } from "../../params.js";
-import { BuildVariantsMap, PackageToBuildProps, ListrContextBuild } from "../../types.js";
+import { PackageToBuildProps, ListrContextBuild } from "../../types.js";
 import { getGitHeadIfAvailable } from "../../utils/git.js";
 import {
   updateComposeImageTags,
@@ -17,13 +17,13 @@ import {
 import { Compose, Manifest, releaseFiles } from "@dappnode/types";
 
 export function getFileCopyTask({
-  variantsMap,
+  packagesToBuildProps,
   variantsDirPath,
   rootDir,
   composeFileName,
   requireGitData
 }: {
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
   variantsDirPath: string;
   rootDir: string;
   composeFileName: string;
@@ -33,7 +33,7 @@ export function getFileCopyTask({
     title: "Copy files to release directory",
     task: async () =>
       copyFilesToReleaseDir({
-        variantsMap,
+        packagesToBuildProps,
         variantsDirPath,
         rootDir,
         composeFileName,
@@ -43,22 +43,21 @@ export function getFileCopyTask({
 }
 
 async function copyFilesToReleaseDir({
-  variantsMap,
+  packagesToBuildProps,
   variantsDirPath,
   rootDir,
   composeFileName,
   requireGitData
 }: {
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
   variantsDirPath: string;
   rootDir: string;
   composeFileName: string;
   requireGitData?: boolean;
 }): Promise<void> {
-  for (const [variantName, variantProps] of Object.entries(variantsMap)) {
+  for (const variantProps of packagesToBuildProps) {
 
-    const variantDirPath = path.join(variantsDirPath, variantName);
-    await copyVariantFilesToReleaseDir({ variantProps, variantDirPath: variantDirPath, rootDir, composeFileName });
+    await copyVariantFilesToReleaseDir({ variantProps, rootDir, variantsDirPath, composeFileName });
 
     // Verify avatar (throws)
     const avatarPath = path.join(
@@ -74,16 +73,19 @@ async function copyFilesToReleaseDir({
 
 async function copyVariantFilesToReleaseDir({
   variantProps,
-  variantDirPath,
   rootDir,
+  variantsDirPath,
   composeFileName
 }: {
   variantProps: PackageToBuildProps;
-  variantDirPath: string;
   rootDir: string;
+  variantsDirPath: string;
   composeFileName: string;
 }): Promise<void> {
-  const { manifest, manifestFormat, releaseDir, compose } = variantProps;
+  const { manifest, manifestFormat, releaseDir, compose, variant } = variantProps;
+
+  // In case of single variant packages, the targets are in the root dir
+  const variantDirPath = variant ? path.join(variantsDirPath, variant) : rootDir;
 
   for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
     // For single variant packages, the targets are in the root dir

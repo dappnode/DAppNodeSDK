@@ -1,6 +1,6 @@
 import path from "path";
 import { ListrTask } from "listr";
-import { BuildVariantsMap, ListrContextPublish } from "../../../types.js";
+import { PackageToBuildProps, ListrContextPublish } from "../../../types.js";
 import {
   writeManifest,
   readCompose,
@@ -13,19 +13,18 @@ export function getUpdateFilesTask({
   rootDir,
   variantsDirPath,
   composeFileName,
-  variantsMap,
-  isMultiVariant
+  packagesToBuildProps,
 }: {
   rootDir: string;
   variantsDirPath: string;
   composeFileName: string;
-  variantsMap: BuildVariantsMap;
-  isMultiVariant: boolean;
+  packagesToBuildProps: PackageToBuildProps[];
 }): ListrTask<ListrContextPublish> {
   return {
     title: "Update compose and manifest files",
     task: async ctx => {
-      for (const [variant, { manifest: { name }, composePaths, manifestPaths }] of Object.entries(variantsMap)) {
+      for (const pkgProps of packagesToBuildProps) {
+        const { variant, manifest: { name }, composePaths, manifestPaths } = pkgProps;
         const nextVersion = ctx[name].nextVersion;
 
         if (!nextVersion) {
@@ -41,12 +40,11 @@ export function getUpdateFilesTask({
           variantsDirPath,
           dnpName: name,
           nextVersion,
-          isMultiVariant
         });
 
         // Update variantsMap entry
-        variantsMap[variant].compose = readCompose(composePaths);
-        variantsMap[variant].manifest = readManifest(manifestPaths).manifest;
+        pkgProps.compose = readCompose(composePaths);
+        pkgProps.manifest = readManifest(manifestPaths).manifest;
       }
     }
   };
@@ -60,19 +58,17 @@ export function updateVariantFiles({
   variantsDirPath,
   dnpName,
   nextVersion,
-  isMultiVariant
 }: {
   rootDir: string;
   composeFileName: string;
-  variant: string;
+  variant: string | null;
   variantsDirPath: string;
   dnpName: string;
   nextVersion: string;
-  isMultiVariant: boolean;
 }): void {
   // For multi-variant packages, manifest and compose files to be modified are located in the variant folder
-  // Single variant packages have single-variant as the variant name
-  const filesDir = isMultiVariant ? path.join(variantsDirPath, variant) : rootDir;
+  // Single variant packages have their files in the root dir
+  const filesDir = variant ? path.join(variantsDirPath, variant) : rootDir;
 
   updateManifestFileVersion({
     manifestDir: filesDir,

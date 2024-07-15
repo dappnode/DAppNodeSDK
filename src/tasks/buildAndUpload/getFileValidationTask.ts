@@ -18,29 +18,29 @@ export function getFileValidationTask({
 }): ListrTask<ListrContextBuild> {
   return {
     title: `Validate files`,
-    task: async () => await validatePackageFiles({ variantsMap: packagesToBuildProps, rootDir })
+    task: async () => await validatePackageFiles({ packagesToBuildProps, rootDir })
   };
 }
 
 async function validatePackageFiles({
-  variantsMap,
+  packagesToBuildProps,
   rootDir
 }: {
-  variantsMap: PackageToBuildProps[];
+  packagesToBuildProps: PackageToBuildProps[];
   rootDir: string;
 }): Promise<void> {
   const setupWizard = readSetupWizardIfExists(rootDir);
 
   if (setupWizard) validateSetupWizardSchema(setupWizard);
 
-  for (const [, variant] of Object.entries(variantsMap))
-    await validateVariantFiles(variant);
+  for (const pkgProps of packagesToBuildProps)
+    await validateVariantFiles(pkgProps);
 }
 
 async function validateVariantFiles(
-  variant: PackageToBuildProps
+  pkgProps: PackageToBuildProps
 ): Promise<void> {
-  const { manifest, compose, composePaths } = variant;
+  const { manifest, compose, composePaths } = pkgProps;
 
   console.log(
     `Validating files for ${manifest.name} (version ${manifest.version})`

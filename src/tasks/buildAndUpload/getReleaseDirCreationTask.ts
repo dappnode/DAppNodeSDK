@@ -2,35 +2,33 @@ import fs from "fs";
 import path from "path";
 import { ListrTask } from "listr/index.js";
 import rimraf from "rimraf";
-import { BuildVariantsMap, ListrContextBuild } from "../../types.js";
+import { PackageToBuildProps, ListrContextBuild } from "../../types.js";
 import { getImageFileName } from "../../utils/getImageFileName.js";
 
 export function getReleaseDirCreationTask({
-  variantsMap
+  packagesToBuildProps
 }: {
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
 }): ListrTask<ListrContextBuild> {
   return {
     title: `Create release directories`,
-    task: ctx => createReleaseDirs({ ctx, variantsMap })
+    task: ctx => createReleaseDirs({ ctx, packagesToBuildProps })
   };
 }
 
 function createReleaseDirs({
   ctx,
-  variantsMap
+  packagesToBuildProps
 }: {
   ctx: ListrContextBuild;
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
 }): void {
-  for (const [
+  for (const {
     variant,
-    {
-      manifest: { name, version },
-      releaseDir,
-      architectures
-    }
-  ] of Object.entries(variantsMap)) {
+    manifest: { name, version },
+    releaseDir,
+    architectures
+  } of packagesToBuildProps) {
     console.log(
       `Creating release directory for ${name} (version ${version}) at ${releaseDir}`
     );
@@ -38,8 +36,7 @@ function createReleaseDirs({
     fs.mkdirSync(releaseDir, { recursive: true }); // Ok on existing dir
     const releaseFiles = fs.readdirSync(releaseDir);
 
-    ctx[name] = ctx[name] || { variant };
-    ctx[name].releaseDir = releaseDir;
+    ctx[name] = { variant, releaseDir };
 
     const imagePaths = architectures.map(arch =>
       getImageFileName(name, version, arch)

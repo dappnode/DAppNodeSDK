@@ -39,31 +39,31 @@ export function buildAndUpload({
   const releaseUploader = getReleaseUploader(releaseUploaderProvider);
 
   return [
-    getFileValidationTask({ packagesToBuildProps: packagesToBuildProps, rootDir: dir }),
+    getFileValidationTask({ packagesToBuildProps, rootDir: dir }),
     getVerifyConnectionTask({ releaseUploader, skipUpload }),
-    getReleaseDirCreationTask({ variantsMap: packagesToBuildProps }),
+    getReleaseDirCreationTask({ packagesToBuildProps }),
     getFileCopyTask({
-      variantsMap: packagesToBuildProps,
+      packagesToBuildProps,
       variantsDirPath,
       rootDir: dir,
       composeFileName,
       requireGitData
     }),
-    ...getBuildTasks({ variantsMap: packagesToBuildProps, buildTimeout, skipSave, rootDir: dir }),
+    ...getBuildTasks({ packagesToBuildProps, buildTimeout, skipSave, rootDir: dir }),
     ...getUploadTasks({
-      variantsMap: packagesToBuildProps,
+      packagesToBuildProps,
       releaseUploader,
       requireGitData: !!requireGitData,
       composeFileName,
       skipUpload
     }),
     getDeleteOldPinsTask({
-      variantsMap: packagesToBuildProps,
+      packagesToBuildProps,
       deleteOldPins: !!deleteOldPins,
       releaseUploaderProvider
     }),
     getSaveUploadResultsTask({
-      variantsMap: packagesToBuildProps,
+      packagesToBuildProps,
       rootDir: dir,
       contentProvider,
       variantsDirPath,

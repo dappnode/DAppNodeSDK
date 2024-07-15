@@ -10,9 +10,9 @@ export interface CliGlobalOptions {
 
 // TODO: Try to have all properties defined
 interface ListrContextBuildItem {
-  releaseDir?: string;
+  variant: string | null;
+  releaseDir: string;
   releaseMultiHash?: string;
-  variant?: string;
 }
 
 interface ListrContextPublishItem extends ListrContextBuildItem {
