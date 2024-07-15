@@ -10,15 +10,15 @@ import { getComposePath, readSetupWizardIfExists } from "../../files/index.js";
 import { CliError } from "../../params.js";
 
 export function getFileValidationTask({
-  variantsMap,
+  packagesToBuildProps,
   rootDir
 }: {
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
   rootDir: string;
 }): ListrTask<ListrContextBuild> {
   return {
     title: `Validate files`,
-    task: async () => await validatePackageFiles({ variantsMap, rootDir })
+    task: async () => await validatePackageFiles({ variantsMap: packagesToBuildProps, rootDir })
   };
 }
 
@@ -26,7 +26,7 @@ async function validatePackageFiles({
   variantsMap,
   rootDir
 }: {
-  variantsMap: BuildVariantsMap;
+  variantsMap: PackageToBuildProps[];
   rootDir: string;
 }): Promise<void> {
   const setupWizard = readSetupWizardIfExists(rootDir);

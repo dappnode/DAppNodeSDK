@@ -27,7 +27,7 @@ export function buildAndUpload({
   composeFileName,
   dir,
   variantsDirPath = defaultVariantsDirName,
-  packagesToBuildProps: variantsMap
+  packagesToBuildProps
 }: BuildAndUploadOptions): ListrTask<ListrContextBuild>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
@@ -39,31 +39,31 @@ export function buildAndUpload({
   const releaseUploader = getReleaseUploader(releaseUploaderProvider);
 
   return [
-    getFileValidationTask({ variantsMap, rootDir: dir }),
+    getFileValidationTask({ packagesToBuildProps: packagesToBuildProps, rootDir: dir }),
     getVerifyConnectionTask({ releaseUploader, skipUpload }),
-    getReleaseDirCreationTask({ variantsMap }),
+    getReleaseDirCreationTask({ variantsMap: packagesToBuildProps }),
     getFileCopyTask({
-      variantsMap,
+      variantsMap: packagesToBuildProps,
       variantsDirPath,
       rootDir: dir,
       composeFileName,
       requireGitData
     }),
-    ...getBuildTasks({ variantsMap, buildTimeout, skipSave, rootDir: dir }),
+    ...getBuildTasks({ variantsMap: packagesToBuildProps, buildTimeout, skipSave, rootDir: dir }),
     ...getUploadTasks({
-      variantsMap,
+      variantsMap: packagesToBuildProps,
       releaseUploader,
       requireGitData: !!requireGitData,
       composeFileName,
       skipUpload
     }),
     getDeleteOldPinsTask({
-      variantsMap,
+      variantsMap: packagesToBuildProps,
       deleteOldPins: !!deleteOldPins,
       releaseUploaderProvider
     }),
     getSaveUploadResultsTask({
-      variantsMap,
+      variantsMap: packagesToBuildProps,
       rootDir: dir,
       contentProvider,
       variantsDirPath,
