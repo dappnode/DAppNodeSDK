@@ -17,5 +17,4 @@ export interface PublishOptions {
   verbosityOptions: VerbosityOptions;
   variantsDirPath: string;
   packagesToBuildProps: PackageToBuildProps[];
-  isMultiVariant: boolean;
 }

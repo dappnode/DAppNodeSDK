@@ -23,7 +23,6 @@ export function publish({
   verbosityOptions,
   variantsDirPath,
   packagesToBuildProps,
-  isMultiVariant
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
     getVerifyEthConnectionTask({ ethProvider }),
