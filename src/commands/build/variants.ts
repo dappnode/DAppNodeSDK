@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { getAllVariantsInPath } from "../../files/variants/getAllPackageVariants.js";
 import { PackageToBuildProps } from "../../types.js";
-import { generatePackagesProps } from "../../tasks/buildAndUpload/buildVariantMap.js";
+import { generatePackagesProps } from "../../tasks/buildAndUpload/generatePackagesProps.js";
 
 export function getPackagesToBuildProps({
   allVariants,

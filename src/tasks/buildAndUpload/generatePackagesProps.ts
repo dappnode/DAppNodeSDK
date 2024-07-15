@@ -34,7 +34,7 @@ export function generatePackagesProps({
   );
 }
 
-export function createPackagePropsItem({
+function createPackagePropsItem({
   rootDir,
   composeFileName,
   variant,

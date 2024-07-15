@@ -1,6 +1,6 @@
 import { ListrTask } from "listr";
 import { VerbosityOptions } from "../../../commands/build/types.js";
-import { BuildVariantsMap, ListrContextPublish } from "../../../types.js";
+import { PackageToBuildProps, ListrContextPublish } from "../../../types.js";
 import { generatePublishTxs } from "../../generatePublishTxs/index.js";
 
 export function getGenerateTxTask({
@@ -9,14 +9,14 @@ export function getGenerateTxTask({
   developerAddress,
   ethProvider,
   verbosityOptions,
-  variantsMap
+  packagesToBuildProps,
 }: {
   dir: string;
   composeFileName: string;
   developerAddress?: string;
   ethProvider: string;
   verbosityOptions: VerbosityOptions;
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
 }): ListrTask<ListrContextPublish> {
   return {
     title: "Generate transaction",
@@ -27,7 +27,7 @@ export function getGenerateTxTask({
         developerAddress,
         ethProvider,
         verbosityOptions,
-        variantsMap
+        packagesToBuildProps,
       });
     }
   };

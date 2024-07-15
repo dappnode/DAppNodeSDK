@@ -46,7 +46,7 @@ export function publish({
         userTimeout,
         requireGitData,
         deleteOldPins,
-        packagesToBuildProps: variantsMap,
+        packagesToBuildProps,
         variantsDirPath
       },
       verbosityOptions
@@ -57,7 +57,7 @@ export function publish({
       developerAddress,
       ethProvider,
       verbosityOptions,
-      variantsMap
+      packagesToBuildProps
     }),
     getCreateGithubReleaseTask({
       dir,
