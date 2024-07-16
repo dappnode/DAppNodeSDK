@@ -16,16 +16,20 @@ export function getFetchNextVersionsFromApmTask({
     title: "Fetch current versions from APM",
     task: async ctx => {
 
-      for (const { manifest } of packagesToBuildProps) {
+      for (const { manifest, variant, releaseDir } of packagesToBuildProps) {
         const dnpName = manifest.name;
 
-        ctx[dnpName] = ctx[dnpName] || {};
-        ctx[dnpName].nextVersion = await getNextPackageVersion({
+        const nextVersion = await getNextPackageVersion({
           manifest,
           releaseType,
           ethProvider
         });
 
+        ctx[dnpName] = {
+          variant,
+          releaseDir,
+          nextVersion
+        }
       }
     }
   };
