@@ -27,14 +27,14 @@ export interface ListrContextPublish {
   [dnpName: string]: ListrContextPublishItem;
 }
 
-interface PackageToPublishProps {
+export interface PackageToBuildProps {
+  // For packages not following multi-variant format, variant is null
+  // These kind of packages have all their files in the root dir
+  variant: string | null;
+
   // Manifest-related
   manifest: Manifest;
   manifestFormat: ManifestFormat;
-}
-
-export interface PackageToBuildProps extends PackageToPublishProps {
-  variant: string | null;
 
   // Compose file
   compose: Compose;
