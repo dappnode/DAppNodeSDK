@@ -34,8 +34,6 @@ export function getUploadTasks({
         // https://github.com/dappnode/DAppNode_Installer/issues/161
         composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
 
-        // TODO: Remove this line after cheking that the release is correctly uploaded
-        // ctx[dnpName] = ctx[dnpName] || { variant, releaseDir };
         ctx[dnpName].releaseMultiHash = await releaseUploader.addFromFs({
           dirPath: releaseDir,
           metadata: getPinMetadata(manifest, gitHead) as PinKeyvaluesDefault,
