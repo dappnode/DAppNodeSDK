@@ -80,7 +80,7 @@ export async function publishHandler({
       variantsDirPath,
       packagesToBuildProps: getPackagesToBuildProps({
         allVariants: Boolean(allVariants),
-        variantsStr: variants,
+        commaSeparatedVariants: variants,
         rootDir: dir,
         variantsDirPath,
         composeFileName

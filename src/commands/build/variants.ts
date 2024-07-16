@@ -5,13 +5,13 @@ import { generatePackagesProps } from "../../tasks/buildAndUpload/generatePackag
 
 export function getPackagesToBuildProps({
   allVariants,
-  variantsStr,
+  commaSeparatedVariants,
   rootDir,
   variantsDirPath,
   composeFileName
 }: {
   allVariants: boolean;
-  variantsStr?: string;
+  commaSeparatedVariants?: string;
   rootDir: string;
   variantsDirPath: string;
   composeFileName: string;
@@ -19,12 +19,12 @@ export function getPackagesToBuildProps({
 
   const buildVariantMapArgs = { rootDir, variantsDirPath, composeFileName };
 
-  if (!allVariants && !variantsStr)
+  if (!allVariants && !commaSeparatedVariants)
     return generatePackagesProps({ ...buildVariantMapArgs, variants: null });
 
   const validVariantNames = getValidVariantNames({
     variantsDirPath,
-    variants: variantsStr
+    variants: commaSeparatedVariants
   });
 
   if (validVariantNames.length === 0)
@@ -34,7 +34,7 @@ export function getPackagesToBuildProps({
 
   console.log(
     `${chalk.dim(
-      `Building package from template for variant(s) ${variantsStr}...`
+      `Building package from template for variant(s) ${commaSeparatedVariants}...`
     )}`
   );
 
