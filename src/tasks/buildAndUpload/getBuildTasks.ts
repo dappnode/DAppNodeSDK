@@ -5,7 +5,7 @@ import { buildWithBuildx } from "./buildWithBuildx.js";
 import { buildWithCompose } from "./buildWithCompose.js";
 import { Architecture, defaultArch } from "@dappnode/types";
 import { getImageFileName } from "../../utils/getImageFileName.js";
-import { getArchitecture } from "../../utils/getArchitecture.js";
+import { getOsArchitecture } from "../../utils/getArchitecture.js";
 
 /**
  * The naming scheme for multiarch exported images must be
@@ -58,7 +58,7 @@ function createBuildTask({
   const { manifest, releaseDir, images, compose } = variantSpecs;
   const { name, version } = manifest;
   const buildFn =
-    architecture === getArchitecture() ? buildWithCompose : buildWithBuildx;
+    architecture === getOsArchitecture() ? buildWithCompose : buildWithBuildx;
 
   const destPath = getImagePath({
     releaseDir,
