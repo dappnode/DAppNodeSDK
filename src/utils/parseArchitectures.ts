@@ -1,5 +1,4 @@
 import { Architecture, architectures } from "@dappnode/types";
-import { getArchitecture } from "./getArchitecture.js";
 
 /**
  *
@@ -7,7 +6,7 @@ import { getArchitecture } from "./getArchitecture.js";
  * @returns
  */
 export function parseArchitectures({
-  rawArchs = [getArchitecture()]
+  rawArchs = ["linux/amd64"]
 }: {
   rawArchs?: Architecture[];
 }): Architecture[] {
