@@ -4,7 +4,7 @@ import { getEthereumUrl } from "../../utils/getEthereumUrl.js";
 import { getPublishTxLink } from "../../utils/getLinks.js";
 import { addReleaseTx } from "../../utils/releaseRecord.js";
 import { defaultDir, YargsError } from "../../params.js";
-import { BuildVariantsMap, CliGlobalOptions, ListrContextPublish, TxData } from "../../types.js";
+import { PackageToBuildProps, CliGlobalOptions, ListrContextPublish, TxData } from "../../types.js";
 import { ApmRepository } from "@dappnode/toolkit";
 import registryAbi from "../../contracts/ApmRegistryAbi.json" assert { type: "json" };
 import { semverToArray } from "../../utils/semverToArray.js";
@@ -14,10 +14,6 @@ import { getRegistryAddressFromDnpName } from "./getRegistryAddressFromEns.js";
 import { Repo } from "./types.js";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
-
-type GenerateTxVariantsMap = {
-  [K in keyof BuildVariantsMap]: Pick<BuildVariantsMap[K], "manifest">;
-}
 
 /**
  * Generates the transaction data necessary to publish the package.
@@ -35,12 +31,12 @@ export function generatePublishTxs({
   developerAddress,
   ethProvider,
   verbosityOptions,
-  variantsMap
+  packagesToBuildProps,
 }: {
   developerAddress?: string;
   ethProvider: string;
   verbosityOptions: VerbosityOptions;
-  variantsMap: GenerateTxVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
 } & CliGlobalOptions): Listr<ListrContextPublish> {
   // Init APM instance
   const ethereumUrl = getEthereumUrl(ethProvider);
@@ -53,7 +49,7 @@ export function generatePublishTxs({
         task: async (ctx, task) => {
           const contractAddress = "0x0000000000000000000000000000000000000000";
 
-          for (const [, { manifest }] of Object.entries(variantsMap)) {
+          for (const { manifest } of packagesToBuildProps) {
 
             const { name: dnpName, version } = manifest;
             const releaseMultiHash = ctx[dnpName]?.releaseMultiHash;

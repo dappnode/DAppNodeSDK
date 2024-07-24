@@ -7,8 +7,9 @@ import {
   defaultVariantsDirName
 } from "../../params.js";
 import { BuildCommandOptions, VerbosityOptions } from "./types.js";
-import { getVariantOptions } from "./variants.js";
+import { getPackagesToBuildProps } from "./variants.js";
 import { BuildAndUploadOptions } from "../../tasks/buildAndUpload/types.js";
+import path from "path";
 
 export async function buildHandler({
   provider: contentProvider,
@@ -29,6 +30,8 @@ export async function buildHandler({
 }: BuildCommandOptions): Promise<ListrContextBuild> {
   const skipUpload = skip_upload || skipSave;
 
+  const variantsDirPath = path.join(dir, variantsDirName);
+
   const buildOptions: BuildAndUploadOptions = {
     dir,
     contentProvider,
@@ -39,11 +42,12 @@ export async function buildHandler({
     composeFileName,
     requireGitData,
     deleteOldPins,
-    ...getVariantOptions({
+    variantsDirPath,
+    packagesToBuildProps: getPackagesToBuildProps({
       allVariants: Boolean(allVariants),
-      variantsStr: variants,
+      commaSeparatedVariants: variants,
       rootDir: dir,
-      variantsDirName,
+      variantsDirPath,
       composeFileName
     })
   };

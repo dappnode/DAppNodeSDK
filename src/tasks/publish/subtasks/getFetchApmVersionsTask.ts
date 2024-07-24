@@ -1,31 +1,35 @@
 import { ListrTask } from "listr";
-import { BuildVariantsMap, ListrContextPublish, ReleaseType } from "../../../types.js";
+import { PackageToBuildProps, ListrContextPublish, ReleaseType } from "../../../types.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
 import { Manifest } from "@dappnode/types";
 
 export function getFetchNextVersionsFromApmTask({
   releaseType,
   ethProvider,
-  variantsMap
+  packagesToBuildProps
 }: {
   releaseType: ReleaseType;
   ethProvider: string;
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
 }): ListrTask<ListrContextPublish> {
   return {
     title: "Fetch current versions from APM",
     task: async ctx => {
 
-      for (const [, { manifest }] of Object.entries(variantsMap)) {
+      for (const { manifest, variant, releaseDir } of packagesToBuildProps) {
         const dnpName = manifest.name;
 
-        ctx[dnpName] = ctx[dnpName] || {};
-        ctx[dnpName].nextVersion = await getNextPackageVersion({
+        const nextVersion = await getNextPackageVersion({
           manifest,
           releaseType,
           ethProvider
         });
 
+        ctx[dnpName] = {
+          variant,
+          releaseDir,
+          nextVersion
+        }
       }
     }
   };

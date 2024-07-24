@@ -7,10 +7,10 @@ import {
   readManifest
 } from "../../files/index.js";
 import { Compose, Manifest } from "@dappnode/types";
-import { defaultComposeFileName, singleVariantName } from "../../params.js";
-import { BuildVariantsMap, BuildVariantsMapEntry } from "../../types.js";
+import { defaultComposeFileName } from "../../params.js";
+import { PackageToBuildProps } from "../../types.js";
 
-export function buildVariantMap({
+export function generatePackagesProps({
   variants,
   rootDir,
   variantsDirPath,
@@ -20,37 +20,37 @@ export function buildVariantMap({
   rootDir: string;
   variantsDirPath: string;
   composeFileName?: string;
-}): BuildVariantsMap {
-  if (!variants || variants.length === 0)
-    return { [singleVariantName]: createVariantMapEntry({ rootDir, composeFileName }) };
+}): PackageToBuildProps[] {
+  if (variants === null)
+    return [createPackagePropsItem({ rootDir, composeFileName, variant: null, variantsDirPath })];
 
-  const map: BuildVariantsMap = {};
-
-  for (const variant of variants) {
-    const variantPath = path.join(variantsDirPath, variant);
-    map[variant] = createVariantMapEntry({
+  return variants.map((variant) =>
+    createPackagePropsItem({
       rootDir,
       composeFileName,
-      variantPath
-    });
-  }
-
-  return map;
+      variant,
+      variantsDirPath
+    })
+  );
 }
 
-export function createVariantMapEntry({
+function createPackagePropsItem({
   rootDir,
   composeFileName,
-  variantPath
+  variant,
+  variantsDirPath
 }: {
   rootDir: string;
   composeFileName: string;
-  variantPath?: string;
-}): BuildVariantsMapEntry {
+  variant: string | null;
+  variantsDirPath: string;
+}): PackageToBuildProps {
   const manifestPaths = [{ dir: rootDir }];
   const composePaths = [{ dir: rootDir, composeFileName }];
 
-  if (variantPath) {
+  if (variant) {
+    const variantPath = path.join(variantsDirPath, variant);
+
     manifestPaths.push({ dir: variantPath });
     composePaths.push({ dir: variantPath, composeFileName });
   }
@@ -65,6 +65,8 @@ export function createVariantMapEntry({
     manifest.upstreamVersion = getUpstreamVersion({ compose, manifest });
 
   return {
+    variant,
+
     manifest,
     manifestFormat,
 

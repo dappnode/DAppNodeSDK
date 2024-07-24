@@ -10,9 +10,9 @@ export interface CliGlobalOptions {
 
 // TODO: Try to have all properties defined
 interface ListrContextBuildItem {
-  releaseDir?: string;
+  variant: string | null;
+  releaseDir: string;
   releaseMultiHash?: string;
-  variant?: string;
 }
 
 interface ListrContextPublishItem extends ListrContextBuildItem {
@@ -27,13 +27,15 @@ export interface ListrContextPublish {
   [dnpName: string]: ListrContextPublishItem;
 }
 
-interface PublishVariantsMapEntry {
+export interface PackageToBuildProps {
+  // For packages not following multi-variant format, variant is null
+  // These kind of packages have all their files in the root dir
+  variant: string | null;
+
   // Manifest-related
   manifest: Manifest;
   manifestFormat: ManifestFormat;
-}
 
-export interface BuildVariantsMapEntry extends PublishVariantsMapEntry {
   // Compose file
   compose: Compose;
 
@@ -45,10 +47,6 @@ export interface BuildVariantsMapEntry extends PublishVariantsMapEntry {
   // Package information
   images: PackageImage[];
   architectures: Architecture[];
-}
-
-export interface BuildVariantsMap {
-  [variant: string]: BuildVariantsMapEntry;
 }
 
 // Interal types

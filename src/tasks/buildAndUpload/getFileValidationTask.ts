@@ -1,5 +1,5 @@
 import { ListrTask } from "listr/index.js";
-import { BuildVariantsMap, BuildVariantsMapEntry, ListrContextBuild } from "../../types.js";
+import { PackageToBuildProps, ListrContextBuild } from "../../types.js";
 import {
   validateComposeSchema,
   validateManifestSchema,
@@ -10,37 +10,37 @@ import { getComposePath, readSetupWizardIfExists } from "../../files/index.js";
 import { CliError } from "../../params.js";
 
 export function getFileValidationTask({
-  variantsMap,
+  packagesToBuildProps,
   rootDir
 }: {
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
   rootDir: string;
 }): ListrTask<ListrContextBuild> {
   return {
     title: `Validate files`,
-    task: async () => await validatePackageFiles({ variantsMap, rootDir })
+    task: async () => await validatePackageFiles({ packagesToBuildProps, rootDir })
   };
 }
 
 async function validatePackageFiles({
-  variantsMap,
+  packagesToBuildProps,
   rootDir
 }: {
-  variantsMap: BuildVariantsMap;
+  packagesToBuildProps: PackageToBuildProps[];
   rootDir: string;
 }): Promise<void> {
   const setupWizard = readSetupWizardIfExists(rootDir);
 
   if (setupWizard) validateSetupWizardSchema(setupWizard);
 
-  for (const [, variant] of Object.entries(variantsMap))
-    await validateVariantFiles(variant);
+  for (const pkgProps of packagesToBuildProps)
+    await validateVariantFiles(pkgProps);
 }
 
 async function validateVariantFiles(
-  variant: BuildVariantsMapEntry
+  pkgProps: PackageToBuildProps
 ): Promise<void> {
-  const { manifest, compose, composePaths } = variant;
+  const { manifest, compose, composePaths } = pkgProps;
 
   console.log(
     `Validating files for ${manifest.name} (version ${manifest.version})`
