@@ -10,7 +10,7 @@ export function buildReleaseDetailsMap(
     dnpName,
     { nextVersion, releaseMultiHash, txData, releaseDir, variant }
   ] of Object.entries(ctx)) {
-    if (!nextVersion || !releaseMultiHash || !txData || !releaseDir || !variant)
+    if (!nextVersion || !releaseMultiHash || !txData || !releaseDir)
       throw new Error(`Missing required release details for ${dnpName}`);
 
     releaseDetailsMap[dnpName] = {

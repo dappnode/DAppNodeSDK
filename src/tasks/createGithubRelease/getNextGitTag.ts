@@ -28,9 +28,13 @@ export function getNextGitTag(releaseDetailsMap: GitTagDetailsMap): string {
   // Not a multi-variant package
   if (variantVersions.length === 1) return `v${variantVersions[0].nextVersion}`;
 
+  // If any variant is null, throw an error
+  if (variantVersions.some(({ variant }) => !variant))
+    throw Error("Could not generate git tag. Missing variant");
+
   // Multi-variant package
   return variantVersions
-    .sort((a, b) => a.variant.localeCompare(b.variant)) // Sort alphabetically by variant
+    .sort((a, b) => (a.variant || "").localeCompare(b.variant || "")) // Sort alphabetically by variant
     .map(({ variant, nextVersion }) => `${variant}@${nextVersion}`) // Map to string
     .join("_"); // Join into a single string
 }

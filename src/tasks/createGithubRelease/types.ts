@@ -6,6 +6,6 @@ export interface ReleaseDetailsMap {
     releaseMultiHash: string;
     txData: TxData;
     releaseDir: string;
-    variant: string;
+    variant: string | null;
   };
 }
