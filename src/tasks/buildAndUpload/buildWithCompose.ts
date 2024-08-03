@@ -44,7 +44,7 @@ export function buildWithCompose({
       title: "Build docker image",
       task: async (_, task) => {
         // Prior to this task, the compose should had been updated with the proper tag
-        await shell(`docker-compose --file ${tmpComposePath} build`, {
+        await shell(`docker compose --file ${tmpComposePath} build`, {
           timeout: buildTimeout,
           maxBuffer: 100 * 1e6,
           onData: data => (task.output = data)
