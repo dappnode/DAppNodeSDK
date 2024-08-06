@@ -94,14 +94,7 @@ async function uploadAssets({
   const releaseEntries = Object.entries(releaseDetailsMap);
   const [, { releaseDir: firstReleaseDir }] = releaseEntries[0];
 
-  // Upload the avatar
-  await github.uploadReleaseAssets({
-    releaseId,
-    assetsDir: firstReleaseDir,
-    matchPattern: /.*\.png/,
-  }).catch((e) => {
-    console.error(`Error uploading avatar from ${firstReleaseDir}`, e);
-  });
+  await uploadAvatar({ github, releaseId, avatarDir: firstReleaseDir });
 
   for (const [dnpName, { releaseDir }] of releaseEntries) {
     const shortDnpName = dnpName.split(".")[0];
@@ -117,6 +110,25 @@ async function uploadAssets({
     });
   }
 }
+
+async function uploadAvatar({
+  github,
+  releaseId,
+  avatarDir
+}: {
+  github: Github;
+  releaseId: number;
+  avatarDir: string;
+}): Promise<void> {
+  await github.uploadReleaseAssets({
+    releaseId,
+    assetsDir: avatarDir,
+    matchPattern: /.*\.png/,
+  }).catch((e) => {
+    console.error(`Error uploading avatar from ${avatarDir}`, e);
+  });
+}
+
 
 /**
  * Write the release body
