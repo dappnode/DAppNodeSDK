@@ -103,7 +103,7 @@ async function uploadAssets({
       releaseId,
       assetsDir: releaseDir,
       // Only upload yml, txz and dappnode_package.json files
-      matchPattern: /(.*\.ya?ml$)|(.*\.txz$)|(dappnode_package\.json)/,
+      matchPattern: /(.*\.ya?ml$)|(.*\.txz$)|(dappnode_package\.json)|(content-hash)/,
       fileNamePrefix: isMultiVariant ? `${shortDnpName}_` : ""
     }).catch((e) => {
       console.error(`Error uploading assets from ${releaseDir}`, e);
