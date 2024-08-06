@@ -100,7 +100,8 @@ async function uploadAssets({
       await github.uploadReleaseAssets({
         releaseId,
         assetsDir: releaseDir,
-        ignorePattern: /\.tar\.xz$/,
+        // Only upload yml, txz and dappnode_package.json files
+        matchPattern: /(.*\.ya?ml$)|(.*\.txz$)|(dappnode_package\.json)/,
         fileNamePrefix: isMultiVariant ? `${shortDnpName}_` : ""
       });
 

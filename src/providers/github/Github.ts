@@ -224,17 +224,17 @@ export class Github {
   async uploadReleaseAssets({
     releaseId,
     assetsDir,
-    ignorePattern,
+    matchPattern,
     fileNamePrefix
   }: {
     releaseId: number;
     assetsDir: string;
-    ignorePattern?: RegExp;
+    matchPattern?: RegExp;
     fileNamePrefix?: string;
   }) {
     for (const file of fs.readdirSync(assetsDir)) {
       // Used to ignore duplicated legacy .tar.xz image
-      if (ignorePattern && ignorePattern.test(file)) continue;
+      if (matchPattern && !matchPattern.test(file)) continue;
 
       const filepath = path.resolve(assetsDir, file);
       const contentType = mime.lookup(filepath) || "application/octet-stream";
