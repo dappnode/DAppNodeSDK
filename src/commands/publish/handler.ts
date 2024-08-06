@@ -63,6 +63,8 @@ export async function publishHandler({
 
   const variantsDirPath = path.join(dir, variantsDirName);
 
+  const isMultiVariant = !!allVariants || !!variants;
+
   const publishTasks = new Listr(
     publish({
       releaseType,
@@ -84,7 +86,8 @@ export async function publishHandler({
         rootDir: dir,
         variantsDirPath,
         composeFileName
-      })
+      }),
+      isMultiVariant
     }),
     verbosityOptions
   );
