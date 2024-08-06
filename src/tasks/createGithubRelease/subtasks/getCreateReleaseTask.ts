@@ -90,24 +90,31 @@ async function uploadAssets({
   github: Github;
   releaseId: number;
 }) {
-  // TODO: Modify when releaseDetailsMap is replaced by releaseDetails[]
   const isMultiVariant = Object.keys(releaseDetailsMap).length > 1;
+  const releaseEntries = Object.entries(releaseDetailsMap);
+  const [, { releaseDir: firstReleaseDir }] = releaseEntries[0];
 
-  for (const [dnpName, { releaseDir }] of Object.entries(releaseDetailsMap)) {
+  // Upload the avatar
+  await github.uploadReleaseAssets({
+    releaseId,
+    assetsDir: firstReleaseDir,
+    matchPattern: /.*\.png/,
+  }).catch((e) => {
+    console.error(`Error uploading avatar from ${firstReleaseDir}`, e);
+  });
+
+  for (const [dnpName, { releaseDir }] of releaseEntries) {
     const shortDnpName = dnpName.split(".")[0];
 
-    try {
-      await github.uploadReleaseAssets({
-        releaseId,
-        assetsDir: releaseDir,
-        // Only upload yml, txz and dappnode_package.json files
-        matchPattern: /(.*\.ya?ml$)|(.*\.txz$)|(dappnode_package\.json)/,
-        fileNamePrefix: isMultiVariant ? `${shortDnpName}_` : ""
-      });
-
-    } catch (e) {
+    await github.uploadReleaseAssets({
+      releaseId,
+      assetsDir: releaseDir,
+      // Only upload yml, txz and dappnode_package.json files
+      matchPattern: /(.*\.ya?ml$)|(.*\.txz$)|(dappnode_package\.json)/,
+      fileNamePrefix: isMultiVariant ? `${shortDnpName}_` : ""
+    }).catch((e) => {
       console.error(`Error uploading assets from ${releaseDir}`, e);
-    }
+    });
   }
 }
 
