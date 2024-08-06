@@ -12,9 +12,11 @@ import { getCreateReleaseTask } from "./subtasks/getCreateReleaseTask.js";
 export function createGithubRelease({
   dir: rootDir = defaultDir,
   compose_file_name: composeFileName,
-  verbosityOptions
+  verbosityOptions,
+  isMultiVariant
 }: {
   verbosityOptions: VerbosityOptions;
+  isMultiVariant: boolean;
 } & CliGlobalOptions): Listr<ListrContextPublish> {
   // OAuth2 token from Github
   if (!process.env.GITHUB_TOKEN)
@@ -27,7 +29,8 @@ export function createGithubRelease({
       getHandleTagsTask({ github }),
       getCreateReleaseTask({
         github,
-        composeFileName
+        composeFileName,
+        isMultiVariant
       })
     ],
     verbosityOptions

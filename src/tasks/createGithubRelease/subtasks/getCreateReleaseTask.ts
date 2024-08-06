@@ -20,10 +20,12 @@ import { compactManifestIfCore, composeDeleteBuildProperties } from "../../../fi
  */
 export function getCreateReleaseTask({
   github,
-  composeFileName
+  composeFileName,
+  isMultiVariant
 }: {
   github: Github;
   composeFileName?: string;
+  isMultiVariant: boolean;
 }): ListrTask<ListrContextPublish> {
   return {
     title: `Create release`,
@@ -45,7 +47,7 @@ export function getCreateReleaseTask({
       prepareGithubReleaseFiles({ releaseDetailsMap, composeFileName });
 
       task.output = "Uploading assets...";
-      await uploadAssets({ releaseDetailsMap, github, releaseId });
+      await uploadAssets({ releaseDetailsMap, github, releaseId, isMultiVariant });
 
     }
   };
@@ -84,13 +86,14 @@ function prepareGithubReleaseFiles({
 async function uploadAssets({
   releaseDetailsMap,
   github,
-  releaseId
+  releaseId,
+  isMultiVariant
 }: {
   releaseDetailsMap: ReleaseDetailsMap;
   github: Github;
   releaseId: number;
+  isMultiVariant: boolean;
 }) {
-  const isMultiVariant = Object.keys(releaseDetailsMap).length > 1;
   const releaseEntries = Object.entries(releaseDetailsMap);
   const [, { releaseDir: firstReleaseDir }] = releaseEntries[0];
 

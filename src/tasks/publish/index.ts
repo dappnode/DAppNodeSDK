@@ -23,6 +23,7 @@ export function publish({
   verbosityOptions,
   variantsDirPath,
   packagesToBuildProps,
+  isMultiVariant
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
     getVerifyEthConnectionTask({ ethProvider }),
@@ -63,7 +64,8 @@ export function publish({
       dir,
       githubRelease: Boolean(githubRelease),
       verbosityOptions,
-      composeFileName
+      composeFileName,
+      isMultiVariant
     })
   ];
 }

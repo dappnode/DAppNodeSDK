@@ -7,12 +7,14 @@ export function getCreateGithubReleaseTask({
   githubRelease,
   dir,
   composeFileName,
-  verbosityOptions
+  verbosityOptions,
+  isMultiVariant
 }: {
   githubRelease: boolean;
   dir: string;
   composeFileName: string;
   verbosityOptions: VerbosityOptions;
+  isMultiVariant: boolean;
 }): ListrTask<ListrContextPublish> {
   return {
     title: "Release on github",
@@ -21,7 +23,8 @@ export function getCreateGithubReleaseTask({
       createGithubRelease({
         dir,
         compose_file_name: composeFileName,
-        verbosityOptions
+        verbosityOptions,
+        isMultiVariant
       })
   };
 }
