@@ -29,7 +29,7 @@ export const init: CommandModule<CliGlobalOptions, InitCommandOptions> = {
       type: "boolean"
     },
     use_variants: {
-      alias: "t",
+      alias: ["t", "use-variants"],
       description:
         "Initialize a template Dappnode package, for creating several package variants that have the same base structure.",
       type: "boolean"
@@ -47,14 +47,13 @@ To start, you can:
 - Develop your dockerized app in   ${path.join(dir, dockerfileName)}
 - Add settings in the compose at   ${path.join(dir, defaultComposeFileName)}
 - Add metadata in the manifest at  ${path.join(dir, defaultManifestFileName)}
-${
-  args.use_variants
-    ? `- Define the specific features of each variant in ${path.join(
-        dir,
-        defaultVariantsDirName
-      )}`
-    : ""
-}
+${args.use_variants
+        ? `- Define the specific features of each variant in ${path.join(
+          dir,
+          defaultVariantsDirName
+        )}`
+        : ""
+      }
 
 Once ready, you can build, install, and test it by running
 
