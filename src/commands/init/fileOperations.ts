@@ -7,7 +7,7 @@ import {
   defaultVariantsEnvName
 } from "../../params.js";
 import { UserAnswers } from "./types.js";
-import { Compose, Manifest, getImageTag, releaseFiles } from "@dappnode/types";
+import { Compose, getImageTag, Manifest, releaseFiles } from "@dappnode/types";
 import {
   getComposePath,
   getManifestPath,
@@ -171,8 +171,10 @@ function writeMultiVariantPackageFiles({
             serviceName,
             version: rootManifest.version
           }),
-          environment: {
-            [envName]: variant
+          build: {
+            args: {
+              [envName]: variant
+            }
           }
         }
       }

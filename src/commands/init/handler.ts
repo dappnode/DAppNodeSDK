@@ -87,7 +87,9 @@ function buildCompose({
     version: "3.5",
     services: {
       [serviceName]: {
-        build: ".", // Dockerfile is in root dir
+        build: {
+          context: "."
+        },
         image: getImageTag({ dnpName, serviceName, version }),
         restart: "unless-stopped"
       }
