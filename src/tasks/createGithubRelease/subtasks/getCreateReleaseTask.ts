@@ -4,10 +4,6 @@ import { Github } from "../../../providers/github/Github.js";
 import { ListrContextPublish, TxData } from "../../../types.js";
 import { ListrTask } from "listr";
 import {
-  compactManifestIfCore,
-  composeDeleteBuildProperties
-} from "../../../files/index.js";
-import {
   getInstallDnpLink,
   getPublishTxLink
 } from "../../../utils/getLinks.js";
@@ -15,6 +11,7 @@ import { getNextGitTag } from "../getNextGitTag.js";
 import { contentHashFileName } from "../../../params.js";
 import { ReleaseDetailsMap } from "../types.js";
 import { buildReleaseDetailsMap } from "../buildReleaseDetailsMap.js";
+import { compactManifestIfCore, composeDeleteBuildProperties } from "../../../files/index.js";
 
 /**
  * Create release
@@ -23,10 +20,12 @@ import { buildReleaseDetailsMap } from "../buildReleaseDetailsMap.js";
  */
 export function getCreateReleaseTask({
   github,
-  composeFileName
+  composeFileName,
+  isMultiVariant
 }: {
   github: Github;
   composeFileName?: string;
+  isMultiVariant: boolean;
 }): ListrTask<ListrContextPublish> {
   return {
     title: `Create release`,
@@ -38,73 +37,101 @@ export function getCreateReleaseTask({
       task.output = "Deleting existing release...";
       await github.deleteReleaseAndAssets(tag);
 
-      const contentHashPaths = await handleReleaseVariantFiles({
-        releaseDetailsMap,
-        composeFileName
-      });
-
       task.output = `Creating release for tag ${tag}...`;
-      await github.createRelease(tag, {
+      const releaseId = await github.createRelease(tag, {
         body: await getReleaseBody({ releaseDetailsMap }),
         prerelease: true, // Until it is actually published to mainnet
       });
 
-      // Clean content hash file so the directory uploaded to IPFS is the same
-      // as the local build_* dir. User can then `ipfs add -r` and get the same hash
-      contentHashPaths.map(contentHashPath => fs.unlinkSync(contentHashPath));
+      task.output = "Preparing release directories for Github release...";
+      prepareGithubReleaseFiles({ releaseDetailsMap, composeFileName });
+
+      task.output = "Uploading assets...";
+      await uploadAssets({ releaseDetailsMap, github, releaseId, isMultiVariant });
+
     }
   };
 }
 
-async function handleReleaseVariantFiles({
+function prepareGithubReleaseFiles({
   releaseDetailsMap,
   composeFileName
 }: {
   releaseDetailsMap: ReleaseDetailsMap;
   composeFileName?: string;
-}): Promise<string[]> {
-  const contentHashPaths: string[] = [];
+}) {
+  for (const [, { releaseMultiHash, releaseDir }] of Object.entries(releaseDetailsMap)) {
 
-  for (const [, { variant, releaseDir, releaseMultiHash }] of Object.entries(
-    releaseDetailsMap
-  )) {
-    if (!releaseMultiHash) {
-      throw new Error(
-        `Release hash not found for variant ${variant} of ${name}`
-      );
+    const contentHashPath = path.join(releaseDir, `${contentHashFileName}`);
+
+    try {
+
+      /**
+       * Plain text file which should contain the IPFS hash of the release
+       * Necessary for the installer script to fetch the latest content hash
+       * of the eth clients. The resulting hashes are used by the DAPPMANAGER
+       * to install an eth client when the user does not want to use a remote node
+       */
+      fs.writeFileSync(contentHashPath, releaseMultiHash);
+
+      compactManifestIfCore(releaseDir);
+      composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
+
+    } catch (e) {
+      console.error(`Error found while preparing files in ${releaseDir} for Github release`, e);
     }
-
-    const contentHashPath = writeContentHashToFile({
-      releaseDir,
-      releaseMultiHash
-    });
-
-    contentHashPaths.push(contentHashPath);
-
-    compactManifestIfCore(releaseDir);
-    composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
   }
-
-  return contentHashPaths;
 }
 
-/**
- * Plain text file which should contain the IPFS hash of the release
- * Necessary for the installer script to fetch the latest content hash
- * of the eth clients. The resulting hashes are used by the DAPPMANAGER
- * to install an eth client when the user does not want to use a remote node
- */
-function writeContentHashToFile({
-  releaseDir,
-  releaseMultiHash
+async function uploadAssets({
+  releaseDetailsMap,
+  github,
+  releaseId,
+  isMultiVariant
 }: {
-  releaseDir: string;
-  releaseMultiHash: string;
-}): string {
-  const contentHashPath = path.join(releaseDir, contentHashFileName);
-  fs.writeFileSync(contentHashPath, releaseMultiHash);
-  return contentHashPath;
+  releaseDetailsMap: ReleaseDetailsMap;
+  github: Github;
+  releaseId: number;
+  isMultiVariant: boolean;
+}) {
+  const releaseEntries = Object.entries(releaseDetailsMap);
+  const [, { releaseDir: firstReleaseDir }] = releaseEntries[0];
+
+  await uploadAvatar({ github, releaseId, avatarDir: firstReleaseDir });
+
+  for (const [dnpName, { releaseDir }] of releaseEntries) {
+    const shortDnpName = dnpName.split(".")[0];
+
+    await github.uploadReleaseAssets({
+      releaseId,
+      assetsDir: releaseDir,
+      // Only upload yml, txz and dappnode_package.json files
+      matchPattern: /(.*\.ya?ml$)|(.*\.txz$)|(dappnode_package\.json)|(content-hash)/,
+      fileNamePrefix: isMultiVariant ? `${shortDnpName}_` : ""
+    }).catch((e) => {
+      console.error(`Error uploading assets from ${releaseDir}`, e);
+    });
+  }
 }
+
+async function uploadAvatar({
+  github,
+  releaseId,
+  avatarDir
+}: {
+  github: Github;
+  releaseId: number;
+  avatarDir: string;
+}): Promise<void> {
+  await github.uploadReleaseAssets({
+    releaseId,
+    assetsDir: avatarDir,
+    matchPattern: /.*\.png/,
+  }).catch((e) => {
+    console.error(`Error uploading avatar from ${avatarDir}`, e);
+  });
+}
+
 
 /**
  * Write the release body

@@ -16,26 +16,26 @@ import { writeManifest } from "./writeManifest.js";
  * @param buildDir `build_0.1.0`
  */
 export function compactManifestIfCore(buildDir: string): void {
-  const { manifest, format } = readManifest([{ dir: buildDir }]);
+    const { manifest, format } = readManifest([{ dir: buildDir }]);
 
-  if (manifest.type !== "dncore") return;
+    if (manifest.type !== "dncore") return;
 
-  const setupWizard = readSetupWizardIfExists(buildDir);
-  if (setupWizard) {
-    manifest.setupWizard = setupWizard;
-  }
+    const setupWizard = readSetupWizardIfExists(buildDir);
+    if (setupWizard) {
+        manifest.setupWizard = setupWizard;
+    }
 
-  writeManifest(manifest, format, { dir: buildDir });
+    writeManifest(manifest, format, { dir: buildDir });
 }
 
 // Utils
 
 function readSetupWizardIfExists(buildDir: string): SetupWizard | null {
-  const files = fs.readdirSync(buildDir);
-  const setupWizardFile = files.find(file =>
-    releaseFiles.setupWizard.regex.test(file)
-  );
-  if (!setupWizardFile) return null;
-  const setupWizardPath = path.join(buildDir, setupWizardFile);
-  return yaml.load(fs.readFileSync(setupWizardPath, "utf8"));
+    const files = fs.readdirSync(buildDir);
+    const setupWizardFile = files.find(file =>
+        releaseFiles.setupWizard.regex.test(file)
+    );
+    if (!setupWizardFile) return null;
+    const setupWizardPath = path.join(buildDir, setupWizardFile);
+    return yaml.load(fs.readFileSync(setupWizardPath, "utf8"));
 }

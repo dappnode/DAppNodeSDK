@@ -1,4 +1,7 @@
 import fs from "fs";
+import path from "path";
+import retry from "async-retry";
+import mime from "mime-types";
 import { Octokit } from "@octokit/rest";
 import { RequestError } from "@octokit/request-error";
 import { getRepoSlugFromManifest } from "../../files/index.js";
@@ -185,7 +188,7 @@ export class Github {
   }
 
   /**
-   * Create a Github release
+   * Create a Github release and return the release id
    * @param tag "v0.2.0"
    * @param options
    */
@@ -195,9 +198,9 @@ export class Github {
       body?: string;
       prerelease?: boolean;
     }
-  ): Promise<void> {
+  ): Promise<number> {
     const { body, prerelease } = options || {};
-    await this.octokit.rest.repos
+    const release = await this.octokit.rest.repos
       .createRelease({
         owner: this.owner,
         repo: this.repo,
@@ -214,6 +217,50 @@ export class Github {
         e.message = `Error creating release: ${e.message}`;
         throw e;
       });
+
+    return release.data.id;
+  }
+
+  async uploadReleaseAssets({
+    releaseId,
+    assetsDir,
+    matchPattern,
+    fileNamePrefix
+  }: {
+    releaseId: number;
+    assetsDir: string;
+    matchPattern?: RegExp;
+    fileNamePrefix?: string;
+  }) {
+    for (const file of fs.readdirSync(assetsDir)) {
+      // Used to ignore duplicated legacy .tar.xz image
+      if (matchPattern && !matchPattern.test(file)) continue;
+
+      const filepath = path.resolve(assetsDir, file);
+      const contentType = mime.lookup(filepath) || "application/octet-stream";
+      try {
+        // The uploadReleaseAssetApi fails sometimes, retry 3 times
+        await retry(
+          async () => {
+            await this.octokit.repos.uploadReleaseAsset({
+              owner: this.owner,
+              repo: this.repo,
+              release_id: releaseId,
+              data: fs.createReadStream(filepath) as any,
+              headers: {
+                "content-type": contentType,
+                "content-length": fs.statSync(filepath).size
+              },
+              name: `${fileNamePrefix || ""}${path.basename(filepath)}`
+            });
+          },
+          { retries: 3 }
+        );
+      } catch (e) {
+        e.message = `Error uploading release asset: ${e.message}`;
+        throw e;
+      }
+    }
   }
 
   /**
