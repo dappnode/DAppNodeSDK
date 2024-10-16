@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false # don't cancel all jobs if some of them failed
       matrix:
-        node: ["18", "20"]
+        node: ["20"]
     steps:
       - uses: actions/checkout@v4
       - name: Setup node
