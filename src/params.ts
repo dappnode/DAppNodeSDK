@@ -3,8 +3,8 @@ import { ManifestFormat } from "./files/manifest/types.js";
 
 export * from "./files/compose/params.js";
 
-export class CliError extends Error { }
-export class YargsError extends Error { }
+export class CliError extends Error {}
+export class YargsError extends Error {}
 
 // Github Actions params
 
@@ -43,5 +43,6 @@ export const releaseFilesDefaultNames: {
   disclaimer: "disclaimer.md",
   gettingStarted: "getting-started.md",
   grafanaDashboards: "grafana-dashboard.json",
-  prometheusTargets: "prometheus-targets.json"
+  prometheusTargets: "prometheus-targets.json",
+  notifications: "notifications.yaml"
 } as const);
