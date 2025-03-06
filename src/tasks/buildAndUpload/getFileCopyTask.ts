@@ -56,12 +56,8 @@ async function copyFilesToReleaseDir({
   requireGitData?: boolean;
 }): Promise<void> {
   for (const variantProps of packagesToBuildProps) {
-    await copyVariantFilesToReleaseDir({
-      variantProps,
-      rootDir,
-      variantsDirPath,
-      composeFileName
-    });
+
+    await copyVariantFilesToReleaseDir({ variantProps, rootDir, variantsDirPath, composeFileName });
 
     // Verify avatar (throws)
     const avatarPath = path.join(
@@ -86,24 +82,14 @@ async function copyVariantFilesToReleaseDir({
   variantsDirPath: string;
   composeFileName: string;
 }): Promise<void> {
-  const {
-    manifest,
-    manifestFormat,
-    releaseDir,
-    compose,
-    variant
-  } = variantProps;
+  const { manifest, manifestFormat, releaseDir, compose, variant } = variantProps;
 
   // In case of single variant packages, the targets are in the root dir
-  const variantDirPath = variant
-    ? path.join(variantsDirPath, variant)
-    : rootDir;
+  const variantDirPath = variant ? path.join(variantsDirPath, variant) : rootDir;
 
   for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
     // For single variant packages, the targets are in the root dir
-    const dirsToCopy = fs.existsSync(variantDirPath)
-      ? [rootDir, variantDirPath]
-      : [rootDir];
+    const dirsToCopy = fs.existsSync(variantDirPath) ? [rootDir, variantDirPath] : [rootDir];
 
     switch (fileId as keyof typeof releaseFiles) {
       case "manifest":
