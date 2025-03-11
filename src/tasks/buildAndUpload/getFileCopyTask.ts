@@ -111,6 +111,17 @@ async function copyVariantFilesToReleaseDir({
         }
         break;
 
+      case "notifications":
+        // Copy the notifications in root and in the variant dir
+        for (const dir of dirsToCopy) {
+          copyReleaseFile({
+            fileConfig: { ...fileConfig, id: fileId },
+            fromDir: dir,
+            toDir: releaseDir
+          });
+        }
+        break;
+
       default:
         copyReleaseFile({
           fileConfig: { ...fileConfig, id: fileId },
