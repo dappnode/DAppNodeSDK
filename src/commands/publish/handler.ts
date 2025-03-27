@@ -55,7 +55,7 @@ export async function publishHandler({
       uploadTo = "ipfs";
       verbose = true;
     }
-    ethProvider = "infura";
+    ethProvider = "remote";
     githubRelease = true;
   }
 
