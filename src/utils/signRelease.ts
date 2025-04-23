@@ -3,7 +3,7 @@ import { base58btc } from "multiformats/bases/base58";
 import { base32 } from "multiformats/bases/base32";
 import { base64, base64url } from "multiformats/bases/base64";
 import { BaseWallet, SigningKey } from "ethers";
-import sortBy from "lodash/sortBy";
+import sortBy from "lodash/sortBy.js";
 import { parseIpfsPath } from "./isIpfsHash.js";
 
 const signatureFileName = "signature.json";
