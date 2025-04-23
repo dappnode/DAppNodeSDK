@@ -7,6 +7,7 @@ export interface PublishCommandOptions extends CliGlobalOptions {
   eth_provider: string;
   content_provider: string;
   upload_to: UploadTo;
+  sign_release: boolean;
   developer_address?: string;
   timeout?: string;
   github_release?: boolean;

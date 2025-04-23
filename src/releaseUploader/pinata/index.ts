@@ -59,4 +59,8 @@ export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
       throw e;
     }
   }
+
+  ipfsApiUrl(): string {
+      throw Error("Pinata does not expose IPFS API url");
+  }
 }

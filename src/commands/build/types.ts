@@ -7,6 +7,7 @@ export interface BuildCommandOptions extends CliGlobalOptions {
   timeout?: string;
   skip_save?: boolean;
   skip_upload?: boolean;
+  sign_release?: boolean;
   require_git_data?: boolean;
   delete_old_pins?: boolean;
   variants_dir_name?: string;

@@ -1,5 +1,4 @@
 import got from "got";
-import { normalizeIpfsProvider } from "./ipfsProvider.js";
 
 interface IpfsApiVersionResponse {
   Version: string; // "0.4.21",
@@ -14,12 +13,11 @@ interface IpfsApiVersionResponse {
  * @param ipfsProvider "dappnode" | "http://localhost:5001"
  */
 export async function ipfsVersion(
-  ipfsProvider: string
+  ipfsApiUrl: string
 ): Promise<IpfsApiVersionResponse> {
   // Parse the ipfsProvider the a full base apiUrl
-  const apiUrl = normalizeIpfsProvider(ipfsProvider);
   const res = await got<IpfsApiVersionResponse>({
-    prefixUrl: apiUrl,
+    prefixUrl: ipfsApiUrl,
     url: "/api/v0/version",
     method: "POST",
     responseType: "json"
