@@ -1,18 +1,18 @@
 export class ReleaseUploaderConnectionError extends Error {
-  ipfsProvider: string;
+  url: string;
   reason: string;
   help?: string;
   constructor({
-    ipfsProvider,
+    url,
     reason,
     help
   }: {
-    ipfsProvider: string;
+    url: string;
     reason: string;
     help?: string;
   }) {
-    super(`Can't connect to ${ipfsProvider}: ${reason}`);
-    this.ipfsProvider = ipfsProvider;
+    super(`Can't connect to ${url}: ${reason}`);
+    this.url = url;
     this.reason = reason;
     this.help = help;
   }

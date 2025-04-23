@@ -7,6 +7,7 @@ export interface BuildAndUploadOptions {
   userTimeout?: string;
   skipSave?: boolean;
   skipUpload?: boolean;
+  signReleaseFlag: boolean;
   requireGitData?: boolean;
   deleteOldPins?: boolean;
   composeFileName: string;

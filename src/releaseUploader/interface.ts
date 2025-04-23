@@ -21,4 +21,9 @@ export interface IReleaseUploader {
    * Resolves if connection is okay. Rejects otherwise
    */
   testConnection(): Promise<void>;
+
+  /**
+   * Returns the IPFS API URL or returns an error if not available
+   */
+  ipfsApiUrl(): string;
 }

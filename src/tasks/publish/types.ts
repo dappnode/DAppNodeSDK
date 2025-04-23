@@ -9,6 +9,7 @@ export interface PublishOptions {
   composeFileName: string;
   contentProvider: string;
   uploadTo: UploadTo;
+  signReleaseFlag: boolean,
   userTimeout?: string;
   requireGitData?: boolean;
   deleteOldPins?: boolean;

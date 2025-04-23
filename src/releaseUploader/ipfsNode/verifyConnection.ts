@@ -6,10 +6,10 @@ import { ReleaseUploaderConnectionError } from "../errors.js";
  * @param ipfsProvider
  */
 export async function verifyIpfsConnection(
-  ipfsProvider: string
+  ipfsApiUrl: string
 ): Promise<void> {
   try {
-    await ipfsVersion(ipfsProvider);
+    await ipfsVersion(ipfsApiUrl);
   } catch (e) {
     // On IPFS version 0.5 only POST methods are allowed
     // Tolerate errors 405 to be more backwards compatible
@@ -17,14 +17,15 @@ export async function verifyIpfsConnection(
 
     if (e.code === "ENOTFOUND") {
       throw new ReleaseUploaderConnectionError({
-        ipfsProvider,
+        url: ipfsApiUrl,
         reason: "ENOTFOUND",
+        // .dappnode URLs are internal to DAppNode use
         help:
-          ipfsProvider === "dappnode" ? "Check your VPN connection" : undefined
+          ipfsApiUrl.endsWith(".dappnode") ? "Check your VPN connection" : undefined
       });
     } else {
       throw new ReleaseUploaderConnectionError({
-        ipfsProvider,
+        url: ipfsApiUrl,
         reason: e.message
       });
     }

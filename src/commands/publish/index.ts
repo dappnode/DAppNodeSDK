@@ -83,7 +83,12 @@ export const publish: CommandModule<CliGlobalOptions, PublishCommandOptions> = {
       alias: "variant",
       description: `Specify the package variants to build (only for packages that support it). Defined by comma-separated list of variant names. If not specified, all variants will be built. Example: "variant1,variant2"`,
       type: "string"
-    }
+    },
+    sign_release: {
+      alias: "sign-release",
+      description: `Adds a signature.json file to the release directory. Requires to set ENV SIGNING_KEY to a hex string of the private key of the signing ECDSA_256 key`,
+      type: "boolean"
+    },
   },
 
   handler: async args => {
