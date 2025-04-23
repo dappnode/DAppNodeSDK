@@ -7,8 +7,10 @@ import { ReleaseSignature } from "@dappnode/types";
 describe("util > signRelease", function () {
   this.timeout(120 * 1000);
 
-  it("throws if ipfsApiUrls is empty", async () => {
-    const localIpfsUrl = "http://localhost:5001";
+  it("Upload and sign release", async () => {
+    // Not ideal to depend on an external service for tests. Ideally this should run against a local IFPS node.
+    // This test should start a docker image for IPFS and remove it when done.
+    const localIpfsUrl = "https://api.ipfs.dappnode.io";
     const firstFileContent = "Hello world";
 
     // Upload a fake release
