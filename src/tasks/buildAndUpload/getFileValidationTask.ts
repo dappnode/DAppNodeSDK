@@ -4,9 +4,10 @@ import {
   validateComposeSchema,
   validateManifestSchema,
   validateSetupWizardSchema,
-  validateDappnodeCompose
+  validateDappnodeCompose,
+  validateNotificationsSchema
 } from "@dappnode/schemas";
-import { getComposePath, readSetupWizardIfExists } from "../../files/index.js";
+import { getComposePath, readNotificationsIfExists, readSetupWizardIfExists } from "../../files/index.js";
 import { CliError } from "../../params.js";
 
 export function getFileValidationTask({
@@ -30,8 +31,10 @@ async function validatePackageFiles({
   rootDir: string;
 }): Promise<void> {
   const setupWizard = readSetupWizardIfExists(rootDir);
-
   if (setupWizard) validateSetupWizardSchema(setupWizard);
+
+  const notifications = readNotificationsIfExists(rootDir);
+  if (notifications) validateNotificationsSchema(notifications);
 
   for (const pkgProps of packagesToBuildProps)
     await validateVariantFiles(pkgProps);
