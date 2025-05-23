@@ -17,7 +17,7 @@ describe("generatePublishTx", async function () {
   this.timeout(60 * 1000);
 
   const burnAddress = "0x0000000000000000000000000000000000000000";
-  const ethProvider = "infura";
+  const ethProvider = "remote";
   const ethereumUrl = getEthereumUrl(ethProvider);
   const apm = new ApmRepository(ethereumUrl);
 
