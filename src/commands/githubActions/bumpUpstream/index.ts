@@ -146,7 +146,7 @@ async function gaBumpUpstreamHandler({
   }
 
   const gitHead = await getGitHead();
-  await buildAndComment({ dir, commitSha: gitHead.commit, branch: branchName });
+  await buildAndComment({ dir, commitSha: gitHead.commit, branch: branchName, all_variants: useVariants });
 }
 
 /**
