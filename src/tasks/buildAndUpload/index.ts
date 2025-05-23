@@ -39,7 +39,7 @@ export function buildAndUpload({
   const releaseUploader = getReleaseUploader(releaseUploaderProvider);
 
   return [
-    getFileValidationTask({ packagesToBuildProps, rootDir: dir }),
+    getFileValidationTask({ packagesToBuildProps }),
     getVerifyConnectionTask({ releaseUploader, skipUpload }),
     getReleaseDirCreationTask({ packagesToBuildProps }),
     getFileCopyTask({
@@ -49,7 +49,12 @@ export function buildAndUpload({
       composeFileName,
       requireGitData
     }),
-    ...getBuildTasks({ packagesToBuildProps, buildTimeout, skipSave, rootDir: dir }),
+    ...getBuildTasks({
+      packagesToBuildProps,
+      buildTimeout,
+      skipSave,
+      rootDir: dir
+    }),
     ...getUploadTasks({
       packagesToBuildProps,
       releaseUploader,

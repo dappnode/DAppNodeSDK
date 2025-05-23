@@ -4,7 +4,9 @@ import {
   readCompose,
   getComposePackageImages,
   parseComposeUpstreamVersion,
-  readManifest
+  readManifest,
+  readNotificationsIfExists,
+  readSetupWizardIfExists
 } from "../../files/index.js";
 import { Compose, Manifest } from "@dappnode/types";
 import { defaultComposeFileName } from "../../params.js";
@@ -22,9 +24,16 @@ export function generatePackagesProps({
   composeFileName?: string;
 }): PackageToBuildProps[] {
   if (variants === null)
-    return [createPackagePropsItem({ rootDir, composeFileName, variant: null, variantsDirPath })];
+    return [
+      createPackagePropsItem({
+        rootDir,
+        composeFileName,
+        variant: null,
+        variantsDirPath
+      })
+    ];
 
-  return variants.map((variant) =>
+  return variants.map(variant =>
     createPackagePropsItem({
       rootDir,
       composeFileName,
@@ -47,16 +56,22 @@ function createPackagePropsItem({
 }): PackageToBuildProps {
   const manifestPaths = [{ dir: rootDir }];
   const composePaths = [{ dir: rootDir, composeFileName }];
+  const notificationsPaths = [{ dir: rootDir }];
+  const setupWizardPaths = [{ dir: rootDir }];
 
   if (variant) {
     const variantPath = path.join(variantsDirPath, variant);
 
     manifestPaths.push({ dir: variantPath });
     composePaths.push({ dir: variantPath, composeFileName });
+    notificationsPaths.push({ dir: variantPath });
+    setupWizardPaths.push({ dir: variantPath });
   }
 
   const { manifest, format: manifestFormat } = readManifest(manifestPaths);
   const compose = readCompose(composePaths);
+  const notifications = readNotificationsIfExists(notificationsPaths);
+  const setupWizard = readSetupWizardIfExists(setupWizardPaths);
 
   const { name: dnpName, version } = manifest;
 
@@ -66,18 +81,17 @@ function createPackagePropsItem({
 
   return {
     variant,
-
     manifest,
     manifestFormat,
-
     compose,
-
+    notifications,
+    setupWizard,
     releaseDir: getReleaseDirPath({ rootDir, dnpName, version }),
     manifestPaths,
     composePaths,
-
+    notificationsPaths,
+    setupWizardPaths,
     images: getComposePackageImages(compose, manifest),
-
     architectures: parseArchitectures({
       rawArchs: manifest.architectures
     })
