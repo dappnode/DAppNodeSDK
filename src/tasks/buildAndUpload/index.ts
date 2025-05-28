@@ -15,6 +15,7 @@ import { getBuildTasks } from "./getBuildTasks.js";
 import { getUploadTasks } from "./getUploadTasks.js";
 import { getDeleteOldPinsTask } from "./getDeleteOldPinsTask.js";
 import { getSaveUploadResultsTask } from "./getSaveUploadResultsTask.js";
+import { signReleaseTasks } from "./signRelease.js";
 
 export function buildAndUpload({
   contentProvider,
@@ -22,6 +23,7 @@ export function buildAndUpload({
   userTimeout,
   skipSave,
   skipUpload,
+  signReleaseFlag,
   requireGitData,
   deleteOldPins,
   composeFileName,
@@ -56,6 +58,12 @@ export function buildAndUpload({
       requireGitData: !!requireGitData,
       composeFileName,
       skipUpload
+    }),
+    ...signReleaseTasks({
+      packagesToBuildProps,
+      releaseUploader,
+      skipUpload,
+      signReleaseFlag
     }),
     getDeleteOldPinsTask({
       packagesToBuildProps,

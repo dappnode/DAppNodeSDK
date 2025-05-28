@@ -11,7 +11,7 @@ import { getFormDataFileUpload } from "../utils/formDataFileUpload.js";
  */
 export async function ipfsAddFromFs(
   dirOrFilePath: string,
-  ipfsProvider: string,
+  ipfsApiUrl: string,
   onProgress?: (percent: number) => void
 ): Promise<string> {
   // Create form and append all files recursively
@@ -19,9 +19,8 @@ export async function ipfsAddFromFs(
 
   // Parse the ipfsProvider the a full base apiUrl
   let lastPercent = -1;
-  const apiUrl = normalizeIpfsProvider(ipfsProvider);
   const res = await got({
-    prefixUrl: apiUrl,
+    prefixUrl: ipfsApiUrl,
     url: "api/v0/add",
     method: "POST",
     headers: form.getHeaders(),

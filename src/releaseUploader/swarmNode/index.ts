@@ -23,4 +23,8 @@ export class ReleaseUploaderSwarmNode implements IReleaseUploader {
   async testConnection(): Promise<void> {
     // ### TODO
   }
+
+  ipfsApiUrl(): string {
+      throw Error("Swarm does not support IPFS API")
+  }
 }
