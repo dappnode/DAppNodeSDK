@@ -36,7 +36,10 @@ describe("buildVariantMap", function () {
 
       const pkgProps = pkgsProps[0];
 
-      expect(pkgProps).to.have.all.keys(
+      // A package could have extra fields like
+      // notifications or setup wizard, but the following are
+      // mandatory:
+      expect(pkgProps).to.include.all.keys(
         "manifest",
         "manifestFormat",
         "compose",

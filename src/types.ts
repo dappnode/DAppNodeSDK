@@ -1,5 +1,17 @@
-import { Architecture, Compose, ComposePaths, Manifest } from "@dappnode/types";
-import { ManifestFormat, ManifestPaths } from "./files/manifest/types.js";
+import {
+  Architecture,
+  Compose,
+  ComposePaths,
+  Manifest,
+  NotificationsConfig,
+  SetupWizard
+} from "@dappnode/types";
+import {
+  ManifestPaths,
+  ManifestFormat,
+  NotificationsPaths,
+  SetupWizardPaths
+} from "./files/index.js";
 
 export interface CliGlobalOptions {
   dir?: string;
@@ -39,10 +51,18 @@ export interface PackageToBuildProps {
   // Compose file
   compose: Compose;
 
+  // Notifications
+  notifications: NotificationsConfig | null;
+
+  // Setup wizard
+  setupWizard: SetupWizard | null;
+
   // File paths
   releaseDir: string;
   composePaths: ComposePaths[];
   manifestPaths: ManifestPaths[];
+  notificationsPaths?: NotificationsPaths[];
+  setupWizardPaths?: SetupWizardPaths[];
 
   // Package information
   images: PackageImage[];

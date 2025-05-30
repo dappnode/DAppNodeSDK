@@ -4,35 +4,28 @@ import {
   validateComposeSchema,
   validateManifestSchema,
   validateSetupWizardSchema,
-  validateDappnodeCompose
+  validateDappnodeCompose,
+  validateNotificationsSchema
 } from "@dappnode/schemas";
-import { getComposePath, readSetupWizardIfExists } from "../../files/index.js";
+import { getComposePath } from "../../files/index.js";
 import { CliError } from "../../params.js";
 
 export function getFileValidationTask({
-  packagesToBuildProps,
-  rootDir
+  packagesToBuildProps
 }: {
   packagesToBuildProps: PackageToBuildProps[];
-  rootDir: string;
 }): ListrTask<ListrContextBuild> {
   return {
     title: `Validate files`,
-    task: async () => await validatePackageFiles({ packagesToBuildProps, rootDir })
+    task: async () => await validatePackageFiles({ packagesToBuildProps })
   };
 }
 
 async function validatePackageFiles({
-  packagesToBuildProps,
-  rootDir
+  packagesToBuildProps
 }: {
   packagesToBuildProps: PackageToBuildProps[];
-  rootDir: string;
 }): Promise<void> {
-  const setupWizard = readSetupWizardIfExists(rootDir);
-
-  if (setupWizard) validateSetupWizardSchema(setupWizard);
-
   for (const pkgProps of packagesToBuildProps)
     await validateVariantFiles(pkgProps);
 }
@@ -40,7 +33,13 @@ async function validatePackageFiles({
 async function validateVariantFiles(
   pkgProps: PackageToBuildProps
 ): Promise<void> {
-  const { manifest, compose, composePaths } = pkgProps;
+  const {
+    manifest,
+    compose,
+    composePaths,
+    notifications,
+    setupWizard
+  } = pkgProps;
 
   console.log(
     `Validating files for ${manifest.name} (version ${manifest.version})`
@@ -53,10 +52,18 @@ async function validateVariantFiles(
   validatePackageVersion(manifest.version);
 
   // Validate compose file using docker compose
-  await validateComposeSchema(composePaths.map(pathObj => getComposePath(pathObj)));
+  await validateComposeSchema(
+    composePaths.map(pathObj => getComposePath(pathObj))
+  );
 
   // Validate compose file specifically for Dappnode requirements
   validateDappnodeCompose(compose, manifest);
+
+  // Validate notifications schema
+  if (notifications) validateNotificationsSchema(notifications);
+
+  // Validate setup wizard schema
+  if (setupWizard) validateSetupWizardSchema(setupWizard);
 }
 
 function validatePackageName(name: string): void {
