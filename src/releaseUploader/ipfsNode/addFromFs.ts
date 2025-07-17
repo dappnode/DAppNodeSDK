@@ -43,31 +43,14 @@ export async function ipfsAddFromFs(
     ];
   }
 
-  // Track progress
-  let totalSize = 0;
-  let uploadedSize = 0;
-  for (const file of files) {
-    const filePath = path.resolve(dirOrFilePath, file.path);
-    if (fs.existsSync(filePath)) {
-      const stat = fs.statSync(filePath);
-      totalSize += stat.size;
-    } else {
-      // Optionally log or handle missing files
-      continue;
-    }
-  }
-
   // Add files to IPFS
   let lastCid = "";
   for await (const result of kuboClient.addAll(files, {
-    wrapWithDirectory: true
+    wrapWithDirectory: true,
+    progress: onProgress
   })) {
     lastCid = result.cid.toString();
-    // Progress callback (approximate)
-    if (onProgress && result.size) {
-      uploadedSize += result.size;
-      onProgress(Math.min(uploadedSize / totalSize, 1));
-    }
+    // Progress is now handled by kuboClient.addAll's progress callback
   }
   if (!lastCid) throw Error("No CID returned from IPFS add");
   return `/ipfs/${lastCid}`;
