@@ -29,10 +29,15 @@ export async function ipfsAddFromFs(
   let totalSize = 0;
   if (fs.statSync(dirOrFilePath).isDirectory()) {
     for (const filePath of getStatFiles(dirOrFilePath)) {
-      totalSize += fs.statSync(filePath).size;
+      const size = fs.statSync(filePath).size;
+      totalSize += size;
+      console.log(`[IPFS-UPLOAD] File: ${filePath}, Size: ${size}`);
     }
   } else {
     totalSize = fs.statSync(dirOrFilePath).size;
+    console.log(
+      `[IPFS-UPLOAD] Single file: ${dirOrFilePath}, Size: ${totalSize}`
+    );
   }
   // Helper to recursively collect files from a directory
   function* getFiles(
@@ -66,16 +71,24 @@ export async function ipfsAddFromFs(
   // Add files to IPFS
   let lastCid = "";
   let uploaded = 0;
+  console.log(`[IPFS-UPLOAD] Starting upload. Total size: ${totalSize}`);
   for await (const result of kuboClient.addAll(files, {
-    wrapWithDirectory: true,
-    progress: (bytes: number) => {
-      uploaded = bytes;
-      if (onProgress && totalSize > 0) {
-        onProgress(Math.min(uploaded / totalSize, 1));
-      }
-    }
+    wrapWithDirectory: true
   })) {
     lastCid = result.cid.toString();
+    uploaded += result.size || 0;
+    const percent = totalSize > 0 ? Math.min(uploaded / totalSize, 1) : 0;
+    console.log(
+      `[IPFS-UPLOAD] Uploaded chunk. CID: ${lastCid}, Path: ${result.path}, Size: ${result.size}`
+    );
+    console.log(
+      `[IPFS-UPLOAD] Progress: ${uploaded} bytes uploaded (${(
+        percent * 100
+      ).toFixed(2)}%)`
+    );
+    if (onProgress && totalSize > 0) {
+      onProgress(percent);
+    }
   }
   if (!lastCid) throw Error("No CID returned from IPFS add");
   return `/ipfs/${lastCid}`;
