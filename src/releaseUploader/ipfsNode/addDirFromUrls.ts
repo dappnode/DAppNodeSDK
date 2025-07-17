@@ -1,4 +1,4 @@
-import got from "got";
+import { got } from "got";
 import FormData from "form-data";
 import request from "request";
 import { normalizeIpfsProvider } from "./ipfsProvider.js";
@@ -33,7 +33,8 @@ export async function ipfsAddDirFromUrls(
     url: "api/v0/add",
     method: "POST",
     headers: form.getHeaders(),
-    body: form
+    body: form,
+    http2: true
   });
 
   // res.body = '{"Name":"dir/file","Hash":"Qm...","Size":"2203"}\n{"Name":"dir","Hash":"Qm...","Size":"24622"}\n'

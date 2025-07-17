@@ -1,4 +1,4 @@
-import got from "got";
+import { got } from "got";
 
 /**
  * Fetch all Github releases without a GITHUB_TOKEN

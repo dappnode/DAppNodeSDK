@@ -1,4 +1,4 @@
-import got from "got";
+import { got } from "got";
 import { IReleaseUploader } from "../interface.js";
 import { PinataMetadata } from "./PinataSDK.js";
 import { pinataAddFromFs } from "./addDirFromFs.js";

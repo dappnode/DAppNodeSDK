@@ -1,5 +1,5 @@
 import path from "path";
-import got from "got";
+import { got } from "got";
 import cliProgress from "cli-progress";
 import { CommandModule } from "yargs";
 import chalk from "chalk";

@@ -1,4 +1,4 @@
-import got from "got";
+import { got } from "got";
 import { normalizeIpfsProvider } from "./ipfsProvider.js";
 import { getFormDataFileUpload } from "../utils/formDataFileUpload.js";
 
@@ -25,7 +25,8 @@ export async function ipfsAddFromFs(
     url: "api/v0/add",
     method: "POST",
     headers: form.getHeaders(),
-    body: form
+    body: form,
+    http2: true
   }).on("uploadProgress", progress => {
     // Report upload progress, and throttle to one update per percent point
     // { percent: 0.9995998225975282, transferred: 733675762, total: 733969480 }
