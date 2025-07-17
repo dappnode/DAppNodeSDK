@@ -1,4 +1,4 @@
-import got from "got";
+import { got } from "got";
 import { getFormDataFileUpload } from "../utils/formDataFileUpload.js";
 import {
   PinataMetadata,

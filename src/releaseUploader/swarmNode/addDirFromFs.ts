@@ -1,5 +1,5 @@
 import tarFS from "tar-fs";
-import got from "got";
+import { got } from "got";
 
 /**
  * @returns Resulting hash: "/bzz/a5e0183cee00112..."

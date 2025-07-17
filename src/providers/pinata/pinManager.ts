@@ -1,4 +1,4 @@
-import got from "got";
+import { got } from "got";
 import { PINATA_URL } from "../../params.js";
 import { PinItem } from "../../releaseUploader/pinata/index.js";
 

@@ -1,4 +1,4 @@
-import got from "got";
+import { got } from "got";
 import { normalizeIpfsProvider } from "./ipfsProvider.js";
 
 interface IpfsApiVersionResponse {
@@ -20,9 +20,10 @@ export async function ipfsVersion(
   const apiUrl = normalizeIpfsProvider(ipfsProvider);
   const res = await got<IpfsApiVersionResponse>({
     prefixUrl: apiUrl,
-    url: "/api/v0/version",
+    url: "api/v0/version",
     method: "POST",
-    responseType: "json"
+    responseType: "json",
+    http2: true
   });
 
   return res.body;
