@@ -12,12 +12,12 @@ import {
   GithubRelease
 } from "../utils/githubGetReleases.js";
 import { ipfsAddDirFromUrls } from "../releaseUploader/ipfsNode/addDirFromUrls.js";
-import { verifyIpfsConnection } from "../releaseUploader/ipfsNode/verifyConnection.js";
 import { CliGlobalOptions } from "../types.js";
 import { Manifest, defaultArch, releaseFiles } from "@dappnode/types";
 import { getLegacyImagePath } from "../utils/getLegacyImagePath.js";
 import { getImageFileName } from "../utils/getImageFileName.js";
 import { contentHashFileName, releaseFilesDefaultNames } from "../params.js";
+import { ReleaseUploaderIpfsNode } from "../releaseUploader/ipfsNode/index.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   repoSlug: string;
@@ -69,12 +69,11 @@ export async function fromGithubHandler({
   latest,
   version
 }: CliCommandOptions): Promise<{ releaseMultiHash: string }> {
-  // Parse options
-  const ipfsProvider = provider;
   // Assume incomplete repo slugs refer to DAppNode core packages
   if (!repoSlug.includes("/")) repoSlug = `dappnode/DNP_${repoSlug}`;
 
-  await verifyIpfsConnection(ipfsProvider);
+  const kuboClient = new ReleaseUploaderIpfsNode({ url: provider });
+  await kuboClient.testConnection();
 
   // Pick version interactively
   const release = await getSelectedGithubRelease({
@@ -135,7 +134,7 @@ export async function fromGithubHandler({
 
   const releaseMultiHash = await ipfsAddDirFromUrls(
     files,
-    ipfsProvider,
+    provider,
     onProgress
   );
 

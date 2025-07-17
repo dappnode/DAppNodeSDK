@@ -1,13 +1,14 @@
 import { IReleaseUploader } from "../interface.js";
 import { ipfsAddFromFs } from "./addFromFs.js";
-import { verifyIpfsConnection } from "./verifyConnection.js";
+import { normalizeIpfsProvider } from "./ipfsProvider.js";
+import { create, KuboRPCClient } from "kubo-rpc-client";
 
 export class ReleaseUploaderIpfsNode implements IReleaseUploader {
   networkName = "IPFS node";
-  ipfsProvider: string;
+  kuboClient: KuboRPCClient;
 
-  constructor({ ipfsProvider }: { ipfsProvider: string }) {
-    this.ipfsProvider = ipfsProvider;
+  constructor({ url }: { url: string }) {
+    this.kuboClient = create({ url: normalizeIpfsProvider(url) });
   }
 
   async addFromFs({
@@ -17,10 +18,10 @@ export class ReleaseUploaderIpfsNode implements IReleaseUploader {
     dirPath: string;
     onProgress?: (percent: number) => void;
   }): Promise<string> {
-    return await ipfsAddFromFs(dirPath, this.ipfsProvider, onProgress);
+    return await ipfsAddFromFs(dirPath, this.kuboClient, onProgress);
   }
 
   async testConnection(): Promise<void> {
-    await verifyIpfsConnection(this.ipfsProvider);
+    await this.kuboClient.version();
   }
 }

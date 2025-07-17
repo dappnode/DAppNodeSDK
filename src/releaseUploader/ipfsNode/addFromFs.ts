@@ -1,6 +1,6 @@
-import got from "got";
-import { normalizeIpfsProvider } from "./ipfsProvider.js";
-import { getFormDataFileUpload } from "../utils/formDataFileUpload.js";
+import { KuboRPCClient } from "kubo-rpc-client";
+import fs from "fs";
+import path from "path";
 
 /**
  * Uploads a directory or file from the fs
@@ -11,37 +11,64 @@ import { getFormDataFileUpload } from "../utils/formDataFileUpload.js";
  */
 export async function ipfsAddFromFs(
   dirOrFilePath: string,
-  ipfsProvider: string,
+  kuboClient: KuboRPCClient,
   onProgress?: (percent: number) => void
 ): Promise<string> {
-  // Create form and append all files recursively
-  const form = getFormDataFileUpload(dirOrFilePath);
-
-  // Parse the ipfsProvider the a full base apiUrl
-  let lastPercent = -1;
-  const apiUrl = normalizeIpfsProvider(ipfsProvider);
-  const res = await got({
-    prefixUrl: apiUrl,
-    url: "api/v0/add",
-    method: "POST",
-    headers: form.getHeaders(),
-    body: form
-  }).on("uploadProgress", progress => {
-    // Report upload progress, and throttle to one update per percent point
-    // { percent: 0.9995998225975282, transferred: 733675762, total: 733969480 }
-    const currentRoundPercent = Math.round(100 * progress.percent);
-    if (lastPercent !== currentRoundPercent) {
-      lastPercent = currentRoundPercent;
-      if (onProgress) onProgress(progress.percent);
+  // Helper to recursively collect files from a directory
+  function* getFiles(
+    dir: string
+  ): Generator<{ path: string; content: fs.ReadStream }> {
+    const stat = fs.statSync(dir);
+    if (stat.isDirectory()) {
+      for (const entry of fs.readdirSync(dir)) {
+        yield* getFiles(path.join(dir, entry));
+      }
+    } else {
+      yield {
+        path: path.relative(path.dirname(dirOrFilePath), dir),
+        content: fs.createReadStream(dir)
+      };
     }
-  });
+  }
 
-  // res.body = '{"Name":"dir/file","Hash":"Qm...","Size":"2203"}\n{"Name":"dir","Hash":"Qm...","Size":"24622"}\n'
-  // Trim last \n, split entries by \n and then select the last which is the root directory
-  const lastFileUnparsed = res.body.trim().split("\n").slice(-1)[0];
-  if (!lastFileUnparsed) throw Error(`No files in response body ${res.body}`);
+  let files: any;
+  if (fs.statSync(dirOrFilePath).isDirectory()) {
+    files = Array.from(getFiles(dirOrFilePath));
+  } else {
+    files = [
+      {
+        path: path.basename(dirOrFilePath),
+        content: fs.createReadStream(dirOrFilePath)
+      }
+    ];
+  }
 
-  // Parse the JSON and return the hash of the root directory
-  const lastFile = JSON.parse(lastFileUnparsed);
-  return `/ipfs/${lastFile.Hash}`;
+  // Track progress
+  let totalSize = 0;
+  let uploadedSize = 0;
+  for (const file of files) {
+    const filePath = path.resolve(dirOrFilePath, file.path);
+    if (fs.existsSync(filePath)) {
+      const stat = fs.statSync(filePath);
+      totalSize += stat.size;
+    } else {
+      // Optionally log or handle missing files
+      continue;
+    }
+  }
+
+  // Add files to IPFS
+  let lastCid = "";
+  for await (const result of kuboClient.addAll(files, {
+    wrapWithDirectory: true
+  })) {
+    lastCid = result.cid.toString();
+    // Progress callback (approximate)
+    if (onProgress && result.size) {
+      uploadedSize += result.size;
+      onProgress(Math.min(uploadedSize / totalSize, 1));
+    }
+  }
+  if (!lastCid) throw Error("No CID returned from IPFS add");
+  return `/ipfs/${lastCid}`;
 }

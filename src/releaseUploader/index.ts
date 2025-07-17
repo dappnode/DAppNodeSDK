@@ -13,7 +13,7 @@ export type ReleaseUploaderProvider =
   | {
       network: "ipfs";
       type: "node";
-      ipfsProvider: string;
+      url: string;
     }
   | {
       network: "ipfs";
@@ -88,7 +88,7 @@ export function cliArgsToReleaseUploaderProvider({
         return {
           network: "ipfs",
           type: "node",
-          ipfsProvider: contentProvider
+          url: contentProvider
         };
       }
 

@@ -31,7 +31,12 @@ function parseIpfsProviderUrl(provider: string) {
 export function normalizeIpfsProvider(provider: string): string {
   const providerUrl = getIpfsProviderUrl(provider);
   const { host, port, protocol } = parseIpfsProviderUrl(providerUrl);
-  const fullUrl = `${protocol}://${host}:${port}`;
+  let fullUrl: string;
+  if (Number(port) === 443) {
+    fullUrl = `${protocol}://${host}`;
+  } else {
+    fullUrl = `${protocol}://${host}:${port}`;
+  }
   // #### TEMP: Make sure the URL is correct
   new URL(fullUrl);
   return fullUrl;
