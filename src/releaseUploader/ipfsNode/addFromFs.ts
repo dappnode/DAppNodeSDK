@@ -1,4 +1,4 @@
-import { KuboRPCClient } from "kubo-rpc-client";
+import { KuboRPCClient, ImportCandidate, AwaitIterable } from "kubo-rpc-client";
 import fs from "fs";
 import path from "path";
 
@@ -14,6 +14,26 @@ export async function ipfsAddFromFs(
   kuboClient: KuboRPCClient,
   onProgress?: (percent: number) => void
 ): Promise<string> {
+  // Calculate total size of all files before upload
+  function* getStatFiles(dir: string): Generator<string> {
+    const stat = fs.statSync(dir);
+    if (stat.isDirectory()) {
+      for (const entry of fs.readdirSync(dir)) {
+        yield* getStatFiles(path.join(dir, entry));
+      }
+    } else {
+      yield dir;
+    }
+  }
+
+  let totalSize = 0;
+  if (fs.statSync(dirOrFilePath).isDirectory()) {
+    for (const filePath of getStatFiles(dirOrFilePath)) {
+      totalSize += fs.statSync(filePath).size;
+    }
+  } else {
+    totalSize = fs.statSync(dirOrFilePath).size;
+  }
   // Helper to recursively collect files from a directory
   function* getFiles(
     dir: string
@@ -31,26 +51,31 @@ export async function ipfsAddFromFs(
     }
   }
 
-  let files: any;
+  let files: AwaitIterable<ImportCandidate>;
   if (fs.statSync(dirOrFilePath).isDirectory()) {
-    files = Array.from(getFiles(dirOrFilePath));
+    files = getFiles(dirOrFilePath);
   } else {
-    files = [
-      {
+    files = (function* () {
+      yield {
         path: path.basename(dirOrFilePath),
         content: fs.createReadStream(dirOrFilePath)
-      }
-    ];
+      };
+    })();
   }
 
   // Add files to IPFS
   let lastCid = "";
+  let uploaded = 0;
   for await (const result of kuboClient.addAll(files, {
     wrapWithDirectory: true,
-    progress: onProgress
+    progress: (bytes: number) => {
+      uploaded = bytes;
+      if (onProgress && totalSize > 0) {
+        onProgress(Math.min(uploaded / totalSize, 1));
+      }
+    }
   })) {
     lastCid = result.cid.toString();
-    // Progress is now handled by kuboClient.addAll's progress callback
   }
   if (!lastCid) throw Error("No CID returned from IPFS add");
   return `/ipfs/${lastCid}`;
