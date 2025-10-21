@@ -45,6 +45,6 @@ export function getNextGitTag(releaseDetailsMap: GitTagDetailsMap, isMultiVarian
   // Multi-variant package (fallback, should not hit if isMultiVariant is set correctly)
   return variantVersions
     .sort((a, b) => (a.variant || "").localeCompare(b.variant || ""))
-    .map(({ variant, nextVersion }) => `${variant}@${nextVersion}`)
+    .map(({ variant, nextVersion }) => `${variant}@v${nextVersion}`)
     .join("_");
 }
