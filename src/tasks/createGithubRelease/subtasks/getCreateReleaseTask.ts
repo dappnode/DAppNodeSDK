@@ -32,7 +32,7 @@ export function getCreateReleaseTask({
     task: async (ctx, task) => {
       const releaseDetailsMap = buildReleaseDetailsMap(ctx);
 
-      const tag = getNextGitTag(releaseDetailsMap);
+      const tag = getNextGitTag(releaseDetailsMap, isMultiVariant);
 
       task.output = "Deleting existing release...";
       await github.deleteReleaseAndAssets(tag);

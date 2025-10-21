@@ -26,7 +26,7 @@ export function createGithubRelease({
 
   return new Listr<ListrContextPublish>(
     [
-      getHandleTagsTask({ github }),
+      getHandleTagsTask({ github, isMultiVariant }),
       getCreateReleaseTask({
         github,
         composeFileName,
