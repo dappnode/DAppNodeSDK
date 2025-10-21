@@ -16,8 +16,10 @@ type GitTagDetailsMap = {
  *
  * - If the package is a single-variant package, the tag will be in the format:
  *  `v0.1.2`
+ *
+ * - If isMultiVariant is true, always use variant@v<version> format, even for a single variant
  */
-export function getNextGitTag(releaseDetailsMap: GitTagDetailsMap): string {
+export function getNextGitTag(releaseDetailsMap: GitTagDetailsMap, isMultiVariant: boolean): string {
   const variantVersions = Object.entries(
     releaseDetailsMap
   ).map(([, { variant, nextVersion }]) => ({ variant, nextVersion }));
@@ -25,16 +27,24 @@ export function getNextGitTag(releaseDetailsMap: GitTagDetailsMap): string {
   if (variantVersions.length === 0)
     throw Error("Could not generate git tag. Missing variant or nextVersion");
 
-  // Not a multi-variant package
-  if (variantVersions.length === 1) return `v${variantVersions[0].nextVersion}`;
-
   // If any variant is null, throw an error
   if (variantVersions.some(({ variant }) => !variant))
     throw Error("Could not generate git tag. Missing variant");
 
-  // Multi-variant package
+  // If isMultiVariant, always use variant@v<version> format, even for a single variant
+  if (isMultiVariant) {
+    return variantVersions
+      .sort((a, b) => (a.variant || "").localeCompare(b.variant || ""))
+      .map(({ variant, nextVersion }) => `${variant}@v${nextVersion}`)
+      .join("_");
+  }
+
+  // Not a multi-variant package
+  if (variantVersions.length === 1) return `v${variantVersions[0].nextVersion}`;
+
+  // Multi-variant package (fallback, should not hit if isMultiVariant is set correctly)
   return variantVersions
-    .sort((a, b) => (a.variant || "").localeCompare(b.variant || "")) // Sort alphabetically by variant
-    .map(({ variant, nextVersion }) => `${variant}@${nextVersion}`) // Map to string
-    .join("_"); // Join into a single string
+    .sort((a, b) => (a.variant || "").localeCompare(b.variant || ""))
+    .map(({ variant, nextVersion }) => `${variant}@v${nextVersion}`)
+    .join("_");
 }

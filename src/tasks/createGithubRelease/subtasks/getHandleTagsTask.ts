@@ -14,9 +14,11 @@ import { buildReleaseDetailsMap } from "../buildReleaseDetailsMap.js";
  * tagged and released on that tag
  */
 export function getHandleTagsTask({
-  github
+  github,
+  isMultiVariant
 }: {
   github: Github;
+  isMultiVariant: boolean;
 }): ListrTask<ListrContextPublish> {
   const isCi = process.env.CI;
   const triggerTag = process.env.GITHUB_REF || process.env.TRAVIS_TAG;
@@ -29,7 +31,7 @@ export function getHandleTagsTask({
 
       const releaseDetailsMap = buildReleaseDetailsMap(ctx);
 
-      const tag = getNextGitTag(releaseDetailsMap);
+      const tag = getNextGitTag(releaseDetailsMap, isMultiVariant);
 
       // If the release is triggered in CI,
       // the trigger tag must be removed ("release/patch")
