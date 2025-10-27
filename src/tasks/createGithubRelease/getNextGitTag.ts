@@ -27,6 +27,10 @@ export function getNextGitTag(releaseDetailsMap: GitTagDetailsMap, isMultiVarian
   if (variantVersions.length === 0)
     throw Error("Could not generate git tag. Missing variant or nextVersion");
 
+  // If not multi-variant and only one variant, return v<version>
+  if (variantVersions.length === 1 && !isMultiVariant)
+    return `v${variantVersions[0].nextVersion}`;
+
   // If any variant is null, throw an error
   if (variantVersions.some(({ variant }) => !variant))
     throw Error("Could not generate git tag. Missing variant");
@@ -38,9 +42,6 @@ export function getNextGitTag(releaseDetailsMap: GitTagDetailsMap, isMultiVarian
       .map(({ variant, nextVersion }) => `${variant}@v${nextVersion}`)
       .join("_");
   }
-
-  // Not a multi-variant package
-  if (variantVersions.length === 1) return `v${variantVersions[0].nextVersion}`;
 
   // Multi-variant package (fallback, should not hit if isMultiVariant is set correctly)
   return variantVersions

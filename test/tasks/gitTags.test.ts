@@ -16,6 +16,26 @@ describe("getNextGitTag", () => {
     expect(result).to.equal("v0.1.2");
   });
 
+  it("should not throw an error if single variant is missing (not multi-variant)", () => {
+    const ctx = {
+      "geth.dnp.dapnode.eth": {
+        variant: null,
+        nextVersion: "0.1.2"
+      }
+    };
+    expect(() => getNextGitTag(ctx, false)).to.not.throw()
+  });
+
+  it("should throw an error if single variant is missing (multi-variant)", () => {
+    const ctx = {
+      "geth.dnp.dapnode.eth": {
+        variant: null,
+        nextVersion: "0.1.2"
+      }
+    };
+    expect(() => getNextGitTag(ctx, true)).to.throw("Could not generate git tag. Missing variant");
+  });
+
   it("should format a single-variant package as variant@v<version> if isMultiVariant is true", () => {
     const ctx = {
       "gnosis.dnp.dapnode.eth": {
