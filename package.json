@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
-    "@dappnode/schemas": "^0.1.24",
+    "@dappnode/schemas": "^0.1.26",
     "@dappnode/toolkit": "^0.1.21",
     "@dappnode/types": "^0.1.41",
     "@octokit/rest": "^20.1.1",
@@ -93,5 +93,6 @@
   },
   "engines": {
     "node": ">=20.0.0"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
