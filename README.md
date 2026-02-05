@@ -131,6 +131,47 @@ The dappnode SDK ueses the following internal dependencies to avoid code duplica
 
 In order to have a better developing experience these modules lives inside the DNP_DAPPMANAGER repository
 
+## VSCode debugging
+
+The DappNode SDK can be run and debugged in VSCode.
+This run configurations can be configured via de `.vscode/launch.json`
+
+Example `launh.json`
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run dappnodesdk",
+            "runtimeExecutable": "yarn",
+            "runtimeArgs": [
+                "start",
+                "github-action",
+                "bump-upstream",
+                "--dir",
+                "${workspaceFolder}/../dummy", // Path to the DappNode package
+                "--skip_build"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "GITHUB_TOKEN": "ghp_XXX", // Your github API key
+                "SKIP_COMMIT": "true"
+            },
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}
+```
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details
