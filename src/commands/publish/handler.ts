@@ -27,6 +27,7 @@ export async function publishHandler({
   dappnode_team_preset: dappnode_team_preset,
   require_git_data: requireGitData,
   delete_old_pins: deleteOldPins,
+  skip_compose_validation: skipComposeValidation,
   // Global options
   dir = defaultDir,
   compose_file_name: composeFileName = defaultComposeFileName,
@@ -80,6 +81,7 @@ export async function publishHandler({
       githubRelease,
       verbosityOptions,
       variantsDirPath,
+      skipComposeValidation,
       packagesToBuildProps: getPackagesToBuildProps({
         allVariants: Boolean(allVariants),
         commaSeparatedVariants: variants,

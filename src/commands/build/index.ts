@@ -53,6 +53,11 @@ export const build: CommandModule<CliGlobalOptions, BuildCommandOptions> = {
       alias: "variant",
       description: `Specify the package variants to build (only for packages that support it). Defined by comma-separated list of variant names. Example: "variant1,variant2"`,
       type: "string"
+    },
+    skip_compose_validation: {
+      alias: "skip-compose-validation",
+      description: `Skip the Dappnode compose validation step`,
+      type: "boolean"
     }
   },
 

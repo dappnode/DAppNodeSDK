@@ -5,4 +5,3 @@ export { parseComposeUpstreamVersion } from "./parseComposeUpstreamVersion.js";
 export { readCompose } from "./readCompose.js";
 export { updateComposeImageTags } from "./updateComposeImageTags.js";
 export { writeCompose } from "./writeCompose.js";
-export { composeSafeKeys } from "./params.js";

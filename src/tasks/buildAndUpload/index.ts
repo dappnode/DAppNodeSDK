@@ -27,7 +27,8 @@ export function buildAndUpload({
   composeFileName,
   dir,
   variantsDirPath = defaultVariantsDirName,
-  packagesToBuildProps
+  packagesToBuildProps,
+  skipComposeValidation
 }: BuildAndUploadOptions): ListrTask<ListrContextBuild>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
@@ -39,7 +40,7 @@ export function buildAndUpload({
   const releaseUploader = getReleaseUploader(releaseUploaderProvider);
 
   return [
-    getFileValidationTask({ packagesToBuildProps }),
+    getFileValidationTask({ packagesToBuildProps, skipComposeValidation }),
     getVerifyConnectionTask({ releaseUploader, skipUpload }),
     getReleaseDirCreationTask({ packagesToBuildProps }),
     getFileCopyTask({

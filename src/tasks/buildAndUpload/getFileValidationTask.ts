@@ -11,27 +11,36 @@ import { getComposePath } from "../../files/index.js";
 import { CliError } from "../../params.js";
 
 export function getFileValidationTask({
-  packagesToBuildProps
+  packagesToBuildProps,
+  skipComposeValidation
 }: {
   packagesToBuildProps: PackageToBuildProps[];
+  skipComposeValidation?: boolean;
 }): ListrTask<ListrContextBuild> {
   return {
     title: `Validate files`,
-    task: async () => await validatePackageFiles({ packagesToBuildProps })
+    task: async () =>
+      await validatePackageFiles({
+        packagesToBuildProps,
+        skipComposeValidation
+      })
   };
 }
 
 async function validatePackageFiles({
-  packagesToBuildProps
+  packagesToBuildProps,
+  skipComposeValidation
 }: {
   packagesToBuildProps: PackageToBuildProps[];
+  skipComposeValidation?: boolean;
 }): Promise<void> {
   for (const pkgProps of packagesToBuildProps)
-    await validateVariantFiles(pkgProps);
+    await validateVariantFiles(pkgProps, skipComposeValidation);
 }
 
 async function validateVariantFiles(
-  pkgProps: PackageToBuildProps
+  pkgProps: PackageToBuildProps,
+  skipComposeValidation?: boolean
 ): Promise<void> {
   const {
     manifest,
@@ -57,7 +66,11 @@ async function validateVariantFiles(
   );
 
   // Validate compose file specifically for Dappnode requirements
-  validateDappnodeCompose(compose, manifest);
+  if (skipComposeValidation) {
+    console.log(`Skipping Dappnode compose validation for ${manifest.name}`);
+  } else {
+    validateDappnodeCompose(compose, manifest);
+  }
 
   // Validate notifications schema
   if (notifications) validateNotificationsSchema(notifications);
