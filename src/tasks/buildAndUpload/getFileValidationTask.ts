@@ -19,7 +19,11 @@ export function getFileValidationTask({
 }): ListrTask<ListrContextBuild> {
   return {
     title: `Validate files`,
-    task: async () => await validatePackageFiles({ packagesToBuildProps, skipComposeValidation })
+    task: async () =>
+      await validatePackageFiles({
+        packagesToBuildProps,
+        skipComposeValidation
+      })
   };
 }
 
