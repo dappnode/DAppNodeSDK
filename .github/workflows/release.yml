@@ -63,8 +63,7 @@ jobs:
       - name: Publish to npm registry
         if: env.SHOULD_CONTINUE == 'true'
         run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          token: ${{ secrets.NPM_TOKEN }}
