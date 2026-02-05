@@ -16,4 +16,5 @@ export interface PublishCommandOptions extends CliGlobalOptions {
   variants_dir_name?: string;
   variants?: string;
   all_variants?: boolean;
+  skip_compose_validation?: boolean;
 }

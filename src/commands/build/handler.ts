@@ -22,6 +22,7 @@ export async function buildHandler({
   all_variants: allVariants,
   variants_dir_name: variantsDirName = defaultVariantsDirName,
   variants,
+  skip_compose_validation: skipComposeValidation,
   // Global options
   dir = defaultDir,
   compose_file_name: composeFileName = defaultComposeFileName,
@@ -43,6 +44,7 @@ export async function buildHandler({
     requireGitData,
     deleteOldPins,
     variantsDirPath,
+    skipComposeValidation,
     packagesToBuildProps: getPackagesToBuildProps({
       allVariants: Boolean(allVariants),
       commaSeparatedVariants: variants,

@@ -18,4 +18,5 @@ export interface PublishOptions {
   variantsDirPath: string;
   packagesToBuildProps: PackageToBuildProps[];
   isMultiVariant: boolean;
+  skipComposeValidation?: boolean;
 }

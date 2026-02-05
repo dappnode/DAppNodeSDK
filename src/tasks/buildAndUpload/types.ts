@@ -13,4 +13,5 @@ export interface BuildAndUploadOptions {
   dir: string;
   variantsDirPath?: string;
   packagesToBuildProps: PackageToBuildProps[];
+  skipComposeValidation?: boolean;
 }
