@@ -19,7 +19,7 @@ export async function ipfsAddFromFs(
 
   // Parse the ipfsProvider the a full base apiUrl
   let lastPercent = -1;
-  const apiUrl = normalizeIpfsProvider(ipfsProvider);
+  const apiUrl = await normalizeIpfsProvider(ipfsProvider);
   const res = await got({
     prefixUrl: apiUrl,
     url: "api/v0/add",
