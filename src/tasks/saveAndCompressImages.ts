@@ -49,7 +49,7 @@ export function saveAndCompressImagesCached({
           await shell(`docker tag ${originalImageTag} ${imageTag}`);
 
           // Validate the resulting image architecture
-          const imageDataRaw = await shell(`docker image inspect ${imageTag}`);
+          const imageDataRaw = await shell(`docker image inspect --platform=${architecture} ${imageTag}`);
           const imageData = JSON.parse(imageDataRaw);
           const imageArch = `${imageData[0]["Os"]}/${imageData[0]["Architecture"]}`;
           if (imageArch !== architecture)
