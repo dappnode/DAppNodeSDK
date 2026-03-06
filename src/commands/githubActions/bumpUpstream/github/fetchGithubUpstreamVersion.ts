@@ -44,11 +44,20 @@ async function fetchGithubLatestTag(repo: string): Promise<string | null> {
 
   // Sort by semver descending to get the highest version
   validReleases.sort((a, b) => {
-    const versionA = semver.coerce(a.tag_name);
-    const versionB = semver.coerce(b.tag_name);
+    const versionA = stripTagPrefix(a.tag_name);
+    const versionB = stripTagPrefix(b.tag_name);
     if (!versionA || !versionB) return 0;
     return semver.rcompare(versionA, versionB);
   });
 
   return validReleases[0].tag_name;
+}
+
+/**
+ * Strips any prefix from a tag name to extract a clean semver version.
+ * e.g. "v1.2.3" -> "1.2.3", "n8n@2.10.3" -> "2.10.3"
+ */
+function stripTagPrefix(tag: string): string | null {
+  const match = tag.match(/(\d+\.\d+\.\d+.*)$/);
+  return match ? match[1] : null;
 }

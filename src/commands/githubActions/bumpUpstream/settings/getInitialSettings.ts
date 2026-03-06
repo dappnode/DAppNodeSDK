@@ -1,9 +1,10 @@
-import { Manifest, UpstreamItem } from "@dappnode/types";
+import { Manifest, UpstreamItem, Compose } from "@dappnode/types";
 import { readManifest, readCompose } from "../../../../files/index.js";
 import { arrIsUnique } from "../../../../utils/array.js";
 import { getFirstAvailableEthProvider } from "../../../../utils/tryEthProviders.js";
 import { InitialSetupData, GitSettings, UpstreamSettings } from "../types.js";
 import { fetchGithubUpstreamVersion } from "../github/fetchGithubUpstreamVersion.js";
+import { resolveVersionFormat } from "../github/resolveVersionFormat.js";
 
 export async function getInitialSettings({
   dir,
@@ -17,7 +18,7 @@ export async function getInitialSettings({
   const { manifest, format } = readManifest([{ dir }]);
   const compose = readCompose([{ dir }]);
 
-  const upstreamSettings = await parseUpstreamSettings(manifest);
+  const upstreamSettings = await parseUpstreamSettings(manifest, compose, dir);
 
   const gitSettings = getGitSettings();
 
@@ -44,11 +45,13 @@ export async function getInitialSettings({
  * field (array of objects with 'repo', 'arg' and 'version' fields)
  */
 async function parseUpstreamSettings(
-  manifest: Manifest
+  manifest: Manifest,
+  compose: Compose,
+  dir: string
 ): Promise<UpstreamSettings[] | null> {
   const upstreamSettings = manifest.upstream
-    ? await parseUpstreamSettingsNewFormat(manifest.upstream)
-    : await parseUpstreamSettingsLegacyFormat(manifest);
+    ? await parseUpstreamSettingsNewFormat(manifest.upstream, compose, dir)
+    : await parseUpstreamSettingsLegacyFormat(manifest, compose, dir);
 
   if (!upstreamSettings || upstreamSettings.length < 1) return null;
 
@@ -58,13 +61,22 @@ async function parseUpstreamSettings(
 }
 
 async function parseUpstreamSettingsNewFormat(
-  upstream: UpstreamItem[]
+  upstream: UpstreamItem[],
+  compose: Compose,
+  dir: string
 ): Promise<UpstreamSettings[]> {
   const upstreamPromises = upstream.map(async ({ repo, arg, version }) => {
     const githubVersion = await fetchGithubUpstreamVersion(repo);
 
-    if (githubVersion)
-      return { repo, arg, manifestVersion: version, githubVersion };
+    if (githubVersion) {
+      const resolvedVersion = await resolveVersionFormat({
+        tag: githubVersion,
+        arg,
+        compose,
+        dir
+      });
+      return { repo, arg, manifestVersion: version, githubVersion: resolvedVersion };
+    }
   });
 
   const upstreamResults = await Promise.all(upstreamPromises);
@@ -78,7 +90,9 @@ async function parseUpstreamSettingsNewFormat(
  * Currently, 'upstream' field is used instead, which is an array of objects with 'repo', 'arg' and 'version' fields
  */
 async function parseUpstreamSettingsLegacyFormat(
-  manifest: Manifest
+  manifest: Manifest,
+  compose: Compose,
+  dir: string
 ): Promise<UpstreamSettings[] | null> {
   // 'upstreamRepo' and 'upstreamArg' being defined as arrays has been deprecated
 
@@ -89,12 +103,20 @@ async function parseUpstreamSettingsLegacyFormat(
 
   if (!githubVersion) return null;
 
+  const arg = manifest.upstreamArg || "UPSTREAM_VERSION";
+  const resolvedVersion = await resolveVersionFormat({
+    tag: githubVersion,
+    arg,
+    compose,
+    dir
+  });
+
   return [
     {
       repo: manifest.upstreamRepo,
       manifestVersion: manifest.upstreamVersion || "UPSTREAM_VERSION",
-      arg: manifest.upstreamArg || "UPSTREAM_VERSION",
-      githubVersion
+      arg,
+      githubVersion: resolvedVersion
     }
   ];
 }
