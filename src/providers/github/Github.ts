@@ -137,6 +137,7 @@ export class Github {
       .listReleases({
         owner: this.owner,
         repo: this.repo,
+        per_page: 100,
         headers: {
           "X-GitHub-Api-Version": "2022-11-28"
         }
