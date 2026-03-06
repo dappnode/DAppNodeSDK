@@ -11,6 +11,7 @@ import { PublishCommandOptions } from "./types.js";
 import { publish } from "../../tasks/publish/index.js";
 import { parseReleaseType } from "./parseReleaseType.js";
 import { getPackagesToBuildProps } from "../build/variants.js";
+import { normalizeArchitecture } from "../build/handler.js";
 
 /**
  * Common handler for CLI and programatic usage
@@ -28,6 +29,7 @@ export async function publishHandler({
   require_git_data: requireGitData,
   delete_old_pins: deleteOldPins,
   skip_compose_validation: skipComposeValidation,
+  arch,
   // Global options
   dir = defaultDir,
   compose_file_name: composeFileName = defaultComposeFileName,
@@ -64,7 +66,28 @@ export async function publishHandler({
 
   const variantsDirPath = path.join(dir, variantsDirName);
 
+  const architecture = arch ? normalizeArchitecture(arch) : undefined;
+
   const isMultiVariant = !!allVariants || !!variants;
+
+  const packagesToBuildProps = getPackagesToBuildProps({
+    allVariants: Boolean(allVariants),
+    commaSeparatedVariants: variants,
+    rootDir: dir,
+    variantsDirPath,
+    composeFileName
+  });
+
+  // Filter architectures if --arch flag is provided
+  if (architecture) {
+    for (const pkg of packagesToBuildProps) {
+      if (!pkg.architectures.includes(architecture))
+        throw Error(
+          `Architecture '${architecture}' is not supported by package ${pkg.manifest.name}. Supported: ${pkg.architectures.join(", ")}`
+        );
+      pkg.architectures = [architecture];
+    }
+  }
 
   const publishTasks = new Listr(
     publish({
@@ -82,13 +105,7 @@ export async function publishHandler({
       verbosityOptions,
       variantsDirPath,
       skipComposeValidation,
-      packagesToBuildProps: getPackagesToBuildProps({
-        allVariants: Boolean(allVariants),
-        commaSeparatedVariants: variants,
-        rootDir: dir,
-        variantsDirPath,
-        composeFileName
-      }),
+      packagesToBuildProps,
       isMultiVariant
     }),
     verbosityOptions
