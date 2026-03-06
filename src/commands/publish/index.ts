@@ -88,10 +88,6 @@ export const publish: CommandModule<CliGlobalOptions, PublishCommandOptions> = {
       alias: "skip-compose-validation",
       description: `Skip the Dappnode compose validation step`,
       type: "boolean"
-    },
-    arch: {
-      description: `Specify the architecture to build for: "linux/amd64" or "linux/arm64"`,
-      type: "string"
     }
   },
 
