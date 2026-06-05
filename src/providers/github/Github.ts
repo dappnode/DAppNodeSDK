@@ -232,7 +232,7 @@ export class Github {
     assetsDir: string;
     matchPattern?: RegExp;
     fileNamePrefix?: string;
-  }) {
+  }): Promise<void> {
     for (const file of fs.readdirSync(assetsDir)) {
       // Used to ignore duplicated legacy .tar.xz image
       if (matchPattern && !matchPattern.test(file)) continue;
@@ -247,7 +247,7 @@ export class Github {
               owner: this.owner,
               repo: this.repo,
               release_id: releaseId,
-              data: fs.createReadStream(filepath) as any,
+              data: fs.createReadStream(filepath) as unknown as string,
               headers: {
                 "content-type": contentType,
                 "content-length": fs.statSync(filepath).size

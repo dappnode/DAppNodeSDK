@@ -1,6 +1,6 @@
 {
   "name": "@dappnode/dappnodesdk",
-  "version": "0.3.45",
+  "version": "0.3.52",
   "type": "module",
   "description": "dappnodesdk is a tool to make the creation of new dappnode packages as simple as possible. It helps to initialize and publish in ethereum blockchain",
   "main": "dist/index.js",
@@ -12,9 +12,7 @@
     "lint": "eslint . --ext .ts --fix",
     "build": "tsc",
     "prepublish": "npm run build",
-    "pre-commit": "npm run lint && npm run test",
-    "cli": "node dist/dappnodesdk.js",
-    "start": "yarn cli"
+    "pre-commit": "npm run lint && npm run test"
   },
   "repository": {
     "type": "git",
@@ -36,7 +34,7 @@
   },
   "homepage": "https://github.com/dappnode/DAppNodeSDK#readme",
   "dependencies": {
-    "@dappnode/schemas": "^0.1.24",
+    "@dappnode/schemas": "^0.1.26",
     "@dappnode/toolkit": "^0.1.21",
     "@dappnode/types": "^0.1.41",
     "@octokit/rest": "^20.1.1",
