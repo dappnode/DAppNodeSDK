@@ -363,7 +363,7 @@ export class Github {
         }
       });
     } else {
-      this.createCommentInPr({ number, body });
+      await this.createCommentInPr({ number, body });
     }
   }
 

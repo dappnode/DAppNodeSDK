@@ -128,7 +128,12 @@ export async function buildAndComment({
     variants
   });
 
-  const body = getBuildBotComment({ commitSha, buildResults });
+  const body = getBuildBotComment({
+    commitSha,
+    buildResults,
+    runId: process.env.GITHUB_RUN_ID,
+    runAttempt: process.env.GITHUB_RUN_ATTEMPT
+  });
 
   console.log(`Build bot comment: \n\n${body}`);
 
