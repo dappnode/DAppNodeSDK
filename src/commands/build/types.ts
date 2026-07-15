@@ -13,6 +13,7 @@ export interface BuildCommandOptions extends CliGlobalOptions {
   variants?: string;
   all_variants?: boolean;
   skip_compose_validation?: boolean;
+  arch?: string;
 }
 
 export interface VerbosityOptions {

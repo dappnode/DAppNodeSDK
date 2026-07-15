@@ -1,4 +1,5 @@
 import Listr from "listr";
+import { Architecture, architectures } from "@dappnode/types";
 import { buildAndUpload } from "../../tasks/buildAndUpload/index.js";
 import { ListrContextBuild } from "../../types.js";
 import {
@@ -23,6 +24,7 @@ export async function buildHandler({
   variants_dir_name: variantsDirName = defaultVariantsDirName,
   variants,
   skip_compose_validation: skipComposeValidation,
+  arch,
   // Global options
   dir = defaultDir,
   compose_file_name: composeFileName = defaultComposeFileName,
@@ -32,6 +34,27 @@ export async function buildHandler({
   const skipUpload = skip_upload || skipSave;
 
   const variantsDirPath = path.join(dir, variantsDirName);
+
+  const architecture = arch ? normalizeArchitecture(arch) : undefined;
+
+  const packagesToBuildProps = getPackagesToBuildProps({
+    allVariants: Boolean(allVariants),
+    commaSeparatedVariants: variants,
+    rootDir: dir,
+    variantsDirPath,
+    composeFileName
+  });
+
+  // Filter architectures if --arch flag is provided
+  if (architecture) {
+    for (const pkg of packagesToBuildProps) {
+      if (!pkg.architectures.includes(architecture))
+        throw Error(
+          `Architecture '${architecture}' is not supported by package ${pkg.manifest.name}. Supported: ${pkg.architectures.join(", ")}`
+        );
+      pkg.architectures = [architecture];
+    }
+  }
 
   const buildOptions: BuildAndUploadOptions = {
     dir,
@@ -45,13 +68,7 @@ export async function buildHandler({
     deleteOldPins,
     variantsDirPath,
     skipComposeValidation,
-    packagesToBuildProps: getPackagesToBuildProps({
-      allVariants: Boolean(allVariants),
-      commaSeparatedVariants: variants,
-      rootDir: dir,
-      variantsDirPath,
-      composeFileName
-    })
+    packagesToBuildProps
   };
 
   const verbosityOptions: VerbosityOptions = {
@@ -61,4 +78,22 @@ export async function buildHandler({
   const buildTasks = new Listr(buildAndUpload(buildOptions), verbosityOptions);
 
   return await buildTasks.run();
+}
+
+const archShorthands: Record<string, Architecture> = {
+  amd64: "linux/amd64",
+  x86_64: "linux/amd64",
+  x64: "linux/amd64",
+  arm64: "linux/arm64",
+  aarch64: "linux/arm64",
+  arm: "linux/arm64"
+};
+
+export function normalizeArchitecture(arch: string): Architecture {
+  const normalized = archShorthands[arch] ?? arch;
+  if (!architectures.includes(normalized as Architecture))
+    throw Error(
+      `Invalid architecture '${arch}', allowed values: ${architectures.join(", ")} (or shorthands: ${Object.keys(archShorthands).join(", ")})`
+    );
+  return normalized as Architecture;
 }
