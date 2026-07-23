@@ -28,11 +28,11 @@ export function buildAndUpload({
   dir,
   variantsDirPath = defaultVariantsDirName,
   packagesToBuildProps,
-  skipComposeValidation
+  skipComposeValidation,
+  stripComposeVersion
 }: BuildAndUploadOptions): ListrTask<ListrContextBuild>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
-  // Release upload. Use function for return syntax
   const releaseUploaderProvider = cliArgsToReleaseUploaderProvider({
     uploadTo,
     contentProvider
@@ -40,7 +40,11 @@ export function buildAndUpload({
   const releaseUploader = getReleaseUploader(releaseUploaderProvider);
 
   return [
-    getFileValidationTask({ packagesToBuildProps, skipComposeValidation }),
+    getFileValidationTask({
+      packagesToBuildProps,
+      skipComposeValidation,
+      stripComposeVersion
+    }),
     getVerifyConnectionTask({ releaseUploader, skipUpload }),
     getReleaseDirCreationTask({ packagesToBuildProps }),
     getFileCopyTask({

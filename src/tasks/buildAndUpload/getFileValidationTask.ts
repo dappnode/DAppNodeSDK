@@ -7,40 +7,53 @@ import {
   validateDappnodeCompose,
   validateNotificationsSchema
 } from "@dappnode/schemas";
-import { getComposePath } from "../../files/index.js";
+import {
+  getComposePath,
+  stripComposeVersion as removeComposeVersion
+} from "../../files/index.js";
 import { CliError } from "../../params.js";
 
 export function getFileValidationTask({
   packagesToBuildProps,
-  skipComposeValidation
+  skipComposeValidation,
+  stripComposeVersion
 }: {
   packagesToBuildProps: PackageToBuildProps[];
   skipComposeValidation?: boolean;
+  stripComposeVersion?: boolean;
 }): ListrTask<ListrContextBuild> {
   return {
     title: `Validate files`,
     task: async () =>
       await validatePackageFiles({
         packagesToBuildProps,
-        skipComposeValidation
+        skipComposeValidation,
+        stripComposeVersion
       })
   };
 }
 
 async function validatePackageFiles({
   packagesToBuildProps,
-  skipComposeValidation
+  skipComposeValidation,
+  stripComposeVersion
 }: {
   packagesToBuildProps: PackageToBuildProps[];
   skipComposeValidation?: boolean;
+  stripComposeVersion?: boolean;
 }): Promise<void> {
   for (const pkgProps of packagesToBuildProps)
-    await validateVariantFiles(pkgProps, skipComposeValidation);
+    await validateVariantFiles(
+      pkgProps,
+      skipComposeValidation,
+      stripComposeVersion
+    );
 }
 
 async function validateVariantFiles(
   pkgProps: PackageToBuildProps,
-  skipComposeValidation?: boolean
+  skipComposeValidation?: boolean,
+  stripComposeVersion?: boolean
 ): Promise<void> {
   const {
     manifest,
@@ -75,8 +88,9 @@ async function validateVariantFiles(
   // Validate notifications schema
   if (notifications) validateNotificationsSchema(notifications);
 
-  // Validate setup wizard schema
-  if (setupWizard) validateSetupWizardSchema(setupWizard);
+  // Keep version available for the Dappnode validation above. Stripping is
+  // opt-in while support for versionless Compose files is being tested.
+  if (stripComposeVersion) removeComposeVersion(compose);
 }
 
 function validatePackageName(name: string): void {

@@ -24,6 +24,7 @@ export async function buildHandler({
   variants_dir_name: variantsDirName = defaultVariantsDirName,
   variants,
   skip_compose_validation: skipComposeValidation,
+  strip_compose_version: stripComposeVersion,
   arch,
   // Global options
   dir = defaultDir,
@@ -65,9 +66,9 @@ export async function buildHandler({
     skipUpload,
     composeFileName,
     requireGitData,
-    deleteOldPins,
     variantsDirPath,
     skipComposeValidation,
+    stripComposeVersion,
     packagesToBuildProps
   };
 

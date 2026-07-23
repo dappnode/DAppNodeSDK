@@ -9,6 +9,7 @@ import {
   defaultVariantsEnvValues
 } from "../../src/params.js";
 import { normalizeIpfsProvider } from "../../src/releaseUploader/ipfsNode/ipfsProvider.js";
+import { readCompose } from "../../src/files/index.js";
 
 const contentProvider = normalizeIpfsProvider("remote");
 
@@ -50,6 +51,32 @@ describe("Init and build simple package", function () {
 
     // Check returned hash is correct
     expect(releaseHashes[0]).to.include("/ipfs/Qm");
+  });
+
+  it("Should only strip the Compose version when explicitly enabled", async () => {
+    const defaultBuild = await buildHandler({
+      dir: testDir,
+      provider: contentProvider,
+      upload_to: "ipfs",
+      timeout: "5min",
+      skip_save: true,
+      skip_upload: true
+    });
+    const [{ releaseDir }] = Object.values(defaultBuild);
+
+    expect(readCompose([{ dir: releaseDir }]).version).to.equal("3.5");
+
+    await buildHandler({
+      dir: testDir,
+      provider: contentProvider,
+      upload_to: "ipfs",
+      timeout: "5min",
+      skip_save: true,
+      skip_upload: true,
+      strip_compose_version: true
+    });
+
+    expect(readCompose([{ dir: releaseDir }]).version).to.be.undefined;
   });
 });
 

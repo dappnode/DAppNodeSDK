@@ -88,6 +88,12 @@ export const publish: CommandModule<CliGlobalOptions, PublishCommandOptions> = {
       alias: "skip-compose-validation",
       description: `Skip the Dappnode compose validation step`,
       type: "boolean"
+    },
+    strip_compose_version: {
+      alias: "strip-compose-version",
+      description: `For testing only: strip the obsolete top-level Compose version`,
+      type: "boolean",
+      default: false
     }
   },
 

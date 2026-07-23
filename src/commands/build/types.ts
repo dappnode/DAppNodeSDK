@@ -13,6 +13,7 @@ export interface BuildCommandOptions extends CliGlobalOptions {
   variants?: string;
   all_variants?: boolean;
   skip_compose_validation?: boolean;
+  strip_compose_version?: boolean;
   arch?: string;
 }
 

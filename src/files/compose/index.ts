@@ -3,5 +3,6 @@ export { getComposePackageImages } from "./getComposePackageImages.js";
 export { getComposePath } from "./getComposePath.js";
 export { parseComposeUpstreamVersion } from "./parseComposeUpstreamVersion.js";
 export { readCompose } from "./readCompose.js";
+export { stripComposeVersion } from "./stripComposeVersion.js";
 export { updateComposeImageTags } from "./updateComposeImageTags.js";
 export { writeCompose } from "./writeCompose.js";
