@@ -2,6 +2,7 @@ import { ListrTask } from "listr";
 import { PackageToBuildProps, ListrContextPublish, ReleaseType } from "../../../types.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
 import { Manifest } from "@dappnode/types";
+import { isPackageNotRegisteredError } from "../../../utils/isPackageNotRegisteredError.js";
 
 export function getFetchNextVersionsFromApmTask({
   releaseType,
@@ -53,7 +54,9 @@ export async function getNextPackageVersion({
       ensName: name
     });
   } catch (e) {
-    if (e.message.includes("NOREPO")) return version;
+    // Publishing this package for the first time: there is no repository to
+    // read a current version from, so start from the manifest version.
+    if (isPackageNotRegisteredError(e)) return version;
     else throw e;
   }
 }

@@ -12,6 +12,7 @@ import repoAbi from "../../contracts/RepoAbi.json" with { type: "json" };
 import { VerbosityOptions } from "../../commands/build/types.js";
 import { getRegistryAddressFromDnpName } from "./getRegistryAddressFromEns.js";
 import { Repo } from "./types.js";
+import { isPackageNotRegisteredError } from "../../utils/isPackageNotRegisteredError.js";
 
 const isZeroAddress = (address: string): boolean => parseInt(address) === 0;
 
@@ -145,7 +146,8 @@ async function getRepoContractIfExists({
   try {
     return await apm.getRepoContract(ensName);
   } catch (e) {
-    if (e.message.includes("Could not resolve name")) return null;
+    // No repository yet: the caller builds a newRepoWithVersion transaction.
+    if (isPackageNotRegisteredError(e)) return null;
     else throw e;
   }
 }
