@@ -28,6 +28,7 @@ export async function publishHandler({
   require_git_data: requireGitData,
   delete_old_pins: deleteOldPins,
   skip_compose_validation: skipComposeValidation,
+  strip_compose_version: stripComposeVersion,
   // Global options
   dir = defaultDir,
   compose_file_name: composeFileName = defaultComposeFileName,
@@ -76,12 +77,12 @@ export async function publishHandler({
       uploadTo,
       userTimeout,
       requireGitData,
-      deleteOldPins,
       developerAddress,
       githubRelease,
       verbosityOptions,
       variantsDirPath,
       skipComposeValidation,
+      stripComposeVersion,
       packagesToBuildProps: getPackagesToBuildProps({
         allVariants: Boolean(allVariants),
         commaSeparatedVariants: variants,

@@ -59,6 +59,12 @@ export const build: CommandModule<CliGlobalOptions, BuildCommandOptions> = {
       description: `Skip the Dappnode compose validation step`,
       type: "boolean"
     },
+    strip_compose_version: {
+      alias: "strip-compose-version",
+      description: `For testing only: strip the obsolete top-level Compose version`,
+      type: "boolean",
+      default: false
+    },
     arch: {
       description: `Specify the architecture to build for: "linux/amd64" or "linux/arm64"`,
       type: "string"
