@@ -11,7 +11,7 @@ import {
 import { normalizeIpfsProvider } from "../../src/releaseUploader/ipfsNode/ipfsProvider.js";
 import { readCompose } from "../../src/files/index.js";
 
-const contentProvider = normalizeIpfsProvider("remote");
+const contentProvider = await normalizeIpfsProvider("remote");
 
 // This test will create the following fake files
 // ./dappnode_package.json  => fake manifest

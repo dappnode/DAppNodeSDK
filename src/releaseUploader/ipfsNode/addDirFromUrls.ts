@@ -28,8 +28,9 @@ export async function ipfsAddDirFromUrls(
   }
 
   // Parse the ipfsProvider the a full base apiUrl
+  const apiUrl = await normalizeIpfsProvider(ipfsProvider);
   const res = await got({
-    prefixUrl: normalizeIpfsProvider(ipfsProvider),
+    prefixUrl: apiUrl,
     url: "api/v0/add",
     method: "POST",
     headers: form.getHeaders(),

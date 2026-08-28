@@ -17,7 +17,7 @@ export async function ipfsVersion(
   ipfsProvider: string
 ): Promise<IpfsApiVersionResponse> {
   // Parse the ipfsProvider the a full base apiUrl
-  const apiUrl = normalizeIpfsProvider(ipfsProvider);
+  const apiUrl = await normalizeIpfsProvider(ipfsProvider);
   const res = await got<IpfsApiVersionResponse>({
     prefixUrl: apiUrl,
     url: "api/v0/version",
