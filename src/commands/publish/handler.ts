@@ -1,4 +1,4 @@
-import { ProgressRenderer } from "../../utils/progress.js";
+import { getRendererOptions } from "../../utils/progress.js";
 import Listr from "listr";
 import path from "path";
 import {
@@ -58,9 +58,10 @@ export async function publishHandler({
     githubRelease = true;
   }
 
-  const verbosityOptions: VerbosityOptions = {
-    renderer: verbose ? "verbose" : silent ? "silent" : ProgressRenderer
-  };
+  const verbosityOptions: VerbosityOptions = getRendererOptions({
+    verbose,
+    silent
+  });
 
   const releaseType = parseReleaseType({ type });
 

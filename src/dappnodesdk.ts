@@ -3,6 +3,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import chalk from "chalk";
+import { formatCliError } from "./utils/formatCliError.js";
 import figlet from "figlet";
 import dotenv from "dotenv";
 
@@ -82,10 +83,25 @@ dappnodesdk.epilogue(
 /**
  * Handle errors
  */
+const reportedErrors = new WeakSet<object>();
+function reportError(err: unknown): void {
+  process.exitCode = 1;
+  if (typeof err === "object" && err !== null) {
+    if (reportedErrors.has(err)) return;
+    reportedErrors.add(err);
+  }
+  const debug = Boolean(
+    (globalThis as typeof globalThis & { DEBUG_MODE?: boolean }).DEBUG_MODE
+  );
+  console.error(`${formatCliError(err, { debug })}\n`);
+}
+
 dappnodesdk.fail((msg, err, yargs) => {
+  // Report once and exit with an error code. Rethrowing would make Node print the
+  // whole error object again (including the full command output and Listr context).
+  process.exitCode = 1;
   if (err) {
-    console.error(` ${chalk.red("✖")} ${err.message}\n`);
-    throw err;
+    reportError(err);
   } else {
     // If no specific error object is passed, use the message
     console.error(` ${chalk.red("✖")} ${msg}\n`);
@@ -94,5 +110,6 @@ dappnodesdk.fail((msg, err, yargs) => {
   }
 });
 
-// Run CLI
-dappnodesdk.parse();
+// Run CLI. yargs reports a failed async command through .fail() but still rejects
+// the parse promise; handle it here so Node does not print the error a second time.
+dappnodesdk.parseAsync().catch(reportError);

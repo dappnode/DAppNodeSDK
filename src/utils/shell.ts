@@ -5,6 +5,7 @@ import {
   ExecFileException
 } from "child_process";
 import { StringDecoder } from "string_decoder";
+import { stripVTControlCharacters } from "util";
 
 /**
  * If timeout is greater than 0, the parent will send the signal
@@ -46,7 +47,14 @@ export async function shell(
     ): void => {
       if (err) {
         // Rethrow a typed error, and ignore the internal NodeJS stack trace
-        reject(new ShellError(err, { stdout, stderr, cmd: cmdStr }));
+        reject(
+          new ShellError(err, {
+            stdout,
+            stderr,
+            cmd: cmdStr,
+            streamed: Boolean(onData)
+          })
+        );
       } else {
         resolve(stdout.trim() || stderr);
       }
@@ -94,6 +102,9 @@ export async function shell(
  * Typed error implementing the native node child exception error
  * Can be rethrow to ignore the internal NodeJS stack trace
  */
+/** Lines of command output kept in the error message; the full streams stay on `stdout`/`stderr`. */
+const errorOutputLines = 20;
+
 export class ShellError extends Error {
   cmd?: string;
   killed?: boolean;
@@ -101,16 +112,29 @@ export class ShellError extends Error {
   signal?: NodeJS.Signals;
   stdout: string;
   stderr: string;
+  /** One line describing what failed, e.g. "Command failed (exit 1): docker compose build". */
+  summary: string;
+  /** True when the output was streamed to the task log while the command ran. */
+  streamed: boolean;
   constructor(
     e: ExecException | ExecFileException,
-    { cmd, stdout, stderr }: { cmd: string; stdout: string; stderr: string }
+    {
+      cmd,
+      stdout,
+      stderr,
+      streamed = false
+    }: { cmd: string; stdout: string; stderr: string; streamed?: boolean }
   ) {
-    const msg = [
-      e.signal === "SIGTERM" ? `TIMEOUT: ${e.message}` : e.message,
-      `stdout: ${stdout}`,
-      `stderr: ${stderr}`
-    ].join("\n");
-    super(msg);
+    const summary =
+      e.signal === "SIGTERM"
+        ? `TIMEOUT: command killed by SIGTERM: ${cmd}`
+        : e.signal
+        ? `Command killed by ${e.signal}: ${cmd}`
+        : typeof e.code === "number"
+        ? `Command failed (exit ${e.code}): ${cmd}`
+        : `Command failed (${e.code || e.message}): ${cmd}`;
+    const tail = outputTail(stderr.trim() ? stderr : stdout);
+    super(tail ? `${summary}\n${tail}` : summary);
 
     this.cmd = cmd;
     this.killed = e.killed;
@@ -118,5 +142,19 @@ export class ShellError extends Error {
     this.signal = e.signal;
     this.stdout = stdout;
     this.stderr = stderr;
+    this.summary = summary;
+    this.streamed = streamed;
   }
+}
+
+/** Last lines of output without terminal control sequences or blank lines. */
+function outputTail(output: string): string {
+  const lines = stripVTControlCharacters(output)
+    .split(/\r?\n|\r/)
+    .filter(line => line.trim());
+  const omitted = lines.length - errorOutputLines;
+  return [
+    ...(omitted > 0 ? [`... (${omitted} earlier lines omitted)`] : []),
+    ...lines.slice(-errorOutputLines)
+  ].join("\n");
 }
