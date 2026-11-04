@@ -1,3 +1,4 @@
+import { ProgressRenderer } from "../../utils/progress.js";
 import Listr from "listr";
 import path from "path";
 import {
@@ -43,10 +44,6 @@ export async function publishHandler({
 
   const isCi = process.env.CI;
 
-  const verbosityOptions: VerbosityOptions = {
-    renderer: verbose ? "verbose" : silent ? "silent" : "default"
-  };
-
   /**
    * Specific set of options used for internal DAppNode releases.
    * Caution: options may change without notice.
@@ -60,6 +57,10 @@ export async function publishHandler({
     ethProvider = "remote";
     githubRelease = true;
   }
+
+  const verbosityOptions: VerbosityOptions = {
+    renderer: verbose ? "verbose" : silent ? "silent" : ProgressRenderer
+  };
 
   const releaseType = parseReleaseType({ type });
 
@@ -77,6 +78,7 @@ export async function publishHandler({
       uploadTo,
       userTimeout,
       requireGitData,
+      deleteOldPins,
       developerAddress,
       githubRelease,
       verbosityOptions,

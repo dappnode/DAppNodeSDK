@@ -74,7 +74,10 @@ export const build: CommandModule<CliGlobalOptions, BuildCommandOptions> = {
   handler: async (args): Promise<void> => {
     const buildResults = await buildHandler(args);
 
-    printBuildResults(buildResults, Boolean(args.skipUpload));
+    printBuildResults(
+      buildResults,
+      Boolean(args.skip_upload || args.skip_save)
+    );
   }
 };
 
@@ -89,8 +92,9 @@ function printBuildResults(
 
   for (const [dnpName, { releaseMultiHash }] of Object.entries(buildResults)) {
     if (!releaseMultiHash) {
-      console.log(chalk.red(`Error building Dappnode Package (${dnpName})\n`));
-      return;
+      throw new Error(
+        `No uploaded release hash for Dappnode Package (${dnpName})`
+      );
     }
 
     console.log(`

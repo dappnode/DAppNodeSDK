@@ -25,19 +25,23 @@ export function getBuildTasks({
   skipSave?: boolean;
   rootDir: string;
 }): ListrTask<ListrContextBuild>[] {
-  const buildTasks: ListrTask<ListrContextBuild>[] = packagesToBuildProps.flatMap((pkgProps) => {
-    return pkgProps.architectures.map(architecture =>
-      createBuildTask({
-        pkgProps,
-        architecture,
-        buildTimeout,
-        skipSave,
-        rootDir
-      })
-    );
-  });
+  const buildTasks: ListrTask<ListrContextBuild>[] =
+    packagesToBuildProps.flatMap(pkgProps => {
+      return pkgProps.architectures.map(architecture =>
+        createBuildTask({
+          pkgProps,
+          architecture,
+          buildTimeout,
+          skipSave,
+          rootDir
+        })
+      );
+    });
 
-  return buildTasks;
+  return buildTasks.map((task, index) => ({
+    ...task,
+    title: `[${index + 1}/${buildTasks.length}] ${task.title}`
+  }));
 }
 
 function createBuildTask({
@@ -66,7 +70,7 @@ function createBuildTask({
   });
 
   return {
-    title: `Build ${name} (version ${version}) for arch ${architecture}`,
+    title: `Build ${pkgProps.variant || name.split(".")[0]} ${version} · ${architecture}`,
     task: () =>
       new Listr(
         buildFn({

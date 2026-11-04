@@ -16,7 +16,6 @@ export function getPackagesToBuildProps({
   variantsDirPath: string;
   composeFileName: string;
 }): PackageToBuildProps[] {
-
   const buildVariantMapArgs = { rootDir, variantsDirPath, composeFileName };
 
   if (!allVariants && !commaSeparatedVariants)
@@ -34,7 +33,7 @@ export function getPackagesToBuildProps({
 
   console.log(
     `${chalk.dim(
-      `Building package from template for variant(s) ${commaSeparatedVariants}...`
+      `Building package from template for variant(s) ${validVariantNames.join(", ")}...`
     )}`
   );
 

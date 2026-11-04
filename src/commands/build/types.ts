@@ -1,3 +1,4 @@
+import type { ProgressRenderer } from "../../utils/progress.js";
 import { UploadTo } from "../../releaseUploader/index.js";
 import { CliGlobalOptions } from "../../types.js";
 
@@ -18,5 +19,5 @@ export interface BuildCommandOptions extends CliGlobalOptions {
 }
 
 export interface VerbosityOptions {
-  renderer: "verbose" | "silent" | "default";
+  renderer: "verbose" | "silent" | "default" | typeof ProgressRenderer;
 }

@@ -1,3 +1,4 @@
+import { ProgressRenderer } from "../../utils/progress.js";
 import Listr from "listr";
 import { Architecture, architectures } from "@dappnode/types";
 import { buildAndUpload } from "../../tasks/buildAndUpload/index.js";
@@ -66,6 +67,7 @@ export async function buildHandler({
     skipUpload,
     composeFileName,
     requireGitData,
+    deleteOldPins,
     variantsDirPath,
     skipComposeValidation,
     stripComposeVersion,
@@ -73,7 +75,7 @@ export async function buildHandler({
   };
 
   const verbosityOptions: VerbosityOptions = {
-    renderer: verbose ? "verbose" : silent ? "silent" : "default"
+    renderer: verbose ? "verbose" : silent ? "silent" : ProgressRenderer
   };
 
   const buildTasks = new Listr(buildAndUpload(buildOptions), verbosityOptions);
