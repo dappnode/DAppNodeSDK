@@ -25,18 +25,21 @@ export class ReleaseUploaderIpfsPinata implements IReleaseUploader {
   async addFromFs({
     dirPath,
     metadata,
-    onProgress
+    onProgress,
+    onUploadComplete
   }: {
     dirPath: string;
     metadata: PinataMetadata;
     onProgress?: (percent: number) => void;
+    onUploadComplete?: () => void;
   }): Promise<string> {
     return await pinataAddFromFs({
       dirOrFilePath: dirPath,
       pinataUrl: this.pinataUrl,
       pinataMetadata: metadata,
       credentials: { apiKey: this.apiKey, secretApiKey: this.secretApiKey },
-      onProgress
+      onProgress,
+      onUploadComplete
     });
   }
 

@@ -1,4 +1,5 @@
 import { got } from "got";
+import { uploadTimeout } from "../utils/uploadTimeout.js";
 import { getFormDataFileUpload } from "../utils/formDataFileUpload.js";
 import {
   PinataMetadata,
@@ -19,7 +20,8 @@ export async function pinataAddFromFs({
   pinataMetadata,
   pinataOptions,
   credentials,
-  onProgress
+  onProgress,
+  onUploadComplete
 }: {
   dirOrFilePath: string;
   pinataUrl: string;
@@ -27,6 +29,7 @@ export async function pinataAddFromFs({
   pinataMetadata?: PinataMetadata;
   pinataOptions?: PinataOptions;
   onProgress?: (percent: number) => void;
+  onUploadComplete?: () => void;
 }): Promise<string> {
   // Create form and append all files recursively
   const form = getFormDataFileUpload(dirOrFilePath);
@@ -45,7 +48,9 @@ export async function pinataAddFromFs({
       pinata_secret_api_key: credentials.secretApiKey
     }),
     body: form,
-    responseType: "json"
+    responseType: "json",
+    timeout: uploadTimeout,
+    retry: { limit: 0 }
   }).on("uploadProgress", progress => {
     // Report upload progress, and throttle to one update per percent point
     // { percent: 0.9995998225975282, transferred: 733675762, total: 733969480 }
@@ -54,6 +59,7 @@ export async function pinataAddFromFs({
       lastPercent = currentRoundPercent;
       if (onProgress) onProgress(progress.percent);
     }
+    if (progress.percent === 1) onUploadComplete?.();
   });
 
   const uploadData = response.body as IpfsUploadResult;

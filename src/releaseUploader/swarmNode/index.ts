@@ -12,12 +12,19 @@ export class ReleaseUploaderSwarmNode implements IReleaseUploader {
 
   async addFromFs({
     dirPath,
-    onProgress
+    onProgress,
+    onUploadComplete
   }: {
     dirPath: string;
     onProgress?: (percent: number) => void;
+    onUploadComplete?: () => void;
   }): Promise<string> {
-    return await swarmAddDirFromFs(dirPath, this.gatewayUrl, onProgress);
+    return await swarmAddDirFromFs(
+      dirPath,
+      this.gatewayUrl,
+      onProgress,
+      onUploadComplete
+    );
   }
 
   async testConnection(): Promise<void> {
