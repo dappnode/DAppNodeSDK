@@ -1,3 +1,5 @@
+import fs from "fs";
+import { taskLog } from "../../utils/progress.js";
 import { ListrTask } from "listr";
 import semver from "semver";
 import { shell } from "../../utils/shell.js";
@@ -67,40 +69,61 @@ export function buildWithBuildx({
 
         switch (architecture) {
           case "linux/arm64":
-            await shell(
-              `docker run --privileged --rm tonistiigi/binfmt --uninstall qemu-*`
-            );
-            await shell(
-              `docker run --privileged --rm tonistiigi/binfmt --install all`
-            );
+            await shell([
+              "docker",
+              "run",
+              "--privileged",
+              "--rm",
+              "tonistiigi/binfmt",
+              "--uninstall",
+              "qemu-*"
+            ]);
+            await shell([
+              "docker",
+              "run",
+              "--privileged",
+              "--rm",
+              "tonistiigi/binfmt",
+              "--install",
+              "all"
+            ]);
             // Make sure QEMU is enabled
             // `cat /proc/sys/fs/binfmt_misc/qemu-aarch64`
             break;
         }
 
-        const currentInstances = await shell(`docker buildx ls`);
+        const currentInstances = await shell(["docker", "buildx", "ls"]);
         if (currentInstances.includes(buildxInstanceName)) {
-          await shell(`docker buildx use ${buildxInstanceName}`);
+          await shell(["docker", "buildx", "use", buildxInstanceName]);
         } else {
-          await shell(
-            `docker buildx create --name ${buildxInstanceName} --use`
-          );
+          await shell([
+            "docker",
+            "buildx",
+            "create",
+            "--name",
+            buildxInstanceName,
+            "--use"
+          ]);
         }
 
         // Will build all services defined in the compose in paralel
         // The resulting images will be imported to docker with the tag declared in the service
         await shell(
           [
-            "docker buildx bake",
-            "--progress plain",
+            "docker",
+            "buildx",
+            "bake",
+            "--progress",
+            "plain",
             "--load",
-            `--file ${tmpComposePath}`,
+            "--file",
+            tmpComposePath,
             `--set=*.platform=${architecture}`
-          ].join(" "),
+          ],
           {
             timeout: buildTimeout,
             maxBuffer: 100 * 1e6,
-            onData: data => (task.output = data)
+            onData: taskLog(task)
           }
         );
 
@@ -110,9 +133,15 @@ export function buildWithBuildx({
           // Make sure the built was done for the correct architecture
           switch (architecture) {
             case "linux/arm64": {
-              const res = await shell(
-                `docker run --rm --entrypoint="" ${firstImageTag} uname -m`
-              ).catch(() => {
+              const res = await shell([
+                "docker",
+                "run",
+                "--rm",
+                "--entrypoint=",
+                firstImageTag,
+                "uname",
+                "-m"
+              ]).catch(() => {
                 // Ignore all errors
               });
               if (res && res !== "aarch64")
@@ -134,7 +163,7 @@ export function buildWithBuildx({
     }),
     {
       title: "Cleanup temporary files",
-      task: async () => shell(`rm ${tmpComposePath}`)
+      task: async () => fs.promises.rm(tmpComposePath, { force: true })
     }
   ];
 }
