@@ -126,10 +126,20 @@ services:
 The dappnode SDK ueses the following internal dependencies to avoid code duplication across the `dappnodeSDK`, `DNP_DAPPMANAGER` and `sdk-publish` modules:
 
 - `@dappnode/types`
-- `@dappnode/toolkit`
 - `@dappnode/schemas`
 
 In order to have a better developing experience these modules lives inside the DNP_DAPPMANAGER repository
+
+## Development
+
+Use Node.js 20.19+, Node.js 22.13+, or Node.js 24+ for development, and install the exact locked dependencies with `yarn install --frozen-lockfile`.
+
+- `yarn lint` checks source and tests without changing files; `yarn lint:fix` applies automatic fixes.
+- `yarn build` checks and compiles the SDK.
+- `yarn test` runs deterministic regressions using temporary files, mocked Docker commands, and localhost HTTP servers. It does not need external credentials.
+- `yarn test:integration` runs the live Docker/IPFS/Ethereum tests and requires those services to be available.
+
+Terminal builds show numbered package/architecture stages and recent complete log lines; uploads display a separate waiting-for-pinning phase after transmission.
 
 ## License
 

@@ -46,8 +46,9 @@ dappnodesdk.options({
     alias: "debug",
     coerce: debug => {
       if (debug || process.env.DEBUG) {
-        // @ts-ignore
-        global.DEBUG_MODE = true;
+        (
+          globalThis as typeof globalThis & { DEBUG_MODE?: boolean }
+        ).DEBUG_MODE = true;
         return true;
       }
     },

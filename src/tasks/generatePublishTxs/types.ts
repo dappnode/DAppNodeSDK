@@ -1,3 +1,3 @@
-import { ApmRepository } from "@dappnode/toolkit";
+import { ApmRepository } from "../../providers/apm/ApmRepository.js";
 
 export type Repo = Awaited<ReturnType<ApmRepository["getRepoContract"]>>;

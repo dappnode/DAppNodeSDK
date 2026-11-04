@@ -12,7 +12,7 @@ export function getFileHash(path: string): Promise<string | null> {
     const hash = crypto.createHash("sha256");
     const stream = fs.createReadStream(path);
 
-    stream.on("data", (chunk: Buffer) => {
+    stream.on("data", (chunk: string | Buffer) => {
       hash.update(chunk); // Should now recognize Buffer correctly
     });
 

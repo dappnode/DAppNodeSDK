@@ -1,2 +1,2 @@
 export { readSetupWizardIfExists } from "./readSetupWizardIfExists.js";
-export { SetupWizardFormat, SetupWizardPaths } from "./types.js";
+export { SetupWizardFormat, type SetupWizardPaths } from "./types.js";

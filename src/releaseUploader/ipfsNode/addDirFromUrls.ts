@@ -1,6 +1,7 @@
-import { got } from "got";
+import { got, type Request } from "got";
+import { uploadTimeout } from "../utils/uploadTimeout.js";
 import FormData from "form-data";
-import request from "request";
+import { PassThrough } from "stream";
 import { normalizeIpfsProvider } from "./ipfsProvider.js";
 
 /**
@@ -18,9 +19,10 @@ export async function ipfsAddDirFromUrls(
   // Create form and append all files recursively
   const form = new FormData();
 
+  const streams: Request[] = [];
   for (const { filepath, url } of files) {
-    // Using request instead of got, because got doesn't seem to work
-    const fileStream = request(url);
+    const fileStream = got.stream(url, { retry: { limit: 0 } });
+    streams.push(fileStream);
     fileStream.on("data", chunk => {
       if (onProgress) onProgress(filepath, chunk.length);
     });
@@ -28,13 +30,24 @@ export async function ipfsAddDirFromUrls(
   }
 
   // Parse the ipfsProvider the a full base apiUrl
-  const res = await got({
+  const body = new PassThrough();
+  form.on("error", error => body.destroy(error));
+  const upload = got({
     prefixUrl: normalizeIpfsProvider(ipfsProvider),
     url: "api/v0/add",
     method: "POST",
     headers: form.getHeaders(),
-    body: form,
+    body,
+    timeout: uploadTimeout,
+    retry: { limit: 0 },
     http2: true
+  });
+
+  form.pipe(body);
+  const res = await upload.finally(() => {
+    for (const stream of streams) stream.destroy();
+    form.destroy();
+    body.destroy();
   });
 
   // res.body = '{"Name":"dir/file","Hash":"Qm...","Size":"2203"}\n{"Name":"dir","Hash":"Qm...","Size":"24622"}\n'

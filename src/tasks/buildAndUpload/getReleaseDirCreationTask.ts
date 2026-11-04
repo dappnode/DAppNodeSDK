@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import { ListrTask } from "listr/index.js";
-import rimraf from "rimraf";
 import { PackageToBuildProps, ListrContextBuild } from "../../types.js";
 import { getImageFileName } from "../../utils/getImageFileName.js";
 
@@ -29,14 +28,10 @@ function createReleaseDirs({
     releaseDir,
     architectures
   } of packagesToBuildProps) {
-    console.log(
-      `Creating release directory for ${name} (version ${version}) at ${releaseDir}`
-    );
-
     fs.mkdirSync(releaseDir, { recursive: true }); // Ok on existing dir
     const releaseFiles = fs.readdirSync(releaseDir);
 
-    ctx[name] = { variant, releaseDir };
+    ctx[name] = { ...ctx[name], variant, releaseDir };
 
     const imagePaths = architectures.map(arch =>
       getImageFileName(name, version, arch)
@@ -45,6 +40,9 @@ function createReleaseDirs({
     // Clean all files except the expected target images
     for (const filepath of releaseFiles)
       if (!imagePaths.includes(filepath))
-        rimraf.sync(path.join(releaseDir, filepath));
+        fs.rmSync(path.join(releaseDir, filepath), {
+          recursive: true,
+          force: true
+        });
   }
 }

@@ -19,9 +19,10 @@ import { merge } from "lodash-es";
  * @throws {Error} - Throws an error if any manifest is not in JSON format, or if there is a
  *                   problem reading or parsing the manifests.
  */
-export function readManifest(
-  paths?: ManifestPaths[]
-): { manifest: Manifest; format: ManifestFormat } {
+export function readManifest(paths?: ManifestPaths[]): {
+  manifest: Manifest;
+  format: ManifestFormat;
+} {
   try {
     if (!paths) return loadManifest(); // Load default manifest
 
@@ -47,16 +48,17 @@ export function readManifest(
       manifest: mergedManifest
     };
   } catch (e) {
-    throw new Error(`Error parsing manifest: ${e.message}`);
+    throw new Error(`Error parsing manifest: ${e.message}`, { cause: e });
   }
 }
 
 /**
  * Loads a manifest from the specified path.
  */
-function loadManifest(
-  paths?: ManifestPaths
-): { manifest: Manifest; format: ManifestFormat } {
+function loadManifest(paths?: ManifestPaths): {
+  manifest: Manifest;
+  format: ManifestFormat;
+} {
   const manifestPath = findManifestPath(paths);
   const format = parseFormat(manifestPath);
   const data = readFile(manifestPath);
@@ -65,16 +67,22 @@ function loadManifest(
   try {
     parsedData = yaml.load(data);
   } catch (e) {
-    throw new Error(`Error parsing manifest at ${manifestPath}: ${e.message}`);
+    throw new Error(`Error parsing manifest at ${manifestPath}: ${e.message}`, {
+      cause: e
+    });
   }
 
-  if (!parsedData) {
+  if (
+    !parsedData ||
+    typeof parsedData !== "object" ||
+    Array.isArray(parsedData)
+  ) {
     throw new Error(`Manifest at ${manifestPath} is empty or invalid.`);
   }
 
   return {
     format,
-    manifest: parsedData
+    manifest: parsedData as Manifest
   };
 }
 
@@ -100,8 +108,8 @@ function findManifestPath(paths?: ManifestPaths): string {
 }
 
 function parseFormat(filepath: string): ManifestFormat {
-  if (/.json$/.test(filepath)) return ManifestFormat.json;
-  if (/.yml$/.test(filepath)) return ManifestFormat.yml;
-  if (/.yaml$/.test(filepath)) return ManifestFormat.yaml;
+  if (/\.json$/.test(filepath)) return ManifestFormat.json;
+  if (/\.yml$/.test(filepath)) return ManifestFormat.yml;
+  if (/\.yaml$/.test(filepath)) return ManifestFormat.yaml;
   throw Error(`Unsupported manifest format: ${filepath}`);
 }

@@ -1,25 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es2019",
-    "lib": ["ES2020", "dom"],
+    "target": "es2022",
+    "lib": ["ES2022", "dom"],
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "strictNullChecks": true,
     "allowJs": true,
     "strict": true,
+    "isolatedModules": true,
     "types": ["mocha", "node"],
     "outDir": "dist",
     "sourceMap": true,
     "declaration": true,
     "useUnknownInCatchVariables": false,
     "skipLibCheck": true
-  },
-  "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node",
-    "experimentalResolver": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]

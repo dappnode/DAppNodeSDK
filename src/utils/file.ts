@@ -10,7 +10,8 @@ export function readFile(filepath: string): string {
   } catch (e) {
     if (e.code === "ENOENT") {
       throw Error(
-        `${filepath} not found. Make sure you are in a directory with an initialized DNP.`
+        `${filepath} not found. Make sure you are in a directory with an initialized DNP.`,
+        { cause: e }
       );
     } else {
       throw e;
