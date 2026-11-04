@@ -1,4 +1,10 @@
-import { exec, ExecException } from "child_process";
+import {
+  exec,
+  execFile,
+  ExecException,
+  ExecFileException
+} from "child_process";
+import { StringDecoder } from "string_decoder";
 
 /**
  * If timeout is greater than 0, the parent will send the signal
@@ -10,13 +16,8 @@ const defaultTimeout = 3 * 60 * 1000; // ms
 const defaultMaxBuffer = 1e7; // bytes
 
 /**
- * Run arbitrary commands in a shell
- * If the child process exits with code > 0, rejects
- * Note: using exec instead of spawn since it's not as safe to run
- * complex arbirary commands. For example:
- * - The executable docker-compose may not be detected, causing ENOENT
- * - Doing cmd > cmd2 may fail
- * - Flags may not be passed properly
+ * Execute an argument array directly, or an intentional shell script as a string.
+ * Stream complete output lines while retaining stdout/stderr for failure diagnostics.
  */
 export async function shell(
   cmd: string | string[],
@@ -25,34 +26,66 @@ export async function shell(
     maxBuffer?: number;
     pipeToMain?: boolean;
     onData?: (data: string) => void;
+    cwd?: string;
   }
 ): Promise<string> {
   const {
     timeout = defaultTimeout,
     maxBuffer = defaultMaxBuffer,
     pipeToMain = false,
-    onData
+    onData,
+    cwd
   } = options || {};
 
   return new Promise((resolve, reject): void => {
     const cmdStr = Array.isArray(cmd) ? cmd.join(" ") : cmd;
-    const proc = exec(cmdStr, { timeout, maxBuffer }, (err, stdout, stderr) => {
+    const callback = (
+      err: ExecException | ExecFileException | null,
+      stdout: string,
+      stderr: string
+    ): void => {
       if (err) {
         // Rethrow a typed error, and ignore the internal NodeJS stack trace
         reject(new ShellError(err, { stdout, stderr, cmd: cmdStr }));
       } else {
         resolve(stdout.trim() || stderr);
       }
-    });
+    };
+    // Arrays are arguments, never shell source. Use strings only for intentional scripts.
+    const proc = Array.isArray(cmd)
+      ? execFile(
+          cmd[0],
+          cmd.slice(1),
+          { timeout, maxBuffer, cwd, encoding: "utf8" },
+          callback
+        )
+      : exec(cmd, { timeout, maxBuffer, cwd, encoding: "utf8" }, callback);
     if (pipeToMain) {
       if (proc.stdout) proc.stdout.pipe(process.stdout);
       if (proc.stderr) proc.stderr.pipe(process.stderr);
     }
     if (onData) {
-      const onChunkData = (chunk: Buffer): void =>
-        onData(chunk.toString().trim());
-      if (proc.stdout) proc.stdout.on("data", onChunkData);
-      if (proc.stderr) proc.stderr.on("data", onChunkData);
+      for (const stream of [proc.stdout, proc.stderr]) {
+        if (!stream) continue;
+        const decoder = new StringDecoder("utf8");
+        let pending = "";
+        const flush = (text: string): void => {
+          pending += text;
+          const lines = pending.split(/\r\n|[\r\n]/);
+          pending = lines.pop() || "";
+          for (const line of lines) if (line.trim()) onData(line);
+          // Keep malformed/no-newline process output bounded as well.
+          if (pending.length > 65536) {
+            onData(pending.slice(0, 65536));
+            pending = pending.slice(65536);
+          }
+        };
+        stream.on("data", (chunk: Buffer) => flush(decoder.write(chunk)));
+        stream.on("end", () => {
+          flush(decoder.end());
+          if (pending.trim()) onData(pending);
+        });
+      }
     }
   });
 }
@@ -64,12 +97,12 @@ export async function shell(
 export class ShellError extends Error {
   cmd?: string;
   killed?: boolean;
-  code?: number;
+  code?: string | number | null;
   signal?: NodeJS.Signals;
   stdout: string;
   stderr: string;
   constructor(
-    e: ExecException,
+    e: ExecException | ExecFileException,
     { cmd, stdout, stderr }: { cmd: string; stdout: string; stderr: string }
   ) {
     const msg = [

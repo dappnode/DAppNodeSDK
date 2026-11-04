@@ -57,6 +57,11 @@ describe("command / gaBumpUpstream / format", () => {
       "sigp/lighthouse": {
         newVersion: "v0.1.5",
         currentVersion: "v0.1.2"
+      },
+      // DAppNodePackage-n8n tracks tags such as n8n@2.46.6
+      "n8n-io/n8n": {
+        newVersion: "n8n@2.46.6",
+        currentVersion: "n8n@2.46.5"
       }
     };
 

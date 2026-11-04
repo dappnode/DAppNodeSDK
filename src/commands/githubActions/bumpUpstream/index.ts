@@ -106,7 +106,7 @@ async function gaBumpUpstreamHandler({
 
   const githubSettings = await getGithubSettings(dir, upstreamSettings);
   const { branchName, repo } = githubSettings;
-  if (!(await isBranchNew({ branchName, repo }))) {
+  if (!(await isBranchNew({ branchName, repo, dir }))) {
     // We assume the PR was already opened
     console.log(`Branch ${branchName} already exists`);
     return;
@@ -129,6 +129,7 @@ async function gaBumpUpstreamHandler({
   });
 
   await prepareAndCommitChanges({
+    dir,
     gitSettings,
     upstreamSettings,
     githubSettings
@@ -145,8 +146,13 @@ async function gaBumpUpstreamHandler({
     return;
   }
 
-  const gitHead = await getGitHead();
-  await buildAndComment({ dir, commitSha: gitHead.commit, branch: branchName, all_variants: useVariants });
+  const gitHead = await getGitHead(dir);
+  await buildAndComment({
+    dir,
+    commitSha: gitHead.commit,
+    branch: branchName,
+    all_variants: useVariants
+  });
 }
 
 /**
@@ -217,7 +223,7 @@ function updateManifestUpstreamVersion({
   try {
     writeManifest(manifest, manifestFormat, { dir });
   } catch (e) {
-    throw new Error(`Error writing manifest: ${e.message}`);
+    throw new Error(`Error writing manifest: ${e.message}`, { cause: e });
   }
 }
 
@@ -232,10 +238,11 @@ async function updateManifestPkgVersion({
   allVariants?: boolean;
   variantsDir: string;
 }): Promise<void> {
+  const variantsPath = path.resolve(dir, variantsDir);
   const manifestDirs = allVariants
-    ? getAllVariantsInPath(variantsDir).map(variant =>
-      path.join(variantsDir, variant)
-    )
+    ? getAllVariantsInPath(variantsPath).map(variant =>
+        path.join(variantsPath, variant)
+      )
     : [dir];
 
   for (const dir of manifestDirs) {
@@ -285,10 +292,12 @@ async function getNewManifestVersion({
 }
 
 async function prepareAndCommitChanges({
+  dir,
   gitSettings,
   upstreamSettings,
   githubSettings
 }: {
+  dir: string;
   gitSettings: GitSettings;
   upstreamSettings: UpstreamSettings[];
   githubSettings: GithubSettings;
@@ -303,9 +312,9 @@ async function prepareAndCommitChanges({
     return;
   }
 
-  await configureGitUser(gitSettings);
-  await checkoutNewBranch(branchName);
-  await commitAndPushChanges({ commitMsg, branchRef });
+  await configureGitUser(gitSettings, dir);
+  await checkoutNewBranch(branchName, dir);
+  await commitAndPushChanges({ commitMsg, branchRef, dir });
   await attemptToOpenPR({ commitMsg, upstreamSettings, githubSettings });
 }
 
@@ -315,24 +324,38 @@ function createCommitMessage(upstreamSettings: UpstreamSettings[]): string {
     .join(", ")}`;
 }
 
-async function configureGitUser({ userName, userEmail }: GitSettings) {
-  await shell(`git config user.name ${userName}`);
-  await shell(`git config user.email ${userEmail}`);
+async function configureGitUser(
+  { userName, userEmail }: GitSettings,
+  dir: string
+) {
+  await shell(["git", "config", "user.name", userName], { cwd: dir });
+  await shell(["git", "config", "user.email", userEmail], { cwd: dir });
 }
 
-async function checkoutNewBranch(branchName: string) {
-  await shell(`git checkout -b ${branchName}`);
+async function checkoutNewBranch(branchName: string, dir: string) {
+  await shell(["git", "check-ref-format", "--branch", branchName], {
+    cwd: dir
+  });
+  await shell(["git", "checkout", "-b", branchName], { cwd: dir });
 }
 
 async function commitAndPushChanges({
+  dir,
   commitMsg,
   branchRef
 }: {
+  dir: string;
   commitMsg: string;
   branchRef: string;
 }) {
-  await shell(`git commit -a -m "${commitMsg}"`, { pipeToMain: true });
-  await shell(`git push -u origin ${branchRef}`, { pipeToMain: true });
+  await shell(["git", "commit", "-a", "-m", commitMsg], {
+    pipeToMain: true,
+    cwd: dir
+  });
+  await shell(["git", "push", "-u", "origin", branchRef], {
+    pipeToMain: true,
+    cwd: dir
+  });
 }
 
 async function attemptToOpenPR({

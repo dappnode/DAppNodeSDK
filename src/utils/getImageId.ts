@@ -8,7 +8,12 @@ import { shell } from "./shell.js";
  * @return formated ID: sha256:0d31e5521ef6e92a0efb6110024da8a3517daac4b1e4bbbccaf063ce96641b1b
  */
 export async function getImageId(imageTag: string): Promise<string> {
-  const id = await shell(`docker inspect --format='{{json .Id}}' ${imageTag}`);
+  const id = await shell([
+    "docker",
+    "inspect",
+    "--format={{json .Id}}",
+    imageTag
+  ]);
   return id.replace(/['"]+/g, "");
 }
 
@@ -23,6 +28,6 @@ export async function getImageId(imageTag: string): Promise<string> {
  * ]
  */
 export async function getImageIds(): Promise<string[]> {
-  const res = await shell(`docker images -q`);
+  const res = await shell(["docker", "images", "-q"]);
   return res.trim().split(/\r?\n/);
 }
