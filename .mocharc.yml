@@ -1,9 +1,12 @@
 colors: true
-exit: true
 extension: [ts]
+import:
+  - tsx
 require:
   - dotenv/config
-  - ts-node/register
-node-option:
-  - experimental-specifier-resolution=node
-  - loader=ts-node/esm
+spec:
+  - test/**/*.test.ts
+ignore:
+  - test/commands/build.test.ts
+  - test/tasks/generatePublishTx.test.ts
+  - test/utils/versions/getNextPackageVersion.test.ts

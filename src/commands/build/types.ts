@@ -1,3 +1,4 @@
+import type { getRendererOptions } from "../../utils/progress.js";
 import { UploadTo } from "../../releaseUploader/index.js";
 import { CliGlobalOptions } from "../../types.js";
 
@@ -17,6 +18,4 @@ export interface BuildCommandOptions extends CliGlobalOptions {
   arch?: string;
 }
 
-export interface VerbosityOptions {
-  renderer: "verbose" | "silent" | "default";
-}
+export type VerbosityOptions = ReturnType<typeof getRendererOptions>;

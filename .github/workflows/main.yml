@@ -7,19 +7,38 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false # don't cancel all jobs if some of them failed
       matrix:
-        node: ["20"]
+        node: ["22", "24", "26"]
     steps:
       - uses: actions/checkout@v4
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      - run: yarn install
+      - run: yarn install --frozen-lockfile
       - run: yarn lint
+      - run: yarn build
       - run: yarn test
+
+  # Live Docker / IPFS / Ethereum checks (previously part of `yarn test`).
+  # Kept visible but non-blocking, since they depend on external services.
+  integration:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - run: yarn test:integration

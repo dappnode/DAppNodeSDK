@@ -1,6 +1,6 @@
 import { Manifest, Compose, getImageTag } from "@dappnode/types";
 import { defaultDir, defaultComposeFileName } from "../../params.js";
-import { shell } from "../../utils/shell.js";
+import path from "path";
 import { defaultVersion } from "./params.js";
 import { InitCommandOptions, UserAnswers } from "./types.js";
 import { getDnpName, getShortDnpName } from "./naming.js";
@@ -21,7 +21,7 @@ export async function initHandler({
   const useDefaults = !!yes;
 
   // shell outputs tend to include trailing spaces and new lines
-  const directoryName = await shell('echo "${PWD##*/}"');
+  const directoryName = path.basename(path.resolve(dir));
   const defaultName = getDnpName(directoryName);
 
   const answers = await getUserAnswers({
@@ -43,7 +43,7 @@ export async function initHandler({
   });
 
   createPackageDirectories(dir, answers, useVariants);
-  writePackageFiles({
+  await writePackageFiles({
     dir,
     answers,
     useVariants,

@@ -17,22 +17,34 @@ export function getDeleteOldPinsTask({
   return {
     title: "Delete old pins",
     enabled: () => deleteOldPins,
-    task: async (_, task) => {
-      const gitHead = await getGitHead();
+    skip: ctx =>
+      !packagesToBuildProps.some(
+        pkg => ctx[pkg.manifest.name]?.releaseMultiHash
+      ),
+    task: async (ctx, task) => {
       if (releaseUploaderProvider.type !== "pinata")
         throw Error("Must use pinata for deleteOldPins");
 
       // Unpin items on the same branch but previous (ancestor) commits
       const pinata = new PinataPinManager(releaseUploaderProvider);
 
-      for (const { manifest } of packagesToBuildProps) {
+      for (const { manifest, manifestPaths } of packagesToBuildProps) {
+        // Never remove the previous release until its replacement was uploaded.
+        if (!ctx[manifest.name]?.releaseMultiHash) continue;
+        const gitHead = await getGitHead(manifestPaths[0]?.dir);
         const pinsToDelete = await fetchPinsWithBranchToDelete(
           pinata,
           manifest,
-          gitHead
+          gitHead,
+          manifestPaths[0]?.dir
         );
 
         for (const pin of pinsToDelete) {
+          if (
+            pin.ipfsHash ===
+            ctx[manifest.name].releaseMultiHash?.replace(/^\/ipfs\//, "")
+          )
+            continue;
           task.output = `Unpinning previous commit ${pin.commit} ${pin.ipfsHash}`;
           await pinata.unpin(pin.ipfsHash).catch(e => {
             console.error(`Error deleting old pin ${pin.ipfsHash}`, e);

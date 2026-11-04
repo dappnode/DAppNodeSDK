@@ -80,7 +80,7 @@ async function closePr(
  */
 async function deleteBranch(branchName: string) {
   try {
-    await shell(`git push origin --delete ${branchName}`);
+    await shell(["git", "push", "origin", "--delete", branchName]);
     console.log(`Deleted branch: ${branchName}`);
   } catch (error) {
     console.error(`Error deleting branch ${branchName}`, error);

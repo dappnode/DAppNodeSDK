@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { spawn } from "child_process";
+import { spawn, ChildProcess } from "child_process";
+import { pipeline } from "stream/promises";
 import { ListrTask } from "listr";
 import { getFileHash } from "../utils/getFileHash.js";
 import { loadCache, writeToCache, getCacheKey } from "../utils/cache.js";
@@ -42,14 +43,17 @@ export function saveAndCompressImagesCached({
       task: async (_, task) => {
         for (const { imageTag, originalImageTag } of externalImages) {
           await shell(
-            `docker pull ${originalImageTag} --platform=${architecture}`,
+            ["docker", "pull", `--platform=${architecture}`, originalImageTag],
             { onData: data => (task.output = data) }
           );
           task.output = `Tagging ${originalImageTag} > ${imageTag}`;
-          await shell(`docker tag ${originalImageTag} ${imageTag}`);
+          await shell(["docker", "tag", originalImageTag, imageTag]);
 
           // Validate the resulting image architecture
-          const imageDataRaw = await shell(`docker image inspect --platform=${architecture} ${imageTag}`);
+          const imageDataRaw = await inspectImageForPlatform(
+            imageTag,
+            architecture
+          );
           const imageData = JSON.parse(imageDataRaw);
           const imageArch = `${imageData[0]["Os"]}/${imageData[0]["Architecture"]}`;
           if (imageArch !== architecture)
@@ -91,7 +95,32 @@ export function saveAndCompressImagesCached({
   ];
 }
 
-async function saveAndCompressImages({
+/**
+ * With the containerd image store a tag can hold several platforms, and a plain
+ * inspect reports the host platform (or none). `--platform` selects the pulled one.
+ * Docker CLI < 28.1 lacks the flag; there a tag holds one platform, so a plain inspect is exact.
+ */
+export async function inspectImageForPlatform(
+  imageTag: string,
+  architecture: Architecture
+): Promise<string> {
+  try {
+    return await shell([
+      "docker",
+      "image",
+      "inspect",
+      `--platform=${architecture}`,
+      imageTag
+    ]);
+  } catch (e) {
+    const output = `${e.message || ""}\n${e.stderr || ""}`;
+    if (!/unknown flag: --platform/i.test(output)) throw e;
+    return await shell(["docker", "image", "inspect", imageTag]);
+  }
+}
+
+/** Export atomically only after both processes and both pipes have succeeded. */
+export async function saveAndCompressImages({
   imageTags,
   destPath,
   onData,
@@ -102,50 +131,70 @@ async function saveAndCompressImages({
   onData?: (data: string) => void;
   timeout?: number;
 }): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const dockerSave = spawn("docker", ["save", ...imageTags]);
-
-    // -e9T0: Compression settings (extreme and paralelized)
-    // -vv: Very verbose log to provide progress
-    // -c: Outputs the compressed result to stdout
-    // -f: Overwrite the destination path if necessary
-    const xz = spawn("xz", ["-e9T0", "-vv", "-c", "-f"], { timeout });
-
-    dockerSave.stdout.pipe(xz.stdin);
-
-    let lastStderr = "";
-    xz.stderr.on("data", chunk => {
-      const data = chunk.toString().trim();
-      lastStderr = data;
-      if (onData) onData(data);
-    });
-
-    xz.stdout.pipe(fs.createWriteStream(destPath));
-
-    // In order for xz to output update logs to stderr,
-    // a SIGALRM must be sent to the xz process every interval
-    // https://stackoverflow.com/questions/48452726/how-to-redirect-xzs-normal-stdout-when-do-tar-xz
-    const interval = setInterval(() => xz.kill("SIGALRM"), 1000);
-
-    xz.on("error", err => {
-      clearInterval(interval);
-      reject(Error(`Error compressing image: ${err.message} \n${lastStderr}`));
-    });
-
-    xz.on("exit", code => {
-      clearInterval(interval);
-      if (code) {
-        reject(
-          Error(`Error compressing image: xz exit ${code} \n${lastStderr}`)
-        );
-      } else {
-        resolve(`Compressed image saved to ${destPath}`);
-      }
-    });
-
-    dockerSave.on("error", err => {
-      clearInterval(interval);
-      reject(Error(`Error saving image: ${err.message}`));
-    });
+  await fs.promises.mkdir(path.dirname(destPath), { recursive: true });
+  const temporaryDir = await fs.promises.mkdtemp(
+    path.join(path.dirname(destPath), ".dappnodesdk-")
+  );
+  const temporaryPath = path.join(temporaryDir, "image.txz");
+  const dockerSave = spawn("docker", ["save", ...imageTags]);
+  const xz = spawn("xz", ["-e9T0", "-vv", "-c"]);
+  let dockerStderr = "";
+  let compressionStderr = "";
+  dockerSave.stderr.on("data", (chunk: Buffer) => {
+    dockerStderr = (dockerStderr + chunk.toString()).slice(-65536);
   });
+  xz.stderr.on("data", (chunk: Buffer) => {
+    const message = chunk.toString().trim();
+    compressionStderr = (compressionStderr + message).slice(-65536);
+    if (message && onData) onData(message);
+  });
+
+  const completed = (
+    child: ChildProcess,
+    label: string,
+    stderr: () => string
+  ): Promise<void> =>
+    new Promise((resolve, reject) => {
+      child.once("error", reject);
+      child.once("close", (code, signal) => {
+        if (code === 0 && !signal) resolve();
+        else
+          reject(
+            new Error(
+              `${label} failed (${signal || `exit ${code}`}): ${stderr()}`
+            )
+          );
+      });
+    });
+
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((resolve, reject) => {
+    if (timeout && timeout > 0)
+      timer = setTimeout(
+        () => reject(new Error(`Image export timed out after ${timeout} ms`)),
+        timeout
+      );
+  });
+  const interval = setInterval(() => xz.kill("SIGALRM"), 1000);
+  try {
+    await Promise.race([
+      Promise.all([
+        completed(dockerSave, "docker save", () => dockerStderr),
+        completed(xz, "xz", () => compressionStderr),
+        pipeline(dockerSave.stdout, xz.stdin),
+        pipeline(xz.stdout, fs.createWriteStream(temporaryPath))
+      ]),
+      timeoutPromise
+    ]);
+    await fs.promises.rename(temporaryPath, destPath);
+    return `Compressed image saved to ${destPath}`;
+  } catch (error) {
+    dockerSave.kill("SIGKILL");
+    xz.kill("SIGKILL");
+    throw error;
+  } finally {
+    clearInterval(interval);
+    if (timer) clearTimeout(timer);
+    await fs.promises.rm(temporaryDir, { recursive: true, force: true });
+  }
 }

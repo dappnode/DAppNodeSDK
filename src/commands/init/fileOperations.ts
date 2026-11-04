@@ -47,7 +47,7 @@ export function createPackageDirectories(
   }
 }
 
-export function writePackageFiles({
+export async function writePackageFiles({
   dir,
   answers,
   useVariants,
@@ -65,9 +65,9 @@ export function writePackageFiles({
   rootCompose: Compose;
   composeFileName: string;
   serviceName: string;
-}): void {
+}): Promise<void> {
   const rootManifestPath = getManifestPath(defaultManifestFormat, { dir });
-  confirmManifestOverwrite(rootManifestPath, force);
+  await confirmManifestOverwrite(rootManifestPath, force);
 
   if (useVariants)
     writeMultiVariantPackageFiles({
@@ -88,7 +88,7 @@ export function writePackageFiles({
 
   addDefaultAvatar(dir);
 
-  addDockerfile(dir);
+  addDockerfile(dir, force);
 
   addGitignore(dir);
 }
@@ -107,7 +107,7 @@ function writeSinglePackageFiles({
   writeManifest<Manifest>(rootManifest, defaultManifestFormat, { dir });
 
   // Only write a compose if it doesn't exist
-  if (!fs.existsSync(getComposePath({ dir }))) {
+  if (!fs.existsSync(getComposePath({ dir, composeFileName }))) {
     writeCompose(rootCompose, { dir, composeFileName });
   }
 }
@@ -197,8 +197,10 @@ function addDefaultAvatar(dir: string) {
   }
 }
 
-function addDockerfile(dir: string) {
-  fs.writeFileSync(path.join(dir, dockerfileName), dockerfileData);
+function addDockerfile(dir: string, force: boolean) {
+  const dockerfilePath = path.join(dir, dockerfileName);
+  if (force || !fs.existsSync(dockerfilePath))
+    fs.writeFileSync(dockerfilePath, dockerfileData);
 }
 
 /**

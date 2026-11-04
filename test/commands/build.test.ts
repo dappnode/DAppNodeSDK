@@ -76,7 +76,7 @@ describe("Init and build simple package", function () {
       strip_compose_version: true
     });
 
-    expect(readCompose([{ dir: releaseDir }]).version).to.be.undefined;
+    expect(readCompose([{ dir: releaseDir }]).version).to.equal(undefined);
   });
 });
 

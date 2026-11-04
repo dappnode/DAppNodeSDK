@@ -5,16 +5,23 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+  # The build bot creates/updates its comment through the issues API; on a pull
+  # request GitHub requires pull-requests: write for that.
+  issues: write
+  pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Node.js 20.x
+      - name: Set up Node.js 24.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-      - run: yarn install
+          node-version: 24.x
+      - run: yarn install --frozen-lockfile
       - run: yarn build
 
       # Simulate Github Actions run on an actual DAppNode package

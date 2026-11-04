@@ -2,7 +2,7 @@ import semver from "semver";
 import { getEthereumUrl } from "../getEthereumUrl.js";
 import { checkSemverType } from "../checkSemverType.js";
 import { ReleaseType } from "../../types.js";
-import { ApmRepository } from "@dappnode/toolkit";
+import { ApmRepository } from "../../providers/apm/ApmRepository.js";
 
 export async function getNextVersionFromApm({
   type,
