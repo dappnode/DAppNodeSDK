@@ -14,7 +14,7 @@ describe("safe commands and line buffering", () => {
   it("passes metacharacters literally instead of executing them", async () => {
     const value = '$(touch SHOULD_NOT_EXIST);echo unsafe "quoted"';
     const result = await shell([
-      process.execPath,
+      "node",
       "-e",
       "process.stdout.write(process.argv[1])",
       value
@@ -43,7 +43,7 @@ describe("safe commands and line buffering", () => {
     const lines: string[] = [];
     await shell(
       [
-        process.execPath,
+        "node",
         "-e",
         'process.stdout.write("hel"); process.stderr.write("warn\\n"); setTimeout(() => { process.stdout.write("lo\\nlast"); }, 30);'
       ],

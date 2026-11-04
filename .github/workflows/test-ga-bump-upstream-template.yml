@@ -9,15 +9,20 @@ env:
   ENVIRONMENT: TEST
   INITIAL_VERSION: "0.1.0"
 
+permissions:
+  contents: write # bump branch
+  pull-requests: write # bump PR
+  issues: write # build bot comment
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Node.js 20.x
+      - name: Set up Node.js 24.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.x
       - run: yarn install --frozen-lockfile
       - run: yarn build
 

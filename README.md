@@ -143,7 +143,7 @@ In order to have a better developing experience these modules lives inside the D
 
 ## Development
 
-Use Node.js 20.19+, Node.js 22.13+, or Node.js 24+ for development, and install the exact locked dependencies with `yarn install --frozen-lockfile`.
+Use Node.js 22.13+ or Node.js 24+ (Node.js 20 reached end of life in April 2026), and install the exact locked dependencies with `yarn install --frozen-lockfile`.
 
 - `yarn lint` checks source and tests without changing files; `yarn lint:fix` applies automatic fixes.
 - `yarn build` checks and compiles the SDK.
