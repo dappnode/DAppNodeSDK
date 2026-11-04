@@ -1,28 +1,24 @@
-// timestring does not have a @types package
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import timestring from "timestring/index.js";
 
-// Define build timeout (60 min)
 const defaultBuildTimeout = 60 * 60 * 1000;
 
 /**
- * Parses a timeout string and returns a number in miliseconds
- * @param timeout "20min", "5000", undefined
+ * Parses a timeout and returns milliseconds.
+ * - Strings are human-readable durations ("20min", "1h"); a bare integer string ("5000") is seconds.
+ * - Numbers are already milliseconds; 0 disables the timeout, as before.
  */
-export function parseTimeout(timeout: string | undefined): number {
-  switch (typeof timeout) {
-    case "number": {
-      return timeout;
-    }
-    case "string": {
-      if (!timeout) defaultBuildTimeout;
-      // Timestring returns in seconds
-      const parsedString = timestring(timeout) || parseInt(timeout);
-      if (!parsedString) throw Error(`Error parsing timeout: ${timeout}`);
-      return parsedString * 1000;
-    }
-    default:
-      return defaultBuildTimeout;
+export function parseTimeout(timeout: string | number | undefined): number {
+  if (timeout === undefined || timeout === "") return defaultBuildTimeout;
+  if (typeof timeout === "number") {
+    if (!Number.isFinite(timeout) || timeout < 0)
+      throw new Error(`Invalid timeout: ${timeout}`);
+    return timeout;
   }
+  const trimmed = timeout.trim();
+  const parsed = /^\d+$/.test(trimmed)
+    ? Number(trimmed) * 1000
+    : timestring(trimmed) * 1000;
+  if (!Number.isFinite(parsed) || parsed <= 0)
+    throw new Error(`Invalid timeout: ${timeout}`);
+  return parsed;
 }
