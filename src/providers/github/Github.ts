@@ -46,7 +46,6 @@ export class Github {
     return `${this.owner}/${this.repo}`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async getRepo() {
     try {
       const repoResponse = await this.octokit.rest.repos.get({
@@ -60,7 +59,7 @@ export class Github {
       return repoResponse.data;
     } catch (e) {
       if (e instanceof RequestError && e.status === 404) {
-        throw new Error(`Repo does not exist: ${this.repoSlug}`);
+        throw new Error(`Repo does not exist: ${this.repoSlug}`, { cause: e });
       }
 
       e.message = `Error verifying repo ${this.repoSlug}: ${e.message}`;
@@ -100,7 +99,8 @@ export class Github {
         }
       });
 
-      if (matchingTags.data.length > 0) return true;
+      if (matchingTags.data.some(item => item.ref === `refs/tags/${tag}`))
+        return true;
 
       return false;
     } catch (e) {
@@ -131,17 +131,14 @@ export class Github {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async listReleases() {
-    return await this.octokit.rest.repos
-      .listReleases({
-        owner: this.owner,
-        repo: this.repo,
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28"
-        }
-      })
-      .then(res => res.data);
+    return await this.octokit.paginate(this.octokit.rest.repos.listReleases, {
+      owner: this.owner,
+      repo: this.repo,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
+      }
+    });
   }
 
   /**
@@ -238,21 +235,41 @@ export class Github {
 
       const filepath = path.resolve(assetsDir, file);
       const contentType = mime.lookup(filepath) || "application/octet-stream";
+      const name = `${fileNamePrefix || ""}${path.basename(filepath)}`;
+      const size = fs.statSync(filepath).size;
       try {
         // The uploadReleaseAssetApi fails sometimes, retry 3 times
         await retry(
           async () => {
-            await this.octokit.repos.uploadReleaseAsset({
-              owner: this.owner,
-              repo: this.repo,
-              release_id: releaseId,
-              data: fs.createReadStream(filepath) as any,
-              headers: {
-                "content-type": contentType,
-                "content-length": fs.statSync(filepath).size
-              },
-              name: `${fileNamePrefix || ""}${path.basename(filepath)}`
-            });
+            try {
+              await this.octokit.request({
+                method: "POST",
+                url: "https://uploads.github.com/repos/{owner}/{repo}/releases/{release_id}/assets{?name}",
+                owner: this.owner,
+                repo: this.repo,
+                release_id: releaseId,
+                data: fs.createReadStream(filepath),
+                headers: {
+                  "content-type": contentType,
+                  "content-length": size
+                },
+                name
+              });
+            } catch (e) {
+              // A failed attempt may still have stored the asset; the retry then gets 422.
+              if (!isAssetAlreadyExistsError(e)) throw e;
+              const existing = await this.findReleaseAsset(releaseId, name);
+              if (existing?.state === "uploaded" && existing.size === size)
+                return;
+              // Partial or different asset: remove it so the next attempt can upload.
+              if (existing)
+                await this.octokit.rest.repos.deleteReleaseAsset({
+                  owner: this.owner,
+                  repo: this.repo,
+                  asset_id: existing.id
+                });
+              throw e;
+            }
           },
           { retries: 3 }
         );
@@ -261,6 +278,19 @@ export class Github {
         throw e;
       }
     }
+  }
+
+  private async findReleaseAsset(releaseId: number, name: string) {
+    const assets = await this.octokit.paginate(
+      this.octokit.rest.repos.listReleaseAssets,
+      {
+        owner: this.owner,
+        repo: this.repo,
+        release_id: releaseId,
+        per_page: 100
+      }
+    );
+    return assets.find(asset => asset.name === name);
   }
 
   /**
@@ -392,7 +422,6 @@ export class Github {
    * Returns open PRs where head branch equals `branch`
    * Only branches and PRs originating from the same repo
    */
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async getOpenPrsFromBranch(branch: string) {
     const openPrsResponse = await this.octokit.rest.pulls.list({
       owner: this.owner,
@@ -408,7 +437,7 @@ export class Github {
   }
 
   /**
-   * Returns list of branches, limited to 100. For more implement pagination
+   * Returns all branches; cleanup must never infer deletion from a partial page.
    * @returns branch = {
    *   name: "octocat-patch-1"
    *   commit: {
@@ -416,23 +445,20 @@ export class Github {
    *   }
    * }
    */
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async listBranches() {
-    const branchesResponse = await this.octokit.rest.repos.listBranches({
+    return await this.octokit.paginate(this.octokit.rest.repos.listBranches, {
       owner: this.owner,
       repo: this.repo,
+      per_page: 100,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28"
       }
     });
-
-    return branchesResponse.data;
   }
 
   /**
    * @param branch "octocat-patch-1"
    */
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async getBranch(branch: string) {
     const branchResponse = await this.octokit.rest.repos.getBranch({
       owner: this.owner,
@@ -481,4 +507,12 @@ export class Github {
       throw e;
     }
   }
+}
+
+function isAssetAlreadyExistsError(e: unknown): boolean {
+  const error = e as { status?: number; response?: { data?: unknown } };
+  return (
+    error?.status === 422 &&
+    JSON.stringify(error.response?.data ?? "").includes("already_exists")
+  );
 }

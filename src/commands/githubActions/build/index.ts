@@ -1,6 +1,6 @@
 import { CommandModule } from "yargs";
 import { CliGlobalOptions } from "../../../types.js";
-import { defaultDir } from "../../../params.js";
+import { defaultDir, defaultVariantsDirName } from "../../../params.js";
 import { getGithubContext } from "../../../providers/github/githubActions.js";
 import { buildHandler } from "../../build/handler.js";
 import { Github } from "../../../providers/github/Github.js";
@@ -30,6 +30,12 @@ export const gaBuild: CommandModule<BuildActionOptions, CliGlobalOptions> = {
   describe:
     "Build and upload test release and post a comment with install link to the triggering PR",
   builder: {
+    variants_dir_name: {
+      alias: "variants-dir-name",
+      type: "string",
+      default: defaultVariantsDirName,
+      description: "Directory containing package variants"
+    },
     all_variants: {
       alias: "all-variants",
       description: `Build all package variants at once, by merging the dappnode_package.json and docker-compose.yml files in the root of the project with the specific ones defined for each package variant`,
@@ -50,7 +56,9 @@ export const gaBuild: CommandModule<BuildActionOptions, CliGlobalOptions> = {
 async function gaBuildHandler({
   dir = defaultDir,
   all_variants,
-  variants
+  variants,
+  variants_dir_name,
+  compose_file_name
 }: BuildActionOptions): Promise<void> {
   const { eventName, sha: commitSha, ref: refString } = getGithubContext();
   const ref = parseRef(refString);
@@ -59,7 +67,10 @@ async function gaBuildHandler({
   // Doing it here prevents having to add two workflows per repo.
   // Also, ensures that pins are deleted eventually, even if this fails sometimes
   try {
-    await cleanPinsFromDeletedBranches({ dir });
+    await cleanPinsFromDeletedBranches({
+      dir,
+      variantsDirName: variants_dir_name
+    });
   } catch (e) {
     console.error("Error on cleanPinsFromDeletedBranches", e);
   }
@@ -77,7 +88,9 @@ async function gaBuildHandler({
       commitSha,
       branch: ref.branch,
       all_variants,
-      variants
+      variants,
+      variants_dir_name,
+      compose_file_name
     });
   } else if (eventName === "push" || eventName === "pull_request") {
     // Consider that for 'pull_request' commitSha does not represent a known commit
@@ -88,12 +101,15 @@ async function gaBuildHandler({
 
     // By default just do a test build and skip_save
     await buildHandler({
+      dir,
       provider: "dappnode",
       upload_to: "ipfs",
       skip_save: true,
       verbose: true,
       all_variants,
-      variants
+      variants,
+      variants_dir_name,
+      compose_file_name
     });
   } else if (!eventName) {
     throw Error("Not in Github action context");
@@ -107,25 +123,32 @@ export async function buildAndComment({
   commitSha,
   branch,
   all_variants,
-  variants
+  variants,
+  variants_dir_name,
+  compose_file_name
 }: {
   dir: string;
   commitSha: string;
   branch: string;
   all_variants?: boolean;
   variants?: string;
+  variants_dir_name?: string;
+  compose_file_name?: string;
 }): Promise<void> {
   // Connect to Github Octokit REST API and post or edit a comment on PR
   const github = Github.fromLocal(dir);
 
   const buildResults = await buildHandler({
+    dir,
     provider: "pinata",
     upload_to: "ipfs",
     require_git_data: true,
     delete_old_pins: true,
     verbose: true,
     all_variants,
-    variants
+    variants,
+    variants_dir_name,
+    compose_file_name
   });
 
   const body = getBuildBotComment({

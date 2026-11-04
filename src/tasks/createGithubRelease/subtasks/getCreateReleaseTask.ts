@@ -1,3 +1,4 @@
+import { releaseFiles } from "@dappnode/types";
 import path from "path";
 import fs from "fs";
 import { Github } from "../../../providers/github/Github.js";
@@ -11,7 +12,10 @@ import { getNextGitTag } from "../getNextGitTag.js";
 import { contentHashFileName } from "../../../params.js";
 import { ReleaseDetailsMap } from "../types.js";
 import { buildReleaseDetailsMap } from "../buildReleaseDetailsMap.js";
-import { compactManifestIfCore, composeDeleteBuildProperties } from "../../../files/index.js";
+import {
+  compactManifestIfCore,
+  composeDeleteBuildProperties
+} from "../../../files/index.js";
 
 /**
  * Create release
@@ -34,21 +38,25 @@ export function getCreateReleaseTask({
 
       const tag = getNextGitTag(releaseDetailsMap, isMultiVariant);
 
+      task.output = "Preparing release files...";
+      prepareGithubReleaseFiles({ releaseDetailsMap, composeFileName });
+
       task.output = "Deleting existing release...";
       await github.deleteReleaseAndAssets(tag);
 
       task.output = `Creating release for tag ${tag}...`;
       const releaseId = await github.createRelease(tag, {
         body: await getReleaseBody({ releaseDetailsMap }),
-        prerelease: true, // Until it is actually published to mainnet
+        prerelease: true // Until it is actually published to mainnet
       });
 
-      task.output = "Preparing release directories for Github release...";
-      prepareGithubReleaseFiles({ releaseDetailsMap, composeFileName });
-
       task.output = "Uploading assets...";
-      await uploadAssets({ releaseDetailsMap, github, releaseId, isMultiVariant });
-
+      await uploadAssets({
+        releaseDetailsMap,
+        github,
+        releaseId,
+        isMultiVariant
+      });
     }
   };
 }
@@ -60,26 +68,21 @@ function prepareGithubReleaseFiles({
   releaseDetailsMap: ReleaseDetailsMap;
   composeFileName?: string;
 }) {
-  for (const [, { releaseMultiHash, releaseDir }] of Object.entries(releaseDetailsMap)) {
-
+  for (const [, { releaseMultiHash, releaseDir }] of Object.entries(
+    releaseDetailsMap
+  )) {
     const contentHashPath = path.join(releaseDir, `${contentHashFileName}`);
 
-    try {
+    /**
+     * Plain text file which should contain the IPFS hash of the release
+     * Necessary for the installer script to fetch the latest content hash
+     * of the eth clients. The resulting hashes are used by the DAPPMANAGER
+     * to install an eth client when the user does not want to use a remote node
+     */
+    fs.writeFileSync(contentHashPath, releaseMultiHash);
 
-      /**
-       * Plain text file which should contain the IPFS hash of the release
-       * Necessary for the installer script to fetch the latest content hash
-       * of the eth clients. The resulting hashes are used by the DAPPMANAGER
-       * to install an eth client when the user does not want to use a remote node
-       */
-      fs.writeFileSync(contentHashPath, releaseMultiHash);
-
-      compactManifestIfCore(releaseDir);
-      composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
-
-    } catch (e) {
-      console.error(`Error found while preparing files in ${releaseDir} for Github release`, e);
-    }
+    compactManifestIfCore(releaseDir);
+    composeDeleteBuildProperties({ dir: releaseDir, composeFileName });
   }
 }
 
@@ -105,11 +108,17 @@ async function uploadAssets({
     await github.uploadReleaseAssets({
       releaseId,
       assetsDir: releaseDir,
-      // Only upload yml, txz and dappnode_package.json files
-      matchPattern: /(.*\.ya?ml$)|(.*\.txz$)|(dappnode_package\.json)|(content-hash)/,
+      // Use the shared release-file definitions so optional artifacts are retained.
+      matchPattern: new RegExp(
+        [
+          "\\.txz$",
+          `^${contentHashFileName}$`,
+          ...Object.entries(releaseFiles)
+            .filter(([id]) => id !== "avatar")
+            .map(([, spec]) => spec.regex.source)
+        ].join("|")
+      ),
       fileNamePrefix: isMultiVariant ? `${shortDnpName}_` : ""
-    }).catch((e) => {
-      console.error(`Error uploading assets from ${releaseDir}`, e);
     });
   }
 }
@@ -126,19 +135,16 @@ async function uploadAvatar({
   await github.uploadReleaseAssets({
     releaseId,
     assetsDir: avatarDir,
-    matchPattern: /.*\.png/,
-  }).catch((e) => {
-    console.error(`Error uploading avatar from ${avatarDir}`, e);
+    matchPattern: /.*\.png/
   });
 }
-
 
 /**
  * Write the release body
  *
  */
 async function getReleaseBody({
-  releaseDetailsMap,
+  releaseDetailsMap
 }: {
   releaseDetailsMap: ReleaseDetailsMap;
 }) {
@@ -155,15 +161,15 @@ function getPackageVersionsTable(releaseDetailsMap: ReleaseDetailsMap) {
   Package | Version | Hash | Install | Publish
   --- | --- | --- | --- | ---
   ${Object.entries(releaseDetailsMap)
-      .map(([dnpName, { nextVersion, releaseMultiHash, txData }]) =>
-        getPackageVersionsRow({
-          dnpName,
-          nextVersion,
-          releaseMultiHash,
-          txData
-        })
-      )
-      .join("\n")}
+    .map(([dnpName, { nextVersion, releaseMultiHash, txData }]) =>
+      getPackageVersionsRow({
+        dnpName,
+        nextVersion,
+        releaseMultiHash,
+        txData
+      })
+    )
+    .join("\n")}
   `.trim();
 }
 

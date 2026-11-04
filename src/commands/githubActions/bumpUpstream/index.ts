@@ -151,7 +151,8 @@ async function gaBumpUpstreamHandler({
     dir,
     commitSha: gitHead.commit,
     branch: branchName,
-    all_variants: useVariants
+    all_variants: useVariants,
+    variants_dir_name: variantsDir
   });
 }
 
