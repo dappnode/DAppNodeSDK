@@ -241,6 +241,11 @@ export class Github {
         // The uploadReleaseAssetApi fails sometimes, retry 3 times
         await retry(
           async () => {
+            // One stream per attempt. A read error fails the request that consumes it;
+            // the listener and destroy() stop a stream left over by a failed attempt from
+            // keeping the file open or raising an unhandled 'error' event later.
+            const data = fs.createReadStream(filepath);
+            data.on("error", () => {});
             try {
               await this.octokit.request({
                 method: "POST",
@@ -248,7 +253,7 @@ export class Github {
                 owner: this.owner,
                 repo: this.repo,
                 release_id: releaseId,
-                data: fs.createReadStream(filepath),
+                data,
                 headers: {
                   "content-type": contentType,
                   "content-length": size
@@ -269,6 +274,8 @@ export class Github {
                   asset_id: existing.id
                 });
               throw e;
+            } finally {
+              data.destroy();
             }
           },
           { retries: 3 }

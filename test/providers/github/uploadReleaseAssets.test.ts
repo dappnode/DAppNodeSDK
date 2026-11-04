@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { mock } from "node:test";
 import { expect } from "chai";
 import { Github } from "../../../src/providers/github/Github.js";
 import { temporaryDirectory } from "../../helpers/fixtures.js";
@@ -68,6 +69,37 @@ describe("idempotent GitHub release asset upload", function () {
     });
     await github.uploadReleaseAssets({ releaseId: 1, assetsDir: dir });
     expect(calls).to.deep.equal(["post", "delete:7", "post"]);
+  });
+
+  it("closes the file stream of every attempt, including failed ones", async () => {
+    const streams: fs.ReadStream[] = [];
+    const original = fs.createReadStream;
+    mock.method(
+      fs,
+      "createReadStream",
+      (...args: Parameters<typeof original>) => {
+        const stream = original(...args);
+        streams.push(stream);
+        return stream;
+      }
+    );
+    let posts = 0;
+    const github = githubWith({
+      request: async () => {
+        if (++posts === 1)
+          throw Object.assign(new Error("reset"), { status: 502 });
+      }
+    });
+    try {
+      await github.uploadReleaseAssets({ releaseId: 1, assetsDir: dir });
+    } finally {
+      mock.restoreAll();
+    }
+    expect(streams).to.have.length(2);
+    expect(streams.every(stream => stream.destroyed)).to.equal(true);
+    // Removing the file while a stream of a failed attempt is still opening must not crash.
+    fs.rmSync(dir, { recursive: true, force: true });
+    await new Promise(resolve => setTimeout(resolve, 50));
   });
 
   it("still fails on other errors", async () => {
