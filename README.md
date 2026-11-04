@@ -30,6 +30,17 @@ Only generates the IPFS Hash to be able to install it without needing to create 
 $ dappnodesdk build
 ```
 
+### Root and variant files
+
+In a multi-variant package (`--all_variants` or `--variants`), each release is assembled from the package root and the variant directory (`package_variants/<variant>` by default):
+
+- `dappnode_package.json` and `docker-compose.yml` are deep-merged, with the variant overriding the root.
+- `setup-wizard.*` fields are merged by `id`, and `notifications.yaml` endpoints by `correlationId`. Within a matched entry, the variant's values override the root's, and an array from the variant (for example `enum`, `conditions` or `alerts`) replaces the root's array. The release contains exactly what was validated.
+- Single files (avatar, `prometheus-targets.*`, `disclaimer.md`, `getting-started.md`, `setup.schema.json`, `setup-target.json`, `setup-ui.json`, `signature.json`) are taken from the variant directory when it has one, and otherwise from the root.
+- Grafana dashboards (`*grafana-dashboard.json`) are collected from both the root and the variant.
+
+Schema validation coerces some values (for example `isBanner: "false"` becomes `false`). The release ships the coerced value, and the build prints a warning in the "Validate files" step so the source file can be fixed.
+
 ## Publish
 
 It does the build of the image and shows the necessary transaction to be able to publish the package. The first time will create the repository but the rest will be updates of it.

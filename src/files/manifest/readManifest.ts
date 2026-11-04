@@ -24,7 +24,8 @@ export function readManifest(paths?: ManifestPaths[]): {
   format: ManifestFormat;
 } {
   try {
-    if (!paths) return loadManifest(); // Load default manifest
+    if (!paths || paths.length === 0) return loadManifest();
+    if (paths.length === 1) return loadManifest(paths[0]); // Load default manifest
 
     const manifestsSpecs = paths.map(path => loadManifest(path));
 

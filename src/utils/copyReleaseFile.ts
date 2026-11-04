@@ -37,7 +37,12 @@ export function copyReleaseFile({
   } else if (matchingFiles.length === 1) {
     fs.copyFileSync(
       path.join(fromDir, matchingFiles[0]),
-      path.join(toDir, getDefaultName(fileConfig.id) || matchingFiles[0])
+      path.join(
+        toDir,
+        (fileConfig.multiple
+          ? matchingFiles[0]
+          : getDefaultName(fileConfig.id)) || matchingFiles[0]
+      )
     );
   } else {
     if (fileConfig.multiple) {

@@ -1,4 +1,5 @@
 import fs from "fs";
+import yaml from "js-yaml";
 import path from "path";
 import { ListrTask } from "listr/index.js";
 import { verifyAvatar } from "../../utils/verifyAvatar.js";
@@ -56,8 +57,12 @@ async function copyFilesToReleaseDir({
   requireGitData?: boolean;
 }): Promise<void> {
   for (const variantProps of packagesToBuildProps) {
-
-    await copyVariantFilesToReleaseDir({ variantProps, rootDir, variantsDirPath, composeFileName });
+    await copyVariantFilesToReleaseDir({
+      variantProps,
+      rootDir,
+      variantsDirPath,
+      composeFileName
+    });
 
     // Verify avatar (throws)
     const avatarPath = path.join(
@@ -67,7 +72,7 @@ async function copyFilesToReleaseDir({
     verifyAvatar(avatarPath);
 
     // Make sure git data is available before doing a long build
-    await getGitHeadIfAvailable({ requireGitData });
+    await getGitHeadIfAvailable({ requireGitData, dir: rootDir });
   }
 }
 
@@ -82,14 +87,26 @@ async function copyVariantFilesToReleaseDir({
   variantsDirPath: string;
   composeFileName: string;
 }): Promise<void> {
-  const { manifest, manifestFormat, releaseDir, compose, variant } = variantProps;
+  const {
+    manifest,
+    manifestFormat,
+    releaseDir,
+    compose,
+    variant,
+    notifications,
+    setupWizard
+  } = variantProps;
 
   // In case of single variant packages, the targets are in the root dir
-  const variantDirPath = variant ? path.join(variantsDirPath, variant) : rootDir;
+  const variantDirPath = variant
+    ? path.join(variantsDirPath, variant)
+    : rootDir;
 
   for (const [fileId, fileConfig] of Object.entries(releaseFiles)) {
     // For single variant packages, the targets are in the root dir
-    const dirsToCopy = fs.existsSync(variantDirPath) ? [rootDir, variantDirPath] : [rootDir];
+    const dirsToCopy = fs.existsSync(variantDirPath)
+      ? [rootDir, variantDirPath]
+      : [rootDir];
 
     switch (fileId as keyof typeof releaseFiles) {
       case "manifest":
@@ -100,35 +117,66 @@ async function copyVariantFilesToReleaseDir({
         writeReleaseCompose({ compose, composeFileName, manifest, releaseDir });
         break;
 
-      case "prometheusTargets":
-        // Copy the targets in root and in the variant dir
-        for (const dir of dirsToCopy) {
-          copyReleaseFile({
-            fileConfig: { ...fileConfig, id: fileId },
-            fromDir: dir,
-            toDir: releaseDir
-          });
-        }
-        break;
-
       case "notifications":
-        // Copy the notifications in root and in the variant dir
-        for (const dir of dirsToCopy) {
-          copyReleaseFile({
-            fileConfig: { ...fileConfig, id: fileId },
-            fromDir: dir,
-            toDir: releaseDir
-          });
-        }
+        if (notifications)
+          fs.writeFileSync(
+            path.join(releaseDir, releaseFilesDefaultNames.notifications),
+            yaml.dump(notifications)
+          );
         break;
 
-      default:
-        copyReleaseFile({
-          fileConfig: { ...fileConfig, id: fileId },
-          fromDir: rootDir,
-          toDir: releaseDir
-        });
+      case "setupWizard":
+        if (setupWizard)
+          fs.writeFileSync(
+            path.join(releaseDir, releaseFilesDefaultNames.setupWizard),
+            JSON.stringify(setupWizard, null, 2) + "\n"
+          );
         break;
+
+      case "prometheusTargets": {
+        // Only one targets file per release: the variant's replaces the root's,
+        // because scrape targets differ per variant (docs/dev/metrics.md).
+        const sourceDir = [...new Set(dirsToCopy)]
+          .filter(dir =>
+            fs.readdirSync(dir).some(file => fileConfig.regex.test(file))
+          )
+          .pop();
+        if (!sourceDir) break;
+        const files = fs
+          .readdirSync(sourceDir)
+          .filter(file => fileConfig.regex.test(file));
+        if (files.length > 1)
+          throw new Error(
+            `More than one prometheusTargets file found in ${sourceDir}: ${files.join(
+              ", "
+            )}. Only one file can match ${fileConfig.regex}`
+          );
+        // Normalise YAML sources so the released .json file is valid JSON.
+        const targets = yaml.load(
+          fs.readFileSync(path.join(sourceDir, files[0]), "utf8")
+        );
+        fs.writeFileSync(
+          path.join(releaseDir, releaseFilesDefaultNames.prometheusTargets),
+          JSON.stringify(targets, null, 2) + "\n"
+        );
+        break;
+      }
+
+      default: {
+        const candidates = [...new Set(dirsToCopy)].filter(dir =>
+          fs.readdirSync(dir).some(file => fileConfig.regex.test(file))
+        );
+        const sources = fileConfig.multiple
+          ? candidates
+          : [candidates.pop() || rootDir];
+        for (const fromDir of sources)
+          copyReleaseFile({
+            fileConfig: { ...fileConfig, id: fileId },
+            fromDir,
+            toDir: releaseDir
+          });
+        break;
+      }
     }
   }
 }

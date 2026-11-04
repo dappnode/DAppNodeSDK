@@ -112,7 +112,7 @@ function getUpstreamVersion({
   );
 }
 
-function getReleaseDirPath({
+export function getReleaseDirPath({
   rootDir,
   dnpName,
   version
