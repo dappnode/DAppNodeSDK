@@ -4,7 +4,8 @@
 export interface DnpPinMetadata {
   dnpName: string;
   version: string;
-  upstreamVersion: string | undefined | string[];
+  upstreamVersion: string | undefined;
+  [key: string]: string | undefined;
   commit: string | undefined;
   branch: string | undefined;
 }
