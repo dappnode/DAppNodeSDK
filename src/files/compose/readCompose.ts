@@ -24,7 +24,7 @@ export function readCompose(paths?: ComposePaths[]): Compose {
 
     return merge({}, ...composes);
   } catch (e) {
-    throw Error(`Error parsing docker-compose: ${e.message}`);
+    throw new Error(`Error parsing docker-compose: ${e.message}`, { cause: e });
   }
 }
 
@@ -37,8 +37,8 @@ function loadCompose(paths?: ComposePaths): Compose {
   const data = readFile(composePath);
   const compose = yaml.load(data);
 
-  if (!compose || typeof compose === "string")
+  if (!compose || typeof compose !== "object" || Array.isArray(compose))
     throw new Error(`Could not parse compose file: ${composePath}`);
 
-  return compose;
+  return compose as Compose;
 }

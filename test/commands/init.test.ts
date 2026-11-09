@@ -37,19 +37,19 @@ describe("Init simple package repository", function () {
 
   describe("File creation", () => {
     it("should create a Dockerfile", () => {
-      expect(testPathExists(dockerfileName)).to.be.true;
+      expect(testPathExists(dockerfileName)).to.equal(true);
     });
 
     it("should create a Dappnode manifest", () => {
-      expect(testPathExists(defaultManifestFileName)).to.be.true;
+      expect(testPathExists(defaultManifestFileName)).to.equal(true);
     });
 
     it("should create a docker-compose.yml", () => {
-      expect(testPathExists("docker-compose.yml")).to.be.true;
+      expect(testPathExists("docker-compose.yml")).to.equal(true);
     });
 
     it("should create a .gitignore", () => {
-      expect(testPathExists(".gitignore")).to.be.true;
+      expect(testPathExists(".gitignore")).to.equal(true);
     });
   });
 
@@ -64,8 +64,8 @@ describe("Init simple package repository", function () {
 
     it("checks manifest content for correct initialization", () => {
       const manifestContent = JSON.parse(readTestFile(defaultManifestFileName));
-      expect(manifestContent.name).to.exist;
-      expect(manifestContent.version).to.exist;
+      expect(manifestContent.name).to.not.equal(undefined);
+      expect(manifestContent.version).to.not.equal(undefined);
     });
 
     it("checks compose file for service configuration", () => {
@@ -90,7 +90,7 @@ describe("Variant initialization", function () {
   });
 
   it("should create variant directories", () => {
-    expect(testPathExists(defaultVariantsDirName)).to.be.true;
+    expect(testPathExists(defaultVariantsDirName)).to.equal(true);
   });
 
   it("checks for specific variant manifest", () => {
@@ -105,9 +105,9 @@ describe("Variant initialization", function () {
     const variantManifestContent = JSON.parse(
       readTestFile(variantManifestPath)
     );
-    expect(rootManifestContent.name).to.not.exist;
-    expect(variantManifestContent.name).to.exist;
-    expect(rootManifestContent.version).to.not.exist;
-    expect(variantManifestContent.version).to.exist;
+    expect(rootManifestContent.name).to.equal(undefined);
+    expect(variantManifestContent.name).to.not.equal(undefined);
+    expect(rootManifestContent.version).to.equal(undefined);
+    expect(variantManifestContent.version).to.not.equal(undefined);
   });
 });

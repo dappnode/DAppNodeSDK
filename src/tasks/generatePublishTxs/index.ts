@@ -4,8 +4,13 @@ import { getEthereumUrl } from "../../utils/getEthereumUrl.js";
 import { getPublishTxLink } from "../../utils/getLinks.js";
 import { addReleaseTx } from "../../utils/releaseRecord.js";
 import { defaultDir, YargsError } from "../../params.js";
-import { PackageToBuildProps, CliGlobalOptions, ListrContextPublish, TxData } from "../../types.js";
-import { ApmRepository } from "@dappnode/toolkit";
+import {
+  PackageToBuildProps,
+  CliGlobalOptions,
+  ListrContextPublish,
+  TxData
+} from "../../types.js";
+import { ApmRepository } from "../../providers/apm/ApmRepository.js";
 import registryAbi from "../../contracts/ApmRegistryAbi.json" with { type: "json" };
 import { semverToArray } from "../../utils/semverToArray.js";
 import repoAbi from "../../contracts/RepoAbi.json" with { type: "json" };
@@ -32,7 +37,7 @@ export function generatePublishTxs({
   developerAddress,
   ethProvider,
   verbosityOptions,
-  packagesToBuildProps,
+  packagesToBuildProps
 }: {
   developerAddress?: string;
   ethProvider: string;
@@ -51,7 +56,6 @@ export function generatePublishTxs({
           const contractAddress = "0x0000000000000000000000000000000000000000";
 
           for (const { manifest } of packagesToBuildProps) {
-
             const { name: dnpName, version } = manifest;
             const releaseMultiHash = ctx[dnpName]?.releaseMultiHash;
 
@@ -118,22 +122,22 @@ export async function buildTxData({
 
   return repository
     ? await getTxDataForExistingRepo({
-      repository,
-      version,
-      contractAddress,
-      contentURI,
-      releaseMultiHash,
-      dnpName: dnpName
-    })
+        repository,
+        version,
+        contractAddress,
+        contentURI,
+        releaseMultiHash,
+        dnpName: dnpName
+      })
     : await getTxDataForNewRepo({
-      dnpName: dnpName,
-      version,
-      contractAddress,
-      contentURI,
-      releaseMultiHash,
-      developerAddress,
-      ethereumUrl
-    });
+        dnpName: dnpName,
+        version,
+        contractAddress,
+        contentURI,
+        releaseMultiHash,
+        developerAddress,
+        ethereumUrl
+      });
 }
 
 async function getRepoContractIfExists({

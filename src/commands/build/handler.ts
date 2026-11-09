@@ -1,3 +1,4 @@
+import { getRendererOptions } from "../../utils/progress.js";
 import Listr from "listr";
 import { Architecture, architectures } from "@dappnode/types";
 import { buildAndUpload } from "../../tasks/buildAndUpload/index.js";
@@ -51,7 +52,9 @@ export async function buildHandler({
     for (const pkg of packagesToBuildProps) {
       if (!pkg.architectures.includes(architecture))
         throw Error(
-          `Architecture '${architecture}' is not supported by package ${pkg.manifest.name}. Supported: ${pkg.architectures.join(", ")}`
+          `Architecture '${architecture}' is not supported by package ${
+            pkg.manifest.name
+          }. Supported: ${pkg.architectures.join(", ")}`
         );
       pkg.architectures = [architecture];
     }
@@ -66,15 +69,17 @@ export async function buildHandler({
     skipUpload,
     composeFileName,
     requireGitData,
+    deleteOldPins,
     variantsDirPath,
     skipComposeValidation,
     stripComposeVersion,
     packagesToBuildProps
   };
 
-  const verbosityOptions: VerbosityOptions = {
-    renderer: verbose ? "verbose" : silent ? "silent" : "default"
-  };
+  const verbosityOptions: VerbosityOptions = getRendererOptions({
+    verbose,
+    silent
+  });
 
   const buildTasks = new Listr(buildAndUpload(buildOptions), verbosityOptions);
 
@@ -94,7 +99,9 @@ export function normalizeArchitecture(arch: string): Architecture {
   const normalized = archShorthands[arch] ?? arch;
   if (!architectures.includes(normalized as Architecture))
     throw Error(
-      `Invalid architecture '${arch}', allowed values: ${architectures.join(", ")} (or shorthands: ${Object.keys(archShorthands).join(", ")})`
+      `Invalid architecture '${arch}', allowed values: ${architectures.join(
+        ", "
+      )} (or shorthands: ${Object.keys(archShorthands).join(", ")})`
     );
   return normalized as Architecture;
 }

@@ -35,13 +35,12 @@ echo "hello"
     if (!error) throw Error("Command did not throw");
 
     expect(error.message).to.equal(
-      `Command failed: cat does-not-exist
-cat: does-not-exist: No such file or directory
-
-stdout: 
-stderr: cat: does-not-exist: No such file or directory
-`,
+      `Command failed (exit 1): cat does-not-exist
+cat: does-not-exist: No such file or directory`,
       "wrong error.message"
+    );
+    expect(error.summary).to.equal(
+      "Command failed (exit 1): cat does-not-exist"
     );
 
     expect({
@@ -55,6 +54,21 @@ stderr: cat: does-not-exist: No such file or directory
       stdout: "",
       stderr: "cat: does-not-exist: No such file or directory\n"
     });
+  });
+
+  it("keeps only the last lines of long output in the message", async () => {
+    const error = await shell([
+      "sh",
+      "-c",
+      "for i in $(seq 1 30); do echo line-$i >&2; done; exit 2"
+    ]).catch(e => e);
+    const lines = error.message.split("\n");
+    expect(lines[0]).to.match(/^Command failed \(exit 2\): sh -c /);
+    expect(lines[1]).to.equal("... (10 earlier lines omitted)");
+    expect(lines.slice(2)).to.deep.equal(
+      Array.from({ length: 20 }, (_, i) => `line-${i + 11}`)
+    );
+    expect(error.stderr.split("\n").filter(Boolean)).to.have.length(30);
   });
 
   after(() => {

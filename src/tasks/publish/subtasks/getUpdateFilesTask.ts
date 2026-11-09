@@ -1,4 +1,5 @@
 import path from "path";
+import { getReleaseDirPath } from "../../buildAndUpload/generatePackagesProps.js";
 import { ListrTask } from "listr";
 import { PackageToBuildProps, ListrContextPublish } from "../../../types.js";
 import {
@@ -14,7 +15,7 @@ export function getUpdateFilesTask({
   rootDir,
   variantsDirPath,
   composeFileName,
-  packagesToBuildProps,
+  packagesToBuildProps
 }: {
   rootDir: string;
   variantsDirPath: string;
@@ -25,7 +26,12 @@ export function getUpdateFilesTask({
     title: "Update compose and manifest files",
     task: async ctx => {
       for (const pkgProps of packagesToBuildProps) {
-        const { variant, manifest: { name }, composePaths, manifestPaths } = pkgProps;
+        const {
+          variant,
+          manifest: { name },
+          composePaths,
+          manifestPaths
+        } = pkgProps;
         const nextVersion = ctx[name].nextVersion;
 
         if (!nextVersion) {
@@ -40,7 +46,7 @@ export function getUpdateFilesTask({
           variant,
           variantsDirPath,
           dnpName: name,
-          nextVersion,
+          nextVersion
         });
 
         const newCompose = readCompose(composePaths);
@@ -49,6 +55,12 @@ export function getUpdateFilesTask({
         // Update variantsMap entry
         pkgProps.compose = newCompose;
         pkgProps.manifest = newManifest;
+        pkgProps.releaseDir = getReleaseDirPath({
+          rootDir,
+          dnpName: name,
+          version: nextVersion
+        });
+        ctx[name].releaseDir = pkgProps.releaseDir;
         pkgProps.images = getComposePackageImages(newCompose, newManifest);
       }
     }
@@ -62,7 +74,7 @@ export function updateVariantFiles({
   variant,
   variantsDirPath,
   dnpName,
-  nextVersion,
+  nextVersion
 }: {
   rootDir: string;
   composeFileName: string;
@@ -120,7 +132,7 @@ function updateComposeFileImages({
   const newCompose = updateComposeImageTags(compose, {
     name: dnpName,
     version: nextVersion
-  }, { editExternalImages: true });
+  });
 
   writeCompose(newCompose, {
     dir: composeDir,

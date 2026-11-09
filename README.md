@@ -30,6 +30,17 @@ Only generates the IPFS Hash to be able to install it without needing to create 
 $ dappnodesdk build
 ```
 
+### Root and variant files
+
+In a multi-variant package (`--all_variants` or `--variants`), each release is assembled from the package root and the variant directory (`package_variants/<variant>` by default):
+
+- `dappnode_package.json` and `docker-compose.yml` are deep-merged, with the variant overriding the root.
+- `setup-wizard.*` fields are merged by `id`, and `notifications.yaml` endpoints by `correlationId`. Within a matched entry, the variant's values override the root's, and an array from the variant (for example `enum`, `conditions` or `alerts`) replaces the root's array. The release contains exactly what was validated.
+- Single files (avatar, `prometheus-targets.*`, `disclaimer.md`, `getting-started.md`, `setup.schema.json`, `setup-target.json`, `setup-ui.json`, `signature.json`) are taken from the variant directory when it has one, and otherwise from the root.
+- Grafana dashboards (`*grafana-dashboard.json`) are collected from both the root and the variant.
+
+Schema validation coerces some values (for example `isBanner: "false"` becomes `false`). The release ships the coerced value, and the build prints a warning in the "Validate files" step so the source file can be fixed.
+
 ## Publish
 
 It does the build of the image and shows the necessary transaction to be able to publish the package. The first time will create the repository but the rest will be updates of it.
@@ -126,10 +137,20 @@ services:
 The dappnode SDK ueses the following internal dependencies to avoid code duplication across the `dappnodeSDK`, `DNP_DAPPMANAGER` and `sdk-publish` modules:
 
 - `@dappnode/types`
-- `@dappnode/toolkit`
 - `@dappnode/schemas`
 
 In order to have a better developing experience these modules lives inside the DNP_DAPPMANAGER repository
+
+## Development
+
+Use Node.js 22.13+ or Node.js 24+ (Node.js 20 reached end of life in April 2026), and install the exact locked dependencies with `yarn install --frozen-lockfile`.
+
+- `yarn lint` checks source and tests without changing files; `yarn lint:fix` applies automatic fixes.
+- `yarn build` checks and compiles the SDK.
+- `yarn test` runs deterministic regressions using temporary files, mocked Docker commands, and localhost HTTP servers. It does not need external credentials.
+- `yarn test:integration` runs the live Docker/IPFS/Ethereum tests and requires those services to be available.
+
+Terminal builds show numbered package/architecture stages and recent complete log lines; uploads display a separate waiting-for-pinning phase after transmission.
 
 ## License
 

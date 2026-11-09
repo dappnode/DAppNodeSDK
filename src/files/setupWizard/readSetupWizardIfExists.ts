@@ -1,17 +1,17 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import { merge } from "lodash-es";
+import { mergeReplacingArrays } from "../../utils/merge.js";
 import { defaultDir } from "../../params.js";
 import { readFile } from "../../utils/file.js";
 import { SetupWizard, releaseFiles } from "@dappnode/types";
 import { SetupWizardPaths } from "./types.js";
 
 /**
- * Reads one or multiple setup-wizard YAML files and merges them. Returns null if none exist.
+ * Reads one or multiple setup-wizard JSON or YAML files and merges them. Returns null if none exist.
  * @param {SetupWizardPaths[]} paths - Optional array of directory/file specs.
  * @returns {SetupWizard | null}
- * @throws {Error} Throws if parsing fails or non-YAML format is encountered.
+ * @throws {Error} Throws if parsing fails or unsupported format is encountered.
  */
 export function readSetupWizardIfExists(
   paths?: SetupWizardPaths[]
@@ -33,10 +33,10 @@ export function readSetupWizardIfExists(
 
     if (filePaths.length === 0) return null;
 
-    // Load and validate YAML-only files
+    // JSON is also valid YAML; preserve both supported source formats.
     const wizards = filePaths.map(fp => {
-      if (!/\.(yml|yaml)$/i.test(fp))
-        throw new Error("Only YAML format supported for setup-wizard: " + fp);
+      if (!/\.(json|yml|yaml)$/i.test(fp))
+        throw new Error("Expected JSON or YAML setup-wizard: " + fp);
       const data = readFile(fp);
       const parsed = yaml.load(data);
       if (!parsed || typeof parsed === "string")
@@ -45,9 +45,19 @@ export function readSetupWizardIfExists(
     });
 
     // Merge all specs
-    return merge({}, ...wizards);
+    const fields = new Map<string, SetupWizard["fields"][number]>();
+    for (const wizard of wizards) {
+      if (wizard.fields !== undefined && !Array.isArray(wizard.fields))
+        throw new Error("setup-wizard.fields must be an array");
+      for (const field of wizard.fields || [])
+        fields.set(field.id, mergeReplacingArrays(fields.get(field.id), field));
+    }
+    return {
+      ...mergeReplacingArrays<SetupWizard>(...wizards),
+      fields: [...fields.values()]
+    };
   } catch (e) {
-    throw new Error(`Error parsing setup-wizard: ${e.message}`);
+    throw new Error(`Error parsing setup-wizard: ${e.message}`, { cause: e });
   }
 }
 

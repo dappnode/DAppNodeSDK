@@ -1,13 +1,12 @@
-import sizeOf from "image-size";
+import { imageSize } from "image-size";
+import fs from "fs";
 import { CliError } from "../params.js";
 
 const maxSize = 300;
 const minSize = 200;
 
 export function verifyAvatar(avatarPath: string): void {
-  // image-size has conflicting types to its documentation
-  // @ts-ignore
-  const { width, height } = sizeOf(avatarPath);
+  const { width, height } = imageSize(fs.readFileSync(avatarPath));
 
   if (width !== height)
     throw new CliError(`Wrong avatar aspect ratio

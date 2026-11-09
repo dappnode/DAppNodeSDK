@@ -54,5 +54,8 @@ export function getDnpName(name: string): string {
   name = name.toLowerCase();
 
   // Append public domain
-  return name.endsWith(".eth") ? name : name + publicRepoDomain;
+  return name.endsWith(".eth")
+    ? name
+    : name.replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") +
+        publicRepoDomain;
 }

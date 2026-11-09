@@ -15,6 +15,7 @@ export interface IReleaseUploader {
     dirPath: string;
     metadata: PinataMetadata;
     onProgress?: (percent: number) => void;
+    onUploadComplete?: () => void;
   }): Promise<string>;
 
   /**

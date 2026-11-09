@@ -1,4 +1,5 @@
 import { got } from "got";
+import { uploadTimeout } from "../utils/uploadTimeout.js";
 import { normalizeIpfsProvider } from "./ipfsProvider.js";
 import { getFormDataFileUpload } from "../utils/formDataFileUpload.js";
 
@@ -12,7 +13,8 @@ import { getFormDataFileUpload } from "../utils/formDataFileUpload.js";
 export async function ipfsAddFromFs(
   dirOrFilePath: string,
   ipfsProvider: string,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  onUploadComplete?: () => void
 ): Promise<string> {
   // Create form and append all files recursively
   const form = getFormDataFileUpload(dirOrFilePath);
@@ -26,6 +28,8 @@ export async function ipfsAddFromFs(
     method: "POST",
     headers: form.getHeaders(),
     body: form,
+    timeout: uploadTimeout,
+    retry: { limit: 0 },
     http2: true
   }).on("uploadProgress", progress => {
     // Report upload progress, and throttle to one update per percent point
@@ -35,6 +39,7 @@ export async function ipfsAddFromFs(
       lastPercent = currentRoundPercent;
       if (onProgress) onProgress(progress.percent);
     }
+    if (progress.percent === 1) onUploadComplete?.();
   });
 
   // res.body = '{"Name":"dir/file","Hash":"Qm...","Size":"2203"}\n{"Name":"dir","Hash":"Qm...","Size":"24622"}\n'

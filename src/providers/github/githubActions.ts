@@ -4,7 +4,6 @@ import fs from "fs";
  * Returns Github Actions context.
  * From https://github.com/actions/toolkit/blob/c861dd8859fe5294289fcada363ce9bc71e9d260/packages/github/src/context.ts#L25
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getGithubContext() {
   return {
     // The name of the webhook event that triggered the workflow.

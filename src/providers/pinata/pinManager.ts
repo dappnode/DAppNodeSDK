@@ -51,24 +51,32 @@ export class PinataPinManager {
     // Fetch only "pinned" items by default
     searchParams["status"] = filters?.status || "pinned";
 
-    // Note: Results in rows will be limited to 1000, in case of needing more pagination should be implemented
     try {
-      const result: {
-        count: number;
-        rows: PinItem<PinKeyvalues>[];
-      } = await got
-        .get({
-          prefixUrl: this.pinataUrl,
-          url: "data/pinList",
-          headers: {
-            pinata_api_key: this.apiKey,
-            pinata_secret_api_key: this.secretApiKey
-          },
-          searchParams
-        })
-        .json();
+      const pins: PinItem<PinKeyvalues>[] = [];
+      while (true) {
+        const result: {
+          count: number;
+          rows: PinItem<PinKeyvalues>[];
+        } = await got
+          .get({
+            prefixUrl: this.pinataUrl,
+            url: "data/pinList",
+            headers: {
+              pinata_api_key: this.apiKey,
+              pinata_secret_api_key: this.secretApiKey
+            },
+            searchParams: {
+              ...searchParams,
+              pageLimit: "1000",
+              pageOffset: String(pins.length)
+            }
+          })
+          .json();
 
-      return result.rows;
+        pins.push(...result.rows);
+        if (result.rows.length === 0 || pins.length >= result.count)
+          return pins;
+      }
     } catch (e) {
       e.message = `Error on Pinata pinList: ${e.message}`;
       throw e;

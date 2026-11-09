@@ -4,7 +4,7 @@ import yaml from "js-yaml";
 import { defaultDir } from "../../params.js";
 import { readFile } from "../../utils/file.js";
 import { NotificationsConfig, releaseFiles } from "@dappnode/types";
-import { merge } from "lodash-es";
+import { mergeReplacingArrays } from "../../utils/merge.js";
 import { NotificationsPaths } from "./types.js";
 
 /**
@@ -45,9 +45,22 @@ export function readNotificationsIfExists(
     });
 
     // Merge all configurations
-    return merge({}, ...configs);
+    const merged = mergeReplacingArrays<Record<string, unknown>>(...configs);
+    for (const key of ["endpoints", "customEndpoints"] as const) {
+      const endpoints = new Map<
+        string,
+        NonNullable<NotificationsConfig[typeof key]>[number]
+      >();
+      for (const config of configs)
+        for (const endpoint of config[key] || []) {
+          const id = endpoint.correlationId || endpoint.name;
+          endpoints.set(id, mergeReplacingArrays(endpoints.get(id), endpoint));
+        }
+      if (endpoints.size > 0) merged[key] = [...endpoints.values()];
+    }
+    return merged as NotificationsConfig;
   } catch (e) {
-    throw new Error(`Error parsing notifications: ${e.message}`);
+    throw new Error(`Error parsing notifications: ${e.message}`, { cause: e });
   }
 }
 

@@ -12,12 +12,19 @@ export class ReleaseUploaderIpfsNode implements IReleaseUploader {
 
   async addFromFs({
     dirPath,
-    onProgress
+    onProgress,
+    onUploadComplete
   }: {
     dirPath: string;
     onProgress?: (percent: number) => void;
+    onUploadComplete?: () => void;
   }): Promise<string> {
-    return await ipfsAddFromFs(dirPath, this.ipfsProvider, onProgress);
+    return await ipfsAddFromFs(
+      dirPath,
+      this.ipfsProvider,
+      onProgress,
+      onUploadComplete
+    );
   }
 
   async testConnection(): Promise<void> {

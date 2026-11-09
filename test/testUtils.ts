@@ -1,11 +1,10 @@
 import fs from "fs";
-import rimraf from "rimraf";
 import { Compose, Manifest, getImageTag } from "@dappnode/types";
 import path from "path";
 
 export const testDir = "test_files";
 export function cleanTestDir(): void {
-  rimraf.sync(testDir);
+  fs.rmSync(testDir, { recursive: true, force: true });
   fs.mkdirSync(testDir, { recursive: true });
 }
 

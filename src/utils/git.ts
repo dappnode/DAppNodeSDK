@@ -20,9 +20,15 @@ export interface GitHead {
  * branch: "dapplion/prepare-build-action"
  * ```
  */
-export async function getGitHead(): Promise<GitHead> {
-  const commit = await shell("git rev-parse --verify HEAD");
-  const branch = await shell("git rev-parse --abbrev-ref HEAD");
+export async function getGitHead(dir?: string): Promise<GitHead> {
+  const commit = await shell(["git", "rev-parse", "--verify", "HEAD"], {
+    cwd: dir
+  });
+  let branch = await shell(["git", "rev-parse", "--abbrev-ref", "HEAD"], {
+    cwd: dir
+  });
+  if (branch === "HEAD" && process.env.GITHUB_REF?.startsWith("refs/heads/"))
+    branch = process.env.GITHUB_REF.slice("refs/heads/".length);
   return { commit, branch };
 }
 
@@ -32,9 +38,10 @@ export async function getGitHead(): Promise<GitHead> {
  */
 export async function getGitHeadIfAvailable(options?: {
   requireGitData?: boolean;
+  dir?: string;
 }): Promise<GitHead | undefined> {
   try {
-    return await getGitHead();
+    return await getGitHead(options?.dir);
   } catch (e) {
     if (options?.requireGitData) {
       e.message = `Error on getGitHead: ${e.message}`;
@@ -48,10 +55,14 @@ export async function getGitHeadIfAvailable(options?: {
 /**
  * @param branch dappnodebot/bump-upstream/go-ipfs@v0.7.0
  */
-export async function getLocalBranchExists(branch: string): Promise<boolean> {
+export async function getLocalBranchExists(
+  branch: string,
+  dir?: string
+): Promise<boolean> {
   try {
     const branchSha = await shell(
-      `git show-ref --verify -s refs/heads/${branch}`
+      ["git", "show-ref", "--verify", "-s", `refs/heads/${branch}`],
+      { cwd: dir }
     );
     return Boolean(branchSha);
   } catch (e) {

@@ -1,8 +1,12 @@
 import semver from "semver";
 
 export function isValidRelease(version: string): boolean {
+  // Commands receive tags as arguments, not shell source; this only rejects
+  // characters that can never form a branch name. `@` is used by real
+  // upstreams (e.g. n8n@2.46.6).
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._+/@-]*$/.test(version)) return false;
   // Nightly builds are not considered valid releases (not taken into account by semver)
-  if (version.includes("nightly")) return false;
+  if (version.toLowerCase().includes("nightly")) return false;
 
   if (semver.valid(version)) {
     const preReleases = semver.prerelease(version);
