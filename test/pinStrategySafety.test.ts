@@ -7,7 +7,10 @@ import Listr from "listr";
 import { fetchPinsWithBranchToDelete } from "../src/pinStrategy/index.js";
 import { PinataPinManager } from "../src/providers/pinata/pinManager.js";
 import { Github } from "../src/providers/github/Github.js";
-import { cleanPinsFromDeletedBranches } from "../src/commands/githubActions/build/cleanPinsFromDeletedBranches.js";
+import {
+  cleanPinsFromDeletedBranches,
+  getPackageManifestsToClean
+} from "../src/commands/githubActions/build/cleanPinsFromDeletedBranches.js";
 import { getDeleteOldPinsTask } from "../src/tasks/buildAndUpload/getDeleteOldPinsTask.js";
 import {
   executable,
@@ -162,5 +165,95 @@ describe("old pin cleanup on shallow CI checkouts", function () {
       clone
     );
     expect(pins.map(pin => pin.commit)).to.deep.equal(commits.slice(0, 2));
+  });
+});
+
+describe("branch pin cleanup for template packages", () => {
+  let dir: string;
+  const write = (rel: string, data: object) => {
+    fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+    fs.writeFileSync(path.join(dir, rel), JSON.stringify(data));
+  };
+  beforeEach(() => {
+    dir = temporaryDirectory();
+    // Same shape as DAppNodePackage-juno-generic: a named root, a variant that
+    // inherits the name and one that overrides it.
+    write("dappnode_package.json", { name: "juno.dnp.dappnode.eth" });
+    write("package_variants/mainnet/dappnode_package.json", {
+      name: "juno.dnp.dappnode.eth",
+      version: "0.1.0"
+    });
+    write("package_variants/sepolia/dappnode_package.json", {
+      name: "juno-sepolia.dnp.dappnode.eth",
+      version: "0.1.0"
+    });
+  });
+  afterEach(() => {
+    mock.restoreAll();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("finds variant package names even when the root manifest has a name", () => {
+    expect(
+      getPackageManifestsToClean({ dir }).map(manifest => manifest.name)
+    ).to.deep.equal(["juno.dnp.dappnode.eth", "juno-sepolia.dnp.dappnode.eth"]);
+  });
+
+  it("uses only variant names when the root manifest has none", () => {
+    write("dappnode_package.json", { upstreamRepo: "x/y" });
+    expect(
+      getPackageManifestsToClean({ dir }).map(manifest => manifest.name)
+    ).to.deep.equal(["juno.dnp.dappnode.eth", "juno-sepolia.dnp.dappnode.eth"]);
+  });
+
+  it("unpins deleted-branch pins of every variant package", async () => {
+    const original = {
+      key: process.env.PINATA_API_KEY,
+      secret: process.env.PINATA_SECRET_API_KEY
+    };
+    process.env.PINATA_API_KEY = "fake";
+    process.env.PINATA_SECRET_API_KEY = "fake";
+    mock.method(Github, "fromLocal", () => ({
+      listBranches: async () => [{ name: "main" }],
+      branchExists: async (branch: string) => branch === "main"
+    }));
+    const queried: string[] = [];
+    mock.method(
+      PinataPinManager.prototype,
+      "pinList",
+      async (filters: { keyvalues: { dnpName: { value: string } } }) => {
+        const dnpName = filters.keyvalues.dnpName.value;
+        queried.push(dnpName);
+        return [
+          {
+            ipfs_pin_hash: `${dnpName}-deleted`,
+            metadata: {
+              keyvalues: { dnpName, branch: "deleted", commit: "1111111" }
+            }
+          }
+        ];
+      }
+    );
+    const removed: string[] = [];
+    mock.method(PinataPinManager.prototype, "unpin", async (hash: string) => {
+      removed.push(hash);
+    });
+    try {
+      await cleanPinsFromDeletedBranches({ dir });
+    } finally {
+      if (original.key === undefined) delete process.env.PINATA_API_KEY;
+      else process.env.PINATA_API_KEY = original.key;
+      if (original.secret === undefined)
+        delete process.env.PINATA_SECRET_API_KEY;
+      else process.env.PINATA_SECRET_API_KEY = original.secret;
+    }
+    expect(queried).to.deep.equal([
+      "juno.dnp.dappnode.eth",
+      "juno-sepolia.dnp.dappnode.eth"
+    ]);
+    expect(removed).to.deep.equal([
+      "juno.dnp.dappnode.eth-deleted",
+      "juno-sepolia.dnp.dappnode.eth-deleted"
+    ]);
   });
 });

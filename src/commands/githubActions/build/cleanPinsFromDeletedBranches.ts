@@ -1,4 +1,6 @@
+import fs from "fs";
 import path from "path";
+import { Manifest } from "@dappnode/types";
 import { defaultVariantsDirName } from "../../../params.js";
 import { getAllVariantsInPath } from "../../../files/variants/getAllPackageVariants.js";
 import { fetchPinsGroupedByBranch } from "../../../pinStrategy/index.js";
@@ -17,19 +19,7 @@ export async function cleanPinsFromDeletedBranches({
   dir: string;
   variantsDirName?: string;
 }): Promise<void> {
-  // Read manifest from disk to get package name
-  const { manifest } = readManifest([{ dir }]);
-
-  const variantsPath = path.join(dir, variantsDirName);
-  const manifests = manifest.name
-    ? [manifest]
-    : getAllVariantsInPath(variantsPath).map(
-        variant =>
-          readManifest([{ dir }, { dir: path.join(variantsPath, variant) }])
-            .manifest
-      );
-  if (manifests.some(item => !item.name))
-    throw new Error("Cannot clean pins without a package name");
+  const manifests = getPackageManifestsToClean({ dir, variantsDirName });
 
   // Connect to Github Octokit REST API to know existing branches
   const github = Github.fromLocal(dir);
@@ -64,4 +54,43 @@ export async function cleanPinsFromDeletedBranches({
       }
     }
   }
+}
+
+/**
+ * Every package name this repository can pin, deduplicated:
+ * - the root manifest's name, used when building without variant flags, and
+ * - each variant's merged name (root + variant), which may inherit or override the root name,
+ *   e.g. juno.dnp.dappnode.eth (mainnet) and juno-sepolia.dnp.dappnode.eth (sepolia).
+ * Variants are discovered whether or not the root manifest has a name.
+ */
+export function getPackageManifestsToClean({
+  dir,
+  variantsDirName = defaultVariantsDirName
+}: {
+  dir: string;
+  variantsDirName?: string;
+}): Manifest[] {
+  const byName = new Map<string, Manifest>();
+  const { manifest: rootManifest } = readManifest([{ dir }]);
+  if (rootManifest.name) byName.set(rootManifest.name, rootManifest);
+
+  const variantsPath = path.join(dir, variantsDirName);
+  const variants = fs.existsSync(variantsPath)
+    ? getAllVariantsInPath(variantsPath)
+    : [];
+  for (const variant of variants) {
+    const { manifest } = readManifest([
+      { dir },
+      { dir: path.join(variantsPath, variant) }
+    ]);
+    if (!manifest.name)
+      throw new Error(
+        `Cannot clean pins without a package name for variant ${variant}`
+      );
+    if (!byName.has(manifest.name)) byName.set(manifest.name, manifest);
+  }
+
+  if (byName.size === 0)
+    throw new Error("Cannot clean pins without a package name");
+  return [...byName.values()];
 }
