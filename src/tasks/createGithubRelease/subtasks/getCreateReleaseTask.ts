@@ -1,4 +1,5 @@
 import { releaseFiles } from "@dappnode/types";
+import { escapeRegExp } from "lodash-es";
 import path from "path";
 import fs from "fs";
 import { Github } from "../../../providers/github/Github.js";
@@ -55,7 +56,8 @@ export function getCreateReleaseTask({
         releaseDetailsMap,
         github,
         releaseId,
-        isMultiVariant
+        isMultiVariant,
+        composeFileName
       });
     }
   };
@@ -86,16 +88,36 @@ function prepareGithubReleaseFiles({
   }
 }
 
+/**
+ * Release assets: image archives, the content hash, every defined release file
+ * (except the avatar, uploaded once separately) and the configured Compose file,
+ * whose name (e.g. docker-compose.yaml) need not match the default compose pattern.
+ */
+export function getReleaseAssetPattern(composeFileName?: string): RegExp {
+  return new RegExp(
+    [
+      "\\.txz$",
+      `^${escapeRegExp(contentHashFileName)}$`,
+      ...(composeFileName ? [`^${escapeRegExp(composeFileName)}$`] : []),
+      ...Object.entries(releaseFiles)
+        .filter(([id]) => id !== "avatar")
+        .map(([, spec]) => spec.regex.source)
+    ].join("|")
+  );
+}
+
 async function uploadAssets({
   releaseDetailsMap,
   github,
   releaseId,
-  isMultiVariant
+  isMultiVariant,
+  composeFileName
 }: {
   releaseDetailsMap: ReleaseDetailsMap;
   github: Github;
   releaseId: number;
   isMultiVariant: boolean;
+  composeFileName?: string;
 }) {
   const releaseEntries = Object.entries(releaseDetailsMap);
   const [, { releaseDir: firstReleaseDir }] = releaseEntries[0];
@@ -108,16 +130,7 @@ async function uploadAssets({
     await github.uploadReleaseAssets({
       releaseId,
       assetsDir: releaseDir,
-      // Use the shared release-file definitions so optional artifacts are retained.
-      matchPattern: new RegExp(
-        [
-          "\\.txz$",
-          `^${contentHashFileName}$`,
-          ...Object.entries(releaseFiles)
-            .filter(([id]) => id !== "avatar")
-            .map(([, spec]) => spec.regex.source)
-        ].join("|")
-      ),
+      matchPattern: getReleaseAssetPattern(composeFileName),
       fileNamePrefix: isMultiVariant ? `${shortDnpName}_` : ""
     });
   }

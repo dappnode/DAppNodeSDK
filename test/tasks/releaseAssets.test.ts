@@ -2,7 +2,10 @@ import fs from "fs";
 import path from "path";
 import { expect } from "chai";
 import Listr from "listr";
-import { getCreateReleaseTask } from "../../src/tasks/createGithubRelease/subtasks/getCreateReleaseTask.js";
+import {
+  getCreateReleaseTask,
+  getReleaseAssetPattern
+} from "../../src/tasks/createGithubRelease/subtasks/getCreateReleaseTask.js";
 import { Github } from "../../src/providers/github/Github.js";
 import type { ListrContextPublish } from "../../src/types.js";
 import { temporaryDirectory } from "../helpers/fixtures.js";
@@ -75,6 +78,46 @@ describe("complete GitHub releases", () => {
       "image.txz",
       "avatar.png"
     ]);
+  });
+
+  it("uploads a Compose file with a custom --compose-file-name", async () => {
+    fs.renameSync(
+      path.join(dir, "docker-compose.yml"),
+      path.join(dir, "docker-compose.yaml")
+    );
+    const uploaded: string[] = [];
+    const github = {
+      deleteReleaseAndAssets: async () => {},
+      createRelease: async () => 1,
+      uploadReleaseAssets: async ({
+        matchPattern
+      }: {
+        matchPattern: RegExp;
+      }) => {
+        uploaded.push(
+          ...fs.readdirSync(dir).filter(file => matchPattern.test(file))
+        );
+      }
+    } as unknown as Github;
+    await new Listr(
+      [
+        getCreateReleaseTask({
+          github,
+          isMultiVariant: false,
+          composeFileName: "docker-compose.yaml"
+        })
+      ],
+      { renderer: "silent" }
+    ).run(ctx);
+    expect(uploaded).to.include("docker-compose.yaml");
+  });
+
+  it("matches the configured Compose file name exactly", () => {
+    const pattern = getReleaseAssetPattern("production.yml");
+    expect(pattern.test("production.yml")).to.equal(true);
+    expect(pattern.test("productionXyml")).to.equal(false);
+    expect(getReleaseAssetPattern().test("production.yml")).to.equal(false);
+    expect(getReleaseAssetPattern().test("docker-compose.yml")).to.equal(true);
   });
 
   it("fails the release when asset upload fails", async () => {
