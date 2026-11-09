@@ -194,7 +194,14 @@ export function checkPackageSpec({
     const composePath = path.join(dir, composeFileName);
     if (fs.existsSync(composePath)) {
       const text = fs.readFileSync(composePath, "utf8");
-      const interpolated = [...new Set(text.match(/\$\{[^}]*\}/g) || [])];
+      // Compose consumes dollar signs in escaped pairs before interpolating.
+      const interpolated = [
+        ...new Set(
+          [...text.matchAll(/(\$+)\{[^}]*\}/g)]
+            .filter(match => match[1].length % 2 === 1)
+            .map(match => match[0].slice(match[1].length - 1))
+        )
+      ];
       if (interpolated.length > 0)
         add(
           "SPEC-C04",
