@@ -151,6 +151,57 @@ describe("package spec checks", function () {
     ).to.include('version "v1.0.0"');
   });
 
+  it("accepts escaped compose variables without reporting interpolation", () => {
+    write("dappnode_package.json", {
+      name: "demo.dnp.dappnode.eth",
+      version: "0.1.0"
+    });
+    write(
+      "docker-compose.yml",
+      yaml.dump({
+        services: {
+          app: {
+            image: "alpine:3.21",
+            environment: {
+              HEALTH_PORT: "$${PORT:-9090}",
+              HEALTH_TOKEN: "$${ANON_KEY}",
+              LITERAL: "$$$${LITERAL}"
+            }
+          }
+        }
+      })
+    );
+    expect(check(dir)).to.deep.equal([]);
+  });
+
+  it("reports real interpolation after escaped dollar pairs", () => {
+    write("dappnode_package.json", {
+      name: "demo.dnp.dappnode.eth",
+      version: "0.1.0"
+    });
+    write(
+      "docker-compose.yml",
+      yaml.dump({
+        services: {
+          app: {
+            image: "alpine:3.21",
+            environment: {
+              PORT: "${PORT:-80}",
+              PREFIXED: "$$${TOKEN}",
+              REPEATED: "${PORT:-80}",
+              ESCAPED: "$${SAFE}"
+            }
+          }
+        }
+      })
+    );
+    const findings = check(dir).filter(finding => finding.rule === "SPEC-C04");
+    expect(findings).to.have.length(1);
+    expect(findings[0].message).to.equal(
+      "Uses environment interpolation ${PORT:-80}, ${TOKEN}; write the values out."
+    );
+  });
+
   it("accepts digest-pinned args, shorter variant upstream lists and real avatars", () => {
     write("dappnode_package.json", {
       upstream: [
