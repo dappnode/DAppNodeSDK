@@ -1,4 +1,6 @@
 import { getRendererOptions } from "../../utils/progress.js";
+import { SpecFinding } from "../../spec/rules.js";
+import { printSpecReport } from "../../spec/report.js";
 import Listr from "listr";
 import { Architecture, architectures } from "@dappnode/types";
 import { buildAndUpload } from "../../tasks/buildAndUpload/index.js";
@@ -60,6 +62,7 @@ export async function buildHandler({
     }
   }
 
+  const specFindings: SpecFinding[] = [];
   const buildOptions: BuildAndUploadOptions = {
     dir,
     contentProvider,
@@ -73,7 +76,8 @@ export async function buildHandler({
     variantsDirPath,
     skipComposeValidation,
     stripComposeVersion,
-    packagesToBuildProps
+    packagesToBuildProps,
+    specFindings
   };
 
   const verbosityOptions: VerbosityOptions = getRendererOptions({
@@ -83,7 +87,11 @@ export async function buildHandler({
 
   const buildTasks = new Listr(buildAndUpload(buildOptions), verbosityOptions);
 
-  return await buildTasks.run();
+  try {
+    return await buildTasks.run();
+  } finally {
+    printSpecReport(specFindings);
+  }
 }
 
 const archShorthands: Record<string, Architecture> = {

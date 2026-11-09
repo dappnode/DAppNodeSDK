@@ -1,4 +1,6 @@
 import { getRendererOptions } from "../../utils/progress.js";
+import { SpecFinding } from "../../spec/rules.js";
+import { printSpecReport } from "../../spec/report.js";
 import Listr from "listr";
 import path from "path";
 import {
@@ -69,6 +71,7 @@ export async function publishHandler({
 
   const isMultiVariant = !!allVariants || !!variants;
 
+  const specFindings: SpecFinding[] = [];
   const publishTasks = new Listr(
     publish({
       releaseType,
@@ -86,6 +89,7 @@ export async function publishHandler({
       variantsDirPath,
       skipComposeValidation,
       stripComposeVersion,
+      specFindings,
       packagesToBuildProps: getPackagesToBuildProps({
         allVariants: Boolean(allVariants),
         commaSeparatedVariants: variants,
@@ -98,5 +102,9 @@ export async function publishHandler({
     verbosityOptions
   );
 
-  return await publishTasks.run();
+  try {
+    return await publishTasks.run();
+  } finally {
+    printSpecReport(specFindings);
+  }
 }
