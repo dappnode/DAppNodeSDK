@@ -17,7 +17,7 @@ The SDK checks every package against these rules during `build` and `publish`.
 
 ## Rules
 
-Counts are from all 113 non-archived `DAppNodePackage*` and `DNP_*` repositories in November 2026; "active" means a push in the last 12 months (87 repositories). 65 active repositories currently have at least one finding, mostly SPEC-M03.
+Counts are from all 113 non-archived `DAppNodePackage*` and `DNP_*` repositories in November 2026; "active" means a push in the last 12 months (87 repositories). 58 active repositories currently have at least one finding, mostly SPEC-M03; 37 repositories are already clean.
 
 ### Manifest
 
