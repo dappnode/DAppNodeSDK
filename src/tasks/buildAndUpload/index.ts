@@ -29,7 +29,8 @@ export function buildAndUpload({
   variantsDirPath = defaultVariantsDirName,
   packagesToBuildProps,
   skipComposeValidation,
-  stripComposeVersion
+  stripComposeVersion,
+  specFindings
 }: BuildAndUploadOptions): ListrTask<ListrContextBuild>[] {
   const buildTimeout = parseTimeout(userTimeout);
 
@@ -43,7 +44,11 @@ export function buildAndUpload({
     getFileValidationTask({
       packagesToBuildProps,
       skipComposeValidation,
-      stripComposeVersion
+      stripComposeVersion,
+      rootDir: dir,
+      variantsDirPath,
+      composeFileName,
+      specFindings
     }),
     getVerifyConnectionTask({ releaseUploader, skipUpload }),
     getReleaseDirCreationTask({ packagesToBuildProps }),

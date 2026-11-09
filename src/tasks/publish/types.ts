@@ -1,3 +1,4 @@
+import { SpecFinding } from "../../spec/rules.js";
 import { VerbosityOptions } from "../../commands/build/types.js";
 import { UploadTo } from "../../releaseUploader/index.js";
 import { PackageToBuildProps, ReleaseType } from "../../types.js";
@@ -20,4 +21,5 @@ export interface PublishOptions {
   isMultiVariant: boolean;
   skipComposeValidation?: boolean;
   stripComposeVersion?: boolean;
+  specFindings?: SpecFinding[];
 }

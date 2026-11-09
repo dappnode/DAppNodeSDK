@@ -13,35 +13,83 @@ import {
 import { cloneDeep } from "lodash-es";
 import { CliError } from "../../params.js";
 import { shell, ShellError } from "../../utils/shell.js";
+import {
+  checkPackageSpec,
+  getPackageRepoSlug
+} from "../../spec/checkPackageSpec.js";
+import { SpecFinding } from "../../spec/rules.js";
+import { formatSpecFindings, getSpecMode } from "../../spec/report.js";
 
 export function getFileValidationTask({
   packagesToBuildProps,
   skipComposeValidation,
-  stripComposeVersion
+  stripComposeVersion,
+  rootDir,
+  variantsDirPath,
+  composeFileName,
+  specFindings = []
 }: {
   packagesToBuildProps: PackageToBuildProps[];
   skipComposeValidation?: boolean;
   stripComposeVersion?: boolean;
+  rootDir?: string;
+  variantsDirPath?: string;
+  composeFileName?: string;
+  /** Collects package spec violations; the command prints them after the run. */
+  specFindings?: SpecFinding[];
 }): ListrTask<ListrContextBuild> {
   return {
     title: `Validate files`,
     task: async (ctx, task) => {
+      const mode = getSpecMode();
+      // Spec checks read the source files, so they run before validation can mutate anything.
+      if (mode !== "off" && rootDir) {
+        onStatus("Checking package spec");
+        specFindings.push(
+          ...checkPackageSpec({
+            rootDir,
+            variantsDirPath,
+            composeFileName,
+            packagesToBuildProps,
+            skipComposeValidation,
+            repoSlug: await getPackageRepoSlug(rootDir)
+          })
+        );
+      }
+
       const coercions = await validatePackageFiles({
         packagesToBuildProps,
         skipComposeValidation,
         stripComposeVersion,
-        onStatus: message => {
-          task.output = message;
-        }
+        onStatus
       });
-      // Release files are written from the validated objects, so coerced values are
-      // what ships. Keep the warning in the title so it stays visible after completion.
-      if (coercions.length > 0)
-        task.title = `Validate files (warning: schema validation changed ${
-          coercions.length
-        } value(s), fix the source files: ${coercions.slice(0, 5).join("; ")}${
-          coercions.length > 5 ? "; ..." : ""
-        })`;
+      // Release files are written from the validated objects, so coerced values are what ships.
+      if (mode !== "off")
+        specFindings.push(
+          ...coercions.map(coercion => ({
+            rule: "SPEC-F03" as const,
+            message: `Schema validation changed ${coercion}; write the value with the schema type.`
+          }))
+        );
+
+      if (specFindings.length > 0) {
+        if (mode === "error")
+          throw new CliError(
+            [
+              `${specFindings.length} package spec violation(s) (DAPPNODE_SDK_SPEC=error):`,
+              ...formatSpecFindings(specFindings, { base: rootDir }).map(
+                line => `  ${line}`
+              )
+            ].join("\n")
+          );
+        task.title = `Validate files (${specFindings.length} spec ${
+          specFindings.length === 1 ? "warning" : "warnings"
+        }, listed at the end)`;
+      }
+
+      function onStatus(message: string): void {
+        task.output = message;
+      }
     }
   };
 }

@@ -25,7 +25,8 @@ export function publish({
   packagesToBuildProps,
   isMultiVariant,
   skipComposeValidation,
-  stripComposeVersion
+  stripComposeVersion,
+  specFindings
 }: PublishOptions): ListrTask<ListrContextPublish>[] {
   return [
     getVerifyEthConnectionTask({ ethProvider }),
@@ -52,7 +53,8 @@ export function publish({
         packagesToBuildProps,
         variantsDirPath,
         skipComposeValidation,
-        stripComposeVersion
+        stripComposeVersion,
+        specFindings
       },
       verbosityOptions
     }),
