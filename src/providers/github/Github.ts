@@ -444,6 +444,24 @@ export class Github {
   }
 
   /**
+   * Returns PRs in any state (open or closed) where head branch equals `branch`
+   * Only branches and PRs originating from the same repo
+   */
+  async getPrsFromBranch(branch: string) {
+    const prsResponse = await this.octokit.rest.pulls.list({
+      owner: this.owner,
+      repo: this.repo,
+      state: "all",
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28"
+      },
+      head: `${this.owner}:${branch}`
+    });
+
+    return prsResponse.data;
+  }
+
+  /**
    * Returns all branches; cleanup must never infer deletion from a partial page.
    * @returns branch = {
    *   name: "octocat-patch-1"

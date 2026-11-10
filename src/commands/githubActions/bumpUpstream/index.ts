@@ -15,6 +15,7 @@ import { GitSettings, GithubSettings, UpstreamSettings } from "./types.js";
 import { printSettings, getInitialSettings } from "./settings/index.js";
 import { ManifestFormat } from "../../../files/manifest/types.js";
 import {
+  branchNeedsPr,
   closeOldPrs,
   getBumpPrBody,
   getGithubSettings,
@@ -107,7 +108,17 @@ async function gaBumpUpstreamHandler({
   const githubSettings = await getGithubSettings(dir, upstreamSettings);
   const { branchName, repo } = githubSettings;
   if (!(await isBranchNew({ branchName, repo, dir }))) {
-    // We assume the PR was already opened
+    if (await branchNeedsPr({ repo, branchName })) {
+      // An earlier run pushed the branch but could not open its PR
+      console.log(`Branch ${branchName} exists without a PR, opening it`);
+      await attemptToOpenPR({
+        commitMsg: createCommitMessage(upstreamSettings),
+        upstreamSettings,
+        githubSettings
+      });
+      return;
+    }
+    // The PR was already opened
     console.log(`Branch ${branchName} already exists`);
     return;
   }

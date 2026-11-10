@@ -1,3 +1,4 @@
+export * from "./branchNeedsPr.js";
 export * from "./closeOldPrs.js";
 export * from "./getBumpPrBody.js";
 export * from "./getGithubSettings.js";
