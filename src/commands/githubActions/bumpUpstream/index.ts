@@ -116,7 +116,7 @@ async function gaBumpUpstreamHandler({
     }
     // An earlier run pushed the branch but could not open its PR. Recover it,
     // then close old PRs and build from it like a freshly pushed branch.
-    console.log(`Branch ${branchName} exists without a PR, opening it`);
+    console.log(`Branch ${branchName} exists without a PR, recovering it`);
     await recoverBumpBranch({
       dir,
       branchName,
