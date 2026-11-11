@@ -7,6 +7,9 @@ import { recoverBumpBranch } from "../../../src/commands/githubActions/bumpUpstr
 
 const branchName = "dappnodebot/bump-upstream/org/repo@1.2.0";
 
+/** Temp dir of the test in progress, removed after it. */
+let root: string;
+
 function git(cwd: string, ...args: string[]): string {
   return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
 }
@@ -16,7 +19,7 @@ function git(cwd: string, ...args: string[]): string {
  * fresh clone of it on the default branch, as a CI checkout would be.
  */
 function setupRepos(): { clone: string; bumpCommit: string } {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "recover-bump-"));
+  root = fs.mkdtempSync(path.join(os.tmpdir(), "recover-bump-"));
   const origin = path.join(root, "origin.git");
   const work = path.join(root, "work");
   const clone = path.join(root, "clone");
@@ -39,6 +42,8 @@ function setupRepos(): { clone: string; bumpCommit: string } {
 
 describe("command / gaBumpUpstream / recoverBumpBranch", function () {
   this.timeout(30 * 1000);
+
+  afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
 
   it("checks out the pushed branch and opens its PR", async () => {
     const { clone, bumpCommit } = setupRepos();
