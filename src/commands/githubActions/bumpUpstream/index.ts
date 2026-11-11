@@ -19,7 +19,8 @@ import {
   closeOldPrs,
   getBumpPrBody,
   getGithubSettings,
-  isBranchNew
+  isBranchNew,
+  recoverBumpBranch
 } from "./github/index.js";
 import path from "path";
 import { getAllVariantsInPath } from "../../../files/variants/getAllPackageVariants.js";
@@ -108,43 +109,49 @@ async function gaBumpUpstreamHandler({
   const githubSettings = await getGithubSettings(dir, upstreamSettings);
   const { branchName, repo } = githubSettings;
   if (!(await isBranchNew({ branchName, repo, dir }))) {
-    if (await branchNeedsPr({ repo, branchName })) {
-      // An earlier run pushed the branch but could not open its PR
-      console.log(`Branch ${branchName} exists without a PR, opening it`);
-      await attemptToOpenPR({
-        commitMsg: createCommitMessage(upstreamSettings),
-        upstreamSettings,
-        githubSettings
-      });
+    if (!(await branchNeedsPr({ repo, branchName }))) {
+      // The PR was already opened
+      console.log(`Branch ${branchName} already exists`);
       return;
     }
-    // The PR was already opened
-    console.log(`Branch ${branchName} already exists`);
-    return;
+    // An earlier run pushed the branch but could not open its PR. Recover it,
+    // then close old PRs and build from it like a freshly pushed branch.
+    console.log(`Branch ${branchName} exists without a PR, opening it`);
+    await recoverBumpBranch({
+      dir,
+      branchName,
+      skipCommit: Boolean(process.env.SKIP_COMMIT),
+      openPr: () =>
+        attemptToOpenPR({
+          commitMsg: createCommitMessage(upstreamSettings),
+          upstreamSettings,
+          githubSettings
+        })
+    });
+  } else {
+    updateComposeUpstreamVersions(dir, compose, upstreamSettings);
+
+    updateManifestUpstreamVersion({
+      manifest,
+      manifestFormat,
+      upstreamSettings,
+      dir
+    });
+
+    await updateManifestPkgVersion({
+      dir,
+      ethProvider,
+      allVariants: useVariants,
+      variantsDir
+    });
+
+    await prepareAndCommitChanges({
+      dir,
+      gitSettings,
+      upstreamSettings,
+      githubSettings
+    });
   }
-
-  updateComposeUpstreamVersions(dir, compose, upstreamSettings);
-
-  updateManifestUpstreamVersion({
-    manifest,
-    manifestFormat,
-    upstreamSettings,
-    dir
-  });
-
-  await updateManifestPkgVersion({
-    dir,
-    ethProvider,
-    allVariants: useVariants,
-    variantsDir
-  });
-
-  await prepareAndCommitChanges({
-    dir,
-    gitSettings,
-    upstreamSettings,
-    githubSettings
-  });
 
   try {
     await closeOldPrs(repo, branchName);

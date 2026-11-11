@@ -5,3 +5,4 @@ export * from "./getGithubSettings.js";
 export * from "./isBranchNew.js";
 export * from "./isValidRelease.js";
 export * from "./pickLatestRelease.js";
+export * from "./recoverBumpBranch.js";
