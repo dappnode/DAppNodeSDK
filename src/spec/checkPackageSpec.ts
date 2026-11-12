@@ -8,6 +8,10 @@ import { defaultComposeFileName, defaultVariantsDirName } from "../params.js";
 import { parseGithubRepoSlug } from "../files/manifest/getRepoSlugFromManifest.js";
 import { shell } from "../utils/shell.js";
 import { SpecFinding, SpecRuleId } from "./rules.js";
+import {
+  checkManifestReferences,
+  manifestFieldIsDefined
+} from "./manifestReferences.js";
 
 const manifestFileName = "dappnode_package.json";
 const packageNamePattern =
@@ -384,27 +388,43 @@ export function checkPackageSpec({
         );
         continue;
       }
-      // "<version>@sha256:<digest>" pins the same version by digest.
-      const matchesVersion = (value: string) =>
-        value === String(upstream.version) ||
-        value.startsWith(`${upstream.version}@sha256:`);
-      if (upstream.version !== undefined && ![...values].some(matchesVersion)) {
-        const argDir = composeOrigin(c =>
-          Object.values(c.services || {}).some(
-            def =>
-              isObject(def?.build) &&
-              hasBuildArg(def.build, upstream.arg as string)
-          )
+      // A digest suffix pins the same version only when its SHA-256 is complete.
+      const matchesVersion = (value: string) => {
+        const prefix = `${upstream.version}@sha256:`;
+        return (
+          value === String(upstream.version) ||
+          (value.startsWith(prefix) &&
+            /^[a-f0-9]{64}$/i.test(value.slice(prefix.length)))
         );
-        const variant = where(upstreamDir) || where(argDir);
-        add(
-          "SPEC-M05",
-          `Upstream ${upstream.repo}${variant} has version "${
-            upstream.version
-          }" but build arg ${upstream.arg} is "${[...values].join('", "')}".`,
-          manifestFileIn(upstreamDir)
-        );
-      }
+      };
+      if (upstream.version !== undefined)
+        for (const [service, value] of values) {
+          if (matchesVersion(value)) continue;
+          const argDir = composeOrigin(c => {
+            const build = c.services?.[service]?.build;
+            return isObject(build) && hasBuildArg(build, upstream.arg);
+          });
+          const variant = where(upstreamDir) || where(argDir);
+          add(
+            "SPEC-M05",
+            `Upstream ${upstream.repo}${variant} has version "${upstream.version}" but services.${service}.build.args.${upstream.arg} is "${value}"; every service using this arg must match (optionally with @sha256:<64 hex digits>).`,
+            composeFileIn(argDir)
+          );
+        }
+    }
+
+    for (const finding of checkManifestReferences(
+      sourceManifest as Manifest,
+      compose
+    )) {
+      const dir = manifestOrigin(m => manifestFieldIsDefined(m, finding.field));
+      add(
+        finding.rule,
+        `${finding.message}${
+          pkg.variant ? ` Checked for variant "${pkg.variant}".` : ""
+        }`,
+        manifestFileIn(dir)
+      );
     }
 
     const services = Object.keys(compose.services || {});
@@ -600,25 +620,29 @@ function mergeByPosition<T>(parts: T[]): T {
   return parts.reduce((acc, part) => merge(acc, part) as T, {} as T);
 }
 
-/** Build arg name -> values across all services; list-style "KEY=value" args included. */
-function collectBuildArgs(compose: Compose): Map<string, Set<string>> {
-  const args = new Map<string, Set<string>>();
-  const put = (key: string, value: unknown) => {
-    if (!args.has(key)) args.set(key, new Set());
+/** Build arg name -> service -> value; list-style "KEY=value" args included. */
+function collectBuildArgs(compose: Compose): Map<string, Map<string, string>> {
+  const args = new Map<string, Map<string, string>>();
+  const put = (service: string, key: string, value: unknown) => {
+    if (!args.has(key)) args.set(key, new Map());
     args
       .get(key)
-      ?.add(value === undefined || value === null ? "" : String(value));
+      ?.set(
+        service,
+        value === undefined || value === null ? "" : String(value)
+      );
   };
-  for (const def of Object.values(compose.services || {})) {
+  for (const [service, def] of Object.entries(compose.services || {})) {
     if (!def || typeof def.build !== "object" || !def.build.args) continue;
     const buildArgs: unknown = def.build.args;
     if (Array.isArray(buildArgs))
       for (const item of buildArgs) {
         const [key, ...rest] = String(item).split("=");
-        put(key, rest.join("="));
+        put(service, key, rest.join("="));
       }
     else if (isObject(buildArgs))
-      for (const [key, value] of Object.entries(buildArgs)) put(key, value);
+      for (const [key, value] of Object.entries(buildArgs))
+        put(service, key, value);
   }
   return args;
 }

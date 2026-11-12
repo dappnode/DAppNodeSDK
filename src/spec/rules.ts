@@ -25,11 +25,11 @@ export const specRules = {
   },
   "SPEC-M05": {
     title: "Upstream version equals the build arg value",
-    why: "Manifest and compose must describe the same upstream version; tools otherwise have to translate between tag formats."
+    why: "Every service using an upstream arg must match its declared version, optionally pinned by a complete SHA-256 digest."
   },
   "SPEC-M06": {
     title: "Variant upstream[] matches the root order",
-    why: "Root and variant manifests are merged by array position, so a reordered or shortened variant upstream[] mixes entries."
+    why: "Root and variant manifests are merged by array position; reordered entries mix upstreams, while shorter lists inherit the root tail."
   },
   "SPEC-M07": {
     title: "Only known manifest fields",
@@ -42,6 +42,14 @@ export const specRules = {
   "SPEC-M09": {
     title: "Exposable services exist in compose",
     why: "An exposable entry for a service that is not in the compose cannot be exposed."
+  },
+  "SPEC-M10": {
+    title: "Manifest service references exist in compose",
+    why: "mainService, chain, backup and global-env service references must resolve after root and variant files are merged."
+  },
+  "SPEC-M11": {
+    title: "Global environment names match the runtime catalogue",
+    why: "DAPPMANAGER prefixes short global-env names at install; unknown or already-prefixed names cannot be injected."
   },
   // Templates (multi-variant packages)
   "SPEC-T01": {

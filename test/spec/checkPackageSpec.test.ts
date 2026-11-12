@@ -222,7 +222,7 @@ describe("package spec checks", function () {
             build: {
               context: ".",
               args: {
-                UPSTREAM_VERSION: "1.0.0@sha256:abc",
+                UPSTREAM_VERSION: `1.0.0@sha256:${"a".repeat(64)}`,
                 STAKER_SCRIPTS_VERSION: "v0.1.2"
               }
             },
@@ -287,6 +287,202 @@ describe("package spec checks", function () {
     expect(rulesOf(check(dir))).to.deep.equal(["SPEC-M06"]);
   });
 
+  it("checks every service using an upstream arg, including digest pins", () => {
+    write("dappnode_package.json", {
+      name: "demo.dnp.dappnode.eth",
+      version: "0.1.0",
+      upstream: [{ repo: "acme/app", version: "1.2.3", arg: "APP_VERSION" }]
+    });
+    for (const [value, valid] of [
+      ["1.2.3", true],
+      [`1.2.3@sha256:${"a".repeat(64)}`, true],
+      ["1.2.2", false],
+      ["1.2.3@sha256:abc", false],
+      [`1.2.3@sha256:${"g".repeat(64)}`, false],
+      ["", false]
+    ] as const) {
+      write(
+        "docker-compose.yml",
+        yaml.dump({
+          services: {
+            app: { build: { context: ".", args: { APP_VERSION: "1.2.3" } } },
+            worker: { build: { context: ".", args: { APP_VERSION: value } } }
+          }
+        })
+      );
+      const findings = check(dir).filter(f => f.rule === "SPEC-M05");
+      expect(findings, value).to.have.length(valid ? 0 : 1);
+      if (!valid) {
+        expect(findings[0].message).to.include(
+          "services.worker.build.args.APP_VERSION"
+        );
+        expect(findings[0].file).to.equal(path.join(dir, "docker-compose.yml"));
+      }
+    }
+  });
+
+  it("attributes conflicting upstream values to the variant compose", () => {
+    write("dappnode_package.json", {
+      upstream: [{ repo: "acme/app", version: "1.2.3", arg: "APP_VERSION" }]
+    });
+    write(
+      "docker-compose.yml",
+      yaml.dump({
+        services: {
+          app: { build: { context: ".", args: { APP_VERSION: "1.2.3" } } }
+        }
+      })
+    );
+    write("package_variants/main/dappnode_package.json", {
+      name: "demo.dnp.dappnode.eth",
+      version: "0.1.0"
+    });
+    write(
+      "package_variants/main/docker-compose.yml",
+      yaml.dump({
+        services: {
+          worker: { build: { context: ".", args: { APP_VERSION: "1.2.2" } } }
+        }
+      })
+    );
+    const findings = check(dir).filter(f => f.rule === "SPEC-M05");
+    expect(findings).to.have.length(1);
+    expect(findings[0].file).to.equal(
+      path.join(dir, "package_variants/main/docker-compose.yml")
+    );
+    expect(findings[0].message).to.include('variant "main"');
+  });
+
+  it("validates all explicit manifest service references", () => {
+    write("dappnode_package.json", {
+      name: "demo.dnp.dappnode.eth",
+      version: "0.1.0",
+      mainService: "missing-main",
+      chain: { driver: "ethereum", serviceName: "missing-chain" },
+      backup: [{ name: "data", path: "/data", service: "missing-backup" }],
+      globalEnvs: [{ envs: ["PUBLIC_IP"], services: ["app", "missing-global"] }]
+    });
+    write(
+      "docker-compose.yml",
+      yaml.dump({ services: { app: { image: "alpine:3.21" } } })
+    );
+    const findings = check(dir).filter(f => f.rule === "SPEC-M10");
+    expect(findings).to.have.length(4);
+    for (const field of [
+      "mainService",
+      "chain.serviceName",
+      "backup[0].service",
+      "globalEnvs[0].services[1]"
+    ])
+      expect(findings.some(f => f.message.startsWith(field))).to.equal(true);
+    expect(
+      findings.every(f => f.file === path.join(dir, "dappnode_package.json"))
+    ).to.equal(true);
+  });
+
+  it("accepts valid references, implicit service defaults and runtime global-env names", () => {
+    write("dappnode_package.json", {
+      name: "demo.dnp.dappnode.eth",
+      version: "0.1.0",
+      mainService: "app",
+      chain: { driver: "ethereum", serviceName: "app" },
+      backup: [
+        { name: "data", path: "/data" },
+        { name: "config", path: "/config", service: "app" }
+      ],
+      globalEnvs: [
+        {
+          envs: ["PUBLIC_IP", "ENVS_ACTIVE", "EXECUTION_CLIENT_MAINNET"],
+          services: ["app"]
+        }
+      ]
+    });
+    write(
+      "docker-compose.yml",
+      yaml.dump({ services: { app: { image: "alpine:3.21" } } })
+    );
+    expect(check(dir)).to.deep.equal([]);
+    write("dappnode_package.json", {
+      name: "demo.dnp.dappnode.eth",
+      version: "0.1.0",
+      chain: "ethereum",
+      globalEnvs: { all: true }
+    });
+    expect(check(dir)).to.deep.equal([]);
+  });
+
+  it("rejects prefixed and unknown global-env names with actionable paths", () => {
+    write("dappnode_package.json", {
+      name: "demo.dnp.dappnode.eth",
+      version: "0.1.0",
+      globalEnvs: [
+        {
+          envs: ["_DAPPNODE_GLOBAL_PUBLIC_IP", "PUBLIC_IPP", "ACTIVE"],
+          services: ["app"]
+        }
+      ]
+    });
+    write(
+      "docker-compose.yml",
+      yaml.dump({ services: { app: { image: "alpine:3.21" } } })
+    );
+    const findings = check(dir).filter(f => f.rule === "SPEC-M11");
+    expect(findings).to.have.length(3);
+    expect(findings[0].message)
+      .to.include("globalEnvs[0].envs[0]")
+      .and.include('Use "PUBLIC_IP"');
+    expect(findings[1].message).to.include("PUBLIC_IPP");
+    expect(findings[2].message).to.include('"ACTIVE"');
+  });
+
+  it("checks references after merging and attributes individual array overrides", () => {
+    write("dappnode_package.json", {
+      mainService: "worker",
+      globalEnvs: [{ envs: ["PUBLIC_IP", "HOSTNAME"], services: ["app"] }]
+    });
+    write(
+      "docker-compose.yml",
+      yaml.dump({ services: { app: { image: "alpine:3.21" } } })
+    );
+    for (const variant of ["good", "bad"]) {
+      write(`package_variants/${variant}/dappnode_package.json`, {
+        name: `demo-${variant}.dnp.dappnode.eth`,
+        version: "0.1.0",
+        ...(variant === "bad"
+          ? { globalEnvs: [{ envs: ["PUBLIC_IPP"], services: ["missing"] }] }
+          : {})
+      });
+      write(
+        `package_variants/${variant}/docker-compose.yml`,
+        yaml.dump({
+          services:
+            variant === "good"
+              ? { worker: { image: "alpine:3.21" } }
+              : { app: {} }
+        })
+      );
+    }
+    const findings = check(dir).filter(
+      f => f.rule === "SPEC-M10" || f.rule === "SPEC-M11"
+    );
+    expect(findings).to.have.length(3);
+    expect(findings.every(f => f.message.includes('variant "bad"'))).to.equal(
+      true
+    );
+    expect(
+      findings.find(f => f.message.startsWith("mainService"))?.file
+    ).to.equal(path.join(dir, "dappnode_package.json"));
+    expect(
+      findings
+        .filter(f => f.message.startsWith("globalEnvs"))
+        .every(
+          f =>
+            f.file ===
+            path.join(dir, "package_variants/bad/dappnode_package.json")
+        )
+    ).to.equal(true);
+  });
+
   it("lets core packages keep container_name, which the installer relies on", () => {
     write("dappnode_package.json", {
       name: "bind.dnp.dappnode.eth",
@@ -333,6 +529,10 @@ describe("package spec checks", function () {
 
   it("collects findings in warn mode and fails validation only in error mode", async () => {
     await initHandler({ dir, yes: true, force: true });
+    const manifestPath = path.join(dir, "dappnode_package.json");
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    manifest.mainService = "missing";
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
     const compose = yaml.load(
       fs.readFileSync(path.join(dir, "docker-compose.yml"), "utf8")
     ) as {
@@ -377,10 +577,11 @@ describe("package spec checks", function () {
     expect(getSpecMode({})).to.equal("warn");
     const warn = await run(undefined);
     expect(warn.error).to.equal(null);
-    expect(rulesOf(warn.specFindings)).to.deep.equal(["SPEC-C02"]);
+    expect(rulesOf(warn.specFindings)).to.deep.equal(["SPEC-C02", "SPEC-M10"]);
     const strict = await run("error");
     expect(strict.error?.message)
       .to.include("SPEC-C02")
+      .and.include("SPEC-M10")
       .and.include("DAPPNODE_SDK_SPEC=error");
     const off = await run("off");
     expect(off.error).to.equal(null);

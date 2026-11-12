@@ -1,8 +1,4 @@
-import {
-  ComposeNetworks,
-  ComposeService,
-  ComposeVolumes
-} from "@dappnode/types";
+import { Compose, ComposeService } from "@dappnode/types";
 
 export type OptionalComposeServiceProperties = Partial<
   Pick<ComposeService, "image" | "build">
@@ -10,11 +6,8 @@ export type OptionalComposeServiceProperties = Partial<
 export type ComposeServiceFlexible = Omit<ComposeService, "image" | "build"> &
   OptionalComposeServiceProperties;
 
-export interface FlexibleCompose {
-  version: string;
+export interface FlexibleCompose extends Omit<Compose, "services"> {
   services: {
     [dnpName: string]: ComposeServiceFlexible;
   };
-  networks?: ComposeNetworks;
-  volumes?: ComposeVolumes;
 }
