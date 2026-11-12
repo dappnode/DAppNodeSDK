@@ -25,7 +25,7 @@ const upstream: ResolvedUpstream = {
 const compose =
   "# header\nservices:\n  app:\n    build:\n      args: {VERSION: \"v1.0.0\", STATIC: keep} # comment\n  worker:\n    build:\n      args:\n        - 'VERSION=v1.0.0' # worker\n        - OTHER=keep\n";
 
-describe("bump targeted edits and planning", () => {
+describe("bump / edits", () => {
   it("preserves mapping/list args, quotes, comments, flow styles, CRLF and unrelated bytes", () => {
     for (const before of [compose, compose.replace(/\n/g, "\r\n")]) {
       const after = editCompose(before, new Map([["VERSION", "v2.0.0"]]));

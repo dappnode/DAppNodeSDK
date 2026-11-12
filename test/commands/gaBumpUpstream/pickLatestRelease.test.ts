@@ -58,12 +58,37 @@ describe("command / gaBumpUpstream / pickLatestRelease", () => {
   });
 
   it("filters tag families with tagPattern", () => {
-    expect(
-      pickLatestRelease(
-        [release("op-deployer/v0.9.0-allowlist"), release("op-node/v1.20.1")],
-        "^op-node/v(.+)$"
-      )
-    ).to.equal("1.20.1");
+    const releases = [
+      release("op-deployer/v0.9.0-allowlist"),
+      release("op-node/v1.20.1")
+    ];
+    expect(pickLatestRelease(releases, "^op-node/v(.+)$")).to.equal("1.20.1");
+    // `-allowlist` is not a pre-release word, so without a pattern the other
+    // tag family wins
+    expect(pickLatestRelease(releases)).to.equal(
+      "op-deployer/v0.9.0-allowlist"
+    );
+  });
+
+  it("skips nightly tags even when tagPattern matches", () => {
+    expect(pickLatestRelease([release("nightly/v1.0.0")], "(v.*)$")).to.equal(
+      null
+    );
+  });
+
+  it("accepts non-semver tags and skips tags with invalid characters", () => {
+    const warn = console.warn;
+    console.warn = () => undefined;
+    try {
+      expect(pickLatestRelease([release("release_2026")])).to.equal(
+        "release_2026"
+      );
+      expect(
+        pickLatestRelease([release("bad tag"), release("stable")])
+      ).to.equal("stable");
+    } finally {
+      console.warn = warn;
+    }
   });
 
   describe("selectLatestRelease", () => {

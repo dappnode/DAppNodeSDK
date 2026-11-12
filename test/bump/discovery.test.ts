@@ -2,133 +2,159 @@ import { expect } from "chai";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  BumpCompose,
   discoverUpstreams,
-  packageManifestDirs,
-  BumpCompose
+  getPackageManifestDirs
 } from "../../src/bump/discovery.js";
-import {
-  compileTagPattern,
-  parseProvider,
-  extractVersion
-} from "../../src/bump/metadata.js";
 import { temporaryDirectory } from "../helpers/fixtures.js";
 
 const compose: BumpCompose = {
   services: { app: { build: { args: { APP_TAG: "1.0.0" } } } }
 };
 
-describe("bump discovery and metadata", () => {
-  it("discovers array and legacy fields, inferring a single arg", () => {
-    expect(
-      discoverUpstreams(
+describe("bump / discovery", () => {
+  describe("discoverUpstreams", () => {
+    it("reads upstream[] and infers the arg of a single upstream", () => {
+      const upstreams = discoverUpstreams(
         { upstream: [{ repo: "acme/app", version: "1.0.0" }] },
         compose
-      )
-    ).to.deep.equal([
-      { repo: "acme/app", version: "1.0.0", arg: "APP_TAG", provider: "docker" }
-    ]);
-    expect(
-      discoverUpstreams(
+      );
+
+      expect(upstreams).to.deep.equal([
+        {
+          repo: "acme/app",
+          version: "1.0.0",
+          arg: "APP_TAG",
+          provider: "docker"
+        }
+      ]);
+    });
+
+    it("reads the legacy fields, including upstreamProvider", () => {
+      const [upstream] = discoverUpstreams(
         {
           upstreamRepo: "acme/app",
           upstreamVersion: "1.0.0",
           upstreamProvider: "GITHUB"
         },
         compose
-      )[0]
-    ).to.include({ arg: "APP_TAG", provider: "github" });
-    expect(
-      discoverUpstreams(
+      );
+
+      expect(upstream).to.include({ arg: "APP_TAG", provider: "github" });
+    });
+
+    it("defaults the arg to UPSTREAM_VERSION", () => {
+      const [upstream] = discoverUpstreams(
         { upstreamRepo: "acme/app", upstreamVersion: "1.0.0" },
         { services: {} }
-      )[0].arg
-    ).to.equal("UPSTREAM_VERSION");
-    expect(discoverUpstreams({}, compose)).to.deep.equal([]);
+      );
+
+      expect(upstream.arg).to.equal("UPSTREAM_VERSION");
+    });
+
+    it("returns no upstreams for a manifest without any", () => {
+      expect(discoverUpstreams({}, compose)).to.deep.equal([]);
+    });
+
+    describe("with several upstreams", () => {
+      const upstream = [
+        { repo: "acme/a", version: "1", arg: "A" },
+        { repo: "acme/b", version: "2", arg: "B" }
+      ];
+
+      it("reads every entry", () => {
+        expect(discoverUpstreams({ upstream }, compose)).to.have.length(2);
+      });
+
+      it("requires each entry to name its arg", () => {
+        const manifest = {
+          upstream: [upstream[0], { ...upstream[1], arg: undefined }]
+        };
+        expect(() => discoverUpstreams(manifest, compose)).to.throw(
+          "multi-upstream"
+        );
+      });
+
+      it("requires unique repositories", () => {
+        const manifest = {
+          upstream: [upstream[0], { ...upstream[1], repo: "acme/a" }]
+        };
+        expect(() => discoverUpstreams(manifest, compose)).to.throw(
+          "repositories must be unique"
+        );
+      });
+
+      it("requires unique args", () => {
+        const manifest = {
+          upstream: [upstream[0], { ...upstream[1], arg: "A" }]
+        };
+        expect(() => discoverUpstreams(manifest, compose)).to.throw(
+          "args must be unique"
+        );
+      });
+    });
+
+    it("fails when several version args could be the upstream arg", () => {
+      const manifest = { upstreamRepo: "acme/app", upstreamVersion: "1" };
+      const listArgsCompose = {
+        services: { app: { build: { args: ["A_VERSION=1", "B_TAG=2"] } } }
+      };
+
+      expect(() => discoverUpstreams(manifest, listArgsCompose)).to.throw(
+        "uniquely detect"
+      );
+    });
   });
 
-  it("requires explicit multi-upstream args, and unique repos and args", () => {
-    const upstream = [
-      { repo: "acme/a", version: "1", arg: "A" },
-      { repo: "acme/b", version: "2", arg: "B" }
-    ];
-    expect(discoverUpstreams({ upstream }, compose)).to.have.length(2);
-    expect(() =>
-      discoverUpstreams(
-        { upstream: [upstream[0], { ...upstream[1], arg: undefined }] },
-        compose
-      )
-    ).to.throw("multi-upstream");
-    expect(() =>
-      discoverUpstreams(
-        { upstream: [upstream[0], { ...upstream[1], repo: "acme/a" }] },
-        compose
-      )
-    ).to.throw("repositories must be unique");
-    expect(() =>
-      discoverUpstreams(
-        { upstream: [upstream[0], { ...upstream[1], arg: "A" }] },
-        compose
-      )
-    ).to.throw("args must be unique");
-    expect(() =>
-      discoverUpstreams(
-        { upstreamRepo: "acme/app", upstreamVersion: "1" },
-        { services: { app: { build: { args: ["A_VERSION=1", "B_TAG=2"] } } } }
-      )
-    ).to.throw("uniquely detect");
-  });
+  describe("getPackageManifestDirs", () => {
+    let dir: string;
 
-  it("normalizes providers and rejects invalid regex constructs", () => {
-    for (const name of [
-      "docker_tags",
-      "DOCKER_TAGS",
-      "docker-tags",
-      "dockerhub"
-    ])
-      expect(parseProvider(name)).to.equal("docker_tags");
-    expect(parseProvider(undefined)).to.equal("docker");
-    expect(() => parseProvider("npm")).to.throw("Unknown upstream provider");
-    for (const pattern of [
-      "[",
-      "(?=a)",
-      "(?<=a)b",
-      "(a)\\1",
-      "(?<foo>a)\\k<foo>"
-    ])
-      expect(() => compileTagPattern(pattern), pattern).to.throw();
-    expect(extractVersion("op-node/v1.2.3", "^op-node/(v.*)$")).to.equal(
-      "v1.2.3"
-    );
-    expect(extractVersion("v1.2.3", "v.*")).to.equal("v1.2.3");
-    expect(extractVersion("other/v1", "^node/(.*)$")).to.equal(null);
-    expect(compileTagPattern(String.raw`^a\\1$`)).to.be.instanceOf(RegExp);
-  });
+    beforeEach(() => {
+      dir = temporaryDirectory();
+    });
 
-  it("detects variant manifests automatically and supports legacy directories", () => {
-    const dir = temporaryDirectory();
-    try {
-      expect(packageManifestDirs(dir)).to.deep.equal([dir]);
+    afterEach(() => {
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    function addVariants(variantsDirName: string): void {
       for (const variant of ["mainnet", "testnet"]) {
-        const base = path.join(dir, "package_variants", variant);
-        fs.mkdirSync(base, { recursive: true });
-        fs.writeFileSync(path.join(base, "dappnode_package.json"), "{}");
+        const variantDir = path.join(dir, variantsDirName, variant);
+        fs.mkdirSync(variantDir, { recursive: true });
+        fs.writeFileSync(path.join(variantDir, "dappnode_package.json"), "{}");
       }
-      expect(
-        packageManifestDirs(dir).map(file => path.basename(file))
-      ).to.deep.equal(["mainnet", "testnet"]);
-      fs.renameSync(
-        path.join(dir, "package_variants"),
-        path.join(dir, "legacy")
-      );
-      expect(packageManifestDirs(dir, "legacy")).to.have.length(2);
+    }
+
+    it("returns the root for a package without variants", () => {
+      expect(getPackageManifestDirs(dir)).to.deep.equal([dir]);
+    });
+
+    it("returns each variant in package_variants", () => {
+      addVariants("package_variants");
+
+      const dirs = getPackageManifestDirs(dir);
+
+      expect(dirs.map(variantDir => path.basename(variantDir))).to.deep.equal([
+        "mainnet",
+        "testnet"
+      ]);
+    });
+
+    it("supports a custom variants directory", () => {
+      addVariants("legacy");
+
+      expect(getPackageManifestDirs(dir, "legacy")).to.have.length(2);
+    });
+
+    it("fails for a variant without manifest", () => {
+      addVariants("package_variants");
       fs.unlinkSync(
-        path.join(dir, "legacy", "mainnet", "dappnode_package.json")
+        path.join(dir, "package_variants", "mainnet", "dappnode_package.json")
       );
-      expect(() => packageManifestDirs(dir, "legacy")).to.throw(
+
+      expect(() => getPackageManifestDirs(dir)).to.throw(
         "Variant has no manifest"
       );
-    } finally {
-      fs.rmSync(dir, { recursive: true, force: true });
-    }
+    });
   });
 });

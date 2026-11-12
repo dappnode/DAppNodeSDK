@@ -1,8 +1,3 @@
-import {
-  BumpUpstreamItem,
-  compileTagPattern,
-  parseProvider
-} from "../bump/metadata.js";
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
@@ -12,6 +7,12 @@ import { PackageToBuildProps } from "../types.js";
 import { defaultComposeFileName, defaultVariantsDirName } from "../params.js";
 import { parseGithubRepoSlug } from "../files/manifest/getRepoSlugFromManifest.js";
 import { shell } from "../utils/shell.js";
+import { BumpManifest } from "../bump/discovery.js";
+import {
+  BumpUpstreamItem,
+  compileTagPattern,
+  parseProvider
+} from "../bump/metadata.js";
 import { SpecFinding, SpecRuleId } from "./rules.js";
 import {
   checkManifestReferences,
@@ -348,23 +349,18 @@ export function checkPackageSpec({
     const sourceManifest = mergedSourceManifest(pkg) || manifest;
     const buildArgs = collectBuildArgs(compose);
     const usesUpstreamArray = Array.isArray(sourceManifest.upstream);
-    const upstreams: (Partial<BumpUpstreamItem> & { repo: string })[] =
-      usesUpstreamArray
-        ? sourceManifest.upstream || []
-        : sourceManifest.upstreamRepo
-        ? [
-            {
-              repo: sourceManifest.upstreamRepo,
-              version: sourceManifest.upstreamVersion,
-              arg: sourceManifest.upstreamArg,
-              provider: (
-                sourceManifest as Partial<Manifest> & {
-                  upstreamProvider?: string;
-                }
-              ).upstreamProvider
-            }
-          ]
-        : [];
+    const upstreams: Partial<BumpUpstreamItem>[] = usesUpstreamArray
+      ? sourceManifest.upstream || []
+      : sourceManifest.upstreamRepo
+      ? [
+          {
+            repo: sourceManifest.upstreamRepo,
+            version: sourceManifest.upstreamVersion,
+            arg: sourceManifest.upstreamArg,
+            provider: (sourceManifest as BumpManifest).upstreamProvider
+          }
+        ]
+      : [];
     const upstreamDir = manifestOrigin(m =>
       usesUpstreamArray
         ? "upstream" in m
@@ -372,20 +368,12 @@ export function checkPackageSpec({
     );
     for (const item of upstreams) {
       if (!item?.repo) continue;
-      for (const validate of [
-        () => parseProvider(item.provider),
-        () => compileTagPattern(item.tagPattern)
-      ]) {
-        try {
-          validate();
-        } catch (error) {
-          add(
-            "SPEC-M12",
-            `Upstream ${item.repo}${where(upstreamDir)}: ${error.message}`,
-            manifestFileIn(upstreamDir)
-          );
-        }
-      }
+      for (const error of getBumpMetadataErrors(item))
+        add(
+          "SPEC-M12",
+          `Upstream ${item.repo}${where(upstreamDir)}: ${error}`,
+          manifestFileIn(upstreamDir)
+        );
       // The legacy fields default the arg to UPSTREAM_VERSION; check the version against it too.
       const upstream = { ...item, arg: item.arg || "UPSTREAM_VERSION" };
       if (!item.arg) {
@@ -646,6 +634,24 @@ function mergeByPosition<T>(parts: T[]): T {
 }
 
 /** Build arg name -> service -> value; list-style "KEY=value" args included. */
+/**
+ * Errors in the optional upstream bump metadata (`provider`, `tagPattern`).
+ */
+function getBumpMetadataErrors(item: Partial<BumpUpstreamItem>): string[] {
+  const errors: string[] = [];
+  try {
+    parseProvider(item.provider);
+  } catch (e) {
+    errors.push(e.message);
+  }
+  try {
+    compileTagPattern(item.tagPattern);
+  } catch (e) {
+    errors.push(e.message);
+  }
+  return errors;
+}
+
 function collectBuildArgs(compose: Compose): Map<string, Map<string, string>> {
   const args = new Map<string, Map<string, string>>();
   const put = (service: string, key: string, value: unknown) => {

@@ -1,11 +1,12 @@
-import fs from "node:fs";
-import path from "node:path";
+import fs from "fs";
+import path from "path";
 import yaml from "js-yaml";
-import { Manifest } from "@dappnode/types";
+import { defaultComposeFileName, defaultManifestFileName } from "../params.js";
 import {
   BumpCompose,
+  BumpManifest,
   discoverUpstreams,
-  packageManifestDirs
+  getPackageManifestDirs
 } from "./discovery.js";
 import {
   editCompose,
@@ -19,34 +20,46 @@ import {
   resolveUpstream
 } from "./resolve.js";
 
+/**
+ * Resolves the target version of each upstream of the package in `dir`.
+ * Upstreams without a qualifying release are left out.
+ */
 export async function resolvePackage(
   dir: string,
   dependencies: ResolutionDependencies,
   explicitVersion?: string
 ): Promise<ResolvedUpstream[]> {
   const manifest = JSON.parse(
-    fs.readFileSync(path.join(dir, "dappnode_package.json"), "utf8")
-  ) as Manifest;
+    fs.readFileSync(path.join(dir, defaultManifestFileName), "utf8")
+  ) as BumpManifest;
   const compose = yaml.load(
-    fs.readFileSync(path.join(dir, "docker-compose.yml"), "utf8")
+    fs.readFileSync(path.join(dir, defaultComposeFileName), "utf8")
   ) as BumpCompose;
+
   const upstreams = discoverUpstreams(manifest, compose);
   if (explicitVersion !== undefined && upstreams.length !== 1)
     throw Error("An explicit version requires exactly one upstream");
-  const results: ResolvedUpstream[] = [];
+
+  const resolvedUpstreams: ResolvedUpstream[] = [];
   for (const upstream of upstreams) {
-    const result = await resolveUpstream(
+    const resolved = await resolveUpstream(
       dir,
       compose,
       upstream,
       dependencies,
       explicitVersion
     );
-    if (result) results.push(result);
+    if (resolved) resolvedUpstreams.push(resolved);
   }
-  return results;
+
+  return resolvedUpstreams;
 }
 
+/**
+ * Plans the file edits of a bump: the upstream versions in the root manifest,
+ * the next package version in each package manifest (root or variants), and
+ * the compose build args. Returns no edits when every upstream is current.
+ */
 export async function planPackageEdits({
   dir,
   upstreams,
@@ -58,53 +71,86 @@ export async function planPackageEdits({
   nextPackageVersion: (dir: string) => Promise<string>;
   variantsDir?: string;
 }): Promise<PlannedFile[]> {
-  const changed = upstreams.filter(item => item.targetVersion !== item.version);
-  if (!changed.length) return [];
-  const manifestFile = path.join(dir, "dappnode_package.json");
-  const manifestText = fs.readFileSync(manifestFile, "utf8");
-  const manifest = JSON.parse(manifestText) as Manifest;
-  const changes: ValueChange[] = changed.map(item => {
-    const index = manifest.upstream?.findIndex(
-      upstream => upstream.repo === item.repo
-    );
-    if (manifest.upstream && (index === undefined || index < 0))
-      throw Error(`Upstream '${item.repo}' is absent from root manifest`);
-    return {
-      path: manifest.upstream
-        ? ["upstream", index!, "version"]
-        : ["upstreamVersion"],
-      value: item.targetVersion
-    };
-  });
+  const changedUpstreams = upstreams.filter(
+    upstream => upstream.targetVersion !== upstream.version
+  );
+  if (changedUpstreams.length === 0) return [];
+
+  const manifestPath = path.join(dir, defaultManifestFileName);
+  const manifestText = fs.readFileSync(manifestPath, "utf8");
+  const rootChanges = getUpstreamVersionChanges(
+    JSON.parse(manifestText),
+    changedUpstreams
+  );
   const plan: PlannedFile[] = [];
-  for (const packageDir of packageManifestDirs(dir, variantsDir)) {
-    const file = path.join(packageDir, "dappnode_package.json");
-    const value = await nextPackageVersion(packageDir);
-    if (path.resolve(file) === path.resolve(manifestFile))
-      changes.push({ path: ["version"], value });
-    else {
-      const before = fs.readFileSync(file, "utf8");
-      plan.push({
-        path: file,
-        before,
-        after: editManifest(before, [{ path: ["version"], value }])
-      });
+
+  for (const packageDir of getPackageManifestDirs(dir, variantsDir)) {
+    const versionChange = {
+      path: ["version"],
+      value: await nextPackageVersion(packageDir)
+    };
+    if (path.resolve(packageDir) === path.resolve(dir)) {
+      rootChanges.push(versionChange);
+    } else {
+      const variantManifestPath = path.join(
+        packageDir,
+        defaultManifestFileName
+      );
+      plan.push(
+        planFileEdit(variantManifestPath, text =>
+          editManifest(text, [versionChange])
+        )
+      );
     }
   }
+
   plan.push({
-    path: manifestFile,
+    path: manifestPath,
     before: manifestText,
-    after: editManifest(manifestText, changes)
+    after: editManifest(manifestText, rootChanges)
   });
-  const composeFile = path.join(dir, "docker-compose.yml");
-  const before = fs.readFileSync(composeFile, "utf8");
-  plan.push({
-    path: composeFile,
-    before,
-    after: editCompose(
-      before,
-      new Map(changed.map(item => [item.arg, item.composeValue]))
+
+  const composeUpdates = new Map(
+    changedUpstreams.map(upstream => [upstream.arg, upstream.composeValue])
+  );
+  plan.push(
+    planFileEdit(path.join(dir, defaultComposeFileName), text =>
+      editCompose(text, composeUpdates)
     )
-  });
+  );
+
   return plan;
+}
+
+/**
+ * Manifest changes that set each upstream's new version, in `upstream[]` or in
+ * the legacy `upstreamVersion` field.
+ */
+function getUpstreamVersionChanges(
+  manifest: BumpManifest,
+  upstreams: ResolvedUpstream[]
+): ValueChange[] {
+  return upstreams.map(upstream => {
+    if (!manifest.upstream)
+      return { path: ["upstreamVersion"], value: upstream.targetVersion };
+
+    const index = manifest.upstream.findIndex(
+      ({ repo }) => repo === upstream.repo
+    );
+    if (index < 0)
+      throw Error(`Upstream '${upstream.repo}' is absent from root manifest`);
+
+    return {
+      path: ["upstream", index, "version"],
+      value: upstream.targetVersion
+    };
+  });
+}
+
+function planFileEdit(
+  filePath: string,
+  edit: (text: string) => string
+): PlannedFile {
+  const before = fs.readFileSync(filePath, "utf8");
+  return { path: filePath, before, after: edit(before) };
 }

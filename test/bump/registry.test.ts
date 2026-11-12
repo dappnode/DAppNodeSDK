@@ -10,12 +10,12 @@ import { createHash } from "node:crypto";
 import {
   manifestAccept,
   RegistryClient,
-  registryImage
+  parseRegistryImage
 } from "../../src/bump/registry.js";
 
 const digest = `sha256:${"b".repeat(64)}`;
 
-describe("bump anonymous registry client", () => {
+describe("bump / registry", () => {
   let server: Server;
   let host: string;
   let handler: (request: IncomingMessage, response: ServerResponse) => void;
@@ -54,17 +54,23 @@ describe("bump anonymous registry client", () => {
       "docker.io/alpine",
       "index.docker.io/library/alpine"
     ])
-      expect(registryImage(image)).to.deep.equal({
+      expect(parseRegistryImage(image)).to.deep.equal({
         host: "registry-1.docker.io",
         name: "library/alpine",
-        hub: true
+        isDockerHub: true
       });
-    expect(registryImage("org/app").name).to.equal("org/app");
-    expect(registryImage("ghcr.io/org/app")).to.deep.equal({
+    expect(parseRegistryImage("org/app").name).to.equal("org/app");
+    expect(parseRegistryImage("ghcr.io/org/app")).to.deep.equal({
       host: "ghcr.io",
       name: "org/app",
-      hub: false
+      isDockerHub: false
     });
+    for (const host of ["evil-docker.io", "docker.io.evil.com"])
+      expect(parseRegistryImage(`${host}/org/app`)).to.deep.equal({
+        host,
+        name: "org/app",
+        isDockerHub: false
+      });
   });
 
   it("answers a bearer challenge, using token or access_token and pull scope", async () => {

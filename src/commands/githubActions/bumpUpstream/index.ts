@@ -5,8 +5,7 @@ import { shell } from "../../../utils/shell.js";
 import { getGitHead } from "../../../utils/git.js";
 import { buildAndComment } from "../build/index.js";
 import { readManifest } from "../../../files/index.js";
-import { parseProvider } from "../../../bump/metadata.js";
-import { packageManifestDirs } from "../../../bump/discovery.js";
+import { getPackageManifestDirs } from "../../../bump/discovery.js";
 import { planPackageEdits } from "../../../bump/plan.js";
 import { writePlan } from "../../../bump/edits.js";
 import { printBumpDeprecation } from "./deprecation.js";
@@ -21,7 +20,6 @@ import {
   isBranchNew,
   recoverBumpBranch
 } from "./github/index.js";
-import path from "path";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
@@ -93,11 +91,10 @@ async function gaBumpUpstreamHandler({
     console.log(
       "--use_variants is ignored; variants are detected automatically"
     );
-  const manifestDirs = packageManifestDirs(dir, variantsDir);
-  const allVariants = manifestDirs.some(
-    packageDir => path.resolve(packageDir) !== path.resolve(dir)
-  );
-  const { upstreamSettings, gitSettings, ethProvider } =
+  // Variants are detected from the manifests in variantsDir
+  const allVariants = !getPackageManifestDirs(dir, variantsDir).includes(dir);
+
+  const { upstreamSettings, resolvedUpstreams, gitSettings, ethProvider } =
     await getInitialSettings({
       dir,
       userEthProvider,
@@ -146,15 +143,7 @@ async function gaBumpUpstreamHandler({
     const plan = await planPackageEdits({
       dir,
       variantsDir,
-      upstreams: upstreamSettings.map(item => ({
-        repo: item.repo,
-        arg: item.arg,
-        provider: parseProvider(item.provider),
-        tagPattern: item.tagPattern,
-        version: item.manifestVersion,
-        targetVersion: item.githubVersion,
-        composeValue: item.composeValue || item.githubVersion
-      })),
+      upstreams: resolvedUpstreams,
       nextPackageVersion: packageDir =>
         getNewManifestVersion({ dir: packageDir, ethProvider })
     });
@@ -185,9 +174,7 @@ async function gaBumpUpstreamHandler({
     commitSha: gitHead.commit,
     branch: branchName,
     all_variants: allVariants,
-    variants_dir_name: allVariants
-      ? path.relative(dir, path.dirname(manifestDirs[0]))
-      : variantsDir
+    variants_dir_name: variantsDir
   });
 }
 

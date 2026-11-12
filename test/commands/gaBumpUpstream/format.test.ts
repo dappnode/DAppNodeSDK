@@ -56,6 +56,22 @@ describe("command / gaBumpUpstream / format", () => {
     });
   });
 
+  describe("digest-pinned version", () => {
+    it("getPrBody shows the pinned Compose value", () => {
+      const composeValue = `v2.0.0@sha256:${"a".repeat(64)}`;
+      const upstreamVersion = getBumpPrBody([
+        {
+          repo: "acme/app",
+          arg: "VERSION",
+          manifestVersion: "v1.0.0",
+          githubVersion: "v2.0.0",
+          composeValue
+        }
+      ]);
+      expect(upstreamVersion).to.include(`(Compose: \`${composeValue}\`)`);
+    });
+  });
+
   describe("Check valid releases", () => {
     const correctVersionsToUpdate: ComposeVersionsToUpdate = {
       "sigp/lighthouse": {

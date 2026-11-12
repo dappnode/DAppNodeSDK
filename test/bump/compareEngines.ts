@@ -7,7 +7,7 @@ import { execFileSync } from "node:child_process";
 import { parseArgs } from "node:util";
 import assert from "node:assert/strict";
 import semver from "semver";
-import { packageManifestDirs } from "../../src/bump/discovery.js";
+import { getPackageManifestDirs } from "../../src/bump/discovery.js";
 import { editManifest, writePlan } from "../../src/bump/edits.js";
 import { planPackageEdits, resolvePackage } from "../../src/bump/plan.js";
 import { RegistryClient } from "../../src/bump/registry.js";
@@ -91,7 +91,7 @@ const referenceOutput = execFileSync("docker", dockerArgs, {
   timeout: 180000
 });
 fs.writeFileSync(path.join(scratch, "reference.json"), referenceOutput);
-const packageManifests = packageManifestDirs(sdk).map(dir =>
+const packageManifests = getPackageManifestDirs(sdk).map(dir =>
   path.relative(sdk, path.join(dir, "dappnode_package.json"))
 );
 const files = [

@@ -1,5 +1,6 @@
 import { Manifest, Compose } from "@dappnode/types";
 import { BumpUpstreamItem } from "../../../bump/metadata.js";
+import { ResolvedUpstream } from "../../../bump/resolve.js";
 import { ManifestFormat } from "../../../files/manifest/types.js";
 import { Github } from "../../../providers/github/Github.js";
 
@@ -28,6 +29,7 @@ export interface GitBranch {
 
 export interface InitialSetupData {
   upstreamSettings: UpstreamSettings[] | null;
+  resolvedUpstreams: ResolvedUpstream[];
   manifestData: {
     manifest: Manifest;
     format: ManifestFormat;

@@ -1,10 +1,10 @@
 import { expect } from "chai";
 import { BumpCompose, Upstream } from "../../src/bump/discovery.js";
 import {
-  currentPin,
+  getCurrentPin,
   ResolutionDependencies,
   resolveUpstream,
-  splitPin
+  parsePin
 } from "../../src/bump/resolve.js";
 
 const digest = `sha256:${"a".repeat(64)}`;
@@ -48,19 +48,19 @@ function dependencies(
   };
 }
 
-describe("bump resolution and pinning", () => {
+describe("bump / resolve", () => {
   it("splits only the last @sha256 suffix and enforces lowercase digests", () => {
-    expect(splitPin(`n8n@2.10.3@${digest}`)).to.deep.equal({
+    expect(parsePin(`n8n@2.10.3@${digest}`)).to.deep.equal({
       version: "n8n@2.10.3",
       digest
     });
-    expect(splitPin("n8n@2.10.3")).to.deep.equal({ version: "n8n@2.10.3" });
+    expect(parsePin("n8n@2.10.3")).to.deep.equal({ version: "n8n@2.10.3" });
     for (const value of [
       `1@sha256:${"A".repeat(64)}`,
       "1@sha256:short",
       `@${digest}`
     ])
-      expect(() => splitPin(value)).to.throw("Invalid digest pin");
+      expect(() => parsePin(value)).to.throw("Invalid digest pin");
   });
 
   it("maps candidate tags and writes the candidate rather than its rendered template", async () => {
@@ -167,19 +167,21 @@ describe("bump resolution and pinning", () => {
         b: { build: { args: [`VERSION=${b}`] } }
       }
     });
-    expect(() => currentPin(mixed("1.0.0", "0.9.0"), upstream)).to.throw(
+    expect(() => getCurrentPin(mixed("1.0.0", "0.9.0"), upstream)).to.throw(
       "Inconsistent Compose pin"
     );
     expect(() =>
-      currentPin(mixed("1.0.0", `1.0.0@${digest}`), upstream)
+      getCurrentPin(mixed("1.0.0", `1.0.0@${digest}`), upstream)
     ).to.throw("Inconsistent digest pins");
     expect(() =>
-      currentPin(
+      getCurrentPin(
         mixed(`1.0.0@${digest}`, `1.0.0@sha256:${"b".repeat(64)}`),
         upstream
       )
     ).to.throw("Inconsistent digest pins");
-    expect(() => currentPin({ services: {} }, upstream)).to.throw("is absent");
+    expect(() => getCurrentPin({ services: {} }, upstream)).to.throw(
+      "is absent"
+    );
   });
 
   it("fails on absent candidates and registry errors", async () => {

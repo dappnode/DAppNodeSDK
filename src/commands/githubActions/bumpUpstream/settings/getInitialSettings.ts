@@ -1,8 +1,9 @@
 import { readManifest, readCompose } from "../../../../files/index.js";
 import { getFirstAvailableEthProvider } from "../../../../utils/tryEthProviders.js";
-import { InitialSetupData, GitSettings } from "../types.js";
+import { InitialSetupData, GitSettings, UpstreamSettings } from "../types.js";
 import { resolvePackage } from "../../../../bump/plan.js";
 import { RegistryClient } from "../../../../bump/registry.js";
+import { ResolvedUpstream } from "../../../../bump/resolve.js";
 import { fetchGithubUpstreamVersion } from "../github/fetchGithubUpstreamVersion.js";
 
 export async function getInitialSettings({
@@ -19,7 +20,7 @@ export async function getInitialSettings({
   const { manifest, format } = readManifest([{ dir }]);
   const compose = readCompose([{ dir }]);
 
-  const resolved = await resolvePackage(
+  const resolvedUpstreams = await resolvePackage(
     dir,
     {
       latestRelease: fetchGithubUpstreamVersion,
@@ -27,17 +28,10 @@ export async function getInitialSettings({
     },
     explicitVersion
   );
-  const upstreamSettings = resolved.length
-    ? resolved.map(item => ({
-        repo: item.repo,
-        arg: item.arg,
-        provider: item.provider,
-        tagPattern: item.tagPattern,
-        manifestVersion: item.version,
-        githubVersion: item.targetVersion,
-        composeValue: item.composeValue
-      }))
-    : null;
+  const upstreamSettings =
+    resolvedUpstreams.length > 0
+      ? resolvedUpstreams.map(toUpstreamSettings)
+      : null;
 
   const gitSettings = getGitSettings();
 
@@ -52,10 +46,23 @@ export async function getInitialSettings({
 
   return {
     upstreamSettings,
+    resolvedUpstreams,
     manifestData: { manifest, format },
     compose,
     gitSettings,
     ethProvider: ethProviderAvailable
+  };
+}
+
+function toUpstreamSettings(upstream: ResolvedUpstream): UpstreamSettings {
+  return {
+    repo: upstream.repo,
+    arg: upstream.arg,
+    provider: upstream.provider,
+    tagPattern: upstream.tagPattern,
+    manifestVersion: upstream.version,
+    githubVersion: upstream.targetVersion,
+    composeValue: upstream.composeValue
   };
 }
 
