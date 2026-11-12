@@ -7,6 +7,12 @@ import { PackageToBuildProps } from "../types.js";
 import { defaultComposeFileName, defaultVariantsDirName } from "../params.js";
 import { parseGithubRepoSlug } from "../files/manifest/getRepoSlugFromManifest.js";
 import { shell } from "../utils/shell.js";
+import { BumpManifest } from "../bump/discovery.js";
+import {
+  BumpUpstreamItem,
+  compileTagPattern,
+  parseProvider
+} from "../bump/metadata.js";
 import { SpecFinding, SpecRuleId } from "./rules.js";
 import {
   checkManifestReferences,
@@ -17,8 +23,8 @@ const manifestFileName = "dappnode_package.json";
 const packageNamePattern =
   /^[a-z0-9]+(-[a-z0-9]+)*\.(dnp|public)\.dappnode\.eth$/;
 const variantNamePattern = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-/** Supported by DAPPMANAGER but not yet in the published manifest schema. */
-const knownUnreleasedManifestFields = ["upnpDisable"];
+/** Supported by consumers but not yet in the published manifest schema. */
+const knownUnreleasedManifestFields = ["upnpDisable", "upstreamProvider"];
 /** Single release files that are copied (not merged) from the root or the variant. */
 const singleCopiedReleaseFiles = [
   "avatar",
@@ -343,14 +349,15 @@ export function checkPackageSpec({
     const sourceManifest = mergedSourceManifest(pkg) || manifest;
     const buildArgs = collectBuildArgs(compose);
     const usesUpstreamArray = Array.isArray(sourceManifest.upstream);
-    const upstreams = usesUpstreamArray
+    const upstreams: Partial<BumpUpstreamItem>[] = usesUpstreamArray
       ? sourceManifest.upstream || []
       : sourceManifest.upstreamRepo
       ? [
           {
             repo: sourceManifest.upstreamRepo,
             version: sourceManifest.upstreamVersion,
-            arg: sourceManifest.upstreamArg
+            arg: sourceManifest.upstreamArg,
+            provider: (sourceManifest as BumpManifest).upstreamProvider
           }
         ]
       : [];
@@ -361,6 +368,12 @@ export function checkPackageSpec({
     );
     for (const item of upstreams) {
       if (!item?.repo) continue;
+      for (const error of getBumpMetadataErrors(item))
+        add(
+          "SPEC-M12",
+          `Upstream ${item.repo}${where(upstreamDir)}: ${error}`,
+          manifestFileIn(upstreamDir)
+        );
       // The legacy fields default the arg to UPSTREAM_VERSION; check the version against it too.
       const upstream = { ...item, arg: item.arg || "UPSTREAM_VERSION" };
       if (!item.arg) {
@@ -394,7 +407,7 @@ export function checkPackageSpec({
         return (
           value === String(upstream.version) ||
           (value.startsWith(prefix) &&
-            /^[a-f0-9]{64}$/i.test(value.slice(prefix.length)))
+            /^[a-f0-9]{64}$/.test(value.slice(prefix.length)))
         );
       };
       if (upstream.version !== undefined)
@@ -407,7 +420,7 @@ export function checkPackageSpec({
           const variant = where(upstreamDir) || where(argDir);
           add(
             "SPEC-M05",
-            `Upstream ${upstream.repo}${variant} has version "${upstream.version}" but services.${service}.build.args.${upstream.arg} is "${value}"; every service using this arg must match (optionally with @sha256:<64 hex digits>).`,
+            `Upstream ${upstream.repo}${variant} has version "${upstream.version}" but services.${service}.build.args.${upstream.arg} is "${value}"; every service using this arg must match (optionally with @sha256:<64 lowercase hex digits>).`,
             composeFileIn(argDir)
           );
         }
@@ -621,6 +634,24 @@ function mergeByPosition<T>(parts: T[]): T {
 }
 
 /** Build arg name -> service -> value; list-style "KEY=value" args included. */
+/**
+ * Errors in the optional upstream bump metadata (`provider`, `tagPattern`).
+ */
+function getBumpMetadataErrors(item: Partial<BumpUpstreamItem>): string[] {
+  const errors: string[] = [];
+  try {
+    parseProvider(item.provider);
+  } catch (e) {
+    errors.push(e.message);
+  }
+  try {
+    compileTagPattern(item.tagPattern);
+  } catch (e) {
+    errors.push(e.message);
+  }
+  return errors;
+}
+
 function collectBuildArgs(compose: Compose): Map<string, Map<string, string>> {
   const args = new Map<string, Map<string, string>>();
   const put = (service: string, key: string, value: unknown) => {

@@ -1,10 +1,13 @@
-import { UpstreamItem, Manifest, Compose } from "@dappnode/types";
+import { Manifest, Compose } from "@dappnode/types";
+import { BumpUpstreamItem } from "../../../bump/metadata.js";
+import { ResolvedUpstream } from "../../../bump/resolve.js";
 import { ManifestFormat } from "../../../files/manifest/types.js";
 import { Github } from "../../../providers/github/Github.js";
 
-export type UpstreamSettings = Omit<UpstreamItem, "version"> & {
+export type UpstreamSettings = Omit<BumpUpstreamItem, "version"> & {
   manifestVersion: string;
   githubVersion: string;
+  composeValue?: string;
 };
 
 export interface GitSettings {
@@ -26,6 +29,7 @@ export interface GitBranch {
 
 export interface InitialSetupData {
   upstreamSettings: UpstreamSettings[] | null;
+  resolvedUpstreams: ResolvedUpstream[];
   manifestData: {
     manifest: Manifest;
     format: ManifestFormat;

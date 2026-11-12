@@ -29,7 +29,7 @@ Repository counts and migration observations belong to dated audit reports; see 
 
 **SPEC-M04: The upstream `arg` is a compose build arg.** Every upstream entry names an `arg` that some compose service declares in `build.args`. Packages using the legacy fields often rely on the implicit default `UPSTREAM_VERSION`.
 
-**SPEC-M05: The upstream `version` equals every matching build arg value.** Every compose service declaring the upstream `arg` must use the same string as `upstream[].version`. Matching one service does not excuse a conflicting value in another. A value `<version>@sha256:<digest>` also matches when the digest contains exactly 64 hexadecimal characters. Findings identify the conflicting service and the compose fragment that supplies its value.
+**SPEC-M05: The upstream `version` equals every matching build arg value.** Every compose service declaring the upstream `arg` must use the same string as `upstream[].version`. Matching one service does not excuse a conflicting value in another. A value `<version>@sha256:<digest>` also matches when the digest contains exactly 64 lowercase hexadecimal characters. Findings identify the conflicting service and the compose fragment that supplies its value.
 
 **SPEC-M06: A variant `upstream[]` keeps the root's positions.** Root and variant manifests are merged by array position. A variant may list fewer or more entries than the root, but an entry at an existing position must refer to the same `repo`.
 
@@ -42,6 +42,8 @@ Repository counts and migration observations belong to dated audit reports; see 
 **SPEC-M10: Manifest service references exist in the resolved compose.** Explicit `mainService`, `chain.serviceName`, `backup[].service` and `globalEnvs[].services[]` references name services present after root and variant files are merged. Omitted optional references retain their runtime defaults; the spec does not choose a service implicitly. Findings identify the manifest field, its defining source fragment and the affected variant.
 
 **SPEC-M11: Global environment names match the runtime catalogue.** Entries in `globalEnvs[].envs` use short names from the `GLOBAL_ENVS` catalogue bundled with `@dappnode/types`, for example `PUBLIC_IP`, `HOSTNAME` or `ENVS_ACTIVE`. DAPPMANAGER adds `_DAPPNODE_GLOBAL_` at install, so `_DAPPNODE_GLOBAL_PUBLIC_IP` in the manifest would be prefixed twice. Catalogue keys are not aliases: the key `ACTIVE` maps to `ENVS_ACTIVE`, which is the valid manifest value. Catalogue updates must be released through shared types and consumed by the SDK before packages adopt newly supported names.
+
+**SPEC-M12: Upstream bump metadata is valid.** Each `upstream[]` entry may set `provider` to `docker` (the default), `github`, or `docker_tags`, case-insensitively. `docker-tags` and `dockerhub` are aliases for `docker_tags`; legacy manifests use `upstreamProvider`. An optional `tagPattern` filters upstream tags and extracts capture group 1, or the whole match when no capture is present. Patterns must compile with JavaScript `RegExp` and use the common JavaScript/Rust regex subset: no lookaround or backreferences. Unknown providers and invalid patterns are reported as warnings.
 
 ### Manifest semantics
 
@@ -118,7 +120,7 @@ These are not checked yet, either because they need consumer changes first or be
 - **Upstream identity and inheritance:** define duplicate-entry behavior, a stable identity for overrides, and any migration away from positional array merging before changing either consumer.
 - **Compose `version:`** is obsolete. Rather than warn, the SDK should strip it from releases by default once versionless composes are verified with DAPPMANAGER (`--strip_compose_version` exists today as an opt-in).
 - **Dockerfiles:** no `FROM …:latest` or untagged base images, and no remote `ADD` without `--checksum`. The staking `ADD ${STAKER_SCRIPTS_URL}/*.sh` pattern needs a shared replacement first.
-- **Declarative upstream metadata:** optional `upstream[].provider`, `tagPattern` and `imageTag` fields would let tropibot drop its built-in provider table and tag-to-image-tag inference. This needs a manifest schema change.
+- **Declarative upstream metadata:** `upstream[].provider` and `tagPattern` are now checked by SPEC-M12. Publishing the shared schema/types support and defining an optional image override would allow more package-specific bump configuration to move into manifests.
 - **ENS names of new variants:** `<base>-<variant>.<dnp|public>.dappnode.eth` for new variants, with an allowlist of existing on-chain names (`hoodi-geth`, `nethermind-xdai`, …).
 - **Explicit `architectures`**, replacing reliance on the implicit `linux/amd64`.
 - **Setup wizard targets:** every wizard target refers to a service and environment variable that exist in the compose (service/environment existence should be checked after merging).
@@ -138,15 +140,15 @@ These came up while defining the rules and should be fixed regardless of the rol
 
 tropibot and the SDK share most package handling. Once a rule is an error, tropibot can drop the matching tolerance:
 
-| Rule | tropibot code that becomes removable |
+| Rule | TropiBot tolerance that becomes removable |
 |---|---|
 | SPEC-M01, SPEC-C01 | Hard-coded name assumptions in discovery, pin cleanup, on-chain sync and dashboard artifacts become guarantees. |
-| SPEC-M03 | The legacy `upstreamRepo/Version/Arg` path in bump discovery and edits (`bump/package/discovery.rs`, `edits.rs`); dashboards keep it only for history. |
-| SPEC-M04, SPEC-C05 | Upstream arg detection heuristics and the `UPSTREAM_VERSION` default (`discovery.rs`, `compose.rs`), list-style arg parsing and string `build:` handling. |
-| SPEC-M05 | Part of the tag/arg format reconciliation in `resolve.rs` and `version_format.rs`; external tag formats (`n8n@x`, `v` prefixes) remain. |
-| SPEC-M06 | The workaround for variants that re-declare `upstream` (`package.rs`). |
-| SPEC-T01 | Phantom root packages in dashboard manifest merging (`source/manifests.rs`) and root-only pin cleanup. |
-| SPEC-T02 | The `variants/` vs `package_variants/` dual layout (`bump/package/types.rs`, `discovery.rs`). |
+| SPEC-M03 | Legacy upstream-field discovery and editing; dashboards keep the fields only for history. |
+| SPEC-M04, SPEC-C05 | Upstream arg detection heuristics, the `UPSTREAM_VERSION` default, list-style arg parsing and string `build:` handling. |
+| SPEC-M05 | Some version/build-arg reconciliation; external tag formats (`n8n@x`, `v` prefixes) remain. |
+| SPEC-M06 | The workaround for variants that re-declare `upstream`. |
+| SPEC-T01 | Phantom root packages in dashboard manifest merging and root-only pin cleanup. |
+| SPEC-T02 | The `variants/` vs `package_variants/` dual layout. |
 | SPEC-M02, SPEC-T03 | Divergent name and variant regexes across modules collapse into one. |
 
 Issues in tropibot independent of the spec:
@@ -154,8 +156,8 @@ Issues in tropibot independent of the spec:
 - Pin cleanup on branch close or delete uses only the root manifest `name`, so it errors for templates whose root has no name and misses variant packages. The SDK now cleans root and variant names (`cleanPinsFromDeletedBranches`); tropibot should do the same or leave cleanup to the SDK.
 - Pinata `pinList` is not paginated (default page size 10), so cleanup sees only the first page.
 - tropibot unpins when a PR closes even if its branch still exists; the SDK only cleans deleted branches.
-- `docs/PACKAGE_CREATION_GUIDE.md` recommends a `variants/<v>/` layout with per-variant Dockerfiles, which contradicts SPEC-T02 and every real template.
-- Two upstream bumpers exist: tropibot and the SDK's `github-action bump-upstream`. One should become canonical.
+- Older package-creation guidance recommends a `variants/<v>/` layout with per-variant Dockerfiles, which contradicts SPEC-T02.
+- The SDK’s `github-action bump-upstream` is deprecated and will be removed in a future release. DAppNode org packages should call `dappnode/workflows/.github/workflows/bump-upstream.yml@master`. Other packages should use `dappnode/workflows/actions/bump-upstream@master` for file edits, followed by their own PR step. See the migration example in [README.md](../README.md#bump-upstream-action-deprecated).
 
 Contract between the SDK and tropibot that the spec work must keep:
 

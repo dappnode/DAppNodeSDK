@@ -25,7 +25,7 @@ export const specRules = {
   },
   "SPEC-M05": {
     title: "Upstream version equals the build arg value",
-    why: "Every service using an upstream arg must match its declared version, optionally pinned by a complete SHA-256 digest."
+    why: "Every service using an upstream arg must match its declared version, optionally pinned by a complete lowercase SHA-256 digest."
   },
   "SPEC-M06": {
     title: "Variant upstream[] matches the root order",
@@ -50,6 +50,10 @@ export const specRules = {
   "SPEC-M11": {
     title: "Global environment names match the runtime catalogue",
     why: "DAPPMANAGER prefixes short global-env names at install; unknown or already-prefixed names cannot be injected."
+  },
+  "SPEC-M12": {
+    title: "Upstream bump metadata is valid",
+    why: "Providers must be recognised and tag patterns must compile in the common JavaScript/Rust regex subset."
   },
   // Templates (multi-variant packages)
   "SPEC-T01": {

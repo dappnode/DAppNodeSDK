@@ -5,15 +5,16 @@ export function getBumpPrBody(upstreamSettings: UpstreamSettings[]): string {
     "Bumps upstream version",
     upstreamSettings
       .flatMap(
-        ({ repo, githubVersion, manifestVersion }) =>
+        ({ repo, githubVersion, manifestVersion, composeValue }) =>
           `- [${repo}](${getGitHubUrl({
             repo
           })}) from ${manifestVersion} to [${githubVersion}](${getGitHubUrl({
             repo,
             tag: githubVersion
-          })})`
+          })}) (Compose: \`${composeValue || githubVersion}\`)`
       )
-      .join("\n")
+      .join("\n"),
+    '<!-- explorer-dashboard: {"kind":"bump"} -->'
   ].join("\n\n");
 }
 

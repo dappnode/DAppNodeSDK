@@ -23,7 +23,9 @@ describe("command / gaBumpUpstream / format", () => {
       const upstreamVersion = getBumpPrBody(versionsToUpdate);
       expect(upstreamVersion).to.equal(`Bumps upstream version
 
-- [ipfs/go-ipfs](https://github.com/ipfs/go-ipfs) from v0.6.0 to [v0.7.0](https://github.com/ipfs/go-ipfs/releases/tag/v0.7.0)`);
+- [ipfs/go-ipfs](https://github.com/ipfs/go-ipfs) from v0.6.0 to [v0.7.0](https://github.com/ipfs/go-ipfs/releases/tag/v0.7.0) (Compose: \`v0.7.0\`)
+
+<!-- explorer-dashboard: {"kind":"bump"} -->`);
     });
   });
 
@@ -47,8 +49,26 @@ describe("command / gaBumpUpstream / format", () => {
       const upstreamVersion = getBumpPrBody(versionsToUpdate);
       expect(upstreamVersion).to.equal(`Bumps upstream version
 
-- [sigp/lighthouse](https://github.com/sigp/lighthouse) from v0.1.2 to [v0.1.4](https://github.com/sigp/lighthouse/releases/tag/v0.1.4)
-- [prysmaticlabs/prysm](https://github.com/prysmaticlabs/prysm) from v0.1.0-beta.28 to [v0.1.0-beta.29](https://github.com/prysmaticlabs/prysm/releases/tag/v0.1.0-beta.29)`);
+- [sigp/lighthouse](https://github.com/sigp/lighthouse) from v0.1.2 to [v0.1.4](https://github.com/sigp/lighthouse/releases/tag/v0.1.4) (Compose: \`v0.1.4\`)
+- [prysmaticlabs/prysm](https://github.com/prysmaticlabs/prysm) from v0.1.0-beta.28 to [v0.1.0-beta.29](https://github.com/prysmaticlabs/prysm/releases/tag/v0.1.0-beta.29) (Compose: \`v0.1.0-beta.29\`)
+
+<!-- explorer-dashboard: {"kind":"bump"} -->`);
+    });
+  });
+
+  describe("digest-pinned version", () => {
+    it("getPrBody shows the pinned Compose value", () => {
+      const composeValue = `v2.0.0@sha256:${"a".repeat(64)}`;
+      const upstreamVersion = getBumpPrBody([
+        {
+          repo: "acme/app",
+          arg: "VERSION",
+          manifestVersion: "v1.0.0",
+          githubVersion: "v2.0.0",
+          composeValue
+        }
+      ]);
+      expect(upstreamVersion).to.include(`(Compose: \`${composeValue}\`)`);
     });
   });
 

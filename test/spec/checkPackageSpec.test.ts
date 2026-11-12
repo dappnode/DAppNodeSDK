@@ -298,6 +298,7 @@ describe("package spec checks", function () {
       [`1.2.3@sha256:${"a".repeat(64)}`, true],
       ["1.2.2", false],
       ["1.2.3@sha256:abc", false],
+      [`1.2.3@sha256:${"A".repeat(64)}`, false],
       [`1.2.3@sha256:${"g".repeat(64)}`, false],
       ["", false]
     ] as const) {
@@ -319,6 +320,45 @@ describe("package spec checks", function () {
         expect(findings[0].file).to.equal(path.join(dir, "docker-compose.yml"));
       }
     }
+  });
+
+  it("reports invalid upstream providers and patterns as SPEC-M12 warnings", () => {
+    write("docker-compose.yml", {
+      services: { app: { build: { args: { VERSION: "1.2.3" } } } }
+    });
+    for (const metadata of [
+      { provider: "npm" },
+      { tagPattern: "[" },
+      { tagPattern: "(?=v)(.*)" },
+      { tagPattern: "(v)\\1" }
+    ]) {
+      write("dappnode_package.json", {
+        name: "demo.dnp.dappnode.eth",
+        version: "0.1.0",
+        upstream: [
+          { repo: "acme/app", version: "1.2.3", arg: "VERSION", ...metadata }
+        ]
+      });
+      const findings = check(dir).filter(f => f.rule === "SPEC-M12");
+      expect(findings, JSON.stringify(metadata)).to.have.length(1);
+      expect(findings[0].file).to.equal(
+        path.join(dir, "dappnode_package.json")
+      );
+    }
+    write("dappnode_package.json", {
+      name: "demo.dnp.dappnode.eth",
+      version: "0.1.0",
+      upstream: [
+        {
+          repo: "acme/app",
+          version: "1.2.3",
+          arg: "VERSION",
+          provider: "DockerHub",
+          tagPattern: "^v(.*)$"
+        }
+      ]
+    });
+    expect(check(dir).filter(f => f.rule === "SPEC-M12")).to.deep.equal([]);
   });
 
   it("attributes conflicting upstream values to the variant compose", () => {
