@@ -76,37 +76,25 @@ npx @dappnode/dappnodesdk <command>
 
 ## Github Actions
 
-### `bump-upstream` action
+### `bump-upstream` action (deprecated)
 
-This Github Action automatically creates pull requests bumping the version to the latest released upstream version on DAppNode Packages. It then tests building the new bumped upstream version and automatically posts an IPFS hash if the build was successful so that the new version can be tested further with other Github Actions and by human testers.
+`dappnodesdk github-action bump-upstream` is deprecated and will be removed in a future release. DAppNode org packages should call the reusable workflow `dappnode/workflows/.github/workflows/bump-upstream.yml@master`. Other packages should use the `dappnode/workflows/actions/bump-upstream@master` action, which edits the files, followed by their own PR step.
 
-_Note: This action also requires a Pinata account with an API Access Token and a Github Personal Access Token stored in the repo's, individual's, or organization's secrets in order to work properly._
-
-#### Sample Usage
-
-`.github/workflows/auto_check.yml`
+Replace `.github/workflows/auto_check.yml` with:
 
 ```yaml
 name: Bump upstream version
-
 on:
   schedule:
     - cron: "00 */4 * * *"
-  push:
-    branches:
-      - "master"
-
+  workflow_dispatch:
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: npx @dappnode/dappnodesdk github-action bump-upstream
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
-          PINATA_SECRET_API_KEY: ${{ secrets.PINATA_SECRET_API_KEY }}
+  bump-upstream:
+    uses: dappnode/workflows/.github/workflows/bump-upstream.yml@master
+    secrets: inherit
 ```
+
+The deprecated command continues to create bump PRs and run package builds until its removal. It preserves Compose comments and digest pins, reads optional upstream `provider` and `tagPattern` metadata, and automatically detects `package_variants/`. `--use_variants` is accepted but ignored; `--variants_dir` supports legacy directory layouts. Use `--upstream_version` to request an explicit tag for a single upstream.
 
 You must specify in the package manifest what upstream Github repo the package is tracking. Also indicate what build variable in the docker-compose file should be updated.
 

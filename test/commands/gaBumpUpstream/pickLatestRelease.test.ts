@@ -1,5 +1,8 @@
 import { expect } from "chai";
-import { pickLatestRelease } from "../../../src/commands/githubActions/bumpUpstream/github/index.js";
+import {
+  pickLatestRelease,
+  selectLatestRelease
+} from "../../../src/commands/githubActions/bumpUpstream/github/index.js";
 
 const release = (
   tag_name: string,
@@ -45,5 +48,56 @@ describe("command / gaBumpUpstream / pickLatestRelease", () => {
         release("v2.0.0-rc.1")
       ])
     ).to.equal(null);
+  });
+
+  it("treats suffixes that are not pre-release words as stable", () => {
+    expect(
+      pickLatestRelease([release("v1.17.11-beta.1"), release("v1.17.10-gc")])
+    ).to.equal("v1.17.10-gc");
+    expect(pickLatestRelease([release("n8n@2.46.6")])).to.equal("n8n@2.46.6");
+  });
+
+  it("filters tag families with tagPattern", () => {
+    expect(
+      pickLatestRelease(
+        [release("op-deployer/v0.9.0-allowlist"), release("op-node/v1.20.1")],
+        "^op-node/v(.+)$"
+      )
+    ).to.equal("1.20.1");
+  });
+
+  describe("selectLatestRelease", () => {
+    const noList = async () => {
+      throw Error("must not list releases");
+    };
+
+    it("prefers GitHub's Latest release when it qualifies", async () => {
+      expect(await selectLatestRelease(release("v1.9.5"), noList)).to.equal(
+        "v1.9.5"
+      );
+    });
+
+    it("falls back to recent releases when Latest does not qualify", async () => {
+      const recent = async () => [
+        release("v5.1.0-rc.1"),
+        release("v5.0.1", { draft: true }),
+        release("v5.0.0")
+      ];
+      expect(
+        await selectLatestRelease(release("v5.1.0-rc.1"), recent)
+      ).to.equal("v5.0.0");
+      expect(await selectLatestRelease(null, recent)).to.equal("v5.0.0");
+    });
+
+    it("applies tagPattern to Latest", async () => {
+      const recent = async () => [release("op-node/v1.20.1")];
+      expect(
+        await selectLatestRelease(
+          release("op-deployer/v0.9.0"),
+          recent,
+          "^op-node/v(.+)$"
+        )
+      ).to.equal("1.20.1");
+    });
   });
 });

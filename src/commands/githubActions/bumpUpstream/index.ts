@@ -4,16 +4,15 @@ import { defaultDir, defaultVariantsDirName } from "../../../params.js";
 import { shell } from "../../../utils/shell.js";
 import { getGitHead } from "../../../utils/git.js";
 import { buildAndComment } from "../build/index.js";
-import {
-  writeManifest,
-  writeCompose,
-  readManifest
-} from "../../../files/index.js";
+import { readManifest } from "../../../files/index.js";
+import { parseProvider } from "../../../bump/metadata.js";
+import { packageManifestDirs } from "../../../bump/discovery.js";
+import { planPackageEdits } from "../../../bump/plan.js";
+import { writePlan } from "../../../bump/edits.js";
+import { printBumpDeprecation } from "./deprecation.js";
 import { getNextVersionFromApm } from "../../../utils/versions/getNextVersionFromApm.js";
-import { Compose, Manifest } from "@dappnode/types";
 import { GitSettings, GithubSettings, UpstreamSettings } from "./types.js";
 import { printSettings, getInitialSettings } from "./settings/index.js";
-import { ManifestFormat } from "../../../files/manifest/types.js";
 import {
   branchNeedsPr,
   closeOldPrs,
@@ -23,7 +22,6 @@ import {
   recoverBumpBranch
 } from "./github/index.js";
 import path from "path";
-import { getAllVariantsInPath } from "../../../files/variants/getAllPackageVariants.js";
 
 interface CliCommandOptions extends CliGlobalOptions {
   eth_provider: string;
@@ -31,6 +29,7 @@ interface CliCommandOptions extends CliGlobalOptions {
   use_variants?: boolean;
   variants_dir: string;
   skip_build?: boolean;
+  upstream_version?: string;
 }
 
 // This action should be run periodically
@@ -41,7 +40,7 @@ export const gaBumpUpstream: CommandModule<
 > = {
   command: "bump-upstream",
   describe:
-    "Check if upstream repo has released a new version and open a PR with version bump",
+    "DEPRECATED: bump upstream and open a PR; migrate to dappnode/workflows bump-upstream",
   builder: {
     eth_provider: {
       alias: "p",
@@ -59,13 +58,18 @@ export const gaBumpUpstream: CommandModule<
     },
     use_variants: {
       alias: "use-variants",
-      description: `It will use the dappnode_package.json and docker-compose.yml files in the root of the project together with the specific ones defined for each package variant to build all of them`,
+      description: "Ignored: package variants are detected automatically",
       type: "boolean"
     },
     variants_dir: {
-      description: `Path to the directory where the package variants are located (only for packages that support it and combined with either "--all-variants" or "--variants"). By default, it is ${defaultVariantsDirName}`,
+      description: `Directory containing package variant manifests, detected automatically (default: ${defaultVariantsDirName})`,
       type: "string",
       default: defaultVariantsDirName
+    },
+    upstream_version: {
+      description:
+        "Explicit upstream release tag or version (single upstream only)",
+      type: "string"
     },
     skip_build: {
       description: `Only create the bump PR without building the package`,
@@ -81,15 +85,25 @@ async function gaBumpUpstreamHandler({
   use_fallback: useFallback,
   use_variants: useVariants,
   variants_dir: variantsDir,
-  skip_build: skipBuild
+  skip_build: skipBuild,
+  upstream_version: explicitVersion
 }: CliCommandOptions): Promise<void> {
-  const {
-    upstreamSettings,
-    manifestData: { manifest, format: manifestFormat },
-    compose,
-    gitSettings,
-    ethProvider
-  } = await getInitialSettings({ dir, userEthProvider, useFallback });
+  printBumpDeprecation();
+  if (useVariants !== undefined)
+    console.log(
+      "--use_variants is ignored; variants are detected automatically"
+    );
+  const manifestDirs = packageManifestDirs(dir, variantsDir);
+  const allVariants = manifestDirs.some(
+    packageDir => path.resolve(packageDir) !== path.resolve(dir)
+  );
+  const { upstreamSettings, gitSettings, ethProvider } =
+    await getInitialSettings({
+      dir,
+      userEthProvider,
+      useFallback,
+      explicitVersion
+    });
   if (!upstreamSettings) {
     console.log("There are no upstream repos/versions defined in the manifest");
     return;
@@ -129,21 +143,22 @@ async function gaBumpUpstreamHandler({
         })
     });
   } else {
-    updateComposeUpstreamVersions(dir, compose, upstreamSettings);
-
-    updateManifestUpstreamVersion({
-      manifest,
-      manifestFormat,
-      upstreamSettings,
-      dir
-    });
-
-    await updateManifestPkgVersion({
+    const plan = await planPackageEdits({
       dir,
-      ethProvider,
-      allVariants: useVariants,
-      variantsDir
+      variantsDir,
+      upstreams: upstreamSettings.map(item => ({
+        repo: item.repo,
+        arg: item.arg,
+        provider: parseProvider(item.provider),
+        tagPattern: item.tagPattern,
+        version: item.manifestVersion,
+        targetVersion: item.githubVersion,
+        composeValue: item.composeValue || item.githubVersion
+      })),
+      nextPackageVersion: packageDir =>
+        getNewManifestVersion({ dir: packageDir, ethProvider })
     });
+    writePlan(plan);
 
     await prepareAndCommitChanges({
       dir,
@@ -169,116 +184,11 @@ async function gaBumpUpstreamHandler({
     dir,
     commitSha: gitHead.commit,
     branch: branchName,
-    all_variants: useVariants,
-    variants_dir_name: variantsDir
+    all_variants: allVariants,
+    variants_dir_name: allVariants
+      ? path.relative(dir, path.dirname(manifestDirs[0]))
+      : variantsDir
   });
-}
-
-/**
- * Updates Docker Compose service build arguments with new versions based on `upstreamRepoVersions`.
- * Creates a deep copy of `compose`, modifies build arguments as needed, and writes the updated
- * compose to `dir` if changes occur. Returns an object detailing updates or `null` if no update is needed.
- *
- * @param {string} dir - Directory for the Compose file.
- * @param {Compose} compose - Original Docker Compose configuration.
- * @param {UpstreamSettings[]} upstreamSettings - New versions for the Compose services.
- */
-function updateComposeUpstreamVersions(
-  dir: string,
-  compose: Compose,
-  upstreamSettings: UpstreamSettings[]
-): void {
-  const newCompose: Compose = JSON.parse(JSON.stringify(compose)); // Deep copy
-
-  for (const upstreamItem of upstreamSettings) {
-    // Checks if the service includes a build argument with the same name as the
-    // upstream item (e.g. "GETH_VERSION" is a build argument for the Geth service)
-    for (const [, service] of Object.entries(newCompose.services))
-      if (
-        typeof service.build !== "string" &&
-        service.build?.args &&
-        upstreamItem.arg in service.build.args
-      )
-        service.build.args[upstreamItem.arg] = upstreamItem.githubVersion;
-  }
-
-  writeCompose(newCompose, { dir });
-}
-
-/**
- * Updates the manifest with new version tags based on the provided `composeVersionsToUpdate`
- * and optionally fetches a new version for the manifest. The updated manifest is returned.
- * @param {Object} options - The options for updating the manifest.
- * @param {Manifest} options.manifest - The manifest object to update.
- * @param {UpstreamSettings[]} options.upstreamSettings - The new versions for the manifest.
- * @param {string} options.dir - Directory path where the manifest will be saved.
- * @param {string} options.ethProvider - Ethereum provider URL.
- * @returns {Promise<Manifest>} The updated manifest object.
- */
-function updateManifestUpstreamVersion({
-  manifest,
-  manifestFormat,
-  upstreamSettings,
-  dir
-}: {
-  manifest: Manifest;
-  manifestFormat: ManifestFormat;
-  upstreamSettings: UpstreamSettings[];
-  dir: string;
-}): void {
-  if (manifest.upstream) {
-    for (const upstreamItem of manifest.upstream) {
-      const versionUpdate = upstreamSettings.find(
-        ({ repo }) => repo === upstreamItem.repo
-      )?.githubVersion;
-
-      if (versionUpdate) upstreamItem.version = versionUpdate;
-    }
-  } else {
-    // There should be only one upstream repo in the legacy format
-    manifest.upstreamVersion = upstreamSettings[0].githubVersion;
-  }
-
-  try {
-    writeManifest(manifest, manifestFormat, { dir });
-  } catch (e) {
-    throw new Error(`Error writing manifest: ${e.message}`, { cause: e });
-  }
-}
-
-async function updateManifestPkgVersion({
-  dir,
-  ethProvider,
-  allVariants,
-  variantsDir
-}: {
-  dir: string;
-  ethProvider: string;
-  allVariants?: boolean;
-  variantsDir: string;
-}): Promise<void> {
-  const variantsPath = path.resolve(dir, variantsDir);
-  const manifestDirs = allVariants
-    ? getAllVariantsInPath(variantsPath).map(variant =>
-        path.join(variantsPath, variant)
-      )
-    : [dir];
-
-  for (const dir of manifestDirs) {
-    try {
-      const { manifest, format } = readManifest([{ dir }]);
-      manifest.version = await getNewManifestVersion({ dir, ethProvider });
-
-      console.log(
-        `New manifest version for ${manifest.name}: ${manifest.version}`
-      );
-
-      writeManifest(manifest, format, { dir });
-    } catch (e) {
-      // Not throwing an error here because updating the manifest version is not critical
-      console.error(`Could not fetch new manifest version: ${e}`);
-    }
-  }
 }
 
 async function getNewManifestVersion({

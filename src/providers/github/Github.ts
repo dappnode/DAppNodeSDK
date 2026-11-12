@@ -131,7 +131,32 @@ export class Github {
     }
   }
 
-  async listReleases() {
+  /** GitHub's Latest release, or null when the repository has none. */
+  async getLatestRelease() {
+    try {
+      const { data } = await this.octokit.rest.repos.getLatestRelease({
+        owner: this.owner,
+        repo: this.repo,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
+      });
+      return data;
+    } catch (e) {
+      if (e instanceof RequestError && e.status === 404) return null;
+      throw e;
+    }
+  }
+
+  async listReleases(firstPageSize?: number) {
+    if (firstPageSize !== undefined) {
+      const { data } = await this.octokit.rest.repos.listReleases({
+        owner: this.owner,
+        repo: this.repo,
+        per_page: firstPageSize
+      });
+      return data;
+    }
     return await this.octokit.paginate(this.octokit.rest.repos.listReleases, {
       owner: this.owner,
       repo: this.repo,

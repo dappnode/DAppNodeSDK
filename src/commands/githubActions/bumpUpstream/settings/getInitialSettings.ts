@@ -1,23 +1,43 @@
-import { Manifest, UpstreamItem } from "@dappnode/types";
 import { readManifest, readCompose } from "../../../../files/index.js";
-import { arrIsUnique } from "../../../../utils/array.js";
 import { getFirstAvailableEthProvider } from "../../../../utils/tryEthProviders.js";
-import { InitialSetupData, GitSettings, UpstreamSettings } from "../types.js";
+import { InitialSetupData, GitSettings } from "../types.js";
+import { resolvePackage } from "../../../../bump/plan.js";
+import { RegistryClient } from "../../../../bump/registry.js";
 import { fetchGithubUpstreamVersion } from "../github/fetchGithubUpstreamVersion.js";
 
 export async function getInitialSettings({
   dir,
   userEthProvider,
-  useFallback
+  useFallback,
+  explicitVersion
 }: {
   dir: string;
   userEthProvider: string;
   useFallback: boolean;
+  explicitVersion?: string;
 }): Promise<InitialSetupData> {
   const { manifest, format } = readManifest([{ dir }]);
   const compose = readCompose([{ dir }]);
 
-  const upstreamSettings = await parseUpstreamSettings(manifest);
+  const resolved = await resolvePackage(
+    dir,
+    {
+      latestRelease: fetchGithubUpstreamVersion,
+      registry: new RegistryClient()
+    },
+    explicitVersion
+  );
+  const upstreamSettings = resolved.length
+    ? resolved.map(item => ({
+        repo: item.repo,
+        arg: item.arg,
+        provider: item.provider,
+        tagPattern: item.tagPattern,
+        manifestVersion: item.version,
+        githubVersion: item.targetVersion,
+        composeValue: item.composeValue
+      }))
+    : null;
 
   const gitSettings = getGitSettings();
 
@@ -37,66 +57,6 @@ export async function getInitialSettings({
     gitSettings,
     ethProvider: ethProviderAvailable
   };
-}
-
-/**
- * Supports both legacy 'upstreamRepo' and 'upstreamArg' fields and current 'upstream'
- * field (array of objects with 'repo', 'arg' and 'version' fields)
- */
-async function parseUpstreamSettings(
-  manifest: Manifest
-): Promise<UpstreamSettings[] | null> {
-  const upstreamSettings = manifest.upstream
-    ? await parseUpstreamSettingsNewFormat(manifest.upstream)
-    : await parseUpstreamSettingsLegacyFormat(manifest);
-
-  if (!upstreamSettings || upstreamSettings.length < 1) return null;
-
-  validateUpstreamSettings(upstreamSettings);
-
-  return upstreamSettings;
-}
-
-async function parseUpstreamSettingsNewFormat(
-  upstream: UpstreamItem[]
-): Promise<UpstreamSettings[]> {
-  const upstreamPromises = upstream.map(async ({ repo, arg, version }) => {
-    const githubVersion = await fetchGithubUpstreamVersion(repo);
-
-    if (githubVersion)
-      return { repo, arg, manifestVersion: version, githubVersion };
-  });
-
-  const upstreamResults = await Promise.all(upstreamPromises);
-  return upstreamResults.filter(
-    item => item !== undefined
-  ) as UpstreamSettings[];
-}
-
-/**
- * Legacy support for 'upstreamRepo' and 'upstreamArg' fields
- * Currently, 'upstream' field is used instead, which is an array of objects with 'repo', 'arg' and 'version' fields
- */
-async function parseUpstreamSettingsLegacyFormat(
-  manifest: Manifest
-): Promise<UpstreamSettings[] | null> {
-  // 'upstreamRepo' and 'upstreamArg' being defined as arrays has been deprecated
-
-  if (!manifest.upstreamRepo || manifest.upstreamRepo.trim() === "")
-    return null;
-
-  const githubVersion = await fetchGithubUpstreamVersion(manifest.upstreamRepo);
-
-  if (!githubVersion) return null;
-
-  return [
-    {
-      repo: manifest.upstreamRepo,
-      manifestVersion: manifest.upstreamVersion || "UPSTREAM_VERSION",
-      arg: manifest.upstreamArg || "UPSTREAM_VERSION",
-      githubVersion
-    }
-  ];
 }
 
 function getEthProviders(
@@ -123,12 +83,4 @@ function getGitSettings(): GitSettings {
     userName: githubActor,
     userEmail
   };
-}
-
-function validateUpstreamSettings(upstreamSettings: UpstreamSettings[]): void {
-  if (!arrIsUnique(upstreamSettings.map(s => s.repo)))
-    throw new Error("Upstream repositories must be unique");
-
-  if (!arrIsUnique(upstreamSettings.map(s => s.arg)))
-    throw new Error("Upstream args must be unique");
 }

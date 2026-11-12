@@ -1,3 +1,8 @@
+import {
+  BumpUpstreamItem,
+  compileTagPattern,
+  parseProvider
+} from "../bump/metadata.js";
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
@@ -17,8 +22,8 @@ const manifestFileName = "dappnode_package.json";
 const packageNamePattern =
   /^[a-z0-9]+(-[a-z0-9]+)*\.(dnp|public)\.dappnode\.eth$/;
 const variantNamePattern = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-/** Supported by DAPPMANAGER but not yet in the published manifest schema. */
-const knownUnreleasedManifestFields = ["upnpDisable"];
+/** Supported by consumers but not yet in the published manifest schema. */
+const knownUnreleasedManifestFields = ["upnpDisable", "upstreamProvider"];
 /** Single release files that are copied (not merged) from the root or the variant. */
 const singleCopiedReleaseFiles = [
   "avatar",
@@ -343,17 +348,23 @@ export function checkPackageSpec({
     const sourceManifest = mergedSourceManifest(pkg) || manifest;
     const buildArgs = collectBuildArgs(compose);
     const usesUpstreamArray = Array.isArray(sourceManifest.upstream);
-    const upstreams = usesUpstreamArray
-      ? sourceManifest.upstream || []
-      : sourceManifest.upstreamRepo
-      ? [
-          {
-            repo: sourceManifest.upstreamRepo,
-            version: sourceManifest.upstreamVersion,
-            arg: sourceManifest.upstreamArg
-          }
-        ]
-      : [];
+    const upstreams: (Partial<BumpUpstreamItem> & { repo: string })[] =
+      usesUpstreamArray
+        ? sourceManifest.upstream || []
+        : sourceManifest.upstreamRepo
+        ? [
+            {
+              repo: sourceManifest.upstreamRepo,
+              version: sourceManifest.upstreamVersion,
+              arg: sourceManifest.upstreamArg,
+              provider: (
+                sourceManifest as Partial<Manifest> & {
+                  upstreamProvider?: string;
+                }
+              ).upstreamProvider
+            }
+          ]
+        : [];
     const upstreamDir = manifestOrigin(m =>
       usesUpstreamArray
         ? "upstream" in m
@@ -361,6 +372,20 @@ export function checkPackageSpec({
     );
     for (const item of upstreams) {
       if (!item?.repo) continue;
+      for (const validate of [
+        () => parseProvider(item.provider),
+        () => compileTagPattern(item.tagPattern)
+      ]) {
+        try {
+          validate();
+        } catch (error) {
+          add(
+            "SPEC-M12",
+            `Upstream ${item.repo}${where(upstreamDir)}: ${error.message}`,
+            manifestFileIn(upstreamDir)
+          );
+        }
+      }
       // The legacy fields default the arg to UPSTREAM_VERSION; check the version against it too.
       const upstream = { ...item, arg: item.arg || "UPSTREAM_VERSION" };
       if (!item.arg) {
@@ -394,7 +419,7 @@ export function checkPackageSpec({
         return (
           value === String(upstream.version) ||
           (value.startsWith(prefix) &&
-            /^[a-f0-9]{64}$/i.test(value.slice(prefix.length)))
+            /^[a-f0-9]{64}$/.test(value.slice(prefix.length)))
         );
       };
       if (upstream.version !== undefined)
@@ -407,7 +432,7 @@ export function checkPackageSpec({
           const variant = where(upstreamDir) || where(argDir);
           add(
             "SPEC-M05",
-            `Upstream ${upstream.repo}${variant} has version "${upstream.version}" but services.${service}.build.args.${upstream.arg} is "${value}"; every service using this arg must match (optionally with @sha256:<64 hex digits>).`,
+            `Upstream ${upstream.repo}${variant} has version "${upstream.version}" but services.${service}.build.args.${upstream.arg} is "${value}"; every service using this arg must match (optionally with @sha256:<64 lowercase hex digits>).`,
             composeFileIn(argDir)
           );
         }
